@@ -100,14 +100,18 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         #endregion
 
         internal void AddEnterableLoosePolyline(Polyline poly) {
-            if (EnterableLoosePolylines == null)
-                EnterableLoosePolylines = new Set<Polyline>();
-            EnterableLoosePolylines.Insert(poly);
+            if (this.EnterableLoosePolylines == null) {
+                this.EnterableLoosePolylines = new Set<Polyline>();
+            }
+
+            this.EnterableLoosePolylines.Insert(poly);
         }
         internal void AddEnterableTightPolyline(Polyline poly) {
-            if (EnterableTightPolylines == null)
-                EnterableTightPolylines = new Set<Polyline>();
-            EnterableTightPolylines.Insert(poly);
+            if (this.EnterableTightPolylines == null) {
+                this.EnterableTightPolylines = new Set<Polyline>();
+            }
+
+            this.EnterableTightPolylines.Insert(poly);
         }
     }
 }

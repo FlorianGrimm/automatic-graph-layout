@@ -11,7 +11,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
     /// <summary>
     /// 
     /// </summary>
-    interface IMetroMapOrderingAlgorithm {
+    internal interface IMetroMapOrderingAlgorithm {
         IEnumerable<Metroline> GetOrder(Station u, Station v);
 
         /// <summary>

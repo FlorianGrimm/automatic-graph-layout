@@ -8,10 +8,10 @@ namespace Microsoft.Msagl.Routing {
     ///this is a port for routing from a cluster
     ///</summary>
     public class ClusterBoundaryPort : RelativeFloatingPort {
-        Polyline loosePolyline;
+        private Polyline loosePolyline;
         internal Polyline LoosePolyline {
-            get { return loosePolyline; }
-            set { loosePolyline = value; }
+            get { return this.loosePolyline; }
+            set { this.loosePolyline = value; }
         }
 
         ///<summary>

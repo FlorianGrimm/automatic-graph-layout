@@ -9,53 +9,55 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     [Serializable]
 #endif
 	public class PolylinePoint {
-		/// <summary>
-		/// 
-		/// </summary>
-		Point point;
+        /// <summary>
+        /// 
+        /// </summary>
+        private Point point;
 
 		/// <summary>
 		/// 
 		/// </summary>
 		public Point Point {
-            get { return point; }
+            get { return this.point; }
             set {
 #if SHARPIT
                 point = value.Clone();
 #else
-                point = value;
+                this.point = value;
 #endif
-                if (Polyline != null)
-                    Polyline.RequireInit();
+                if (this.Polyline != null) {
+                    this.Polyline.RequireInit();
+                }
             }
         }
 
-
-        PolylinePoint next;
+        private PolylinePoint next;
 
 		/// <summary>
 		/// 
 		/// </summary>
 		public PolylinePoint Next {
-            get { return next; }
+            get { return this.next; }
             set {
-                next = value;
-                if (Polyline != null)
-                    Polyline.RequireInit();
+                this.next = value;
+                if (this.Polyline != null) {
+                    this.Polyline.RequireInit();
+                }
             }
         }
 
-        PolylinePoint prev;
+        private PolylinePoint prev;
 
         /// <summary>
         /// 
         /// </summary>
         public PolylinePoint Prev {
-            get { return prev; }
+            get { return this.prev; }
             set {
-                prev = value;
-                if (Polyline != null)
-                    Polyline.RequireInit();
+                this.prev = value;
+                if (this.Polyline != null) {
+                    this.Polyline.RequireInit();
+                }
             }
         }
 
@@ -69,40 +71,40 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 #if SHARKPIT
             Point = p.Clone();
 #else
-            Point = p;
+            this.Point = p;
 #endif
         }
 
-        Polyline polyline;
+        private Polyline polyline;
 
         /// <summary>
         /// 
         /// </summary>
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         public Polyline Polyline {
-            get { return polyline; }
-            set { polyline = value; }
+            get { return this.polyline; }
+            set { this.polyline = value; }
         }
 
 		/// <summary>
 		/// 
 		/// </summary>
 		public override string ToString() {
-            return point.ToString();
+            return this.point.ToString();
         }
 
         /// <summary>
         /// 
         /// </summary>
         public PolylinePoint NextOnPolyline {
-            get { return Polyline.Next(this); }
+            get { return this.Polyline.Next(this); }
         }
 
         /// <summary>
         /// 
         /// </summary>
         public PolylinePoint PrevOnPolyline {
-            get { return Polyline.Prev(this); }
+            get { return this.Polyline.Prev(this); }
         }
 
     }

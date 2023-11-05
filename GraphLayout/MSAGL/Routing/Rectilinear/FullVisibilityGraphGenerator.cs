@@ -22,14 +22,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         // This tracks the last (usually) added ScanSegment for subsumption as an optimization to
         // searching the tree for fully-internal subsumptions.
-        ScanSegment hintScanSegment;
+        private ScanSegment hintScanSegment;
 
         /// <summary>
         /// Generate the visibility graph along which edges will be routed.
         /// </summary>
         /// <returns></returns>
         internal override void GenerateVisibilityGraph() {
-            if (null == ObsTree.Root) {
+            if (null == this.ObsTree.Root) {
                 return;
             }
 
@@ -38,31 +38,31 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             base.GenerateVisibilityGraph();
 
             // Merge any ScanSegments that share intervals.
-            HorizontalScanSegments.MergeSegments();
-            VerticalScanSegments.MergeSegments();
+            this.HorizontalScanSegments.MergeSegments();
+            this.VerticalScanSegments.MergeSegments();
 
             // Done now with the ScanSegment generation; intersect them to create the VisibilityGraph.
-            IntersectScanSegments();
-            Debug_AssertGraphIsRectilinear(VisibilityGraph, ObsTree);
+            this.IntersectScanSegments();
+            Debug_AssertGraphIsRectilinear(this.VisibilityGraph, this.ObsTree);
         }
 
         private void IntersectScanSegments()
         {
             var si = new SegmentIntersector();
-            this.VisibilityGraph = si.Generate(HorizontalScanSegments.Segments, VerticalScanSegments.Segments);
-            si.RemoveSegmentsWithNoVisibility(HorizontalScanSegments, VerticalScanSegments);
-            HorizontalScanSegments.DevTraceVerifyVisibility();
-            VerticalScanSegments.DevTraceVerifyVisibility();
+            this.VisibilityGraph = si.Generate(this.HorizontalScanSegments.Segments, this.VerticalScanSegments.Segments);
+            si.RemoveSegmentsWithNoVisibility(this.HorizontalScanSegments, this.VerticalScanSegments);
+            this.HorizontalScanSegments.DevTraceVerifyVisibility();
+            this.VerticalScanSegments.DevTraceVerifyVisibility();
         }
 
         internal override void InitializeEventQueue(ScanDirection scanDir) {
             base.InitializeEventQueue(scanDir);
-            hintScanSegment = null;
+            this.hintScanSegment = null;
         }
 
         internal override void Clear() {
             base.Clear();
-            hintScanSegment = null;
+            this.hintScanSegment = null;
         }
 
         protected override bool InsertPerpendicularReflectionSegment(Point start, Point end) {
@@ -71,10 +71,10 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // same span we have here, -or- we may be adding the non-overlapped extension of an overlapped
             // segment at exactly the same point that the horizontal pass added a reflection.
             // See TestRectilinear.Reflection_Staircase_Stops_At_BoundingBox_Side*.
-            if (null != PerpendicularScanSegments.Find(start, end)) {
+            if (null != this.PerpendicularScanSegments.Find(start, end)) {
                 return false;
             }
-            PerpendicularScanSegments.InsertUnique(new ScanSegment(start, end, ScanSegment.ReflectionWeight, gbcList: null));
+            this.PerpendicularScanSegments.InsertUnique(new ScanSegment(start, end, ScanSegment.ReflectionWeight, gbcList: null));
             return true;
         }
 
@@ -82,32 +82,32 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 BasicObstacleSide lowNborSide, BasicObstacleSide highNborSide, BasicReflectionEvent action) {
             // See notes in InsertPerpendicularReflectionSegment for comments about an existing segment.
             // Here, we call AddSegment which adds the segment and continues the reflection staircase.
-            if (null != ParallelScanSegments.Find(start, end)) {
+            if (null != this.ParallelScanSegments.Find(start, end)) {
                 return false;
             }
-            return AddSegment(start, end, eventObstacle, lowNborSide, highNborSide, action, ScanSegment.ReflectionWeight);
+            return this.AddSegment(start, end, eventObstacle, lowNborSide, highNborSide, action, ScanSegment.ReflectionWeight);
         }
 
         // Return value is whether or not we added a new segment.
-        bool AddSegment(Point start, Point end, Obstacle eventObstacle
+        private bool AddSegment(Point start, Point end, Obstacle eventObstacle
                                 , BasicObstacleSide lowNborSide, BasicObstacleSide highNborSide
                                 , SweepEvent action, double weight) {
-            DevTraceInfoVgGen(1, "Adding Segment [{0} -> {1} {2}] weight {3}", start, end, weight);
-            DevTraceInfoVgGen(2, "     side {0}", lowNborSide);
-            DevTraceInfoVgGen(2, "  -> side {0}", highNborSide);
+            this.DevTraceInfoVgGen(1, "Adding Segment [{0} -> {1} {2}] weight {3}", start, end, weight);
+            this.DevTraceInfoVgGen(2, "     side {0}", lowNborSide);
+            this.DevTraceInfoVgGen(2, "  -> side {0}", highNborSide);
             if (PointComparer.Equal(start, end)) {
                 return false;
             }
 
             // See if the new segment subsumes or can be subsumed by the last one.  gbcList may be null.
-            PointAndCrossingsList gbcList = CurrentGroupBoundaryCrossingMap.GetOrderedListBetween(start, end);
+            PointAndCrossingsList gbcList = this.CurrentGroupBoundaryCrossingMap.GetOrderedListBetween(start, end);
             bool extendStart, extendEnd;
-            bool wasSubsumed = ScanSegment.Subsume(ref hintScanSegment, start, end, weight, gbcList, ScanDirection
-                                        , ParallelScanSegments, out extendStart, out extendEnd);
+            bool wasSubsumed = ScanSegment.Subsume(ref this.hintScanSegment, start, end, weight, gbcList, this.ScanDirection
+                                        , this.ParallelScanSegments, out extendStart, out extendEnd);
             if (!wasSubsumed) {
-                Debug.Assert((weight != ScanSegment.ReflectionWeight) || (ParallelScanSegments.Find(start, end) == null),
+                Debug.Assert((weight != ScanSegment.ReflectionWeight) || (this.ParallelScanSegments.Find(start, end) == null),
                             "Reflection segments already in the ScanSegmentTree should should have been detected before calling AddSegment");
-                hintScanSegment = ParallelScanSegments.InsertUnique(new ScanSegment(start, end, weight, gbcList)).Item;
+                this.hintScanSegment = this.ParallelScanSegments.InsertUnique(new ScanSegment(start, end, weight, gbcList)).Item;
             } else if (weight == ScanSegment.ReflectionWeight) {
                 // Do not continue this; it is probably a situation where a side is at a tiny angle from the axis,
                 // resulting in an initial reflection segment that is parallel and very close to the extreme-vertex-derived
@@ -129,7 +129,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 if (action is CloseVertexEvent) {
                     // If both neighbor sides reflect upward, they can't intersect, so we don't need
                     // to store a lookahead site (if neither reflect upward, StoreLookaheadSite no-ops).
-                    if (!SideReflectsUpward(lowNborSide) || !SideReflectsUpward(highNborSide)) {
+                    if (!this.SideReflectsUpward(lowNborSide) || !this.SideReflectsUpward(highNborSide)) {
                         // Try to store both; only one will "take" (for the upward-reflecting side).
                         // The initial Obstacle is the opposite neighbor.
                         if (extendStart) {
@@ -142,16 +142,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 }
                 else {
                     if (extendStart) {
-                        StoreLookaheadSite(eventObstacle, LowNeighborSides.GroupSideInterveningBeforeLowNeighbor, lowNborSide, start);
+                        this.StoreLookaheadSite(eventObstacle, this.LowNeighborSides.GroupSideInterveningBeforeLowNeighbor, lowNborSide, start);
                     }
                     if (extendEnd) {
-                        StoreLookaheadSite(eventObstacle, HighNeighborSides.GroupSideInterveningBeforeHighNeighbor, highNborSide, end);
+                        this.StoreLookaheadSite(eventObstacle, this.HighNeighborSides.GroupSideInterveningBeforeHighNeighbor, highNborSide, end);
                     }
                 }
             }
 
-            DevTraceInfoVgGen(2, "HintScanSegment {0}{1}", hintScanSegment, wasSubsumed ? " (subsumed)" : "");
-            DevTrace_DumpScanSegmentsDuringAdd(3);
+            this.DevTraceInfoVgGen(2, "HintScanSegment {0}{1}", this.hintScanSegment, wasSubsumed ? " (subsumed)" : "");
+            this.DevTrace_DumpScanSegmentsDuringAdd(3);
             return true;
         }
 
@@ -167,8 +167,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         private bool IntersectionAtSideIsInsideAnotherObstacle(BasicObstacleSide side, BasicVertexEvent vertexEvent) {
-            Point intersect = ScanLineIntersectSide(vertexEvent.Site, side);
-            return IntersectionAtSideIsInsideAnotherObstacle(side, vertexEvent.Obstacle, intersect);
+            Point intersect = this.ScanLineIntersectSide(vertexEvent.Site, side);
+            return this.IntersectionAtSideIsInsideAnotherObstacle(side, vertexEvent.Obstacle, intersect);
         }
 
         // obstacleToIgnore is the event obstacle if we're looking at intersections along its boundary.
@@ -183,7 +183,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             if (!side.Obstacle.IsGroup && !eventObstacle.IsGroup && (side.Obstacle.Clump != eventObstacle.Clump)) {
                 return false;
             }
-            return ObsTree.IntersectionIsInsideAnotherObstacle(side.Obstacle, eventObstacle, intersect, ScanDirection);
+            return this.ObsTree.IntersectionIsInsideAnotherObstacle(side.Obstacle, eventObstacle, intersect, this.ScanDirection);
         }
 
         // As described in the document, we currently don't create ScanSegments where a flat top/bottom boundary may have
@@ -207,14 +207,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         // Then pass that depth through to VisibilityEdge as an increased weight.  (This would also automatically
         // handle the foregoing situation of non-overlapped intervals in the middle of a flat top/bottom border,
         // not that it would really gain anything).
-        void CreateScanSegments(Obstacle obstacle, HighObstacleSide lowNborSide, BasicObstacleSide lowOverlapSide, 
+        private void CreateScanSegments(Obstacle obstacle, HighObstacleSide lowNborSide, BasicObstacleSide lowOverlapSide, 
                                 BasicObstacleSide highOverlapSide, LowObstacleSide highNborSide, BasicVertexEvent vertexEvent) {
             // If we have either of the high/low OverlapSides, we'll need to see if they're inside
             // another obstacle.  If not, they end the overlap.
-            if ((null == highOverlapSide) || IntersectionAtSideIsInsideAnotherObstacle(highOverlapSide, vertexEvent)) {
+            if ((null == highOverlapSide) || this.IntersectionAtSideIsInsideAnotherObstacle(highOverlapSide, vertexEvent)) {
                 highOverlapSide = highNborSide;
             }
-            if ((null == lowOverlapSide) || IntersectionAtSideIsInsideAnotherObstacle(lowOverlapSide, vertexEvent)) {
+            if ((null == lowOverlapSide) || this.IntersectionAtSideIsInsideAnotherObstacle(lowOverlapSide, vertexEvent)) {
                 lowOverlapSide = lowNborSide;
             }
 
@@ -228,14 +228,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             //                                                          ...---+  +-----+=========...
             // This may be the low side of a flat bottom or top border, so lowNbor or highNbor 
             // may be in the middle of the border.
-            Point lowNborIntersect = ScanLineIntersectSide(vertexEvent.Site, lowNborSide);
-            Point highNborIntersect = ScanLineIntersectSide(vertexEvent.Site, highNborSide);
-            bool lowNborEndpointIsOverlapped = IntersectionAtSideIsInsideAnotherObstacle(lowNborSide,
+            Point lowNborIntersect = this.ScanLineIntersectSide(vertexEvent.Site, lowNborSide);
+            Point highNborIntersect = this.ScanLineIntersectSide(vertexEvent.Site, highNborSide);
+            bool lowNborEndpointIsOverlapped = this.IntersectionAtSideIsInsideAnotherObstacle(lowNborSide,
                         vertexEvent.Obstacle /*obstacleToIgnore*/, lowNborIntersect);
 
             if (!lowNborEndpointIsOverlapped && (lowNborSide == lowOverlapSide)) {
                 // Nothing is overlapped so create one segment.
-                AddSegment(lowNborIntersect, highNborIntersect, obstacle, lowNborSide, highNborSide, vertexEvent,
+                this.AddSegment(lowNborIntersect, highNborIntersect, obstacle, lowNborSide, highNborSide, vertexEvent,
                         ScanSegment.NormalWeight);
                 return;
             }
@@ -254,35 +254,35 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
             // Get the other intersections we'll want.
             Point highOverlapIntersect = (highOverlapSide == highNborSide) ? highNborIntersect
-                                            : ScanLineIntersectSide(vertexEvent.Site, highOverlapSide);
+                                            : this.ScanLineIntersectSide(vertexEvent.Site, highOverlapSide);
             Point lowOverlapIntersect = (lowOverlapSide == lowNborSide) ? lowNborIntersect
-                                            : ScanLineIntersectSide(vertexEvent.Site, lowOverlapSide);
+                                            : this.ScanLineIntersectSide(vertexEvent.Site, lowOverlapSide);
 
             // Create the segments.
             if (!lowNborEndpointIsOverlapped) {
                 // First interval is non-overlapped; there is a second overlapped interval, and may be a 
                 // third non-overlapping interval if another obstacle surrounded this vertex.
-                AddSegment(lowNborIntersect, lowOverlapIntersect, obstacle, lowNborSide, lowOverlapSide, vertexEvent,
+                this.AddSegment(lowNborIntersect, lowOverlapIntersect, obstacle, lowNborSide, lowOverlapSide, vertexEvent,
                         ScanSegment.NormalWeight);
-                AddSegment(lowOverlapIntersect, highOverlapIntersect, obstacle, lowOverlapSide, highOverlapSide, vertexEvent,
+                this.AddSegment(lowOverlapIntersect, highOverlapIntersect, obstacle, lowOverlapSide, highOverlapSide, vertexEvent,
                         ScanSegment.OverlappedWeight);
                 if (highOverlapSide != highNborSide) {
-                    AddSegment(highOverlapIntersect, highNborIntersect, obstacle, highOverlapSide, highNborSide, vertexEvent,
+                    this.AddSegment(highOverlapIntersect, highNborIntersect, obstacle, highOverlapSide, highNborSide, vertexEvent,
                         ScanSegment.NormalWeight);
                 }
             }
             else {
                 // Starts off overlapped so ignore lowOverlapSide.
-                AddSegment(lowNborIntersect, highOverlapIntersect, obstacle, lowNborSide, highOverlapSide, vertexEvent, 
+                this.AddSegment(lowNborIntersect, highOverlapIntersect, obstacle, lowNborSide, highOverlapSide, vertexEvent, 
                         ScanSegment.OverlappedWeight);
                 if (highOverlapSide != highNborSide) {
-                    AddSegment(highOverlapIntersect, highNborIntersect, obstacle, highOverlapSide, highNborSide, vertexEvent,
+                    this.AddSegment(highOverlapIntersect, highNborIntersect, obstacle, highOverlapSide, highNborSide, vertexEvent,
                         ScanSegment.NormalWeight);
                 }
             }
         }
 
-        void CreateScanSegments(Obstacle obstacle, NeighborSides neighborSides, BasicVertexEvent vertexEvent) {
+        private void CreateScanSegments(Obstacle obstacle, NeighborSides neighborSides, BasicVertexEvent vertexEvent) {
             this.CreateScanSegments(obstacle, (HighObstacleSide)neighborSides.LowNeighbor.Item
                                     , (null == neighborSides.LowOverlapEnd) ? null : neighborSides.LowOverlapEnd.Item
                                     , (null == neighborSides.HighOverlapEnd) ? null : neighborSides.HighOverlapEnd.Item
@@ -294,7 +294,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             this.CreateScanSegments(lowSideNode.Item.Obstacle, this.LowNeighborSides, vertexEvent);
         }
 
-        void CreateScanSegmentFromHighSide(RBNode<BasicObstacleSide> highSideNode, BasicVertexEvent vertexEvent) {
+        private void CreateScanSegmentFromHighSide(RBNode<BasicObstacleSide> highSideNode, BasicVertexEvent vertexEvent) {
             // Create one or more segments from low to high using the neighbors of the HighObstacleSide.
             this.CreateScanSegments(highSideNode.Item.Obstacle, this.HighNeighborSides, vertexEvent);
         }
@@ -302,7 +302,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         protected override void ProcessVertexEvent(RBNode<BasicObstacleSide> lowSideNode,
                     RBNode<BasicObstacleSide> highSideNode, BasicVertexEvent vertexEvent) {
             // Create the scan segment from the low side.
-            CreateScanSegmentFromLowSide(lowSideNode, vertexEvent);
+            this.CreateScanSegmentFromLowSide(lowSideNode, vertexEvent);
 
             // If the low segment covered up to our high neighbor, we're done.  Otherwise, there were overlaps
             // inside a flat boundary and now we need to come in from the high side.  In this case there's a chance
@@ -311,8 +311,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // we don't need to optimize it away as the segments will be merged by ScanSegmentTree.MergeSegments.
             // TODOgroup TODOperf: currentGroupBoundaryCrossingMap still has the Low-side stuff in it but it shouldn't
             // matter much - profile to see how much time GetOrderedIndexBetween takes.
-            if (LowNeighborSides.HighNeighbor.Item != HighNeighborSides.HighNeighbor.Item) {
-                CreateScanSegmentFromHighSide(highSideNode, vertexEvent);
+            if (this.LowNeighborSides.HighNeighbor.Item != this.HighNeighborSides.HighNeighbor.Item) {
+                this.CreateScanSegmentFromHighSide(highSideNode, vertexEvent);
             }
         }
     }

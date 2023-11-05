@@ -5,7 +5,7 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner
 {
     internal class RightObstacleSide : ObstacleSide
     {
-        Point end;
+        private Point end;
         internal RightObstacleSide(PolylinePoint startVertex)
             : base(startVertex)
         {
@@ -13,12 +13,12 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner
         }
         internal override Point End
         {
-            get { return end; }
+            get { return this.end; }
         }
 
         internal override PolylinePoint EndVertex
         {
-            get { return StartVertex.PrevOnPolyline; }
+            get { return this.StartVertex.PrevOnPolyline; }
         }
 
     }

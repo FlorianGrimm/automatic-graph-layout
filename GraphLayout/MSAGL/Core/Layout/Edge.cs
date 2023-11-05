@@ -16,8 +16,8 @@ namespace Microsoft.Msagl.Core.Layout {
         /// The member is used at the moment only when adding an edge to the graph.
         /// </summary>
         public Port SourcePort {
-            get { return EdgeGeometry.SourcePort; }
-            set { EdgeGeometry.SourcePort = value; }
+            get { return this.EdgeGeometry.SourcePort; }
+            set { this.EdgeGeometry.SourcePort = value; }
         }
 
         /// <summary>
@@ -25,26 +25,28 @@ namespace Microsoft.Msagl.Core.Layout {
         /// The member is used at the moment only when adding an edge to the graph.
         /// </summary>
         public Port TargetPort {
-            get { return EdgeGeometry.TargetPort; }
-            set { EdgeGeometry.TargetPort = value; }
+            get { return this.EdgeGeometry.TargetPort; }
+            set { this.EdgeGeometry.TargetPort = value; }
         }
 
-        readonly List<Label> labels = new List<Label>();
+        private readonly List<Label> labels = new List<Label>();
 
         /// <summary>
         /// gets the default (first) label of the edge
         /// </summary>
         public Label Label {
             get{
-                if (labels.Count == 0)
+                if (this.labels.Count == 0) {
                     return null;
-                return labels[0];
+                }
+
+                return this.labels[0];
             }
             set {
-                if (labels.Count == 0) {
-                    labels.Add(value);
+                if (this.labels.Count == 0) {
+                    this.labels.Add(value);
                 } else {
-                    labels[0] = value;
+                    this.labels[0] = value;
                 }
             }
         }
@@ -52,28 +54,27 @@ namespace Microsoft.Msagl.Core.Layout {
         /// Returns the full enumeration of labels associated with this edge
         /// </summary>
         public IList<Label> Labels {
-            get { return labels; }
+            get { return this.labels; }
         }
 
-        Node source;
+        private Node source;
 
         /// <summary>
         /// id of the source node
         /// </summary>
         public Node Source {
-            get { return source; }
-            set { source = value; }
+            get { return this.source; }
+            set { this.source = value; }
         }
 
-        
-        Node target;
+        private Node target;
 
         /// <summary>
         /// id of the target node
         /// </summary>
         public Node Target {
-            get { return target; }
-            set { target = value; }
+            get { return this.target; }
+            set { this.target = value; }
         }
 
 
@@ -98,9 +99,11 @@ namespace Microsoft.Msagl.Core.Layout {
         public Edge(Node source, Node target, double labelWidth, double labelHeight, double edgeThickness) {
             this.source = source;
             this.target = target;
-            if (labelWidth > 0)
-                Label = new Label(labelWidth, labelHeight, this);
-            LineWidth = edgeThickness;
+            if (labelWidth > 0) {
+                this.Label = new Label(labelWidth, labelHeight, this);
+            }
+
+            this.LineWidth = edgeThickness;
         }
 
         /// <summary>
@@ -122,39 +125,39 @@ namespace Microsoft.Msagl.Core.Layout {
         /// The label bounding box
         /// </summary>
         internal Rectangle LabelBBox {
-            get { return Label.BoundingBox; }
+            get { return this.Label.BoundingBox; }
         }
 
-        double length = 1;
+        private double length = 1;
 
         /// <summary>
         /// applicable for MDS layouts
         /// </summary>
         public double Length {
-            get { return length; }
-            set { length = value; }
+            get { return this.length; }
+            set { this.length = value; }
         }
 
-        int weight = 1;
+        private int weight = 1;
 
         /// <summary>
         /// The greater is the weight the more important is keeping the edge short. It is 1 by default.
         /// Other values are not tested yet.
         /// </summary>
         public int Weight {
-            get { return weight; }
-            set { weight = value; }
+            get { return this.weight; }
+            set { this.weight = value; }
         }
 
-        int separation = 1;
+        private int separation = 1;
 
         /// <summary>
         /// The minimum number of levels dividing source from target: 1 means that the edge goes down at least one level.
         /// Separation is 1 by default. Other values are not tested yet.
         /// </summary>
         public int Separation {
-            get { return separation; }
-            set { separation = value; }
+            get { return this.separation; }
+            set { this.separation = value; }
         }
 
 
@@ -163,15 +166,15 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return source + "->" + target;
+            return this.source + "->" + this.target;
         }
 
         /// <summary>
         /// edge thickness
         /// </summary>
         public double LineWidth {
-            get { return EdgeGeometry.LineWidth; }
-            set { EdgeGeometry.LineWidth = value; }
+            get { return this.EdgeGeometry.LineWidth; }
+            set { this.EdgeGeometry.LineWidth = value; }
         }
 
         /// <summary>
@@ -181,21 +184,27 @@ namespace Microsoft.Msagl.Core.Layout {
             get {
 
                 var rect = Rectangle.CreateAnEmptyBox();
-                if (UnderlyingPolyline != null)
-                    foreach (Point p in UnderlyingPolyline)
+                if (this.UnderlyingPolyline != null) {
+                    foreach (Point p in this.UnderlyingPolyline) {
                         rect.Add(p);
-
-                if (Curve != null)
-                    rect.Add(Curve.BoundingBox);
-
-                if (EdgeGeometry != null) {
-                    if (EdgeGeometry.SourceArrowhead != null)
-                        rect.Add(EdgeGeometry.SourceArrowhead.TipPosition);
-                    if (EdgeGeometry.TargetArrowhead != null)
-                        rect.Add(EdgeGeometry.TargetArrowhead.TipPosition);
+                    }
                 }
 
-                double del = LineWidth;
+                if (this.Curve != null) {
+                    rect.Add(this.Curve.BoundingBox);
+                }
+
+                if (this.EdgeGeometry != null) {
+                    if (this.EdgeGeometry.SourceArrowhead != null) {
+                        rect.Add(this.EdgeGeometry.SourceArrowhead.TipPosition);
+                    }
+
+                    if (this.EdgeGeometry.TargetArrowhead != null) {
+                        rect.Add(this.EdgeGeometry.TargetArrowhead.TipPosition);
+                    }
+                }
+
+                double del = this.LineWidth;
                 rect.Left -= del;
                 rect.Top += del;
                 rect.Right += del;
@@ -205,34 +214,33 @@ namespace Microsoft.Msagl.Core.Layout {
             set { throw new NotImplementedException(); }
         }
 
-
-        EdgeGeometry edgeGeometry = new EdgeGeometry();
+        private EdgeGeometry edgeGeometry = new EdgeGeometry();
         public object Color;
 
         /// <summary>
         /// Gets or sets the edge geometry: the curve, the arrowhead positions and the underlying polyline
         /// </summary>
         public EdgeGeometry EdgeGeometry {
-            get { return edgeGeometry; }
-            set { edgeGeometry = value; }
+            get { return this.edgeGeometry; }
+            set { this.edgeGeometry = value; }
         }
 
         /// <summary>
         /// the polyline of the untrimmed spline
         /// </summary>
         public SmoothedPolyline UnderlyingPolyline {
-            get { return edgeGeometry.SmoothedPolyline; }
-            set { edgeGeometry.SmoothedPolyline = value; }
+            get { return this.edgeGeometry.SmoothedPolyline; }
+            set { this.edgeGeometry.SmoothedPolyline = value; }
         }
 
         /// <summary>
         /// A curve representing the edge
         /// </summary>
         public ICurve Curve {
-            get { return edgeGeometry != null ? edgeGeometry.Curve : null; }
+            get { return this.edgeGeometry != null ? this.edgeGeometry.Curve : null; }
             set {
-                RaiseLayoutChangeEvent(value);
-                edgeGeometry.Curve = value;
+                this.RaiseLayoutChangeEvent(value);
+                this.edgeGeometry.Curve = value;
             }
         }
 
@@ -242,24 +250,32 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <param name="matrix">affine transform matrix</param>
         internal void Transform(PlaneTransformation matrix)
         {
-            if (Curve == null)
+            if (this.Curve == null) {
                 return;
-            Curve = Curve.Transform(matrix);
-            if (UnderlyingPolyline != null)
-                for (CornerSite s = UnderlyingPolyline.HeadSite, s0 = UnderlyingPolyline.HeadSite;
+            }
+
+            this.Curve = this.Curve.Transform(matrix);
+            if (this.UnderlyingPolyline != null) {
+                for (CornerSite s = this.UnderlyingPolyline.HeadSite, s0 = this.UnderlyingPolyline.HeadSite;
                      s != null;
-                     s = s.Next, s0 = s0.Next)
+                     s = s.Next, s0 = s0.Next) {
                     s.Point = matrix * s.Point;
+                }
+            }
 
-            var sourceArrow = edgeGeometry.SourceArrowhead;
-            if (sourceArrow != null)
+            var sourceArrow = this.edgeGeometry.SourceArrowhead;
+            if (sourceArrow != null) {
                 sourceArrow.TipPosition = matrix * sourceArrow.TipPosition;
-            var targetArrow = edgeGeometry.TargetArrowhead;
-            if (targetArrow != null)
-                targetArrow.TipPosition = matrix * targetArrow.TipPosition;
+            }
 
-            if (Label != null)
-                Label.Center = matrix * LabelBBox.Center;
+            var targetArrow = this.edgeGeometry.TargetArrowhead;
+            if (targetArrow != null) {
+                targetArrow.TipPosition = matrix * targetArrow.TipPosition;
+            }
+
+            if (this.Label != null) {
+                this.Label.Center = matrix * this.LabelBBox.Center;
+            }
         }
 
         /// <summary>
@@ -283,12 +299,12 @@ namespace Microsoft.Msagl.Core.Layout {
 		/// </summary>
 		public void TransformRelativeTo(Rectangle oldBounds, Rectangle newBounds)
         {
-            if (EdgeGeometry != null) {
+            if (this.EdgeGeometry != null) {
                 var toOrigin = new PlaneTransformation(1, 0, -oldBounds.Left, 0, 1, -oldBounds.Bottom);
                 var scale = new PlaneTransformation(newBounds.Width/oldBounds.Width, 0, 0,
                                                     0,newBounds.Height/oldBounds.Height, 0);
                 var toNewBounds = new PlaneTransformation(1, 0, newBounds.Left, 0, 1, newBounds.Bottom);
-                Transform(toNewBounds*scale*toOrigin);
+                this.Transform(toNewBounds*scale*toOrigin);
             }
             foreach (var l in this.Labels)
             {
@@ -303,7 +319,7 @@ namespace Microsoft.Msagl.Core.Layout {
         {
             get
             {
-                return EdgeGeometry != null && EdgeGeometry.SourceArrowhead != null;
+                return this.EdgeGeometry != null && this.EdgeGeometry.SourceArrowhead != null;
             }
         }
 
@@ -314,7 +330,7 @@ namespace Microsoft.Msagl.Core.Layout {
         {
             get
             {
-                return EdgeGeometry != null && EdgeGeometry.TargetArrowhead != null;
+                return this.EdgeGeometry != null && this.EdgeGeometry.TargetArrowhead != null;
             }
         }
         
@@ -346,8 +362,8 @@ namespace Microsoft.Msagl.Core.Layout {
         /// 
         /// </summary>
         /// <param name="newValue"></param>
-        public override void RaiseLayoutChangeEvent(object newValue) { 
-            edgeGeometry.RaiseLayoutChangeEvent(newValue);
+        public override void RaiseLayoutChangeEvent(object newValue) {
+            this.edgeGeometry.RaiseLayoutChangeEvent(newValue);
         }
 
         
@@ -355,12 +371,12 @@ namespace Microsoft.Msagl.Core.Layout {
         /// 
         /// </summary>
         public override event EventHandler<LayoutChangeEventArgs> BeforeLayoutChangeEvent {
-            add { edgeGeometry.LayoutChangeEvent+=value; }
-            remove { edgeGeometry.LayoutChangeEvent-=value; }
+            add { this.edgeGeometry.LayoutChangeEvent+=value; }
+            remove { this.edgeGeometry.LayoutChangeEvent-=value; }
         }
 
         internal bool UnderCollapsedCluster() {
-            return Source.UnderCollapsedCluster() || Target.UnderCollapsedCluster();
+            return this.Source.UnderCollapsedCluster() || this.Target.UnderCollapsedCluster();
         }
     }
 }

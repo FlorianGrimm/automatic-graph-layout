@@ -35,7 +35,7 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
     /// </summary>
     internal class ProximityQuery {
         internal ProximityQuery(List<IHull> nodeHulls) {
-            hierarchy = RectangleNode<IHull,Point>.CreateRectangleNodeOnEnumeration(GetNodeRects(nodeHulls));
+            this.hierarchy = RectangleNode<IHull,Point>.CreateRectangleNodeOnEnumeration(this.GetNodeRects(nodeHulls));
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
         /// <returns>List of overlapping pairs</returns>
         internal List<Tuple<IHull, IHull>> GetAllIntersections() {
             List<Tuple<IHull, IHull>> closePairs = new List<Tuple<IHull, IHull>>();
-            GetClosePairs(hierarchy, hierarchy, closePairs);
+            this.GetClosePairs(this.hierarchy, this.hierarchy, closePairs);
             return closePairs;
         }
         private RectangleNode<IHull,Point> hierarchy;
@@ -57,20 +57,24 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         private void GetIntersecting(RectangleNode<IHull,Point> leafNode, RectangleNode<IHull,Point> internalNode, List<IHull> intersecting) {
             Debug.Assert(leafNode.UserData != null);
-            if (!leafNode.Rectangle.Intersects(internalNode.Rectangle))
+            if (!leafNode.Rectangle.Intersects(internalNode.Rectangle)) {
                 return;
+            }
+
             if (internalNode.UserData != null) {
                 if (leafNode.UserData != internalNode.UserData) {
                     intersecting.Add(internalNode.UserData);
                 }
             } else {
-                GetIntersecting(leafNode, internalNode.Left, intersecting);
-                GetIntersecting(leafNode, internalNode.Right, intersecting);
+                this.GetIntersecting(leafNode, internalNode.Left, intersecting);
+                this.GetIntersecting(leafNode, internalNode.Right, intersecting);
             }
         }
         private void GetClosePairs(RectangleNode<IHull,Point> a, RectangleNode<IHull,Point> b, List<Tuple<IHull, IHull>> closePairs) {
-            if (!a.Rectangle.Intersects(b.Rectangle))
+            if (!a.Rectangle.Intersects(b.Rectangle)) {
                 return;
+            }
+
             if (a.UserData != null && b.UserData != null) {
                 if (a.UserData != b.UserData) {
                     Point ap = a.UserData.Center;
@@ -80,16 +84,16 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
                     }
                 }
             } else if (a.UserData == null && b.UserData == null) {
-                GetClosePairs(a.Left, b.Left, closePairs);
-                GetClosePairs(a.Left, b.Right, closePairs);
-                GetClosePairs(a.Right, b.Left, closePairs);
-                GetClosePairs(a.Right, b.Right, closePairs);
+                this.GetClosePairs(a.Left, b.Left, closePairs);
+                this.GetClosePairs(a.Left, b.Right, closePairs);
+                this.GetClosePairs(a.Right, b.Left, closePairs);
+                this.GetClosePairs(a.Right, b.Right, closePairs);
             } else if (a.UserData == null) {
-                GetClosePairs(a.Left, b, closePairs);
-                GetClosePairs(a.Right, b, closePairs);
+                this.GetClosePairs(a.Left, b, closePairs);
+                this.GetClosePairs(a.Right, b, closePairs);
             } else {
-                GetClosePairs(a, b.Left, closePairs);
-                GetClosePairs(a, b.Right, closePairs);
+                this.GetClosePairs(a, b.Left, closePairs);
+                this.GetClosePairs(a, b.Right, closePairs);
             }
         }
 

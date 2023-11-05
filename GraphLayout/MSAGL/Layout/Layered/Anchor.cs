@@ -30,29 +30,28 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <returns></returns>
         public override string ToString() {
             return "la:ra " +
-              la.ToString("#.##", CultureInfo.InvariantCulture) + " " + ra.ToString("#.##", CultureInfo.InvariantCulture) + " ta:ba " + ta.ToString("#.##", CultureInfo.InvariantCulture) + " " + ba.ToString("#.##", CultureInfo.InvariantCulture) + " x:y " + x.ToString("#.##", CultureInfo.InvariantCulture) + " " + y.ToString("#.##", CultureInfo.InvariantCulture);
+              this.la.ToString("#.##", CultureInfo.InvariantCulture) + " " + this.ra.ToString("#.##", CultureInfo.InvariantCulture) + " ta:ba " + this.ta.ToString("#.##", CultureInfo.InvariantCulture) + " " + this.ba.ToString("#.##", CultureInfo.InvariantCulture) + " x:y " + this.x.ToString("#.##", CultureInfo.InvariantCulture) + " " + this.y.ToString("#.##", CultureInfo.InvariantCulture);
         }
 
-        double la;
-        double ra;
-        double ta;
-        double ba;
-
-        double labelCornersPreserveCoefficient;
+        private double la;
+        private double ra;
+        private double ta;
+        private double ba;
+        private double labelCornersPreserveCoefficient;
 
         /// <summary>
         /// distance for the center of the node to its left boundary
         /// </summary>
         public double LeftAnchor {
             get {
-                return la;
+                return this.la;
             }
             set {
                 //the absence of this check allows a situation when an edge crosses its label or 
                 // a label which does not belong to the edge
                 //       if(value<-Curve.DistEps)
                 //       throw new Exception("assigning negative value to a anchor");
-                la = Math.Max(value, 0); ;
+                this.la = Math.Max(value, 0); ;
             }
         }
 
@@ -61,12 +60,12 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public double RightAnchor {
             get {
-                return ra;
+                return this.ra;
             }
             set {
                 //   if(value<-Curve.DistEps)
                 //   throw new Exception("assigning negative value to a anchor: "+value );
-                ra = Math.Max(value, 0);
+                this.ra = Math.Max(value, 0);
             }
         }
 
@@ -75,12 +74,12 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public double TopAnchor {
             get {
-                return ta;
+                return this.ta;
             }
             set {
                 //if(value<-Curve.DistEps)
                 //throw new Exception("assigning negative value to a anchor");
-                ta = Math.Max(value, 0);
+                this.ta = Math.Max(value, 0);
             }
         }
 
@@ -89,13 +88,13 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public double BottomAnchor {
             get {
-                return ba;
+                return this.ba;
             }
             set {
 
                 //if(value<-Curve.DistEps)
                 //throw new InvalidOperationException();//"assigning negative value to a anchor");
-                ba = Math.Max(value, 0);
+                this.ba = Math.Max(value, 0);
             }
         }
 
@@ -104,23 +103,23 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// Left boundary of the node
         /// </summary>
         public double Left {
-            get { return x - la; }
+            get { return this.x - this.la; }
         }
 
         /// <summary>
         /// right boundary of the node
         /// </summary>
         public double Right {
-            get { return x + ra; }
+            get { return this.x + this.ra; }
         }
 
         /// <summary>
         /// top boundary of the node
         /// </summary>
         public double Top {
-            get { return y + ta; }
-            set { 
-                y += value - Top;
+            get { return this.y + this.ta; }
+            set {
+                this.y += value - this.Top;
             }
         }
 
@@ -128,35 +127,35 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// bottom of the node
         /// </summary>
         public double Bottom {
-            get { return y - ba; }
-            set { y += value - Bottom; }
+            get { return this.y - this.ba; }
+            set { this.y += value - this.Bottom; }
         }
 
         /// <summary>
         /// Left top corner
         /// </summary>
         public Point LeftTop {
-            get { return new Point(Left, Top); }
+            get { return new Point(this.Left, this.Top); }
         }
         /// <summary>
         /// Left bottom of the node
         /// </summary>
         public Point LeftBottom {
-            get { return new Point(Left, Bottom); }
+            get { return new Point(this.Left, this.Bottom); }
         }
         /// <summary>
         /// Right bottom of the node
         /// </summary>
         public Point RightBottom {
-            get { return new Point(Right, Bottom); }
+            get { return new Point(this.Right, this.Bottom); }
         }
 
-        Node node;
+        private Node node;
 
         internal Node Node {
-            get { return node; }
-            set { 
-                node = value;
+            get { return this.node; }
+            set {
+                this.node = value;
                 this.polygonalBoundary = null;
             }
         }
@@ -165,7 +164,7 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// Right top of the node
         /// </summary>
         public Point RightTop {
-            get { return new Point(Right, Top); }
+            get { return new Point(this.Right, this.Top); }
         }
 
         /// <summary>
@@ -179,41 +178,41 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public Anchor(double leftAnchor, double rightAnchor,
             double topAnchor, double bottomAnchor, Node node, double labelCornersPreserveCoefficient) {
-            la = leftAnchor;
-            ra = rightAnchor;
-            ta = topAnchor;
-            ba = bottomAnchor;
-            Node = node;
+            this.la = leftAnchor;
+            this.ra = rightAnchor;
+            this.ta = topAnchor;
+            this.ba = bottomAnchor;
+            this.Node = node;
             this.labelCornersPreserveCoefficient = labelCornersPreserveCoefficient;
         }
 
-        double x;
+        private double x;
         /// <summary>
         /// the x position
         /// </summary>
         internal double X {
             get {
-                return x;
+                return this.x;
             }
 
             set {
-                polygonalBoundary = null;
-                x = value;
+                this.polygonalBoundary = null;
+                this.x = value;
             }
         }
 
-        double y;
+        private double y;
         /// <summary>
         /// the y position
         /// </summary>
         internal double Y {
             get {
-                return y;
+                return this.y;
             }
 
             set {
-                polygonalBoundary = null;
-                y = value;
+                this.polygonalBoundary = null;
+                this.y = value;
             }
         }
 
@@ -222,18 +221,18 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public Point Origin {
             get {
-                return new Point(x, y);
+                return new Point(this.x, this.y);
             }
         }
 
-        bool alreadySitsOnASpline;
+        private bool alreadySitsOnASpline;
         /// <summary>
         /// signals if the spline has been routed already through the node
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811")]
         public bool AlreadySitsOnASpline {
-            get { return alreadySitsOnASpline; }
-            set { alreadySitsOnASpline = value; }
+            get { return this.alreadySitsOnASpline; }
+            set { this.alreadySitsOnASpline = value; }
         }
 
         /// <summary>
@@ -256,47 +255,50 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811")]
         public bool RepresentsLabel {
-            get { return LabelToTheRightOfAnchorCenter || LabelToTheLeftOfAnchorCenter; }
+            get { return this.LabelToTheRightOfAnchorCenter || this.LabelToTheLeftOfAnchorCenter; }
         }
 
-        bool labelIsToTheLeftOfTheSpline;
+        private bool labelIsToTheLeftOfTheSpline;
 
         /// <summary>
         /// An anchor for an edge label with the label to the right of the spline has its height equal to the one of the label
         /// Its leftAnchor is a reserved space for the spline and the rightAnchor is equal to the label width.
         /// </summary>
         internal bool LabelToTheLeftOfAnchorCenter {
-            get { return labelIsToTheLeftOfTheSpline; }
-            set { labelIsToTheLeftOfTheSpline = value; }
+            get { return this.labelIsToTheLeftOfTheSpline; }
+            set { this.labelIsToTheLeftOfTheSpline = value; }
         }
 
-        bool labelIsToTheRightOfTheSpline;
+        private bool labelIsToTheRightOfTheSpline;
 
         /// <summary>
         /// An anchor for an edge label with the label to the left of the spline has its height equal to the one of the label
         /// Its rightAnchor is a reserved space for the spline and the leftAnchor is equal to the label width.
         /// </summary>
         internal bool LabelToTheRightOfAnchorCenter {
-            get { return labelIsToTheRightOfTheSpline; }
-            set { labelIsToTheRightOfTheSpline = value; }
+            get { return this.labelIsToTheRightOfTheSpline; }
+            set { this.labelIsToTheRightOfTheSpline = value; }
         }
 
         internal bool HasLabel {
-            get { return LabelToTheRightOfAnchorCenter || LabelToTheLeftOfAnchorCenter; }
+            get { return this.LabelToTheRightOfAnchorCenter || this.LabelToTheLeftOfAnchorCenter; }
         }
 
         internal double LabelWidth {
             get {
-                if (LabelToTheLeftOfAnchorCenter)
-                    return LeftAnchor;
-                if (LabelToTheRightOfAnchorCenter)
-                    return RightAnchor;
+                if (this.LabelToTheLeftOfAnchorCenter) {
+                    return this.LeftAnchor;
+                }
+
+                if (this.LabelToTheRightOfAnchorCenter) {
+                    return this.RightAnchor;
+                }
 
                 throw new InvalidOperationException();
             }
         }
 
-        Polyline polygonalBoundary;
+        private Polyline polygonalBoundary;
         /// <summary>
         /// the polygon representing the boundary of a node
         /// </summary>
@@ -307,46 +309,51 @@ namespace Microsoft.Msagl.Layout.Layered {
 #endif
  Polyline PolygonalBoundary {
             get {
-                if (polygonalBoundary != null)
-                    return polygonalBoundary;
-                return polygonalBoundary = Pad(CreatPolygonalBoundaryWithoutPadding(),Padding);
+                if (this.polygonalBoundary != null) {
+                    return this.polygonalBoundary;
+                }
+
+                return this.polygonalBoundary = Pad(this.CreatPolygonalBoundaryWithoutPadding(), this.Padding);
                 }
         }
 
-        static Polyline Pad(Polyline curve, double padding) {
-            if (padding == 0)
+        private static Polyline Pad(Polyline curve, double padding) {
+            if (padding == 0) {
                 return curve;
+            }
 
             if (CurveIsConvex(curve)) {
                 return PadConvexCurve(curve, padding);
-            } else
+            } else {
                 return PadConvexCurve(Curve.StandardRectBoundary(curve), padding);
+            }
         }
 
-        static void PadCorner(Polyline poly, PolylinePoint p0, PolylinePoint p1, PolylinePoint p2, double padding) {
+        private static void PadCorner(Polyline poly, PolylinePoint p0, PolylinePoint p1, PolylinePoint p2, double padding) {
             Point a, b;
             int numberOfPoints=GetPaddedCorner(p0, p1, p2, out a, out b, padding);
             poly.AddPoint(a);
-            if (numberOfPoints==2)
+            if (numberOfPoints==2) {
                 poly.AddPoint(b);
+            }
         }
 
-
-        static  Polyline PadConvexCurve(Polyline poly, double padding) { 
+        private static  Polyline PadConvexCurve(Polyline poly, double padding) { 
             Polyline ret = new Polyline();
 
             PadCorner(ret, poly.EndPoint.Prev, poly.EndPoint, poly.StartPoint, padding);
             PadCorner(ret, poly.EndPoint, poly.StartPoint, poly.StartPoint.Next, padding);
 
-            for (PolylinePoint pp = poly.StartPoint; pp.Next.Next != null; pp = pp.Next)
+            for (PolylinePoint pp = poly.StartPoint; pp.Next.Next != null; pp = pp.Next) {
                 PadCorner(ret, pp, pp.Next, pp.Next.Next, padding);
+            }
 
             ret.Closed = true;
             return ret;
 
         }
 
-        
+
         /// <summary>
         /// 
         /// </summary>
@@ -357,7 +364,7 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="b"></param>
         /// <param name="padding"></param>
         /// <returns>number of new points</returns>
-        static int GetPaddedCorner(PolylinePoint first, PolylinePoint second, PolylinePoint third, out Point a, out Point b,
+        private static int GetPaddedCorner(PolylinePoint first, PolylinePoint second, PolylinePoint third, out Point a, out Point b,
             double padding) {
             Point u = first.Point;
             Point v = second.Point;
@@ -388,7 +395,7 @@ namespace Microsoft.Msagl.Layout.Layered {
             return 2; //number of points to add 
         }
 
-        static IEnumerable<TriangleOrientation> Orientations(Polyline poly) {
+        private static IEnumerable<TriangleOrientation> Orientations(Polyline poly) {
             yield return Point.GetTriangleOrientation(poly.EndPoint.Point, poly.StartPoint.Point, poly.StartPoint.Next.Point);
             yield return Point.GetTriangleOrientation(poly.EndPoint.Prev.Point, poly.EndPoint.Point, poly.StartPoint.Point);
               
@@ -398,15 +405,19 @@ namespace Microsoft.Msagl.Layout.Layered {
                 pp = pp.Next;
             }
         }
-        static bool CurveIsConvex(Polyline poly) {
+
+        private static bool CurveIsConvex(Polyline poly) {
             var orientation = TriangleOrientation.Collinear;
             foreach (var or in Orientations(poly)) {
-                if (or == TriangleOrientation.Collinear)
+                if (or == TriangleOrientation.Collinear) {
                     continue;
-                if (orientation == TriangleOrientation.Collinear)
+                }
+
+                if (orientation == TriangleOrientation.Collinear) {
                     orientation = or;
-                else if (or != orientation)
+                } else if (or != orientation) {
                     return false;
+                }
             }
             return true;
         }
@@ -418,45 +429,47 @@ namespace Microsoft.Msagl.Layout.Layered {
 
         private Polyline CreatPolygonalBoundaryWithoutPadding() {
             Polyline ret;
-            if (this.HasLabel)
-                ret = LabelToTheLeftOfAnchorCenter ? PolygonOnLeftLabel() : PolygonOnRightLabel();
-            else if (this.NodeBoundary == null)
-                ret = StandardRectBoundary();
-            else 
+            if (this.HasLabel) {
+                ret = this.LabelToTheLeftOfAnchorCenter ? this.PolygonOnLeftLabel() : this.PolygonOnRightLabel();
+            } else if (this.NodeBoundary == null) {
+                ret = this.StandardRectBoundary();
+            } else {
                 ret = Curve.PolylineAroundClosedCurve(this.NodeBoundary);
+            }
+
             return ret;
         }
 
         private Polyline StandardRectBoundary() {
             Polyline poly = new Polyline();
-            poly.AddPoint(LeftTop);
-            poly.AddPoint(RightTop);
-            poly.AddPoint(RightBottom);
-            poly.AddPoint(LeftBottom);
+            poly.AddPoint(this.LeftTop);
+            poly.AddPoint(this.RightTop);
+            poly.AddPoint(this.RightBottom);
+            poly.AddPoint(this.LeftBottom);
             poly.Closed = true;
             return poly;
         }
 
         private Polyline PolygonOnLeftLabel() {
             Polyline poly = new Polyline();
-            double t = Left + (1 - this.labelCornersPreserveCoefficient) * LabelWidth;
-            poly.AddPoint(new Point(t, Top));
-            poly.AddPoint(RightTop);
-            poly.AddPoint(RightBottom);
-            poly.AddPoint(new Point(t, Bottom));
-            poly.AddPoint(new Point(Left, Y));
+            double t = this.Left + (1 - this.labelCornersPreserveCoefficient) * this.LabelWidth;
+            poly.AddPoint(new Point(t, this.Top));
+            poly.AddPoint(this.RightTop);
+            poly.AddPoint(this.RightBottom);
+            poly.AddPoint(new Point(t, this.Bottom));
+            poly.AddPoint(new Point(this.Left, this.Y));
             poly.Closed = true;
             return poly;
         }
 
         private Polyline PolygonOnRightLabel() {
             Polyline poly = new Polyline();
-            double t = Right - (1 - this.labelCornersPreserveCoefficient) * LabelWidth;
-            poly.AddPoint(t, Top);
-            poly.AddPoint(Right, Y);
-            poly.AddPoint(t, Bottom);
-            poly.AddPoint(Left, Bottom);
-            poly.AddPoint(Left, Top);
+            double t = this.Right - (1 - this.labelCornersPreserveCoefficient) * this.LabelWidth;
+            poly.AddPoint(t, this.Top);
+            poly.AddPoint(this.Right, this.Y);
+            poly.AddPoint(t, this.Bottom);
+            poly.AddPoint(this.Left, this.Bottom);
+            poly.AddPoint(this.Left, this.Top);
             poly.Closed = true;
             return poly;
 
@@ -464,17 +477,16 @@ namespace Microsoft.Msagl.Layout.Layered {
 
       
         internal ICurve NodeBoundary {
-            get { return Node!=null?Node.BoundaryCurve:null; }
+            get { return this.Node !=null? this.Node.BoundaryCurve:null; }
         }
 
-
-        double padding;
+        private double padding;
         /// <summary>
         /// node padding
         /// </summary>
         public double Padding {
-            get { return padding; }
-            set { padding = value; }
+            get { return this.padding; }
+            set { this.padding = value; }
         }
 
         internal void Move(Point p){

@@ -3,61 +3,60 @@ using Microsoft.Msagl.Core.Geometry.Curves;
 
 namespace Microsoft.Msagl.Routing.Visibility {
     internal class Tangent {
-
-        Tangent comp;
+        private Tangent comp;
 
         //the complimentary tangent
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Tangent Comp {
-            get { return comp; }
-            set { comp = value; }
+            get { return this.comp; }
+            set { this.comp = value; }
         }
 
         internal bool IsHigh {
-            get { return !IsLow; }
+            get { return !this.IsLow; }
         }
 
-        bool lowTangent; //true means that it is a low tangent to Q, false meanst that it is a high tangent to Q
+        private bool lowTangent; //true means that it is a low tangent to Q, false meanst that it is a high tangent to Q
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal bool IsLow {
-            get { return lowTangent; }
-            set { lowTangent = value; }
+            get { return this.lowTangent; }
+            set { this.lowTangent = value; }
         }
 
-        bool separatingPolygons;
+        private bool separatingPolygons;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal bool SeparatingPolygons
         {
-            get { return separatingPolygons; }
-            set { separatingPolygons = value; }
+            get { return this.separatingPolygons; }
+            set { this.separatingPolygons = value; }
         }
-       
-        Diagonal diagonal;
+
+        private Diagonal diagonal;
         /// <summary>
         /// the diagonal will be not a null only when it is active
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Diagonal Diagonal {
-            get { return diagonal; }
-            set { diagonal = value; }
+            get { return this.diagonal; }
+            set { this.diagonal = value; }
         }
 
-        PolylinePoint start;
+        private PolylinePoint start;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal PolylinePoint Start {
-            get { return start; }
-            set { start = value; }
+            get { return this.start; }
+            set { this.start = value; }
         }
 
-        PolylinePoint end;
+        private PolylinePoint end;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         public PolylinePoint End {
-            get { return end; }
-            set { end = value; }
+            get { return this.end; }
+            set { this.end = value; }
         }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Tangent(PolylinePoint start, PolylinePoint end) {
@@ -66,7 +65,7 @@ namespace Microsoft.Msagl.Routing.Visibility {
         }
 
         public override string ToString() {
-            return String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0},{1}", Start, End);
+            return String.Format(System.Globalization.CultureInfo.InvariantCulture, "{0},{1}", this.Start, this.End);
         }
     }
 }

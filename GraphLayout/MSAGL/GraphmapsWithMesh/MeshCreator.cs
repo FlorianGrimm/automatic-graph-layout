@@ -8,7 +8,7 @@ using Point = Microsoft.Msagl.Core.Geometry.Point;
 
 namespace Microsoft.Msagl.GraphmapsWithMesh
 {
-    class MeshCreator
+    internal class MeshCreator
     {
 
         private static void CreateFourRaysPerVertex(Tiling G, int maxX, int maxY)
@@ -50,8 +50,7 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             }
         }
 
-
-        static Point GrowOneUnit(LineSegment ls, int maxX, int maxY)
+        private static Point GrowOneUnit(LineSegment ls, int maxX, int maxY)
         {
             int xNew = 0;
             int yNew = 0;
@@ -76,12 +75,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 xNew = (int)ls.End.X - 1;
                 yNew = (int)ls.End.Y;
             }
-            if (!(xNew >= 0 && xNew <= maxX && yNew >= 0 && yNew <= maxY)) return new Point(-1, -1);
+            if (!(xNew >= 0 && xNew <= maxX && yNew >= 0 && yNew <= maxY)) {
+                return new Point(-1, -1);
+            }
+
             return new Point(xNew, yNew);
         }
 
-
-        static int FindVertexClosestToSegmentEnd(Tiling g, LineSegment ls)
+        private static int FindVertexClosestToSegmentEnd(Tiling g, LineSegment ls)
         {
             double distance = double.MaxValue;
             int nearestVertex = -1;
@@ -90,7 +91,10 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 for (int nodeIndex = 0; nodeIndex < g.NumOfnodes; nodeIndex++)
                 {
-                    if (g.VList[nodeIndex].XLoc != (int)ls.Start.X) continue;
+                    if (g.VList[nodeIndex].XLoc != (int)ls.Start.X) {
+                        continue;
+                    }
+
                     if (ls.Start.Y < ls.End.Y && g.VList[nodeIndex].YLoc >= ls.Start.Y && g.VList[nodeIndex].YLoc < ls.End.Y)
                     {
                         if (distance > ls.End.Y - g.VList[nodeIndex].YLoc)
@@ -113,7 +117,10 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 for (int nodeIndex = 0; nodeIndex < g.NumOfnodes; nodeIndex++)
                 {
-                    if (g.VList[nodeIndex].YLoc != (int)ls.Start.Y) continue;
+                    if (g.VList[nodeIndex].YLoc != (int)ls.Start.Y) {
+                        continue;
+                    }
+
                     if (ls.Start.X < ls.End.X && g.VList[nodeIndex].XLoc >= ls.Start.X && g.VList[nodeIndex].XLoc < ls.End.X)
                     {
                         if (distance > ls.End.X - g.VList[nodeIndex].XLoc)
@@ -132,13 +139,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                     }
                 }
             }
-            if (distance == double.MaxValue)
+            if (distance == double.MaxValue) {
                 System.Diagnostics.Debug.WriteLine("No vertex Found Error");
+            }
+
             return nearestVertex;
         }
 
-
-        static int FindClosestVertexWhileWalkingToStart(Tiling g, LineSegment ls, Point p)
+        private static int FindClosestVertexWhileWalkingToStart(Tiling g, LineSegment ls, Point p)
         {
             double distance = double.MaxValue;
             int nearestVertex = -1;
@@ -147,7 +155,10 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 for (int nodeIndex = 0; nodeIndex < g.NumOfnodes; nodeIndex++)
                 {
-                    if (g.VList[nodeIndex].XLoc != (int)ls.Start.X) continue;
+                    if (g.VList[nodeIndex].XLoc != (int)ls.Start.X) {
+                        continue;
+                    }
+
                     if (ls.Start.Y <= p.Y && g.VList[nodeIndex].YLoc >= ls.Start.Y && g.VList[nodeIndex].YLoc <= p.Y)
                     {
                         if (distance > p.Y - g.VList[nodeIndex].YLoc)
@@ -170,7 +181,10 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 for (int nodeIndex = 0; nodeIndex < g.NumOfnodes; nodeIndex++)
                 {
-                    if (g.VList[nodeIndex].YLoc != (int)ls.Start.Y) continue;
+                    if (g.VList[nodeIndex].YLoc != (int)ls.Start.Y) {
+                        continue;
+                    }
+
                     if (ls.Start.X <= p.X && g.VList[nodeIndex].XLoc >= ls.Start.X && g.VList[nodeIndex].XLoc <= p.X)
                     {
                         if (distance > p.X - g.VList[nodeIndex].XLoc)
@@ -189,12 +203,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                     }
                 }
             }
-            if (distance == double.MaxValue)
+            if (distance == double.MaxValue) {
                 System.Diagnostics.Debug.WriteLine("No vertex Found Error");
+            }
+
             return nearestVertex;
         }
 
-        static int FindClosestVertexWhileWalkingToEnd(Tiling g, LineSegment ls, Point p)
+        private static int FindClosestVertexWhileWalkingToEnd(Tiling g, LineSegment ls, Point p)
         {
             double distance = double.MaxValue;
             var nearestVertex = -1;
@@ -203,7 +219,10 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 for (int nodeIndex = 0; nodeIndex < g.NumOfnodes; nodeIndex++)
                 {
-                    if (g.VList[nodeIndex].XLoc != (int)ls.Start.X) continue;
+                    if (g.VList[nodeIndex].XLoc != (int)ls.Start.X) {
+                        continue;
+                    }
+
                     if (p.Y <= ls.End.Y && g.VList[nodeIndex].YLoc >= p.Y && g.VList[nodeIndex].YLoc <= ls.End.Y)
                     {
                         if (distance > g.VList[nodeIndex].YLoc - p.Y)
@@ -227,7 +246,10 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 for (int nodeIndex = 0; nodeIndex < g.NumOfnodes; nodeIndex++)
                 {
-                    if (g.VList[nodeIndex].YLoc != (int)ls.Start.Y) continue;
+                    if (g.VList[nodeIndex].YLoc != (int)ls.Start.Y) {
+                        continue;
+                    }
+
                     if (p.X <= ls.End.X && g.VList[nodeIndex].XLoc >= p.X && g.VList[nodeIndex].XLoc <= ls.End.X)
                     {
                         if (distance > g.VList[nodeIndex].XLoc - p.X)
@@ -267,11 +289,16 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 {
                     foreach (LineSegment ls1 in g.VList[nodeIndex1].SegmentList.Keys)
                     {
-                        if (g.VList[nodeIndex1].SegmentList[ls1] == false) continue;
+                        if (g.VList[nodeIndex1].SegmentList[ls1] == false) {
+                            continue;
+                        }
 
                         for (int nodeIndex2 = 0; nodeIndex2 < g.N; nodeIndex2++)
                         {
-                            if (nodeIndex1 == nodeIndex2) continue;
+                            if (nodeIndex1 == nodeIndex2) {
+                                continue;
+                            }
+
                             foreach (LineSegment ls2 in g.VList[nodeIndex2].SegmentList.Keys)
                             {
 
@@ -288,7 +315,9 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                         || ((int)ls1.Start.Y == (int)ls1.End.Y && (int)ls2.Start.Y == (int)ls2.End.Y))
                                     {
 
-                                        if ((int)ls1.End.X == (int)ls2.Start.X && (int)ls1.End.Y == (int)ls2.Start.Y) continue;
+                                        if ((int)ls1.End.X == (int)ls2.Start.X && (int)ls1.End.Y == (int)ls2.Start.Y) {
+                                            continue;
+                                        }
 
                                         int a = FindVertexClosestToSegmentEnd(g, ls1);
                                         int b = FindVertexClosestToSegmentEnd(g, ls2);
@@ -301,12 +330,22 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                         if (g.AddEdge(a, b))
                                         {
                                             LineSegment l = new LineSegment(ls1.Start, ls2.Start);
-                                            if (!addList.ContainsKey(l)) addList.Add(l, -1);
-                                            l = new LineSegment(ls2.Start, ls1.Start);
-                                            if (!addList.ContainsKey(l)) addList.Add(l, -1);
+                                            if (!addList.ContainsKey(l)) {
+                                                addList.Add(l, -1);
+                                            }
 
-                                            if (!removeList.ContainsKey(ls1)) removeList.Add(ls1, nodeIndex1);
-                                            if (!removeList.ContainsKey(ls2)) removeList.Add(ls2, nodeIndex2);
+                                            l = new LineSegment(ls2.Start, ls1.Start);
+                                            if (!addList.ContainsKey(l)) {
+                                                addList.Add(l, -1);
+                                            }
+
+                                            if (!removeList.ContainsKey(ls1)) {
+                                                removeList.Add(ls1, nodeIndex1);
+                                            }
+
+                                            if (!removeList.ContainsKey(ls2)) {
+                                                removeList.Add(ls2, nodeIndex2);
+                                            }
                                         }
                                     }
 
@@ -315,7 +354,9 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                     {
                                         if (MsaglUtilities.PointIsOnAxisAlignedSegment(ls2, ls1.End) &&
                                             MsaglUtilities.PointIsOnAxisAlignedSegment(ls1, ls2.End) &&
-                                            nodeIndex1 > nodeIndex2) continue;
+                                            nodeIndex1 > nodeIndex2) {
+                                            continue;
+                                        }
 
                                         if (g.GetNode((int)ls1.End.X, (int)ls1.End.Y) == -1)
                                         {
@@ -329,17 +370,32 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                             g.VList[d] = new Vertex((int)ls1.End.X, (int)ls1.End.Y) { Id = d };
                                             g.NumOfnodes++;
 
-                                            if (a >= 0) g.AddEdge(a, d);
-                                            if (b >= 0) g.AddEdge(b, d);
-                                            if (c >= 0) g.AddEdge(c, d);
-                                            if (a == b)
+                                            if (a >= 0) {
+                                                g.AddEdge(a, d);
+                                            }
+
+                                            if (b >= 0) {
+                                                g.AddEdge(b, d);
+                                            }
+
+                                            if (c >= 0) {
+                                                g.AddEdge(c, d);
+                                            }
+
+                                            if (a == b) {
                                                 System.Diagnostics.Debug.WriteLine("degenerate orthogonal collision");
-                                            if (a >= 0 && b >= 0) g.RemoveEdge(a, b);
+                                            }
+
+                                            if (a >= 0 && b >= 0) {
+                                                g.RemoveEdge(a, b);
+                                            }
 
                                             if (!removeList.ContainsKey(ls1))
                                             {
                                                 removeList.Add(ls1, nodeIndex1);
-                                                if (!addList.ContainsKey(ls1)) addList.Add(ls1, -1);
+                                                if (!addList.ContainsKey(ls1)) {
+                                                    addList.Add(ls1, -1);
+                                                }
                                             }
 
                                         }
@@ -347,14 +403,18 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                         {
                                             int a = g.GetNode((int)ls1.End.X, (int)ls1.End.Y);
                                             int b = FindVertexClosestToSegmentEnd(g, ls1);
-                                            if (b == -1)
+                                            if (b == -1) {
                                                 System.Diagnostics.Debug.WriteLine("vertex not found error");
+                                            }
+
                                             g.AddEdge(a, b);
 
                                             if (!removeList.ContainsKey(ls1))
                                             {
                                                 removeList.Add(ls1, nodeIndex1);
-                                                if (!addList.ContainsKey(ls1)) addList.Add(ls1, -1);
+                                                if (!addList.ContainsKey(ls1)) {
+                                                    addList.Add(ls1, -1);
+                                                }
                                             }
                                         }
                                     }
@@ -371,8 +431,11 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 removeList.Clear();
                 foreach (var s in addList)
                 {
-                    if (s.Value >= 0) g.VList[s.Value].SegmentList.Add(s.Key, true);
-                    else g.VList[g.GetNode((int)s.Key.Start.X, (int)s.Key.Start.Y)].SegmentList.Add(s.Key, false);
+                    if (s.Value >= 0) {
+                        g.VList[s.Value].SegmentList.Add(s.Key, true);
+                    } else {
+                        g.VList[g.GetNode((int)s.Key.Start.X, (int)s.Key.Start.Y)].SegmentList.Add(s.Key, false);
+                    }
                 }
                 addList.Clear();
 
@@ -383,15 +446,23 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                     foreach (LineSegment ls in g.VList[nodeIndex].SegmentList.Keys)
                     {
 
-                        if (g.VList[nodeIndex].SegmentList[ls] == false) continue;
+                        if (g.VList[nodeIndex].SegmentList[ls] == false) {
+                            continue;
+                        }
+
                         Core.Geometry.Point nextPoint = GrowOneUnit(ls, maxX + 1, maxY + 1);
                         if (nextPoint.X >= 0)
                         {
                             LineSegment l_new = new LineSegment(ls.Start, nextPoint);
 
 
-                            if (!addList.ContainsKey(l_new)) addList.Add(l_new, nodeIndex);
-                            if (!removeList.ContainsKey(ls)) removeList.Add(ls, nodeIndex);
+                            if (!addList.ContainsKey(l_new)) {
+                                addList.Add(l_new, nodeIndex);
+                            }
+
+                            if (!removeList.ContainsKey(ls)) {
+                                removeList.Add(ls, nodeIndex);
+                            }
                         }
 
                     }
@@ -404,8 +475,11 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 removeList.Clear();
                 foreach (var s in addList)
                 {
-                    if (s.Value >= 0) g.VList[s.Value].SegmentList.Add(s.Key, true);
-                    else g.VList[g.GetNode((int)s.Key.Start.X, (int)s.Key.Start.Y)].SegmentList.Add(s.Key, false);
+                    if (s.Value >= 0) {
+                        g.VList[s.Value].SegmentList.Add(s.Key, true);
+                    } else {
+                        g.VList[g.GetNode((int)s.Key.Start.X, (int)s.Key.Start.Y)].SegmentList.Add(s.Key, false);
+                    }
                 }
                 addList.Clear();
 
@@ -478,12 +552,13 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             ProcessDownwardRays(g, maxX, maxY, locationtoNode);
 
             int numOfVEdges = 0, numOfHEdges = 0;
-            foreach (var list in HVEdges.Keys)
+            foreach (var list in HVEdges.Keys) {
                 numOfVEdges += HVEdges[list].Count;
+            }
 
-            foreach (var list in VHEdges.Keys)
+            foreach (var list in VHEdges.Keys) {
                 numOfHEdges += VHEdges[list].Count;
-
+            }
         }
 
 
@@ -524,10 +599,13 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                     }
                     //else
                     {   //there is a ray that can stop the left ray
-                        if (distance4 == double.MaxValue && distance5 == double.MaxValue)
+                        if (distance4 == double.MaxValue && distance5 == double.MaxValue) {
                             Neighbor = g.VList[g.N + 1];
-                        else if (distance4 < distance5) Neighbor = Neighbor4;
-                        else Neighbor = Neighbor5;
+                        } else if (distance4 < distance5) {
+                            Neighbor = Neighbor4;
+                        } else {
+                            Neighbor = Neighbor5;
+                        }
 
 
                         //check if the neighbor is on the same y line of current vertex
@@ -551,13 +629,17 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                     }
                                 }
                             } while (rightNeighbor.Id != Neighbor.Id);
-                            if (rightNeighbor.XLoc >= CurrentVertex.XLoc) continue;
+                            if (rightNeighbor.XLoc >= CurrentVertex.XLoc) {
+                                continue;
+                            }
                             //dont need to find left neighbor since this is the first time ray is growing
 
 
                             g.AddEdge(CurrentVertex.Id, rightNeighbor.Id);
-                            if (!VHEdges.ContainsKey(CurrentVertex.YLoc))
-                                VHEdges[CurrentVertex.YLoc] = new List<OrthogonalEdge>();                            
+                            if (!VHEdges.ContainsKey(CurrentVertex.YLoc)) {
+                                VHEdges[CurrentVertex.YLoc] = new List<OrthogonalEdge>();
+                            }
+
                             VHEdges[CurrentVertex.YLoc].Add(new OrthogonalEdge(CurrentVertex, rightNeighbor));
 
                         }
@@ -581,18 +663,28 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                         Neighbor.YLoc >= vEdge.b.YLoc && vEdge.b.YLoc >= CurrentVertex.YLoc)
                                     {
                                         if (Math.Abs(vEdge.a.YLoc - CurrentVertex.YLoc) <
-                                            Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) ClosestVertex = vEdge.a;
+                                            Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) {
+                                            ClosestVertex = vEdge.a;
+                                        }
+
                                         if (Math.Abs(vEdge.b.YLoc - CurrentVertex.YLoc) <
-                                            Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) ClosestVertex = vEdge.b;
+                                            Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) {
+                                            ClosestVertex = vEdge.b;
+                                        }
                                     }
                                     else if (Neighbor.YLoc < CurrentVertex.YLoc &&
                                         Neighbor.YLoc <= vEdge.a.YLoc && vEdge.a.YLoc <= CurrentVertex.YLoc &&
                                         Neighbor.YLoc <= vEdge.b.YLoc && vEdge.b.YLoc <= CurrentVertex.YLoc)
                                     {
                                         if (Math.Abs(vEdge.a.YLoc - CurrentVertex.YLoc) <
-                                            Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) ClosestVertex = vEdge.a;
+                                            Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) {
+                                            ClosestVertex = vEdge.a;
+                                        }
+
                                         if (Math.Abs(vEdge.b.YLoc - CurrentVertex.YLoc) <
-                                            Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) ClosestVertex = vEdge.b;
+                                            Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) {
+                                            ClosestVertex = vEdge.b;
+                                        }
                                     }
                                 }
                             }
@@ -604,10 +696,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                 g.AddEdge(r.b.Id, a);
                                 g.AddEdge(CurrentVertex.Id, a);
 
-                                if (!HVEdges.ContainsKey(Neighbor.XLoc)) 
+                                if (!HVEdges.ContainsKey(Neighbor.XLoc)) {
                                     HVEdges[Neighbor.XLoc] = new List<OrthogonalEdge>();
-                                if (!VHEdges.ContainsKey(CurrentVertex.YLoc))
+                                }
+
+                                if (!VHEdges.ContainsKey(CurrentVertex.YLoc)) {
                                     VHEdges[CurrentVertex.YLoc] = new List<OrthogonalEdge>();
+                                }
+
                                 HVEdges[Neighbor.XLoc].Remove(r);
                                 HVEdges[Neighbor.XLoc].Add(new OrthogonalEdge(r.a, g.VList[a]));
                                 HVEdges[Neighbor.XLoc].Add(new OrthogonalEdge(r.b, g.VList[a]));
@@ -619,10 +715,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                 g.AddEdge(CurrentVertex.Id, a);
                                 g.AddEdge(ClosestVertex.Id, a);
 
-                                if (!HVEdges.ContainsKey(Neighbor.XLoc)) 
+                                if (!HVEdges.ContainsKey(Neighbor.XLoc)) {
                                     HVEdges[Neighbor.XLoc] = new List<OrthogonalEdge>();
-                                if (!VHEdges.ContainsKey(CurrentVertex.YLoc)) 
+                                }
+
+                                if (!VHEdges.ContainsKey(CurrentVertex.YLoc)) {
                                     VHEdges[CurrentVertex.YLoc] = new List<OrthogonalEdge>();
+                                }
+
                                 VHEdges[CurrentVertex.YLoc].Add(new OrthogonalEdge(CurrentVertex, g.VList[a]));
                                 HVEdges[ClosestVertex.XLoc].Add(new OrthogonalEdge(ClosestVertex, g.VList[a]));
                             }
@@ -647,7 +747,10 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 foreach (var edge in hEdges)
                 {
-                    if (edge.a == null) continue;
+                    if (edge.a == null) {
+                        continue;
+                    }
+
                     E.Add(edge);                    
                     Y.Add(edge.a.YLoc);
                 }
@@ -689,23 +792,33 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
 
                 //insert the points below CurrentY according to the y-coordinates 
-                while (index < PointIdArray.Length && g.VList[PointIdArray[index]].YLoc < CurrentY)
+                while (index < PointIdArray.Length && g.VList[PointIdArray[index]].YLoc < CurrentY) {
                     PointTreeSortedByX.Insert(g.VList[PointIdArray[index++]]);
+                }
 
                 //do a search to find the intersecting points
                 var node1 = PointTreeSortedByX.FindLast(v => v.XLoc >= leftEnd);
                 var node2 = PointTreeSortedByX.FindFirst(v => v.XLoc <= rightEnd);
-                if (node1 != null && node1.Item.XLoc > rightEnd) node1 = null;
-                if (node2 != null && node2.Item.XLoc < leftEnd) node2 = null;
-                if (node1 == null || node2 == null) continue;
+                if (node1 != null && node1.Item.XLoc > rightEnd) {
+                    node1 = null;
+                }
+
+                if (node2 != null && node2.Item.XLoc < leftEnd) {
+                    node2 = null;
+                }
+
+                if (node1 == null || node2 == null) {
+                    continue;
+                }
 
 
                 //collect all the candidate vertices
                 var node = node2;
                 List<Vertex> nodesToCheck = new List<Vertex>();
 
-                if (node1.Item.Id == node2.Item.Id) nodesToCheck.Add(node.Item);
-                else
+                if (node1.Item.Id == node2.Item.Id) {
+                    nodesToCheck.Add(node.Item);
+                } else
                 {
                     while (node.Item.Id != node1.Item.Id)
                     {
@@ -737,7 +850,9 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                             }
                         }
                     } while (topNeighborId != CurrentVertexId);
-                    if (g.VList[topNeighborId].YLoc >= CurrentY) continue;
+                    if (g.VList[topNeighborId].YLoc >= CurrentY) {
+                        continue;
+                    }
 
                     //add a subdivision
                     a = g.InsertVertexWithDuplicateCheck(g.VList[topNeighborId].XLoc, CurrentY, locationtoNode);
@@ -745,8 +860,10 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
 
                     g.AddEdge(topNeighborId, a);
-                    if (!HVEdges.ContainsKey(g.VList[topNeighborId].XLoc))
+                    if (!HVEdges.ContainsKey(g.VList[topNeighborId].XLoc)) {
                         HVEdges[g.VList[topNeighborId].XLoc] = new List<OrthogonalEdge>();
+                    }
+
                     HVEdges[g.VList[topNeighborId].XLoc].Add(new OrthogonalEdge(g.VList[topNeighborId], g.VList[a]));
 
                     nodesToRemove.Add(w);
@@ -759,22 +876,26 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
 
                     bool e1 = g.AddEdge(CurrentEdge.a.Id, newnode.Id);
-                    if (!VHEdges.ContainsKey(newnode.YLoc))
+                    if (!VHEdges.ContainsKey(newnode.YLoc)) {
                         VHEdges[newnode.YLoc] = new List<OrthogonalEdge>();
+                    }
+
                     VHEdges[newnode.YLoc].Add(new OrthogonalEdge(CurrentEdge.a, newnode));
 
                     bool e2 = g.AddEdge(CurrentEdge.b.Id, newnode.Id);
-                    if (!VHEdges.ContainsKey(newnode.YLoc))
+                    if (!VHEdges.ContainsKey(newnode.YLoc)) {
                         VHEdges[newnode.YLoc] = new List<OrthogonalEdge>();
+                    }
+
                     VHEdges[newnode.YLoc].Add(new OrthogonalEdge(CurrentEdge.b, newnode));
 
 
                     if (e1 && e2)
                     {
                         g.RemoveEdge(CurrentEdge.a.Id, CurrentEdge.b.Id);
-                        if (VHEdges.ContainsKey(CurrentEdge.b.YLoc))
+                        if (VHEdges.ContainsKey(CurrentEdge.b.YLoc)) {
                             VHEdges[CurrentEdge.b.YLoc].Remove(CurrentEdge);
-
+                        }
                     }
 
 
@@ -783,9 +904,9 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
                 }
 
-                foreach (var w in nodesToRemove)
+                foreach (var w in nodesToRemove) {
                     PointTreeSortedByX.Remove(w);
-
+                }
             }
         }
 
@@ -803,7 +924,10 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 foreach (var edge in hEdges)
                 {
-                    if(edge.a == null) continue;
+                    if(edge.a == null) {
+                        continue;
+                    }
+
                     E.Add(edge);
                     Y.Add(-edge.a.YLoc);
                 }
@@ -845,23 +969,33 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
 
                 //insert the points above CurrentY according to the -y coordinates 
-                while (index < PointIdArray.Length && g.VList[PointIdArray[index]].YLoc > CurrentY)
+                while (index < PointIdArray.Length && g.VList[PointIdArray[index]].YLoc > CurrentY) {
                     PointTreeSortedByX.Insert(g.VList[PointIdArray[index++]]);
+                }
 
                 //do a search to find the intersecting points
                 var node1 = PointTreeSortedByX.FindLast(v => v.XLoc >= leftEnd);
                 var node2 = PointTreeSortedByX.FindFirst(v => v.XLoc <= rightEnd);
-                if (node1 != null && node1.Item.XLoc > rightEnd) node1 = null;
-                if (node2 != null && node2.Item.XLoc < leftEnd) node2 = null;
-                if (node1 == null || node2 == null) continue;
+                if (node1 != null && node1.Item.XLoc > rightEnd) {
+                    node1 = null;
+                }
+
+                if (node2 != null && node2.Item.XLoc < leftEnd) {
+                    node2 = null;
+                }
+
+                if (node1 == null || node2 == null) {
+                    continue;
+                }
 
 
                 //collect all the candidate vertices
                 var node = node2;
                 List<Vertex> nodesToCheck = new List<Vertex>();
 
-                if (node1.Item.Id == node2.Item.Id) nodesToCheck.Add(node.Item);
-                else
+                if (node1.Item.Id == node2.Item.Id) {
+                    nodesToCheck.Add(node.Item);
+                } else
                 {
                     while (node.Item.Id != node1.Item.Id)
                     {
@@ -893,15 +1027,19 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                             }
                         }
                     } while (bottomNeighbor.Id != CurrentVertex.Id);
-                    if (bottomNeighbor.YLoc <= CurrentY) continue;
+                    if (bottomNeighbor.YLoc <= CurrentY) {
+                        continue;
+                    }
 
                     //add a subdivision
                     a = g.InsertVertexWithDuplicateCheck(bottomNeighbor.XLoc, CurrentY, locationtoNode);
                     addedVertices.Add(g.VList[a]);
 
                     g.AddEdge(bottomNeighbor.Id, a);
-                    if (!HVEdges.ContainsKey(bottomNeighbor.XLoc))
+                    if (!HVEdges.ContainsKey(bottomNeighbor.XLoc)) {
                         HVEdges[bottomNeighbor.XLoc] = new List<OrthogonalEdge>();
+                    }
+
                     HVEdges[bottomNeighbor.XLoc].Add(new OrthogonalEdge(bottomNeighbor, g.VList[a]));
 
                     nodesToRemove.Add(w);
@@ -912,27 +1050,32 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 foreach (var newnode in addedVertices)
                 {
                     bool e1 = g.AddEdge(CurrentEdge.a.Id, newnode.Id);
-                    if (!VHEdges.ContainsKey(newnode.YLoc))
+                    if (!VHEdges.ContainsKey(newnode.YLoc)) {
                         VHEdges[newnode.YLoc] = new List<OrthogonalEdge>();
+                    }
+
                     VHEdges[newnode.YLoc].Add(new OrthogonalEdge(CurrentEdge.a, newnode));
 
                     bool e2 = g.AddEdge(CurrentEdge.b.Id, newnode.Id);
-                    if (!VHEdges.ContainsKey(newnode.YLoc))
+                    if (!VHEdges.ContainsKey(newnode.YLoc)) {
                         VHEdges[newnode.YLoc] = new List<OrthogonalEdge>();
+                    }
+
                     VHEdges[newnode.YLoc].Add(new OrthogonalEdge(CurrentEdge.b, newnode));
 
                     if (e1 && e2)
                     {
                         g.RemoveEdge(CurrentEdge.a.Id, CurrentEdge.b.Id);
-                        if (VHEdges.ContainsKey(CurrentEdge.b.YLoc))
+                        if (VHEdges.ContainsKey(CurrentEdge.b.YLoc)) {
                             VHEdges[CurrentEdge.b.YLoc].Remove(CurrentEdge);
+                        }
                     }
                     CurrentEdge = new OrthogonalEdge(newnode, CurrentEdge.a);
                 }
 
-                foreach (var w in nodesToRemove)
+                foreach (var w in nodesToRemove) {
                     PointTreeSortedByX.Remove(w);
-
+                }
             }
         }
 
@@ -966,10 +1109,13 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
 
                     //there is a ray that can stop the left ray
-                    if (distance1 == double.MaxValue && distance8 == double.MaxValue)
+                    if (distance1 == double.MaxValue && distance8 == double.MaxValue) {
                         Neighbor = g.VList[g.N + 2];
-                    else if (distance1 < distance8) Neighbor = Neighbor1;
-                    else Neighbor = Neighbor8;
+                    } else if (distance1 < distance8) {
+                        Neighbor = Neighbor1;
+                    } else {
+                        Neighbor = Neighbor8;
+                    }
 
                     //check if the neighbor is on the same y line of current vertex
                     if (CurrentVertex.YLoc == Neighbor.YLoc)
@@ -990,13 +1136,17 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                 }
                             }
                         } while (leftneighbor.Id != Neighbor.Id);
-                        if (leftneighbor.XLoc <= CurrentVertex.XLoc) continue;
+                        if (leftneighbor.XLoc <= CurrentVertex.XLoc) {
+                            continue;
+                        }
                         //no need to find the right neighbor since this is the first time it is growing
 
                         //add the edge 
                         g.AddEdge(CurrentVertex.Id, Neighbor.Id);
-                        if (!VHEdges.ContainsKey(CurrentVertex.YLoc))
+                        if (!VHEdges.ContainsKey(CurrentVertex.YLoc)) {
                             VHEdges[CurrentVertex.YLoc] = new List<OrthogonalEdge>();
+                        }
+
                         VHEdges[CurrentVertex.YLoc].Add(new OrthogonalEdge(CurrentVertex, Neighbor));
 
                     }
@@ -1021,18 +1171,28 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                     Neighbor.YLoc >= vEdge.b.YLoc && vEdge.b.YLoc >= CurrentVertex.YLoc)
                                 {
                                     if (Math.Abs(vEdge.a.YLoc - CurrentVertex.YLoc) <
-                                        Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) ClosestVertex = vEdge.a;
+                                        Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) {
+                                        ClosestVertex = vEdge.a;
+                                    }
+
                                     if (Math.Abs(vEdge.b.YLoc - CurrentVertex.YLoc) <
-                                        Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) ClosestVertex = vEdge.b;
+                                        Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) {
+                                        ClosestVertex = vEdge.b;
+                                    }
                                 }
                                 else if (Neighbor.YLoc < CurrentVertex.YLoc &&
                                          Neighbor.YLoc <= vEdge.a.YLoc && vEdge.a.YLoc <= CurrentVertex.YLoc &&
                                          Neighbor.YLoc <= vEdge.b.YLoc && vEdge.b.YLoc <= CurrentVertex.YLoc)
                                 {
                                     if (Math.Abs(vEdge.a.YLoc - CurrentVertex.YLoc) <
-                                        Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) ClosestVertex = vEdge.a;
+                                        Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) {
+                                        ClosestVertex = vEdge.a;
+                                    }
+
                                     if (Math.Abs(vEdge.b.YLoc - CurrentVertex.YLoc) <
-                                        Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) ClosestVertex = vEdge.b;
+                                        Math.Abs(ClosestVertex.YLoc - CurrentVertex.YLoc)) {
+                                        ClosestVertex = vEdge.b;
+                                    }
                                 }
                             }
                         }
@@ -1044,10 +1204,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                             g.AddEdge(r.b.Id, a);
                             g.AddEdge(CurrentVertex.Id, a);
 
-                            if (!HVEdges.ContainsKey(Neighbor.XLoc))
+                            if (!HVEdges.ContainsKey(Neighbor.XLoc)) {
                                 HVEdges[Neighbor.XLoc] = new List<OrthogonalEdge>();
-                            if (!VHEdges.ContainsKey(CurrentVertex.YLoc))
+                            }
+
+                            if (!VHEdges.ContainsKey(CurrentVertex.YLoc)) {
                                 VHEdges[CurrentVertex.YLoc] = new List<OrthogonalEdge>();
+                            }
+
                             HVEdges[Neighbor.XLoc].Remove(r);
                             HVEdges[Neighbor.XLoc].Add(new OrthogonalEdge(r.a, g.VList[a]));
                             HVEdges[Neighbor.XLoc].Add(new OrthogonalEdge(r.b, g.VList[a]));
@@ -1059,10 +1223,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                             g.AddEdge(CurrentVertex.Id, a);
                             g.AddEdge(ClosestVertex.Id, a);
 
-                            if (!HVEdges.ContainsKey(Neighbor.XLoc))
+                            if (!HVEdges.ContainsKey(Neighbor.XLoc)) {
                                 HVEdges[Neighbor.XLoc] = new List<OrthogonalEdge>();
-                            if (!VHEdges.ContainsKey(CurrentVertex.YLoc))
+                            }
+
+                            if (!VHEdges.ContainsKey(CurrentVertex.YLoc)) {
                                 VHEdges[CurrentVertex.YLoc] = new List<OrthogonalEdge>();
+                            }
+
                             VHEdges[CurrentVertex.YLoc].Add(new OrthogonalEdge(CurrentVertex, g.VList[a]));
                             HVEdges[ClosestVertex.XLoc].Add(new OrthogonalEdge(ClosestVertex, g.VList[a]));
 
@@ -1118,25 +1286,39 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             double[] toPy = new double[a.Length];
 
             Dictionary<int, double> IdToX = new Dictionary<int, double>();
-            for (int k = 0; k < a.Length; k++) IdToX.Add(Pid[k], Px[k]);
-            Dictionary<int, double> IdToY = new Dictionary<int, double>();
-            for (int k = 0; k < a.Length; k++) IdToY.Add(Pid[k], Py[k]);
-            Dictionary<int, int> PosToId = new Dictionary<int, int>();
-            for (int k = 0; k < a.Length; k++) PosToId.Add(k, Pid[k]);
+            for (int k = 0; k < a.Length; k++) {
+                IdToX.Add(Pid[k], Px[k]);
+            }
 
+            Dictionary<int, double> IdToY = new Dictionary<int, double>();
+            for (int k = 0; k < a.Length; k++) {
+                IdToY.Add(Pid[k], Py[k]);
+            }
+
+            Dictionary<int, int> PosToId = new Dictionary<int, int>();
+            for (int k = 0; k < a.Length; k++) {
+                PosToId.Add(k, Pid[k]);
+            }
 
             for (int blockSize = 1; blockSize < a.Length; blockSize *= 2)
             {
-                for (int start = 0; start < a.Length; start += 2 * blockSize)
+                for (int start = 0; start < a.Length; start += 2 * blockSize) {
                     FindNeighbor(from, to, start, start + blockSize, start + 2 * blockSize, Px, Py, Pid, toPx, toPy, toPid, neighborlist, IdToX, IdToY, PosToId);
+                }
             }
 
             return neighborlist;
         }
         private static void FindNeighbor(double[] from, double[] to, int lo, int mid, int hi, double[] Px, double[] Py, int[] Pid, double[] toPx, double[] toPy, int[] toPid, Dictionary<int, int> neighborlist, Dictionary<int, double> IdToX, Dictionary<int, double> IdToY, Dictionary<int, int> PosToId)
         {
-            if (mid > from.Length) mid = from.Length;
-            if (hi > from.Length) hi = from.Length;
+            if (mid > from.Length) {
+                mid = from.Length;
+            }
+
+            if (hi > from.Length) {
+                hi = from.Length;
+            }
+
             int i = lo, j = mid;
             //sort all the points according to x+y
             for (int k = lo; k < hi; k++)
@@ -1182,14 +1364,18 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                         }
                         else
                         {
-                            if (IdToY[CandidateNeighborId] >= IdToY[currentPointId])
+                            if (IdToY[CandidateNeighborId] >= IdToY[currentPointId]) {
                                 neighborlist.Add(currentPointId, CandidateNeighborId);
+                            }
                         }
                     }
                 }
 
                 //process current point
-                if (mid == from.Length) --mid;
+                if (mid == from.Length) {
+                    --mid;
+                }
+
                 if (IdToY[currentPointId] >= IdToY[PosToId[mid]] && (IdToX[currentPointId] - IdToY[currentPointId] >= LargestXMinusY))
                 {
                     LargestXMinusY = IdToX[currentPointId] - IdToY[currentPointId];
@@ -1198,9 +1384,9 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
             }
 
-            for (int k = lo; k < hi; k++)
+            for (int k = lo; k < hi; k++) {
                 Assign(k, k, to, from, toPx, toPy, toPid, Px, Py, Pid);
-
+            }
         }
 
 
@@ -1217,17 +1403,25 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             double[] toPy = new double[a.Length];
             for (int blockSize = 1; blockSize < a.Length; blockSize *= 2)
             {
-                for (int start = 0; start < a.Length; start += 2 * blockSize)
+                for (int start = 0; start < a.Length; start += 2 * blockSize) {
                     merge(from, to, start, start + blockSize, start + 2 * blockSize, Px, Py, Pid, toPx, toPy, toPid);
+                }
             }
-            for (int k = 0; k < a.Length; k++)
+            for (int k = 0; k < a.Length; k++) {
                 a[k] = from[k];
+            }
         }
 
         private static void merge(double[] from, double[] to, int lo, int mid, int hi, double[] Px, double[] Py, int[] Pid, double[] toPx, double[] toPy, int[] toPid)
         {
-            if (mid > from.Length) mid = from.Length;
-            if (hi > from.Length) hi = from.Length;
+            if (mid > from.Length) {
+                mid = from.Length;
+            }
+
+            if (hi > from.Length) {
+                hi = from.Length;
+            }
+
             int i = lo, j = mid;
             for (int k = lo; k < hi; k++)
             {
@@ -1238,24 +1432,33 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 else if (from[i] == from[j] && Px[i] >= Px[j]) { Assign(k, j, from, to, Px, Py, Pid, toPx, toPy, toPid); j++; }
                 else { Assign(k, i, from, to, Px, Py, Pid, toPx, toPy, toPid); i++; }
             }
-            for (int k = lo; k < hi; k++)
+            for (int k = lo; k < hi; k++) {
                 Assign(k, k, to, from, toPx, toPy, toPid, Px, Py, Pid);
-
+            }
         }
 
         private static void FixMesh(Tiling g)
         {
             for (int i = 0; i < g.NumOfnodes; i++)
             {
-                if (g.DegList[i] == 0) continue;
+                if (g.DegList[i] == 0) {
+                    continue;
+                }
+
                 for (int j = g.N; j < g.NumOfnodes; j++)
                 {
-                    if (i == j) continue;
+                    if (i == j) {
+                        continue;
+                    }
+
                     if (g.VList[i].XLoc == g.VList[j].XLoc && g.VList[i].YLoc == g.VList[j].YLoc)
                     {
                         for (int neighborIndex = 0; neighborIndex < g.DegList[j]; neighborIndex++)
                         {
-                            if (g.DegList[g.EList[j, neighborIndex].NodeId] == 0) continue;
+                            if (g.DegList[g.EList[j, neighborIndex].NodeId] == 0) {
+                                continue;
+                            }
+
                             g.AddEdge(i, g.EList[j, neighborIndex].NodeId);
                         }
                         g.DegList[j] = 0;
@@ -1280,18 +1483,21 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                 {
                                     Core.Geometry.Point p = new Core.Geometry.Point(g.VList[index].XLoc, g.VList[index].YLoc);
                                     if (MsaglUtilities.PointIsOnAxisAlignedSegment(ls1, p) ||
-                                        MsaglUtilities.PointIsOnAxisAlignedSegment(ls2, p))
+                                        MsaglUtilities.PointIsOnAxisAlignedSegment(ls2, p)) {
                                         list.Add(p);
+                                    }
                                 }
                                 if (list.Count > 2)
                                 {
                                     list.Sort();
                                     Core.Geometry.Point[] points = list.ToArray();
 
-                                    for (int i = 0; i < points.Length; i++)
-                                        for (int j = i + 1; j < points.Length; j++)
+                                    for (int i = 0; i < points.Length; i++) {
+                                        for (int j = i + 1; j < points.Length; j++) {
                                             g.RemoveEdge(g.GetNode((int)points[i].X, (int)points[i].Y),
                                                 g.GetNode((int)points[j].X, (int)points[j].Y));
+                                        }
+                                    }
 
                                     for (int i = 0; i < points.Length - 1; i++)
                                     {
@@ -1306,10 +1512,10 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             }
 
 
-            for (int nodeIndex = 0; nodeIndex < g.NumOfnodes; nodeIndex++)
+            for (int nodeIndex = 0; nodeIndex < g.NumOfnodes; nodeIndex++) {
                 g.nodeTree.Add(new Rectangle(new Core.Geometry.Point(g.VList[nodeIndex].XLoc, g.VList[nodeIndex].YLoc)),
                     nodeIndex);
-
+            }
 
             bool searchNew = true;
             while (searchNew)
@@ -1330,8 +1536,13 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                         for (int nodeIndex2 = 0; nodeIndex2 < intersectedVertices.Length; nodeIndex2++)
                         {
                             int currentVertexId = intersectedVertices[nodeIndex2];
-                            if (g.VList[currentVertexId].Invalid) continue;
-                            if (currentVertexId == nodeIndex1 || currentVertexId == neighborId) continue;
+                            if (g.VList[currentVertexId].Invalid) {
+                                continue;
+                            }
+
+                            if (currentVertexId == nodeIndex1 || currentVertexId == neighborId) {
+                                continue;
+                            }
 
                             Core.Geometry.Point p = new Point(g.VList[currentVertexId].XLoc, g.VList[currentVertexId].YLoc);
                             LineSegment ls = new LineSegment(a, b);
@@ -1345,9 +1556,13 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                 break;
                             }
                         }
-                        if (searchNew) break;
+                        if (searchNew) {
+                            break;
+                        }
                     }
-                    if (searchNew) break;
+                    if (searchNew) {
+                        break;
+                    }
                 }
             }
         }
@@ -1370,11 +1585,16 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 {
                     foreach (LineSegment ls1 in g.VList[nodeIndex1].SegmentList.Keys)
                     {
-                        if (g.VList[nodeIndex1].SegmentList[ls1] == false) continue;
+                        if (g.VList[nodeIndex1].SegmentList[ls1] == false) {
+                            continue;
+                        }
 
                         for (int nodeIndex2 = 0; nodeIndex2 < g.N; nodeIndex2++)
                         {
-                            if (nodeIndex1 == nodeIndex2) continue;
+                            if (nodeIndex1 == nodeIndex2) {
+                                continue;
+                            }
+
                             foreach (LineSegment ls2 in g.VList[nodeIndex2].SegmentList.Keys)
                             {
 
@@ -1387,7 +1607,9 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                         || ((int)ls1.Start.Y == (int)ls1.End.Y && (int)ls2.Start.Y == (int)ls2.End.Y))
                                     {
 
-                                        if ((int)ls1.End.X == (int)ls2.Start.X && (int)ls1.End.Y == (int)ls2.Start.Y) continue;
+                                        if ((int)ls1.End.X == (int)ls2.Start.X && (int)ls1.End.Y == (int)ls2.Start.Y) {
+                                            continue;
+                                        }
 
                                         int a = FindVertexClosestToSegmentEnd(g, ls1);
                                         int b = FindVertexClosestToSegmentEnd(g, ls2);
@@ -1400,12 +1622,22 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                         if (g.AddEdge(a, b))
                                         {
                                             LineSegment l = new LineSegment(ls1.Start, ls2.Start);
-                                            if (!addList.ContainsKey(l)) addList.Add(l, -1);
-                                            l = new LineSegment(ls2.Start, ls1.Start);
-                                            if (!addList.ContainsKey(l)) addList.Add(l, -1);
+                                            if (!addList.ContainsKey(l)) {
+                                                addList.Add(l, -1);
+                                            }
 
-                                            if (!removeList.ContainsKey(ls1)) removeList.Add(ls1, nodeIndex1);
-                                            if (!removeList.ContainsKey(ls2)) removeList.Add(ls2, nodeIndex2);
+                                            l = new LineSegment(ls2.Start, ls1.Start);
+                                            if (!addList.ContainsKey(l)) {
+                                                addList.Add(l, -1);
+                                            }
+
+                                            if (!removeList.ContainsKey(ls1)) {
+                                                removeList.Add(ls1, nodeIndex1);
+                                            }
+
+                                            if (!removeList.ContainsKey(ls2)) {
+                                                removeList.Add(ls2, nodeIndex2);
+                                            }
                                         }
                                     }
 
@@ -1414,7 +1646,9 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                     {
                                         if (MsaglUtilities.PointIsOnAxisAlignedSegment(ls2, ls1.End) &&
                                             MsaglUtilities.PointIsOnAxisAlignedSegment(ls1, ls2.End) &&
-                                            nodeIndex1 > nodeIndex2) continue;
+                                            nodeIndex1 > nodeIndex2) {
+                                            continue;
+                                        }
 
                                         if (g.GetNode((int)ls1.End.X, (int)ls1.End.Y) == -1)
                                         {
@@ -1428,17 +1662,32 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                             g.VList[d] = new Vertex((int)ls1.End.X, (int)ls1.End.Y) { Id = d };
                                             g.NumOfnodes++;
 
-                                            if (a >= 0) g.AddEdge(a, d);
-                                            if (b >= 0) g.AddEdge(b, d);
-                                            if (c >= 0) g.AddEdge(c, d);
-                                            if (a == b)
+                                            if (a >= 0) {
+                                                g.AddEdge(a, d);
+                                            }
+
+                                            if (b >= 0) {
+                                                g.AddEdge(b, d);
+                                            }
+
+                                            if (c >= 0) {
+                                                g.AddEdge(c, d);
+                                            }
+
+                                            if (a == b) {
                                                 System.Diagnostics.Debug.WriteLine("degenerate");
-                                            if (a >= 0 && b >= 0) g.RemoveEdge(a, b);
+                                            }
+
+                                            if (a >= 0 && b >= 0) {
+                                                g.RemoveEdge(a, b);
+                                            }
 
                                             if (!removeList.ContainsKey(ls1) && MsaglUtilities.HittedSegmentComesFromLeft(ls2, ls1))
                                             {
                                                 removeList.Add(ls1, nodeIndex1);
-                                                if (!addList.ContainsKey(ls1)) addList.Add(ls1, -1);
+                                                if (!addList.ContainsKey(ls1)) {
+                                                    addList.Add(ls1, -1);
+                                                }
                                             }
 
                                         }
@@ -1446,14 +1695,18 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                                         {
                                             int a = g.GetNode((int)ls1.End.X, (int)ls1.End.Y);
                                             int b = FindVertexClosestToSegmentEnd(g, ls1);
-                                            if (b == -1)
+                                            if (b == -1) {
                                                 System.Diagnostics.Debug.WriteLine("vertex not found error");
+                                            }
+
                                             g.AddEdge(a, b);
 
                                             if (!removeList.ContainsKey(ls1) && MsaglUtilities.HittedSegmentComesFromLeft(ls2, ls1))
                                             {
                                                 removeList.Add(ls1, nodeIndex1);
-                                                if (!addList.ContainsKey(ls1)) addList.Add(ls1, -1);
+                                                if (!addList.ContainsKey(ls1)) {
+                                                    addList.Add(ls1, -1);
+                                                }
                                             }
                                         }
                                     }
@@ -1470,8 +1723,11 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 removeList.Clear();
                 foreach (var s in addList)
                 {
-                    if (s.Value >= 0) g.VList[s.Value].SegmentList.Add(s.Key, true);
-                    else g.VList[g.GetNode((int)s.Key.Start.X, (int)s.Key.Start.Y)].SegmentList.Add(s.Key, false);
+                    if (s.Value >= 0) {
+                        g.VList[s.Value].SegmentList.Add(s.Key, true);
+                    } else {
+                        g.VList[g.GetNode((int)s.Key.Start.X, (int)s.Key.Start.Y)].SegmentList.Add(s.Key, false);
+                    }
                 }
                 addList.Clear();
 
@@ -1482,15 +1738,23 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                     foreach (LineSegment ls in g.VList[nodeIndex].SegmentList.Keys)
                     {
 
-                        if (g.VList[nodeIndex].SegmentList[ls] == false) continue;
+                        if (g.VList[nodeIndex].SegmentList[ls] == false) {
+                            continue;
+                        }
+
                         var nextWeightedPoint = GrowOneUnit(ls, maxX + 1, maxY + 1);
                         if (nextWeightedPoint.X >= 0)
                         {
                             LineSegment l_new = new LineSegment(ls.Start, nextWeightedPoint);
 
 
-                            if (!addList.ContainsKey(l_new)) addList.Add(l_new, nodeIndex);
-                            if (!removeList.ContainsKey(ls)) removeList.Add(ls, nodeIndex);
+                            if (!addList.ContainsKey(l_new)) {
+                                addList.Add(l_new, nodeIndex);
+                            }
+
+                            if (!removeList.ContainsKey(ls)) {
+                                removeList.Add(ls, nodeIndex);
+                            }
                         }
 
                     }
@@ -1503,8 +1767,11 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 removeList.Clear();
                 foreach (var s in addList)
                 {
-                    if (s.Value >= 0) g.VList[s.Value].SegmentList.Add(s.Key, true);
-                    else g.VList[g.GetNode((int)s.Key.Start.X, (int)s.Key.Start.Y)].SegmentList.Add(s.Key, false);
+                    if (s.Value >= 0) {
+                        g.VList[s.Value].SegmentList.Add(s.Key, true);
+                    } else {
+                        g.VList[g.GetNode((int)s.Key.Start.X, (int)s.Key.Start.Y)].SegmentList.Add(s.Key, false);
+                    }
                 }
                 addList.Clear();
 
@@ -1528,26 +1795,26 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 if (p.YLoc <= q.YLoc)
                 {
-                    a = p;
-                    b = q;
+                    this.a = p;
+                    this.b = q;
                 }
                 else
                 {
-                    a = q;
-                    b = p;
+                    this.a = q;
+                    this.b = p;
                 }
             }
             if (p.YLoc == q.YLoc)
             {
                 if (p.XLoc <= q.XLoc)
                 {
-                    a = p;
-                    b = q;
+                    this.a = p;
+                    this.b = q;
                 }
                 else
                 {
-                    a = q;
-                    b = p;
+                    this.a = q;
+                    this.b = p;
                 }
             }
         }
@@ -1558,8 +1825,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
         public int Compare(Vertex a, Vertex b)
         {
-            if (a.YLoc < b.YLoc) return 1;
-            if (a.YLoc == b.YLoc) return 0;
+            if (a.YLoc < b.YLoc) {
+                return 1;
+            }
+
+            if (a.YLoc == b.YLoc) {
+                return 0;
+            }
+
             return -1;
         }
     }
@@ -1568,8 +1841,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
         public int Compare(Vertex a, Vertex b)
         {
-            if (a.XLoc < b.XLoc) return 1;
-            if (a.XLoc == b.XLoc) return 0;
+            if (a.XLoc < b.XLoc) {
+                return 1;
+            }
+
+            if (a.XLoc == b.XLoc) {
+                return 0;
+            }
+
             return -1;
         }
     }

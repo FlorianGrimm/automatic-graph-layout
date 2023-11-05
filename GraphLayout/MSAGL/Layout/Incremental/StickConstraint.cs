@@ -39,13 +39,13 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// 
         /// </summary>
         public virtual double Project() {
-            Point uv = v.Center - u.Center;
-            double d = separation - uv.Length,
-                   wu = ((FiNode)u.AlgorithmData).stayWeight,
-                   wv = ((FiNode)v.AlgorithmData).stayWeight;
+            Point uv = this.v.Center - this.u.Center;
+            double d = this.separation - uv.Length,
+                   wu = ((FiNode)this.u.AlgorithmData).stayWeight,
+                   wv = ((FiNode)this.v.AlgorithmData).stayWeight;
             Point f = d * uv.Normalize() / (wu + wv);
-            u.Center -= wv * f;
-            v.Center += wu * f;
+            this.u.Center -= wv * f;
+            this.v.Center += wu * f;
             return Math.Abs(d);
         }
         /// <summary>
@@ -57,6 +57,6 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// <summary>
         /// Get the list of nodes involved in the constraint
         /// </summary>
-        public IEnumerable<Node> Nodes { get { return new Node[]{ u, v }; } }
+        public IEnumerable<Node> Nodes { get { return new Node[]{ this.u, this.v }; } }
     }
 }

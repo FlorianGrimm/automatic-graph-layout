@@ -11,15 +11,15 @@ namespace Microsoft.Msagl.Layout.Layered {
         internal const int Infinity = Int32.MaxValue;
         internal NetworkEdge(PolyIntEdge e)
             : base(e.Source, e.Target) {
-            Weight = e.Weight;
-            Separation = e.Separation;
+            this.Weight = e.Weight;
+            this.Separation = e.Separation;
         }
         internal bool inTree;
-        int cut = Infinity;
+        private int cut = Infinity;
 
         internal int Cut {
-            get { return cut; }
-            set { cut = value; }
+            get { return this.cut; }
+            set { this.cut = value; }
         }
     }
 

@@ -14,35 +14,32 @@ namespace Microsoft.Msagl.Routing.Visibility {
     /// </summary>
     internal class PointVisibilityCalculator {
         [SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields")] //  VisibilityGraph graphOfHoleBoundaries;
-            ActiveEdgeComparerWithRay activeEdgeComparer;
-
-        RbTree<PolylinePoint> activeSidesTree;
+        private ActiveEdgeComparerWithRay activeEdgeComparer;
+        private RbTree<PolylinePoint> activeSidesTree;
 
         /// <summary>
         /// A mapping from sides to their RBNodes
         /// </summary>
-        Dictionary<PolylinePoint, RBNode<PolylinePoint>> sideNodes = new Dictionary<PolylinePoint, RBNode<PolylinePoint>>();
-
-        readonly BinaryHeapWithComparer<Stem> heapForSorting;
-
-        readonly VisibilityGraph visibilityGraph;
-        readonly VisibilityKind visibilityKind;
+        private Dictionary<PolylinePoint, RBNode<PolylinePoint>> sideNodes = new Dictionary<PolylinePoint, RBNode<PolylinePoint>>();
+        private readonly BinaryHeapWithComparer<Stem> heapForSorting;
+        private readonly VisibilityGraph visibilityGraph;
+        private readonly VisibilityKind visibilityKind;
 
         /// <summary>
         /// These are parts of hole boundaries visible from q where each node is taken in isolation
         /// </summary>
-        readonly Dictionary<Polyline, Stem> visibleBoundaries = new Dictionary<Polyline, Stem>();
-
-        Point q;
-        readonly PolylinePoint qPolylinePoint;
+        private readonly Dictionary<Polyline, Stem> visibleBoundaries = new Dictionary<Polyline, Stem>();
+        private Point q;
+        private readonly PolylinePoint qPolylinePoint;
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal VisibilityVertex QVertex { get; set; }
 
-        readonly List<PolylinePoint> sortedListOfPolypoints = new List<PolylinePoint>();
-                                     //the sorted list of possibly visible vertices
+        private readonly List<PolylinePoint> sortedListOfPolypoints = new List<PolylinePoint>();
 
-        readonly IEnumerable<Polyline> holes;
+        //the sorted list of possibly visible vertices
+
+        private readonly IEnumerable<Polyline> holes;
 
         /// <summary>
         /// We suppose that the holes are convex and oriented clockwis and are mutually disjoint
@@ -70,12 +67,12 @@ namespace Microsoft.Msagl.Routing.Visibility {
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void FillGraph() {
-            ComputeHoleBoundariesPossiblyVisibleFromQ();
-            if (visibleBoundaries.Count > 0) {
-                SortSAndInitActiveSides();
+        private void FillGraph() {
+            this.ComputeHoleBoundariesPossiblyVisibleFromQ();
+            if (this.visibleBoundaries.Count > 0) {
+                this.SortSAndInitActiveSides();
                 // CheckActiveSidesAreConsistent();
-                Sweep();
+                this.Sweep();
             }
         }
 
@@ -83,23 +80,27 @@ namespace Microsoft.Msagl.Routing.Visibility {
         /// sorts the set of potentially visible vertices around point q
         /// </summary>
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void SortSAndInitActiveSides() {
-            InitHeapAndInsertActiveSides();
-            for (Stem stem = heapForSorting.GetMinimum();; stem = heapForSorting.GetMinimum()) {
-                sortedListOfPolypoints.Add(stem.Start);
-                if (stem.MoveStartClockwise())
-                    heapForSorting.ChangeMinimum(stem);
-                else
-                    heapForSorting.Dequeue();
-                if (heapForSorting.Count == 0)
+        private void SortSAndInitActiveSides() {
+            this.InitHeapAndInsertActiveSides();
+            for (Stem stem = this.heapForSorting.GetMinimum();; stem = this.heapForSorting.GetMinimum()) {
+                this.sortedListOfPolypoints.Add(stem.Start);
+                if (stem.MoveStartClockwise()) {
+                    this.heapForSorting.ChangeMinimum(stem);
+                } else {
+                    this.heapForSorting.Dequeue();
+                }
+
+                if (this.heapForSorting.Count == 0) {
                     break;
+                }
             }
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void InitHeapAndInsertActiveSides() {
-            foreach (Stem pp in GetInitialVisibleBoundaryStemsAndInsertActiveSides())
-                heapForSorting.Enqueue(pp);
+        private void InitHeapAndInsertActiveSides() {
+            foreach (Stem pp in this.GetInitialVisibleBoundaryStemsAndInsertActiveSides()) {
+                this.heapForSorting.Enqueue(pp);
+            }
         }
 
 
@@ -110,17 +111,17 @@ namespace Microsoft.Msagl.Routing.Visibility {
         /// </summary>
         /// <returns></returns>
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        IEnumerable<Stem> GetInitialVisibleBoundaryStemsAndInsertActiveSides() {
-            foreach (var keyValuePair in visibleBoundaries) {
+        private IEnumerable<Stem> GetInitialVisibleBoundaryStemsAndInsertActiveSides() {
+            foreach (var keyValuePair in this.visibleBoundaries) {
                 Polyline hole = keyValuePair.Key;
                 Stem stem = keyValuePair.Value;
                 bool crosses = false;
 
                 foreach (PolylinePoint side in stem.Sides) {
                     PolylinePoint source = side;
-                    if (source.Point.Y < q.Y) {
-                        if (side.NextOnPolyline.Point.Y >= q.Y) {
-                            TriangleOrientation orientation = Point.GetTriangleOrientation(q, source.Point,
+                    if (source.Point.Y < this.q.Y) {
+                        if (side.NextOnPolyline.Point.Y >= this.q.Y) {
+                            TriangleOrientation orientation = Point.GetTriangleOrientation(this.q, source.Point,
                                                                                            side.NextOnPolyline.Point);
                             if (orientation == TriangleOrientation.Counterclockwise ||
                                 orientation == TriangleOrientation.Collinear) {
@@ -129,34 +130,36 @@ namespace Microsoft.Msagl.Routing.Visibility {
                                 yield return new Stem(stem.Start, side);
                                 yield return new Stem(side.NextOnPolyline, stem.End);
 
-                                RegisterActiveSide(side);
+                                this.RegisterActiveSide(side);
                                 break;
                             }
                         }
-                    } else if (source.Point.Y > q.Y)
+                    } else if (source.Point.Y > this.q.Y) {
                         break;
-                    else if (side.Point.X >= q.X) {
+                    } else if (side.Point.X >= this.q.X) {
                         //we have pp.Y==q.Y
                         crosses = true;
                         //we need to add one or two stems here
                         yield return new Stem(side, stem.End);
-                        if (side != stem.Start)
+                        if (side != stem.Start) {
                             yield return new Stem(stem.Start, hole.Prev(source));
+                        }
 
-                        RegisterActiveSide(side);
+                        this.RegisterActiveSide(side);
                         break;
                     }
                 }
                 //there is no intersection with the ray
-                if (!crosses)
+                if (!crosses) {
                     yield return stem;
+                }
             }
         }
 
-        void RegisterActiveSide(PolylinePoint side) 
+        private void RegisterActiveSide(PolylinePoint side) 
         {
-            activeEdgeComparer.IntersectionOfTheRayAndInsertedEdge = activeEdgeComparer.IntersectEdgeWithRay(side, new Point(1, 0));
-            sideNodes[side] = activeSidesTree.Insert(side);
+            this.activeEdgeComparer.IntersectionOfTheRayAndInsertedEdge = this.activeEdgeComparer.IntersectEdgeWithRay(side, new Point(1, 0));
+            this.sideNodes[side] = this.activeSidesTree.Insert(side);
         }
 
         //private Polyline GetPolylineBetweenPolyPointsTest(Polyline hole, PolylinePoint p0, PolylinePoint p1) {
@@ -171,23 +174,24 @@ namespace Microsoft.Msagl.Routing.Visibility {
         //}
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        PointVisibilityCalculator(IEnumerable<Polyline> holes, VisibilityGraph visibilityGraph, Point point,
+        private PointVisibilityCalculator(IEnumerable<Polyline> holes, VisibilityGraph visibilityGraph, Point point,
                                   VisibilityKind visibilityKind) {
             this.holes = holes;
             //this.graphOfHoleBoundaries = holeBoundariesGraph;
             this.visibilityGraph = visibilityGraph;
-            q = point;
-            qPolylinePoint = new PolylinePoint(q);
-            QVertex = this.visibilityGraph.AddVertex(qPolylinePoint);
+            this.q = point;
+            this.qPolylinePoint = new PolylinePoint(this.q);
+            this.QVertex = this.visibilityGraph.AddVertex(this.qPolylinePoint);
             this.visibilityKind = visibilityKind;
-            heapForSorting = new BinaryHeapWithComparer<Stem>(new StemStartPointComparer(q));
+            this.heapForSorting = new BinaryHeapWithComparer<Stem>(new StemStartPointComparer(this.q));
         }
 
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void Sweep() {
-            foreach (PolylinePoint polylinePoint in sortedListOfPolypoints)
-                SweepPolylinePoint(polylinePoint);
+        private void Sweep() {
+            foreach (PolylinePoint polylinePoint in this.sortedListOfPolypoints) {
+                this.SweepPolylinePoint(polylinePoint);
+            }
 #if TEST_MSAGL
             //List<ICurve> l = new List<ICurve>();
             //foreach (PEdge pe in this.visibilityGraph.Edges) {
@@ -204,9 +208,9 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
         //this code will work for convex holes
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void SweepPolylinePoint(PolylinePoint v) {
+        private void SweepPolylinePoint(PolylinePoint v) {
             PolylinePoint inSide = GetIncomingSide(v);
-            PolylinePoint outSide = GetOutgoingSide(v);
+            PolylinePoint outSide = this.GetOutgoingSide(v);
 
 
             //if (inEdge != null && outEdge != null)
@@ -217,49 +221,54 @@ namespace Microsoft.Msagl.Routing.Visibility {
             //else if (outEdge != null)
             //    SugiyamaLayoutSettings.Show(new LineSegment(outEdge.Start.Point, outEdge.End.Point), new LineSegment(this.q, v.Point));
 
-            activeEdgeComparer.IntersectionOfTheRayAndInsertedEdge = v.Point;
+            this.activeEdgeComparer.IntersectionOfTheRayAndInsertedEdge = v.Point;
             RBNode<PolylinePoint> node;
-            if (sideNodes.TryGetValue(inSide, out node) && node != null) {
+            if (this.sideNodes.TryGetValue(inSide, out node) && node != null) {
 //we have an active edge
-                if (node == activeSidesTree.TreeMinimum())
-                    AddEdge(v);
+                if (node == this.activeSidesTree.TreeMinimum()) {
+                    this.AddEdge(v);
+                }
 
                 if (outSide != null) {
                     node.Item = outSide; //just replace the edge since the order does not change
-                    sideNodes[outSide] = node;
+                    this.sideNodes[outSide] = node;
                 } else {
-                    RBNode<PolylinePoint> changedNode = activeSidesTree.DeleteSubtree(node);
-                    if (changedNode != null)
-                        if (changedNode.Item != null)
-                            sideNodes[changedNode.Item] = changedNode;
+                    RBNode<PolylinePoint> changedNode = this.activeSidesTree.DeleteSubtree(node);
+                    if (changedNode != null) {
+                        if (changedNode.Item != null) {
+                            this.sideNodes[changedNode.Item] = changedNode;
+                        }
+                    }
                 }
-                sideNodes.Remove(inSide);
+                this.sideNodes.Remove(inSide);
             } else //the incoming edge is not active
                 if (outSide != null) {
                     RBNode<PolylinePoint> outsideNode;
-                    if (!sideNodes.TryGetValue(outSide, out outsideNode) || outsideNode == null) {
-                        outsideNode = activeSidesTree.Insert(outSide);
-                        sideNodes[outSide] = outsideNode;
-                        if (outsideNode == activeSidesTree.TreeMinimum())
-                            AddEdge(v);
+                    if (!this.sideNodes.TryGetValue(outSide, out outsideNode) || outsideNode == null) {
+                        outsideNode = this.activeSidesTree.Insert(outSide);
+                    this.sideNodes[outSide] = outsideNode;
+                        if (outsideNode == this.activeSidesTree.TreeMinimum()) {
+                        this.AddEdge(v);
                     }
-                } else
-                    throw new InvalidOperationException();
+                }
+                } else {
+                throw new InvalidOperationException();
+            }
 
             // CheckActiveSidesAreConsistent();
         }
 
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void AddEdge(PolylinePoint v) {
-            if (visibilityKind == VisibilityKind.Regular ||
-                (visibilityKind == VisibilityKind.Tangent && LineTouchesPolygon(QVertex.Point, v))) {
-                visibilityGraph.AddEdge(QVertex.Point, v.Point, ((a,b)=>new TollFreeVisibilityEdge(a,b)));
+        private void AddEdge(PolylinePoint v) {
+            if (this.visibilityKind == VisibilityKind.Regular ||
+                (this.visibilityKind == VisibilityKind.Tangent && LineTouchesPolygon(this.QVertex.Point, v))) {
+                this.visibilityGraph.AddEdge(this.QVertex.Point, v.Point, ((a,b)=>new TollFreeVisibilityEdge(a,b)));
             }
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        static bool LineTouchesPolygon(Point a, PolylinePoint p) {
+        private static bool LineTouchesPolygon(Point a, PolylinePoint p) {
             Point prev = p.Polyline.Prev(p).Point;
             Point next = p.Polyline.Next(p).Point;
             Point v = p.Point;
@@ -268,16 +277,20 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
 #if TEST_MSAGL
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-// ReSharper disable UnusedMember.Local
+        private
+        // ReSharper disable UnusedMember.Local
         void DrawActiveEdgesAndVisibleGraph() {
 // ReSharper restore UnusedMember.Local
             var l = new List<ICurve>();
-            foreach (VisibilityEdge pe in visibilityGraph.Edges)
+            foreach (VisibilityEdge pe in this.visibilityGraph.Edges) {
                 l.Add(new LineSegment(pe.SourcePoint, pe.TargetPoint));
+            }
 
-            foreach (PolylinePoint pe in activeSidesTree)
+            foreach (PolylinePoint pe in this.activeSidesTree) {
                 l.Add(new LineSegment(pe.Point, pe.NextOnPolyline.Point));
-            l.Add(new Ellipse(0.1, 0.1, q));
+            }
+
+            l.Add(new Ellipse(0.1, 0.1, this.q));
 
 
             LayoutAlgorithmSettings.Show(l.ToArray());
@@ -285,43 +298,45 @@ namespace Microsoft.Msagl.Routing.Visibility {
 #endif
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        PolylinePoint GetOutgoingSide(PolylinePoint v) {
-            Stem visibleStem = visibleBoundaries[v.Polyline];
+        private PolylinePoint GetOutgoingSide(PolylinePoint v) {
+            Stem visibleStem = this.visibleBoundaries[v.Polyline];
 
-            if (v == visibleStem.End)
+            if (v == visibleStem.End) {
                 return null;
+            }
 
             return v;
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        static PolylinePoint GetIncomingSide(PolylinePoint v) {
+        private static PolylinePoint GetIncomingSide(PolylinePoint v) {
             return v.PrevOnPolyline;
         }
 
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void ComputeHoleBoundariesPossiblyVisibleFromQ() {
-            InitActiveEdgesAndActiveEdgesComparer();
+        private void ComputeHoleBoundariesPossiblyVisibleFromQ() {
+            this.InitActiveEdgesAndActiveEdgesComparer();
 
-            foreach (Polyline hole in holes)
-                ComputeVisiblePartOfTheHole(hole);
+            foreach (Polyline hole in this.holes) {
+                this.ComputeVisiblePartOfTheHole(hole);
+            }
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void InitActiveEdgesAndActiveEdgesComparer() {
-            activeEdgeComparer = new ActiveEdgeComparerWithRay {Pivot = q};
-            activeSidesTree = new RbTree<PolylinePoint>(activeEdgeComparer);
+        private void InitActiveEdgesAndActiveEdgesComparer() {
+            this.activeEdgeComparer = new ActiveEdgeComparerWithRay {Pivot = this.q };
+            this.activeSidesTree = new RbTree<PolylinePoint>(this.activeEdgeComparer);
         }
 
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void ComputeVisiblePartOfTheHole(Polyline hole) {
+        private void ComputeVisiblePartOfTheHole(Polyline hole) {
             //find a separating edge
             PolylinePoint a;
             var needToGoCounterclockWise = true;
 
-            for (a = hole.StartPoint; !HoleSideIsVisibleFromQ(hole, a); a = hole.Next(a)) {
+            for (a = hole.StartPoint; !this.HoleSideIsVisibleFromQ(hole, a); a = hole.Next(a)) {
                 Debug.Assert(needToGoCounterclockWise || a != hole.StartPoint);
                     //check that we have not done the full circle                
                 needToGoCounterclockWise = false;
@@ -330,19 +345,21 @@ namespace Microsoft.Msagl.Routing.Visibility {
             PolylinePoint b = hole.Next(a);
 
             //now the side a, a.Next - is separating
-            if (needToGoCounterclockWise)
-                while (HoleSideIsVisibleFromQ(hole, hole.Prev(a)))
+            if (needToGoCounterclockWise) {
+                while (this.HoleSideIsVisibleFromQ(hole, hole.Prev(a))) {
                     a = hole.Prev(a);
+                }
+            }
 
             //go clockwise starting from b
-            for (; HoleSideIsVisibleFromQ(hole, b); b = hole.Next(b)) {}
+            for (; this.HoleSideIsVisibleFromQ(hole, b); b = hole.Next(b)) {}
 
-            visibleBoundaries[hole] = new Stem(a, b);
+            this.visibleBoundaries[hole] = new Stem(a, b);
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        bool HoleSideIsVisibleFromQ(Polyline hole, PolylinePoint b) {
-            return Point.SignedDoubledTriangleArea(q, b.Point, hole.Next(b).Point) >= -ApproximateComparer.SquareOfDistanceEpsilon;
+        private bool HoleSideIsVisibleFromQ(Polyline hole, PolylinePoint b) {
+            return Point.SignedDoubledTriangleArea(this.q, b.Point, hole.Next(b).Point) >= -ApproximateComparer.SquareOfDistanceEpsilon;
         }
     }
 }

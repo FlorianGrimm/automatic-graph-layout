@@ -8,34 +8,34 @@ namespace Microsoft.Msagl.Layout.Incremental {
     /// i.e. u.X + separation less or equal v.X
     /// </summary>
     public class HorizontalSeparationConstraint : IConstraint {
-        bool equality;
+        private bool equality;
         /// <summary>
         /// 
         /// </summary>
         public bool IsEquality {
-            get { return equality; }
+            get { return this.equality; }
         }
         private Node u;
         /// <summary>
         /// Constrained to be vertically above the BottomNode
         /// </summary>
         public Node LeftNode {
-            get { return u; }
+            get { return this.u; }
         }
         private Node v;
         /// <summary>
         /// Constrained to be vertically below the TopNode
         /// </summary>
         public Node RightNode {
-            get { return v; }
+            get { return this.v; }
         }
         private double separation;
         /// <summary>
         /// We allow the separation of existing constraints to be modified by the user.
         /// </summary>
         public double Separation {
-            get { return separation; }
-            set { separation = value; }
+            get { return this.separation; }
+            set { this.separation = value; }
         }
         /// <summary>
         /// 
@@ -69,15 +69,15 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// 
         /// </summary>
         public virtual double Project() {
-            double uv = v.Center.X - u.Center.X;
-            double d = separation - uv;
+            double uv = this.v.Center.X - this.u.Center.X;
+            double d = this.separation - uv;
             if (d > 0) {
                 double
-                    wu = ((FiNode)u.AlgorithmData).stayWeight,
-                    wv = ((FiNode)v.AlgorithmData).stayWeight;
+                    wu = ((FiNode)this.u.AlgorithmData).stayWeight,
+                    wv = ((FiNode)this.v.AlgorithmData).stayWeight;
                 double f = d / (wu + wv);
-                u.Center = new Point(u.Center.X - wv * f, u.Center.Y);
-                v.Center = new Point(v.Center.X + wu * f, v.Center.Y);
+                this.u.Center = new Point(this.u.Center.X - wv * f, this.u.Center.Y);
+                this.v.Center = new Point(this.v.Center.X + wu * f, this.v.Center.Y);
                 return d;
             } else {
                 return 0;
@@ -91,6 +91,6 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// <summary>
         /// Get the list of nodes involved in the constraint
         /// </summary>
-        public IEnumerable<Node> Nodes { get { return new Node[] { u, v }; } }
+        public IEnumerable<Node> Nodes { get { return new Node[] { this.u, this.v }; } }
     }
 }

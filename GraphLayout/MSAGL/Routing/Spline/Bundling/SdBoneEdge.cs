@@ -10,43 +10,43 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         internal readonly VisibilityEdge VisibilityEdge;
         internal readonly SdVertex Source;
         internal readonly SdVertex Target;
-        int numberOfPassedPaths;
+        private int numberOfPassedPaths;
 
         internal SdBoneEdge(VisibilityEdge visibilityEdge, SdVertex source, SdVertex target) {
-            VisibilityEdge = visibilityEdge;
-            Source = source;
-            Target = target;
+            this.VisibilityEdge = visibilityEdge;
+            this.Source = source;
+            this.Target = target;
         }
 
         internal Point TargetPoint {
-            get { return Target.Point; }
+            get { return this.Target.Point; }
         }
 
         internal Point SourcePoint {
-            get { return Source.Point; }
+            get { return this.Source.Point; }
         }
 
         internal bool IsOccupied {
-            get { return numberOfPassedPaths > 0; }
+            get { return this.numberOfPassedPaths > 0; }
         }
 
         internal Set<CdtEdge> CrossedCdtEdges { get; set; }
 
         internal bool IsPassable {
             get {
-                return Target.IsTargetOfRouting || Source.IsSourceOfRouting ||
-                       VisibilityEdge.IsPassable == null ||
-                       VisibilityEdge.IsPassable();
+                return this.Target.IsTargetOfRouting || this.Source.IsSourceOfRouting ||
+                       this.VisibilityEdge.IsPassable == null ||
+                       this.VisibilityEdge.IsPassable();
             }
         }
 
         internal void AddOccupiedEdge() {
-            numberOfPassedPaths++;
+            this.numberOfPassedPaths++;
         }
 
         internal void RemoveOccupiedEdge() {
-            numberOfPassedPaths--;
-            Debug.Assert(numberOfPassedPaths >= 0);
+            this.numberOfPassedPaths--;
+            Debug.Assert(this.numberOfPassedPaths >= 0);
         }
     }
 }

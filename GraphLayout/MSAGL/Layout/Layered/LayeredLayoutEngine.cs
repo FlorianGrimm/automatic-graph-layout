@@ -24,33 +24,30 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <summary>
         /// the Log property
         /// </summary>
-        SugiyamaLayoutLogger SugiyamaLayoutLogger { get; set; }
+        private SugiyamaLayoutLogger SugiyamaLayoutLogger { get; set; }
 #endif
 
         /// <summary>
         /// If set on always forces using fast but not optimal Brandes algorithm for x-coordinate assignment.
         /// </summary>
-        bool Brandes { get; set; }
+        private bool Brandes { get; set; }
 
-        LayerArrays engineLayerArrays;
-
-        readonly GeometryGraph originalGraph;
-
-        ProperLayeredGraph properLayeredGraph;
+        private LayerArrays engineLayerArrays;
+        private readonly GeometryGraph originalGraph;
+        private ProperLayeredGraph properLayeredGraph;
 
         /// <summary>
         /// the sugiyama layout settings responsible for the algorithm parameters
         /// </summary>
-        readonly SugiyamaLayoutSettings sugiyamaSettings;
-        
-        Database database;
+        private readonly SugiyamaLayoutSettings sugiyamaSettings;
+        private Database database;
 
         /// <summary>
         /// Keeps assorted data associated with the graph.
         /// </summary>
         internal Database Database {
-            set { database = value; }
-            get { return database; }
+            set { this.database = value; }
+            get { return this.database; }
         }
 
         /// <summary>
@@ -62,30 +59,30 @@ namespace Microsoft.Msagl.Layout.Layered {
             this.properLayeredGraph = properLayeredGraph;
             this.sugiyamaSettings = sugiyamaSettings;
             this.database = database;
-            IntGraph = intGraph;
+            this.IntGraph = intGraph;
             this.nodeIdToIndex = nodeIdToIndex;
-            GluedDagSkeletonForLayering = gluedDagSkeletonForLayering;
-            LayersAreDoubled = layersAreDoubled;
+            this.GluedDagSkeletonForLayering = gluedDagSkeletonForLayering;
+            this.LayersAreDoubled = layersAreDoubled;
             this.constrainedOrdering = constrainedOrdering;
-            Brandes = brandes;
-            anchors = database.anchors;
+            this.Brandes = brandes;
+            this.anchors = database.anchors;
             this.xLayoutGraph = xLayoutGraph;
         }
 
-       
-        
+
+
 
         /// <summary>
         /// the width of dummy nodes
         /// </summary>
-        static double VirtualNodeWidth {
+        private static double VirtualNodeWidth {
             get { return 1; }
         }
 
         /// <summary>
         /// the height of dummy nodes
         /// </summary>
-        static double VirtualNodeHeight(SugiyamaLayoutSettings settings) {
+        private static double VirtualNodeHeight(SugiyamaLayoutSettings settings) {
             return settings.MinNodeHeight*1.5f/8;
         }
 
@@ -94,12 +91,12 @@ namespace Microsoft.Msagl.Layout.Layered {
 
         internal BasicGraph<Node, PolyIntEdge> IntGraph; //the input graph
 
-        BasicGraph<Node, PolyIntEdge> GluedDagSkeletonForLayering { get; set; }
+        private BasicGraph<Node, PolyIntEdge> GluedDagSkeletonForLayering { get; set; }
 
         //the graph obtained after X coord calculation
-        XLayoutGraph xLayoutGraph;
-        readonly Dictionary<Node, int> nodeIdToIndex;
-        Anchor[] anchors;
+        private XLayoutGraph xLayoutGraph;
+        private readonly Dictionary<Node, int> nodeIdToIndex;
+        private Anchor[] anchors;
 
         /// <summary>
         /// constructor
@@ -108,17 +105,19 @@ namespace Microsoft.Msagl.Layout.Layered {
                                      Dictionary<Node, int> nodeIdToIndex, SugiyamaLayoutSettings settings) {
             if (originalGraph != null) {
                 this.originalGraph = originalGraph;
-                sugiyamaSettings = settings;
-                IntGraph = graph;
-                Database = new Database();
+                this.sugiyamaSettings = settings;
+                this.IntGraph = graph;
+                this.Database = new Database();
                 this.nodeIdToIndex = nodeIdToIndex;
-                foreach (PolyIntEdge e in graph.Edges)
-                    database.RegisterOriginalEdgeInMultiedges(e);
+                foreach (PolyIntEdge e in graph.Edges) {
+                    this.database.RegisterOriginalEdgeInMultiedges(e);
+                }
 #if TEST_MSAGL
-                if (sugiyamaSettings.Reporting && SugiyamaLayoutLogger == null)
-                    SugiyamaLayoutLogger = new SugiyamaLayoutLogger();
+                if (this.sugiyamaSettings.Reporting && this.SugiyamaLayoutLogger == null) {
+                    this.SugiyamaLayoutLogger = new SugiyamaLayoutLogger();
+                }
 #endif
-                CycleRemoval();
+                this.CycleRemoval();
             }
         }
 
@@ -130,13 +129,13 @@ namespace Microsoft.Msagl.Layout.Layered {
         internal LayeredLayoutEngine(GeometryGraph originalGraph, SugiyamaLayoutSettings settings) {
             if (originalGraph != null) {
                 //enumerate the nodes - maps node indices to strings 
-                nodeIdToIndex = new Dictionary<Node, int>();
+                this.nodeIdToIndex = new Dictionary<Node, int>();
 
                 IList<Node> nodes = originalGraph.Nodes;
 
                 int index = 0;
                 foreach (Node n in nodes) {
-                    nodeIdToIndex[n] = index;
+                    this.nodeIdToIndex[n] = index;
                     index++;
                 }
 
@@ -146,27 +145,30 @@ namespace Microsoft.Msagl.Layout.Layered {
                 int i = 0;
                 foreach(var edge in edges){
                 
-                    if (edge.Source == null || edge.Target == null)
+                    if (edge.Source == null || edge.Target == null) {
                         throw new InvalidOperationException(); //"creating an edge with null source or target");
+                    }
 
-                    var intEdge = new PolyIntEdge(nodeIdToIndex[edge.Source], nodeIdToIndex[edge.Target], edge);
+                    var intEdge = new PolyIntEdge(this.nodeIdToIndex[edge.Source], this.nodeIdToIndex[edge.Target], edge);
 
                     intEdges[i] = intEdge;
                     i++;
                 }
 
-                IntGraph = new BasicGraph<Node, PolyIntEdge>(intEdges, originalGraph.Nodes.Count) {Nodes = nodes};
+                this.IntGraph = new BasicGraph<Node, PolyIntEdge>(intEdges, originalGraph.Nodes.Count) {Nodes = nodes};
                 this.originalGraph = originalGraph;
-                sugiyamaSettings = settings;
-                Database = new Database();
-                foreach (PolyIntEdge e in IntGraph.Edges)
-                    database.RegisterOriginalEdgeInMultiedges(e);
+                this.sugiyamaSettings = settings;
+                this.Database = new Database();
+                foreach (PolyIntEdge e in this.IntGraph.Edges) {
+                    this.database.RegisterOriginalEdgeInMultiedges(e);
+                }
 
 #if TEST_MSAGL
-                if (sugiyamaSettings.Reporting && SugiyamaLayoutLogger == null)
-                    SugiyamaLayoutLogger = new SugiyamaLayoutLogger();
+                if (this.sugiyamaSettings.Reporting && this.SugiyamaLayoutLogger == null) {
+                    this.SugiyamaLayoutLogger = new SugiyamaLayoutLogger();
+                }
 #endif
-                CycleRemoval();
+                this.CycleRemoval();
             }
         }
 
@@ -180,43 +182,51 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// replacing original multiple edges with a single edge.
         /// upDown constraints will be added as edges
         /// </summary>
-        void CreateGluedDagSkeletonForLayering() {
-            GluedDagSkeletonForLayering = new BasicGraph<Node, PolyIntEdge>(GluedDagSkeletonEdges(),
-                                                                        originalGraph.Nodes.Count);
-            SetGluedEdgesWeights();
+        private void CreateGluedDagSkeletonForLayering() {
+            this.GluedDagSkeletonForLayering = new BasicGraph<Node, PolyIntEdge>(this.GluedDagSkeletonEdges(),
+                                                                        this.originalGraph.Nodes.Count);
+            this.SetGluedEdgesWeights();
         }
 
-        void SetGluedEdgesWeights() {
+        private void SetGluedEdgesWeights() {
             var gluedPairsToGluedEdge = new Dictionary<IntPair, PolyIntEdge>();
-            foreach (PolyIntEdge ie in GluedDagSkeletonForLayering.Edges)
+            foreach (PolyIntEdge ie in this.GluedDagSkeletonForLayering.Edges) {
                 gluedPairsToGluedEdge[new IntPair(ie.Source, ie.Target)] = ie;
+            }
 
-            foreach (var t in database.Multiedges)
+            foreach (var t in this.database.Multiedges) {
                 if (t.Key.x != t.Key.y) {
-                    IntPair gluedPair = VerticalConstraints.GluedIntPair(t.Key);
-                    if (gluedPair.x == gluedPair.y) continue;
+                    IntPair gluedPair = this.VerticalConstraints.GluedIntPair(t.Key);
+                    if (gluedPair.x == gluedPair.y) {
+                        continue;
+                    }
+
                     PolyIntEdge gluedIntEdge = gluedPairsToGluedEdge[gluedPair];
-                    foreach (PolyIntEdge ie in t.Value)
+                    foreach (PolyIntEdge ie in t.Value) {
                         gluedIntEdge.Weight += ie.Weight;
+                    }
                 }
+            }
         }
 
-        IEnumerable<PolyIntEdge> GluedDagSkeletonEdges() {
+        private IEnumerable<PolyIntEdge> GluedDagSkeletonEdges() {
             var ret =
-                new Set<PolyIntEdge>(from kv in database.Multiedges
+                new Set<PolyIntEdge>(from kv in this.database.Multiedges
                                  where kv.Key.x != kv.Key.y
-                                 let e = VerticalConstraints.GluedIntEdge(kv.Value[0])
+                                 let e = this.VerticalConstraints.GluedIntEdge(kv.Value[0])
                                  where e.Source != e.Target
                                  select e);
 
-            IEnumerable<PolyIntEdge> gluedUpDownConstraints = from p in VerticalConstraints.GluedUpDownIntConstraints
+            IEnumerable<PolyIntEdge> gluedUpDownConstraints = from p in this.VerticalConstraints.GluedUpDownIntConstraints
                                                           select CreateUpDownConstrainedIntEdge(p);
-            foreach (PolyIntEdge edge in gluedUpDownConstraints)
+            foreach (PolyIntEdge edge in gluedUpDownConstraints) {
                 ret.Insert(edge);
+            }
+
             return ret;
         }
 
-        static PolyIntEdge CreateUpDownConstrainedIntEdge(IntPair intPair) {
+        private static PolyIntEdge CreateUpDownConstrainedIntEdge(IntPair intPair) {
             var intEdge = new PolyIntEdge(intPair.x, intPair.y);
             intEdge.Weight = 0;
             //we do not want the edge weight to contribute in to the sum but just take the constraint into account
@@ -235,110 +245,117 @@ namespace Microsoft.Msagl.Layout.Layered {
         override protected void RunInternal() {
 #if TEST_MSAGL
             Timer t = null;
-            if (sugiyamaSettings.Reporting) {
-                Report("removing cycles ... ");
+            if (this.sugiyamaSettings.Reporting) {
+                this.Report("removing cycles ... ");
                 t = new Timer();
                 t.Start();
             }
 #endif
-            if (originalGraph.Nodes.Count > 0) {
-                engineLayerArrays = CalculateLayers();
+            if (this.originalGraph.Nodes.Count > 0) {
+                this.engineLayerArrays = this.CalculateLayers();
   
-                if (!sugiyamaSettings.LayeringOnly)
-                    RunPostLayering();
-            } else
-                originalGraph.boundingBox.SetToEmpty();
+                if (!this.sugiyamaSettings.LayeringOnly) {
+                    this.RunPostLayering();
+                }
+            } else {
+                this.originalGraph.boundingBox.SetToEmpty();
+            }
 
 #if TEST_MSAGL
-            if (sugiyamaSettings.Reporting) {
+            if (this.sugiyamaSettings.Reporting) {
                 t.Stop();
-                Report(String.Format(CultureInfo.InvariantCulture, "done for {0}, nodes {1} edges {2}", t.Duration,
-                                     IntGraph.NodeCount, IntGraph.Edges.Count));
+                this.Report(String.Format(CultureInfo.InvariantCulture, "done for {0}, nodes {1} edges {2}", t.Duration,
+                                     this.IntGraph.NodeCount, this.IntGraph.Edges.Count));
             }
 
             //SugiyamaLayoutSettings.ShowDatabase(database);
 #endif
         }
 
-        void RunPostLayering() {
+        private void RunPostLayering() {
 #if TEST_MSAGL
             Timer t = null;
-            if (sugiyamaSettings.Reporting) {
-                Report("Calculating edge splines... ");
+            if (this.sugiyamaSettings.Reporting) {
+                this.Report("Calculating edge splines... ");
                 t = new Timer();
                 t.Start();
             }
 #endif
-            EdgeRoutingSettings routingSettings = sugiyamaSettings.EdgeRoutingSettings;
+            EdgeRoutingSettings routingSettings = this.sugiyamaSettings.EdgeRoutingSettings;
             var mode = routingSettings.EdgeRoutingMode;
-            if (constrainedOrdering != null) //we switch to splines when there are constraints, since the ordering of virtual nodes sometimes does not do a good job
+            if (this.constrainedOrdering != null) //we switch to splines when there are constraints, since the ordering of virtual nodes sometimes does not do a good job
+{
                 mode = EdgeRoutingMode.Spline;
+            }
+
             switch (mode) {
                 case EdgeRoutingMode.SugiyamaSplines:
-                    CalculateEdgeSplines();
+                    this.CalculateEdgeSplines();
                     break;
                 case EdgeRoutingMode.StraightLine:
-                    StraightLineEdges.SetStraightLineEdgesWithUnderlyingPolylines(originalGraph);
-                    SetLabels();
+                    StraightLineEdges.SetStraightLineEdgesWithUnderlyingPolylines(this.originalGraph);
+                    this.SetLabels();
                     break;
                 case EdgeRoutingMode.Spline:
-                    double padding = sugiyamaSettings.NodeSeparation/4;
-                    double loosePadding = SplineRouter.ComputeLooseSplinePadding(sugiyamaSettings.NodeSeparation,
+                    double padding = this.sugiyamaSettings.NodeSeparation/4;
+                    double loosePadding = SplineRouter.ComputeLooseSplinePadding(this.sugiyamaSettings.NodeSeparation,
                                                                                  padding);
-                    var router = new SplineRouter(originalGraph, padding, loosePadding, (Math.PI / 6), null);
+                    var router = new SplineRouter(this.originalGraph, padding, loosePadding, (Math.PI / 6), null);
                     router.Run();
-                    SetLabels();
+                    this.SetLabels();
                     break;
                 case EdgeRoutingMode.SplineBundling:
                     double coneAngle = routingSettings.ConeAngle;
-                    padding = sugiyamaSettings.NodeSeparation/20;
-                    loosePadding = SplineRouter.ComputeLooseSplinePadding(sugiyamaSettings.NodeSeparation, padding)*2;
-                    if (sugiyamaSettings.EdgeRoutingSettings.BundlingSettings == null)
-                        sugiyamaSettings.EdgeRoutingSettings.BundlingSettings = new BundlingSettings();
-                    var br = new SplineRouter(originalGraph, padding, loosePadding, coneAngle,
-                                              sugiyamaSettings.EdgeRoutingSettings.BundlingSettings);
+                    padding = this.sugiyamaSettings.NodeSeparation/20;
+                    loosePadding = SplineRouter.ComputeLooseSplinePadding(this.sugiyamaSettings.NodeSeparation, padding)*2;
+                    if (this.sugiyamaSettings.EdgeRoutingSettings.BundlingSettings == null) {
+                        this.sugiyamaSettings.EdgeRoutingSettings.BundlingSettings = new BundlingSettings();
+                    }
+
+                    var br = new SplineRouter(this.originalGraph, padding, loosePadding, coneAngle,
+                                              this.sugiyamaSettings.EdgeRoutingSettings.BundlingSettings);
                     br.Run();
-                    SetLabels();
+                    this.SetLabels();
                     break;
                 case EdgeRoutingMode.Rectilinear:
                 case EdgeRoutingMode.RectilinearToCenter:
                     //todo: are these good values?
-                    var rer = new RectilinearEdgeRouter(originalGraph, sugiyamaSettings.NodeSeparation/3,
-                                                        sugiyamaSettings.NodeSeparation/4,
+                    var rer = new RectilinearEdgeRouter(this.originalGraph, this.sugiyamaSettings.NodeSeparation/3,
+                                                        this.sugiyamaSettings.NodeSeparation/4,
                                                         true);
                     rer.RouteToCenterOfObstacles = routingSettings.EdgeRoutingMode ==
                                                    EdgeRoutingMode.RectilinearToCenter;
                     rer.BendPenaltyAsAPercentageOfDistance = routingSettings.BendPenalty;
                     rer.Run();
-                    SetLabels();
+                    this.SetLabels();
                     break;
             }
-            originalGraph.BoundingBox = originalGraph.PumpTheBoxToTheGraphWithMargins();
+            this.originalGraph.BoundingBox = this.originalGraph.PumpTheBoxToTheGraphWithMargins();
 
 #if TEST_MSAGL
-            if (sugiyamaSettings.Reporting) {
+            if (this.sugiyamaSettings.Reporting) {
                 t.Stop();
-                Report(String.Format(CultureInfo.InvariantCulture, "splines done for {0}", t.Duration));
+                this.Report(String.Format(CultureInfo.InvariantCulture, "splines done for {0}", t.Duration));
             }
 #endif
         }
 
-        void SetLabels() {
-            var edgeLabeller = new EdgeLabelPlacement(originalGraph);
+        private void SetLabels() {
+            var edgeLabeller = new EdgeLabelPlacement(this.originalGraph);
             edgeLabeller.Run();
         }
 
 
         public void IncrementalRun(Node node) {
-            PushLayers(node);
-           // LayoutAlgorithmSettings.ShowDatabase(database);
-            RunPostLayering();
+            this.PushLayers(node);
+            // LayoutAlgorithmSettings.ShowDatabase(database);
+            this.RunPostLayering();
         }
 
-        void PushLayers(Node node) {
-            int nodeIndex = IntGraph.Nodes.TakeWhile(n => node != n).Count();
+        private void PushLayers(Node node) {
+            int nodeIndex = this.IntGraph.Nodes.TakeWhile(n => node != n).Count();
 
-            Anchor nodeAnchor = anchors[nodeIndex];
+            Anchor nodeAnchor = this.anchors[nodeIndex];
 
 
             double delWidth = 0.5*(node.BoundaryCurve.BoundingBox.Width - nodeAnchor.Width);
@@ -351,91 +368,92 @@ namespace Microsoft.Msagl.Layout.Layered {
             nodeAnchor.BottomAnchor += delHight;
             nodeAnchor.Node = node;
 
-            PushDownLowerLayers(delHight, nodeIndex);
-            PushUpUpperLayers(delHight, nodeIndex);
+            this.PushDownLowerLayers(delHight, nodeIndex);
+            this.PushUpUpperLayers(delHight, nodeIndex);
 
-            if (xLayoutGraph != null) {
-                FixEdgeSeparation(nodeIndex);
-                CalculateXLayersByGansnerNorthOnProperLayeredGraph();
-            } else
-                CalculateXPositionsByBrandes(engineLayerArrays);
+            if (this.xLayoutGraph != null) {
+                this.FixEdgeSeparation(nodeIndex);
+                this.CalculateXLayersByGansnerNorthOnProperLayeredGraph();
+            } else {
+                this.CalculateXPositionsByBrandes(this.engineLayerArrays);
+            }
 
-            for (int i = 0; i < IntGraph.NodeCount; i++) {
-                Node n = IntGraph.Nodes[i];
-                Anchor a = anchors[i];
+            for (int i = 0; i < this.IntGraph.NodeCount; i++) {
+                Node n = this.IntGraph.Nodes[i];
+                Anchor a = this.anchors[i];
                 n.Center = a.Origin;
                 a.Node = n;
             }
         }
 
-        void FixEdgeSeparation(int nodeIndex) {
-            int nodeLayerIndex = engineLayerArrays.Y[nodeIndex];
-            int[] layer = engineLayerArrays.Layers[nodeLayerIndex];
-            int nodePosition = engineLayerArrays.X[nodeIndex];
-            Anchor a = anchors[nodeIndex];
+        private void FixEdgeSeparation(int nodeIndex) {
+            int nodeLayerIndex = this.engineLayerArrays.Y[nodeIndex];
+            int[] layer = this.engineLayerArrays.Layers[nodeLayerIndex];
+            int nodePosition = this.engineLayerArrays.X[nodeIndex];
+            Anchor a = this.anchors[nodeIndex];
             if (nodePosition > 0) {
                 int target = layer[nodePosition - 1];
-                foreach (PolyIntEdge ie in xLayoutGraph.OutEdges(nodeIndex))
+                foreach (PolyIntEdge ie in this.xLayoutGraph.OutEdges(nodeIndex)) {
                     if (ie.Target == target) {
                         ie.Separation =
-                            (int) (sugiyamaSettings.NodeSeparation + a.LeftAnchor + anchors[target].RightAnchor + 1);
+                            (int) (this.sugiyamaSettings.NodeSeparation + a.LeftAnchor + this.anchors[target].RightAnchor + 1);
                         break;
                     }
+                }
             }
             if (nodePosition < layer.Length - 1) {
                 int source = layer[nodePosition + 1];
-                foreach (PolyIntEdge ie in xLayoutGraph.InEdges(nodeIndex))
+                foreach (PolyIntEdge ie in this.xLayoutGraph.InEdges(nodeIndex)) {
                     if (ie.Source == source) {
                         ie.Separation =
-                            (int) (sugiyamaSettings.NodeSeparation + a.RightAnchor + anchors[source].LeftAnchor + 1);
+                            (int) (this.sugiyamaSettings.NodeSeparation + a.RightAnchor + this.anchors[source].LeftAnchor + 1);
                         break;
                     }
+                }
             }
         }
 
-
-        void MoveNode(Point del, int i) {
-            if (i < IntGraph.Nodes.Count) {
-                Node node = IntGraph.Nodes[i];
+        private void MoveNode(Point del, int i) {
+            if (i < this.IntGraph.Nodes.Count) {
+                Node node = this.IntGraph.Nodes[i];
                 node.Center += del;
-                anchors[i].Node = node;
+                this.anchors[i].Node = node;
             }
         }
 
-
-        void PushUpUpperLayers(double delHight, int nodeIndex) {
+        private void PushUpUpperLayers(double delHight, int nodeIndex) {
             var delta = new Point(0, delHight);
-            int layerIndex = engineLayerArrays.Y[nodeIndex];
-            for (int i = layerIndex + 1; i < engineLayerArrays.Layers.Length; i++) {
-                int[] layer = engineLayerArrays.Layers[i];
+            int layerIndex = this.engineLayerArrays.Y[nodeIndex];
+            for (int i = layerIndex + 1; i < this.engineLayerArrays.Layers.Length; i++) {
+                int[] layer = this.engineLayerArrays.Layers[i];
                 foreach (int j in layer) {
-                    MoveNode(delta, j);
-                    anchors[j].Move(delta);
+                    this.MoveNode(delta, j);
+                    this.anchors[j].Move(delta);
                 }
             }
         }
 
-        void PushDownLowerLayers(double delHight, int nodeIndex) {
+        private void PushDownLowerLayers(double delHight, int nodeIndex) {
             var delta = new Point(0, -delHight);
-            int layerIndex = engineLayerArrays.Y[nodeIndex];
+            int layerIndex = this.engineLayerArrays.Y[nodeIndex];
             for (int i = 0; i < layerIndex; i++) {
-                int[] layer = engineLayerArrays.Layers[i];
+                int[] layer = this.engineLayerArrays.Layers[i];
                 foreach (int j in layer) {
-                    MoveNode(delta, j);
-                    anchors[j].Move(delta);
+                    this.MoveNode(delta, j);
+                    this.anchors[j].Move(delta);
                 }
             }
         }
 
-        LayerArrays CalculateLayers() {
-            CreateGluedDagSkeletonForLayering();
+        private LayerArrays CalculateLayers() {
+            this.CreateGluedDagSkeletonForLayering();
 
             #region reporting
 
 #if TEST_MSAGL
             Timer t = null;
-            if (sugiyamaSettings.Reporting) {
-                Report("calculating layers ... ");
+            if (this.sugiyamaSettings.Reporting) {
+                this.Report("calculating layers ... ");
                 t = new Timer();
                 t.Start();
             }
@@ -443,16 +461,16 @@ namespace Microsoft.Msagl.Layout.Layered {
 
             #endregion
 
-            LayerArrays layerArrays = CalculateLayerArrays();
+            LayerArrays layerArrays = this.CalculateLayerArrays();
 
-            UpdateNodePositionData();
+            this.UpdateNodePositionData();
 
             #region reporting
 
 #if TEST_MSAGL
-            if (sugiyamaSettings.Reporting) {
+            if (this.sugiyamaSettings.Reporting) {
                 t.Stop();
-                Report(String.Format(CultureInfo.CurrentCulture, "done with layers for {0}\n", t.Duration));
+                this.Report(String.Format(CultureInfo.CurrentCulture, "done with layers for {0}\n", t.Duration));
             }
 #endif
 
@@ -465,17 +483,18 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <summary>
         /// pushes positions from the anchors to node Centers
         /// </summary>
-        void UpdateNodePositionData() {
-            TryToSatisfyMinWidhtAndMinHeight();
+        private void UpdateNodePositionData() {
+            this.TryToSatisfyMinWidhtAndMinHeight();
 
-            for (int i = 0; i < IntGraph.Nodes.Count && i < database.Anchors.Length; i++)
-                IntGraph.Nodes[i].Center = database.Anchors[i].Origin;
+            for (int i = 0; i < this.IntGraph.Nodes.Count && i < this.database.Anchors.Length; i++) {
+                this.IntGraph.Nodes[i].Center = this.database.Anchors[i].Origin;
+            }
 
             if (this.sugiyamaSettings.GridSizeByX > 0)
             {
-                for (int i = 0; i < originalGraph.Nodes.Count; i++)
+                for (int i = 0; i < this.originalGraph.Nodes.Count; i++)
                 {
-                    SnapLeftSidesOfTheNodeToGrid(i, this.sugiyamaSettings.GridSizeByX);
+                    this.SnapLeftSidesOfTheNodeToGrid(i, this.sugiyamaSettings.GridSizeByX);
                 }
             }
 
@@ -483,9 +502,9 @@ namespace Microsoft.Msagl.Layout.Layered {
 
         private void SnapLeftSidesOfTheNodeToGrid(int i, double gridSize)
         {
-            Node node = IntGraph.Nodes[i];
+            Node node = this.IntGraph.Nodes[i];
 
-            Anchor anchor = database.Anchors[i];
+            Anchor anchor = this.database.Anchors[i];
             anchor.LeftAnchor -= gridSize / 2;
             anchor.RightAnchor -= gridSize / 2;
 
@@ -512,175 +531,194 @@ namespace Microsoft.Msagl.Layout.Layered {
             anchor.X = node.Center.X;
         }
 
-        void TryToSatisfyMinWidhtAndMinHeight() {
-            TryToSatisfyMinWidth();
-            TryToSatisfyMinHeight();
+        private void TryToSatisfyMinWidhtAndMinHeight() {
+            this.TryToSatisfyMinWidth();
+            this.TryToSatisfyMinHeight();
         }
 
-        void TryToSatisfyMinWidth() {
-            if (sugiyamaSettings.MinimalWidth == 0)
+        private void TryToSatisfyMinWidth() {
+            if (this.sugiyamaSettings.MinimalWidth == 0) {
                 return;
-            double w = GetCurrentWidth();
-            if (w < sugiyamaSettings.MinimalWidth)
-                StretchWidth();
+            }
+
+            double w = this.GetCurrentWidth();
+            if (w < this.sugiyamaSettings.MinimalWidth) {
+                this.StretchWidth();
+            }
         }
 
         /// <summary>
         /// </summary>
-        void StretchWidth() {
+        private void StretchWidth() {
             //calculate the desired span of the anchor centers and the current span of anchor center
             var desiredSpan = new RealNumberSpan();
-            foreach (Node node in originalGraph.Nodes) {
+            foreach (Node node in this.originalGraph.Nodes) {
                 desiredSpan.AddValue(node.BoundingBox.Width/2);
-                desiredSpan.AddValue(sugiyamaSettings.MinimalWidth - node.BoundingBox.Width/2);
+                desiredSpan.AddValue(this.sugiyamaSettings.MinimalWidth - node.BoundingBox.Width/2);
             }
 
             var currentSpan = new RealNumberSpan();
-            foreach (Anchor anchor in NodeAnchors())
+            foreach (Anchor anchor in this.NodeAnchors()) {
                 currentSpan.AddValue(anchor.X);
+            }
 
             if (currentSpan.Length > ApproximateComparer.DistanceEpsilon) {
                 double stretch = desiredSpan.Length/currentSpan.Length;
-                if (stretch > 1)
-                    foreach (Anchor a in anchors)
+                if (stretch > 1) {
+                    foreach (Anchor a in this.anchors) {
                         a.X *= stretch;
+                    }
+                }
             }
         }
 
-        void TryToSatisfyMinHeight() {
-            if (sugiyamaSettings.MinimalHeight == 0)
+        private void TryToSatisfyMinHeight() {
+            if (this.sugiyamaSettings.MinimalHeight == 0) {
                 return;
-            double h = GetCurrentHeight();
-            if (h < sugiyamaSettings.MinimalHeight)
-                StretchHeight();
+            }
+
+            double h = this.GetCurrentHeight();
+            if (h < this.sugiyamaSettings.MinimalHeight) {
+                this.StretchHeight();
+            }
         }
 
-        double GetCurrentHeight() {
+        private double GetCurrentHeight() {
             var span = new RealNumberSpan();
-            foreach (Anchor anchor in NodeAnchors()) {
+            foreach (Anchor anchor in this.NodeAnchors()) {
                 span.AddValue(anchor.Top);
                 span.AddValue(anchor.Bottom);
             }
             return span.Length;
         }
 
-        void StretchHeight() {
+        private void StretchHeight() {
             var desiredSpan = new RealNumberSpan();
-            foreach (Node node in originalGraph.Nodes) {
+            foreach (Node node in this.originalGraph.Nodes) {
                 desiredSpan.AddValue(node.BoundingBox.Height/2);
-                desiredSpan.AddValue(sugiyamaSettings.MinimalHeight - node.BoundingBox.Height/2);
+                desiredSpan.AddValue(this.sugiyamaSettings.MinimalHeight - node.BoundingBox.Height/2);
             }
 
             var currentSpan = new RealNumberSpan();
-            foreach (Anchor anchor in NodeAnchors())
+            foreach (Anchor anchor in this.NodeAnchors()) {
                 currentSpan.AddValue(anchor.Y);
+            }
 
             if (currentSpan.Length > ApproximateComparer.DistanceEpsilon) {
                 double stretch = desiredSpan.Length/currentSpan.Length;
-                if (stretch > 1)
-                    foreach (Anchor a in anchors)
+                if (stretch > 1) {
+                    foreach (Anchor a in this.anchors) {
                         a.Y *= stretch;
+                    }
+                }
             }
         }
 
-        IEnumerable<Anchor> NodeAnchors() {
-            return anchors.Take(Math.Min(IntGraph.Nodes.Count, anchors.Length));
+        private IEnumerable<Anchor> NodeAnchors() {
+            return this.anchors.Take(Math.Min(this.IntGraph.Nodes.Count, this.anchors.Length));
         }
 
-        double GetCurrentWidth() {
+        private double GetCurrentWidth() {
             var span = new RealNumberSpan();
-            foreach (Anchor anchor in NodeAnchors()) {
+            foreach (Anchor anchor in this.NodeAnchors()) {
                 span.AddValue(anchor.Left);
                 span.AddValue(anchor.Right);
             }
             return span.Length;
         }
 
-
-        void StretchToDesiredAspectRatio(double aspectRatio, double desiredAR) {
-            if (aspectRatio > desiredAR)
-                StretchInYDirection(aspectRatio/desiredAR);
-            else if (aspectRatio < desiredAR)
-                StretchInXDirection(desiredAR/aspectRatio);
+        private void StretchToDesiredAspectRatio(double aspectRatio, double desiredAR) {
+            if (aspectRatio > desiredAR) {
+                this.StretchInYDirection(aspectRatio/desiredAR);
+            } else if (aspectRatio < desiredAR) {
+                this.StretchInXDirection(desiredAR/aspectRatio);
+            }
         }
 
-        void StretchInYDirection(double scaleFactor) {
-            double center = (originalGraph.BoundingBox.Top + originalGraph.BoundingBox.Bottom)/2;
-            foreach (Anchor a in Database.Anchors) {
+        private void StretchInYDirection(double scaleFactor) {
+            double center = (this.originalGraph.BoundingBox.Top + this.originalGraph.BoundingBox.Bottom)/2;
+            foreach (Anchor a in this.Database.Anchors) {
                 a.BottomAnchor *= scaleFactor;
                 a.TopAnchor *= scaleFactor;
                 a.Y = center + scaleFactor*(a.Y - center);
             }
-            double h = originalGraph.Height*scaleFactor;
-            originalGraph.BoundingBox = new Rectangle(originalGraph.BoundingBox.Left, center + h/2,
-                                                      originalGraph.BoundingBox.Right, center - h/2);
+            double h = this.originalGraph.Height*scaleFactor;
+            this.originalGraph.BoundingBox = new Rectangle(this.originalGraph.BoundingBox.Left, center + h/2,
+                                                      this.originalGraph.BoundingBox.Right, center - h/2);
         }
 
-        void StretchInXDirection(double scaleFactor) {
-            double center = (originalGraph.BoundingBox.Left + originalGraph.BoundingBox.Right)/2;
-            foreach (Anchor a in Database.Anchors) {
+        private void StretchInXDirection(double scaleFactor) {
+            double center = (this.originalGraph.BoundingBox.Left + this.originalGraph.BoundingBox.Right)/2;
+            foreach (Anchor a in this.Database.Anchors) {
                 a.LeftAnchor *= scaleFactor;
                 a.RightAnchor *= scaleFactor;
                 a.X = center + scaleFactor*(a.X - center);
             }
-            double w = originalGraph.Width*scaleFactor;
-            originalGraph.BoundingBox = new Rectangle(center - w/2, originalGraph.BoundingBox.Top, center + w/2,
-                                                      originalGraph.BoundingBox.Bottom);
+            double w = this.originalGraph.Width*scaleFactor;
+            this.originalGraph.BoundingBox = new Rectangle(center - w/2, this.originalGraph.BoundingBox.Top, center + w/2,
+                                                      this.originalGraph.BoundingBox.Bottom);
         }
 
-        LayerArrays CalculateLayerArrays() {
-            LayerArrays layerArrays = CalculateYLayers();
+        private LayerArrays CalculateLayerArrays() {
+            LayerArrays layerArrays = this.CalculateYLayers();
 
-            if (constrainedOrdering == null) {
-                DecideIfUsingFastXCoordCalculation(layerArrays);
+            if (this.constrainedOrdering == null) {
+                this.DecideIfUsingFastXCoordCalculation(layerArrays);
 
-                CalculateAnchorsAndYPositions(layerArrays);
+                this.CalculateAnchorsAndYPositions(layerArrays);
 
-                if (Brandes)
-                    CalculateXPositionsByBrandes(layerArrays);
-                else
-                    CalculateXLayersByGansnerNorth(layerArrays);
-            } else
-                anchors = database.Anchors;
+                if (this.Brandes) {
+                    this.CalculateXPositionsByBrandes(layerArrays);
+                } else {
+                    this.CalculateXLayersByGansnerNorth(layerArrays);
+                }
+            } else {
+                this.anchors = this.database.Anchors;
+            }
 
-            OptimizeEdgeLabelsLocations();
+            this.OptimizeEdgeLabelsLocations();
 
-            engineLayerArrays = layerArrays;
-            StraightensShortEdges();
+            this.engineLayerArrays = layerArrays;
+            this.StraightensShortEdges();
 
             double aspectRatio;
-            CalculateOriginalGraphBox(out aspectRatio);
+            this.CalculateOriginalGraphBox(out aspectRatio);
 
-            if (sugiyamaSettings.AspectRatio != 0)
-                StretchToDesiredAspectRatio(aspectRatio, sugiyamaSettings.AspectRatio);
+            if (this.sugiyamaSettings.AspectRatio != 0) {
+                this.StretchToDesiredAspectRatio(aspectRatio, this.sugiyamaSettings.AspectRatio);
+            }
 
             return layerArrays;
         }
 
-        void DecideIfUsingFastXCoordCalculation(LayerArrays layerArrays) {
-            if (layerArrays.X.Length >= sugiyamaSettings.BrandesThreshold)
-                Brandes = true;
+        private void DecideIfUsingFastXCoordCalculation(LayerArrays layerArrays) {
+            if (layerArrays.X.Length >= this.sugiyamaSettings.BrandesThreshold) {
+                this.Brandes = true;
+            }
 #if !SHARPKIT
             else {
                 string s = Environment.GetEnvironmentVariable("Brandes");
-                if (!String.IsNullOrEmpty(s) && String.Compare(s, "on", true, CultureInfo.CurrentCulture) == 0)
-                    Brandes = true;
+                if (!String.IsNullOrEmpty(s) && String.Compare(s, "on", true, CultureInfo.CurrentCulture) == 0) {
+                    this.Brandes = true;
+                }
             }
 #endif
         }
 
-        void StraightensShortEdges() {
-            for (; StraightenEdgePaths();) {}
+        private void StraightensShortEdges() {
+            for (; this.StraightenEdgePaths();) {}
         }
 
-
-        bool StraightenEdgePaths() {
+        private bool StraightenEdgePaths() {
             bool ret = false;
-            foreach (PolyIntEdge e in database.AllIntEdges)
-                if (e.LayerSpan == 2)
+            foreach (PolyIntEdge e in this.database.AllIntEdges) {
+                if (e.LayerSpan == 2) {
                     ret =
-                        ShiftVertexWithNeighbors(e.LayerEdges[0].Source, e.LayerEdges[0].Target, e.LayerEdges[1].Target) ||
+                        this.ShiftVertexWithNeighbors(e.LayerEdges[0].Source, e.LayerEdges[0].Target, e.LayerEdges[1].Target) ||
                         ret;
+                }
+            }
+
             return ret;
             //foreach (LayerEdge[][] edgeStrings in this.dataBase.RefinedEdges.Values)
             //    if (edgeStrings[0].Length == 2)
@@ -689,116 +727,125 @@ namespace Microsoft.Msagl.Layout.Layered {
             //return ret;
         }
 
-
-        bool ShiftVertexWithNeighbors(int u, int i, int v) {
-            Anchor upper = database.Anchors[u];
-            Anchor lower = database.Anchors[v];
-            Anchor iAnchor = database.Anchors[i];
+        private bool ShiftVertexWithNeighbors(int u, int i, int v) {
+            Anchor upper = this.database.Anchors[u];
+            Anchor lower = this.database.Anchors[v];
+            Anchor iAnchor = this.database.Anchors[i];
             //calculate the ideal x position for i
             // (x- upper.x)/(iAnchor.y-upper.y)=(lower.x-upper.x)/(lower.y-upper.y)
 
             double x = (iAnchor.Y - upper.Y)*(lower.X - upper.X)/(lower.Y - upper.Y) + upper.X;
             const double eps = 0.0001;
-            if (x > iAnchor.X + eps)
-                return TryShiftToTheRight(x, i);
-            if (x < iAnchor.X - eps)
-                return TryShiftToTheLeft(x, i);
+            if (x > iAnchor.X + eps) {
+                return this.TryShiftToTheRight(x, i);
+            }
+
+            if (x < iAnchor.X - eps) {
+                return this.TryShiftToTheLeft(x, i);
+            }
+
             return false;
         }
 
-
-        bool TryShiftToTheLeft(double x, int v) {
-            int[] layer = engineLayerArrays.Layers[engineLayerArrays.Y[v]];
-            int vPosition = engineLayerArrays.X[v];
+        private bool TryShiftToTheLeft(double x, int v) {
+            int[] layer = this.engineLayerArrays.Layers[this.engineLayerArrays.Y[v]];
+            int vPosition = this.engineLayerArrays.X[v];
             if (vPosition > 0) {
-                Anchor uAnchor = database.Anchors[layer[vPosition - 1]];
+                Anchor uAnchor = this.database.Anchors[layer[vPosition - 1]];
                 double allowedX = Math.Max(
-                    uAnchor.Right + sugiyamaSettings.NodeSeparation + database.Anchors[v].LeftAnchor, x);
-                if (allowedX < database.Anchors[v].X - 1) {
-                    database.Anchors[v].X = allowedX;
+                    uAnchor.Right + this.sugiyamaSettings.NodeSeparation + this.database.Anchors[v].LeftAnchor, x);
+                if (allowedX < this.database.Anchors[v].X - 1) {
+                    this.database.Anchors[v].X = allowedX;
                     return true;
                 }
                 return false;
             }
-            database.Anchors[v].X = x;
+            this.database.Anchors[v].X = x;
             return true;
         }
 
-        bool TryShiftToTheRight(double x, int v) {
-            int[] layer = engineLayerArrays.Layers[engineLayerArrays.Y[v]];
-            int vPosition = engineLayerArrays.X[v];
+        private bool TryShiftToTheRight(double x, int v) {
+            int[] layer = this.engineLayerArrays.Layers[this.engineLayerArrays.Y[v]];
+            int vPosition = this.engineLayerArrays.X[v];
             if (vPosition < layer.Length - 1) {
-                Anchor uAnchor = database.Anchors[layer[vPosition + 1]];
+                Anchor uAnchor = this.database.Anchors[layer[vPosition + 1]];
                 double allowedX = Math.Min(
-                    uAnchor.Left - sugiyamaSettings.NodeSeparation - database.Anchors[v].RightAnchor, x);
-                if (allowedX > database.Anchors[v].X + 1) {
-                    database.Anchors[v].X = allowedX;
+                    uAnchor.Left - this.sugiyamaSettings.NodeSeparation - this.database.Anchors[v].RightAnchor, x);
+                if (allowedX > this.database.Anchors[v].X + 1) {
+                    this.database.Anchors[v].X = allowedX;
                     return true;
                 }
                 return false;
             }
-            database.Anchors[v].X = x;
+            this.database.Anchors[v].X = x;
             return true;
         }
 
-        LayerArrays CalculateYLayers() {
+        private LayerArrays CalculateYLayers() {
             LayerArrays layerArrays =
-                YLayeringAndOrdering(new NetworkSimplexForGeneralGraph(GluedDagSkeletonForLayering, CancelToken));
-            if (constrainedOrdering != null)
+                this.YLayeringAndOrdering(new NetworkSimplexForGeneralGraph(this.GluedDagSkeletonForLayering, this.CancelToken));
+            if (this.constrainedOrdering != null) {
                 return layerArrays;
-            return InsertLayersIfNeeded(layerArrays);
+            }
+
+            return this.InsertLayersIfNeeded(layerArrays);
         }
 
-        VerticalConstraintsForSugiyama VerticalConstraints {
-            get { return sugiyamaSettings.VerticalConstraints; }
+        private VerticalConstraintsForSugiyama VerticalConstraints {
+            get { return this.sugiyamaSettings.VerticalConstraints; }
         }
 
-        HorizontalConstraintsForSugiyama HorizontalConstraints {
-            get { return sugiyamaSettings.HorizontalConstraints; }
+        private HorizontalConstraintsForSugiyama HorizontalConstraints {
+            get { return this.sugiyamaSettings.HorizontalConstraints; }
         }
 
-        void CalculateAnchorsAndYPositions(LayerArrays layerArrays) {
-            CalculateAnchorSizes(database, out anchors, properLayeredGraph, originalGraph, IntGraph, sugiyamaSettings);
-            CalcInitialYAnchorLocations(layerArrays, 500, originalGraph, database, IntGraph, sugiyamaSettings,
-                                        LayersAreDoubled);
+        private void CalculateAnchorsAndYPositions(LayerArrays layerArrays) {
+            CalculateAnchorSizes(this.database, out this.anchors, this.properLayeredGraph, this.originalGraph, this.IntGraph, this.sugiyamaSettings);
+            CalcInitialYAnchorLocations(layerArrays, 500, this.originalGraph, this.database, this.IntGraph, this.sugiyamaSettings,
+                                        this.LayersAreDoubled);
         }
 
         /// <summary>
         /// put some labels to the left of the splines if it makes sense
         /// </summary>
-        void OptimizeEdgeLabelsLocations() {
-            for (int i = 0; i < anchors.Length; i++) {
-                Anchor a = anchors[i];
+        private void OptimizeEdgeLabelsLocations() {
+            for (int i = 0; i < this.anchors.Length; i++) {
+                Anchor a = this.anchors[i];
                 if (a.LabelToTheRightOfAnchorCenter) {
                     //by default the label is put to the right of the spline
                     Anchor predecessor;
                     Anchor successor;
-                    GetSuccessorAndPredecessor(i, out predecessor, out successor);
+                    this.GetSuccessorAndPredecessor(i, out predecessor, out successor);
                     if (!TryToPutLabelOutsideOfAngle(a, predecessor, successor)) {
                         double sumNow = (predecessor.Origin - a.Origin).Length + (successor.Origin - a.Origin).Length;
                         double nx = a.Right - a.LeftAnchor; //new potential anchor center 
                         var xy = new Point(nx, a.Y);
                         double sumWouldBe = (predecessor.Origin - xy).Length + (successor.Origin - xy).Length;
                         if (sumWouldBe < sumNow) //we need to swap
+{
                             PutLabelToTheLeft(a);
+                        }
                     }
                 }
             }
         }
 
-        static bool TryToPutLabelOutsideOfAngle(Anchor a, Anchor predecessor, Anchor successor) {
+        private static bool TryToPutLabelOutsideOfAngle(Anchor a, Anchor predecessor, Anchor successor) {
             if (a.LabelToTheRightOfAnchorCenter) {
                 if (Point.GetTriangleOrientation(predecessor.Origin, a.Origin, successor.Origin) ==
-                    TriangleOrientation.Clockwise)
+                    TriangleOrientation.Clockwise) {
                     return true;
+                }
 
                 double la = a.LeftAnchor;
                 double ra = a.RightAnchor;
                 double x = a.X;
                 PutLabelToTheLeft(a);
                 if (Point.GetTriangleOrientation(predecessor.Origin, a.Origin, successor.Origin) ==
-                    TriangleOrientation.Counterclockwise)
+                    TriangleOrientation.Counterclockwise) {
                     return true;
+                }
+
                 a.X = x;
                 a.LeftAnchor = la;
                 a.RightAnchor = ra;
@@ -809,7 +856,7 @@ namespace Microsoft.Msagl.Layout.Layered {
             return false;
         }
 
-        static void PutLabelToTheLeft(Anchor a) {
+        private static void PutLabelToTheLeft(Anchor a) {
             double r = a.Right;
             double t = a.LeftAnchor;
             a.LeftAnchor = a.RightAnchor;
@@ -820,19 +867,21 @@ namespace Microsoft.Msagl.Layout.Layered {
             a.LabelToTheRightOfAnchorCenter = false;
         }
 
-        void GetSuccessorAndPredecessor(int i, out Anchor p, out Anchor s) {
+        private void GetSuccessorAndPredecessor(int i, out Anchor p, out Anchor s) {
             int predecessor = 10; //the value does not matter, just to silence the compiler
-            foreach (LayerEdge ie in properLayeredGraph.InEdges(i))
+            foreach (LayerEdge ie in this.properLayeredGraph.InEdges(i)) {
                 predecessor = ie.Source; // there will be only one
+            }
 
             int successor = 10; // the value does not matter, just to silence the compiler
-            foreach (LayerEdge ie in properLayeredGraph.OutEdges(i))
+            foreach (LayerEdge ie in this.properLayeredGraph.OutEdges(i)) {
                 successor = ie.Target; //there will be only one
+            }
 
             //we compare the sum of length of projections of edges (predecessor,i), (i,successor) to x in cases when the label is to the right and to the left
-            p = anchors[predecessor];
+            p = this.anchors[predecessor];
 
-            s = anchors[successor];
+            s = this.anchors[successor];
         }
 
         //void MakeXOfAnchorsPositive(LayerArrays layerArrays)
@@ -870,13 +919,13 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <summary>
         /// Create a DAG from the given graph
         /// </summary>
-        void CycleRemoval() {
-            VerticalConstraintsForSugiyama verticalConstraints = sugiyamaSettings.VerticalConstraints;
+        private void CycleRemoval() {
+            VerticalConstraintsForSugiyama verticalConstraints = this.sugiyamaSettings.VerticalConstraints;
             IEnumerable<IEdge> feedbackSet = verticalConstraints.IsEmpty
-                                                 ? CycleRemoval<PolyIntEdge>.GetFeedbackSet(IntGraph)
-                                                 : verticalConstraints.GetFeedbackSet(IntGraph, nodeIdToIndex);
+                                                 ? CycleRemoval<PolyIntEdge>.GetFeedbackSet(this.IntGraph)
+                                                 : verticalConstraints.GetFeedbackSet(this.IntGraph, this.nodeIdToIndex);
 
-            database.AddFeedbackSet(feedbackSet);
+            this.database.AddFeedbackSet(feedbackSet);
         }
 
 
@@ -885,8 +934,8 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// Prints the function to the console and to the log if the log file name is given
         /// </summary>
         /// <param name="s"></param>
-        void Report(string s) {
-            SugiyamaLayoutLogger.Write(s);
+        private void Report(string s) {
+            this.SugiyamaLayoutLogger.Write(s);
         }
 #endif
 
@@ -895,18 +944,19 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// thus, in fact, defining node, including dummy nodes, locations.
         /// </summary>
         /// <param name="layerArrays"></param>
-        void CalculateXLayersByGansnerNorth(LayerArrays layerArrays) {
-            xLayoutGraph = CreateXLayoutGraph(layerArrays);
-            CalculateXLayersByGansnerNorthOnProperLayeredGraph();
+        private void CalculateXLayersByGansnerNorth(LayerArrays layerArrays) {
+            this.xLayoutGraph = this.CreateXLayoutGraph(layerArrays);
+            this.CalculateXLayersByGansnerNorthOnProperLayeredGraph();
         }
 
-        void CalculateXLayersByGansnerNorthOnProperLayeredGraph() {
-            int[] xLayers = (new NetworkSimplex(xLayoutGraph, null)).GetLayers();
+        private void CalculateXLayersByGansnerNorthOnProperLayeredGraph() {
+            int[] xLayers = (new NetworkSimplex(this.xLayoutGraph, null)).GetLayers();
 
             //TestYXLayers(layerArrays, xLayers);//this will not be called in the release version
 
-            for (int i = 0; i < database.Anchors.Length; i++)
-                anchors[i].X = xLayers[i];
+            for (int i = 0; i < this.database.Anchors.Length; i++) {
+                this.anchors[i].X = xLayers[i];
+            }
         }
 
         //[System.Diagnostics.Conditional("TEST_MSAGL")]
@@ -941,18 +991,20 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         /// <param name="layering"></param>
         /// <param name="layerArrays"></param>
-        void CreaeteProperLayeredGraph(int[] layering, out LayerArrays layerArrays) {
+        private void CreaeteProperLayeredGraph(int[] layering, out LayerArrays layerArrays) {
             int n = layering.Length;
             int nOfVV = 0;
 
 
-            foreach (PolyIntEdge e in database.SkeletonEdges()) {
+            foreach (PolyIntEdge e in this.database.SkeletonEdges()) {
                 int span = EdgeSpan(layering, e);
 
                 Debug.Assert(span >= 0);
 
-                if (span > 0)
+                if (span > 0) {
                     e.LayerEdges = new LayerEdge[span];
+                }
+
                 int pe = 0; //offset in the string
 
                 if (span > 1) {
@@ -981,35 +1033,37 @@ namespace Microsoft.Msagl.Layout.Layered {
                 }
             }
 
-            var extendedVertexLayering = new int[originalGraph.Nodes.Count + nOfVV];
+            var extendedVertexLayering = new int[this.originalGraph.Nodes.Count + nOfVV];
 
-            foreach (PolyIntEdge e in database.SkeletonEdges())
+            foreach (PolyIntEdge e in this.database.SkeletonEdges()) {
                 if (e.LayerEdges != null) {
                     int l = layering[e.Source];
                     extendedVertexLayering[e.Source] = l--;
-                    foreach (LayerEdge le in e.LayerEdges)
+                    foreach (LayerEdge le in e.LayerEdges) {
                         extendedVertexLayering[le.Target] = l--;
+                    }
                 } else {
                     extendedVertexLayering[e.Source] = layering[e.Source];
                     extendedVertexLayering[e.Target] = layering[e.Target];
                 }
+            }
 
-            properLayeredGraph =
-                new ProperLayeredGraph(new BasicGraph<Node, PolyIntEdge>(database.SkeletonEdges(), layering.Length));
-            properLayeredGraph.BaseGraph.Nodes = IntGraph.Nodes;
+            this.properLayeredGraph =
+                new ProperLayeredGraph(new BasicGraph<Node, PolyIntEdge>(this.database.SkeletonEdges(), layering.Length));
+            this.properLayeredGraph.BaseGraph.Nodes = this.IntGraph.Nodes;
             layerArrays = new LayerArrays(extendedVertexLayering);
         }
 
-        ConstrainedOrdering constrainedOrdering;
+        private ConstrainedOrdering constrainedOrdering;
 
-        LayerArrays YLayeringAndOrdering(LayerCalculator layering) {
+        private LayerArrays YLayeringAndOrdering(LayerCalculator layering) {
             #region reporting
 
 #if TEST_MSAGL
             Timer t = null;
-            if (sugiyamaSettings.Reporting) {
+            if (this.sugiyamaSettings.Reporting) {
                 t = new Timer();
-                Report("ylayering ... ");
+                this.Report("ylayering ... ");
                 t.Start();
             }
 #endif
@@ -1017,16 +1071,16 @@ namespace Microsoft.Msagl.Layout.Layered {
             #endregion
 
             int[] yLayers = layering.GetLayers();
-            Balancing.Balance(GluedDagSkeletonForLayering, yLayers, GetNodeCountsOfGluedDag(), null);
-            yLayers = ExtendLayeringToUngluedSameLayerVertices(yLayers);
+            Balancing.Balance(this.GluedDagSkeletonForLayering, yLayers, this.GetNodeCountsOfGluedDag(), null);
+            yLayers = this.ExtendLayeringToUngluedSameLayerVertices(yLayers);
 
             #region reporting
 
 #if TEST_MSAGL
-            if (sugiyamaSettings.Reporting) {
+            if (this.sugiyamaSettings.Reporting) {
                 t.Stop();
-                Report(String.Format(CultureInfo.CurrentCulture, "{0}\n", t.Duration));
-                Report("ordering ... ");
+                this.Report(String.Format(CultureInfo.CurrentCulture, "{0}\n", t.Duration));
+                this.Report("ordering ... ");
                 t.Start();
             }
 #endif
@@ -1035,15 +1089,15 @@ namespace Microsoft.Msagl.Layout.Layered {
 
             var layerArrays = new LayerArrays(yLayers);
             //if (!SugiyamaSettings.UseEdgeBundling && (HorizontalConstraints == null || HorizontalConstraints.IsEmpty)) {
-            if (HorizontalConstraints == null || HorizontalConstraints.IsEmpty) {
-                layerArrays = YLayeringAndOrderingWithoutHorizontalConstraints(layerArrays);
+            if (this.HorizontalConstraints == null || this.HorizontalConstraints.IsEmpty) {
+                layerArrays = this.YLayeringAndOrderingWithoutHorizontalConstraints(layerArrays);
 
                 #region reporting
 
 #if TEST_MSAGL
-                if (sugiyamaSettings.Reporting) {
+                if (this.sugiyamaSettings.Reporting) {
                     t.Stop();
-                    Report(String.Format(CultureInfo.CurrentCulture, "{0}\n", t.Duration));
+                    this.Report(String.Format(CultureInfo.CurrentCulture, "{0}\n", t.Duration));
                 }
 #endif
 
@@ -1051,48 +1105,46 @@ namespace Microsoft.Msagl.Layout.Layered {
 
                 return layerArrays;
             }
-            constrainedOrdering = new ConstrainedOrdering(originalGraph, IntGraph, layerArrays.Y, nodeIdToIndex,
-                                                          database, sugiyamaSettings);
-            constrainedOrdering.Calculate();
-            properLayeredGraph = constrainedOrdering.ProperLayeredGraph;
+            this.constrainedOrdering = new ConstrainedOrdering(this.originalGraph, this.IntGraph, layerArrays.Y, this.nodeIdToIndex,
+                                                          this.database, this.sugiyamaSettings);
+            this.constrainedOrdering.Calculate();
+            this.properLayeredGraph = this.constrainedOrdering.ProperLayeredGraph;
 
             #region reporting
 
 #if TEST_MSAGL
-            if (sugiyamaSettings.Reporting) {
+            if (this.sugiyamaSettings.Reporting) {
                 t.Stop();
-                Report(String.Format(CultureInfo.CurrentCulture, "{0}\n", t.Duration));
+                this.Report(String.Format(CultureInfo.CurrentCulture, "{0}\n", t.Duration));
             }
 #endif
 
             #endregion
 
             // SugiyamaLayoutSettings.ShowDatabase(this.database);
-            return constrainedOrdering.LayerArrays;
+            return this.constrainedOrdering.LayerArrays;
         }
 
-        LayerArrays YLayeringAndOrderingWithoutHorizontalConstraints(LayerArrays layerArrays) {
-            CreaeteProperLayeredGraph(layerArrays.Y, out layerArrays);
-            Ordering.OrderLayers(properLayeredGraph, layerArrays, originalGraph.Nodes.Count,
-                 sugiyamaSettings, CancelToken);
-            MetroMapOrdering.UpdateLayerArrays(properLayeredGraph, layerArrays);
+        private LayerArrays YLayeringAndOrderingWithoutHorizontalConstraints(LayerArrays layerArrays) {
+            this.CreaeteProperLayeredGraph(layerArrays.Y, out layerArrays);
+            Ordering.OrderLayers(this.properLayeredGraph, layerArrays, this.originalGraph.Nodes.Count,
+                 this.sugiyamaSettings, this.CancelToken);
+            MetroMapOrdering.UpdateLayerArrays(this.properLayeredGraph, layerArrays);
             return layerArrays;
         }
 
-
-        void CalculateXPositionsByBrandes(LayerArrays layerArrays) {
-            XCoordsWithAlignment.CalculateXCoordinates(layerArrays, properLayeredGraph, originalGraph.Nodes.Count,
-                                                       database.Anchors, sugiyamaSettings.NodeSeparation);
+        private void CalculateXPositionsByBrandes(LayerArrays layerArrays) {
+            XCoordsWithAlignment.CalculateXCoordinates(layerArrays, this.properLayeredGraph, this.originalGraph.Nodes.Count,
+                                                       this.database.Anchors, this.sugiyamaSettings.NodeSeparation);
         }
 
-
-        void CalculateOriginalGraphBox(out double aspectRatio) {
+        private void CalculateOriginalGraphBox(out double aspectRatio) {
             aspectRatio = 0;
-            if (anchors.Length > 0) {
-                var box = new Rectangle(anchors[0].Left, anchors[0].Top, anchors[0].Right, anchors[0].Bottom);
+            if (this.anchors.Length > 0) {
+                var box = new Rectangle(this.anchors[0].Left, this.anchors[0].Top, this.anchors[0].Right, this.anchors[0].Bottom);
 
-                for (int i = 1; i < anchors.Length; i++) {
-                    Anchor a = anchors[i];
+                for (int i = 1; i < this.anchors.Length; i++) {
+                    Anchor a = this.anchors[i];
                     box.Add(a.LeftTop);
                     box.Add(a.RightBottom);
                 }
@@ -1105,53 +1157,54 @@ namespace Microsoft.Msagl.Layout.Layered {
                 box.Add(box.LeftTop + del);
                 box.Add(box.RightBottom - del);
 
-                originalGraph.BoundingBox = box;
+                this.originalGraph.BoundingBox = box;
             }
         }
 
-
-        LayerArrays InsertLayersIfNeeded(LayerArrays layerArrays) {
+        private LayerArrays InsertLayersIfNeeded(LayerArrays layerArrays) {
             bool needToInsertLayers = false;
             bool multipleEdges = false;
 
-            InsertVirtualEdgesIfNeeded(layerArrays);
+            this.InsertVirtualEdgesIfNeeded(layerArrays);
 
-            AnalyzeNeedToInsertLayersAndHasMultiedges(layerArrays, ref needToInsertLayers, ref multipleEdges);
+            this.AnalyzeNeedToInsertLayersAndHasMultiedges(layerArrays, ref needToInsertLayers, ref multipleEdges);
 
             if (needToInsertLayers) {
-                LayerInserter.InsertLayers(ref properLayeredGraph, ref layerArrays, database, IntGraph);
-                LayersAreDoubled = true;
-            } else if (multipleEdges)
-                EdgePathsInserter.InsertPaths(ref properLayeredGraph, ref layerArrays, database, IntGraph);
+                LayerInserter.InsertLayers(ref this.properLayeredGraph, ref layerArrays, this.database, this.IntGraph);
+                this.LayersAreDoubled = true;
+            } else if (multipleEdges) {
+                EdgePathsInserter.InsertPaths(ref this.properLayeredGraph, ref layerArrays, this.database, this.IntGraph);
+            }
 
-            RecreateIntGraphFromDataBase();
+            this.RecreateIntGraphFromDataBase();
 
             return layerArrays;
         }
 
-        bool LayersAreDoubled { get; set; }
+        private bool LayersAreDoubled { get; set; }
 
-        
-
-        void RecreateIntGraphFromDataBase() {
+        private void RecreateIntGraphFromDataBase() {
             var edges = new List<PolyIntEdge>();
-            foreach (var list in database.Multiedges.Values)
+            foreach (var list in this.database.Multiedges.Values) {
                 edges.AddRange(list);
-            IntGraph.SetEdges(edges, IntGraph.NodeCount);
+            }
+
+            this.IntGraph.SetEdges(edges, this.IntGraph.NodeCount);
         }
 
-        void AnalyzeNeedToInsertLayersAndHasMultiedges(LayerArrays layerArrays, ref bool needToInsertLayers,
+        private void AnalyzeNeedToInsertLayersAndHasMultiedges(LayerArrays layerArrays, ref bool needToInsertLayers,
                                                        ref bool multipleEdges) {
-            foreach (PolyIntEdge ie in IntGraph.Edges)
+            foreach (PolyIntEdge ie in this.IntGraph.Edges) {
                 if (ie.HasLabel && layerArrays.Y[ie.Source] != layerArrays.Y[ie.Target]) {
                     //if an edge is a flat edge then
                     needToInsertLayers = true;
                     break;
                 }
+            }
 
-            if (needToInsertLayers == false && constrainedOrdering == null)
+            if (needToInsertLayers == false && this.constrainedOrdering == null) {
                 //if we have constrains the multiple edges have been already represented in layers
-                foreach (var kv in database.Multiedges)
+                foreach (var kv in this.database.Multiedges) {
                     if (kv.Value.Count > 1) {
                         multipleEdges = true;
                         if (layerArrays.Y[kv.Key.x] - layerArrays.Y[kv.Key.y] == 1) {
@@ -1161,13 +1214,17 @@ namespace Microsoft.Msagl.Layout.Layered {
                             break;
                         }
                     }
+                }
+            }
         }
 
-        void InsertVirtualEdgesIfNeeded(LayerArrays layerArrays) {
-            if (constrainedOrdering != null) //if there are constraints we handle multiedges correctly
+        private void InsertVirtualEdgesIfNeeded(LayerArrays layerArrays) {
+            if (this.constrainedOrdering != null) //if there are constraints we handle multiedges correctly
+{
                 return;
+            }
 
-            foreach (var kv in database.Multiedges)
+            foreach (var kv in this.database.Multiedges) {
                 // If there are an even number of multi-edges between two nodes then
                 //  add a virtual edge in the multi-edge dict to improve the placement, but only in case when the edge goes down only one layer.         
                 if (kv.Value.Count%2 == 0 && layerArrays.Y[kv.Key.First] - 1 == layerArrays.Y[kv.Key.Second]) {
@@ -1175,47 +1232,52 @@ namespace Microsoft.Msagl.Layout.Layered {
                     newVirtualEdge.Edge = new Edge();
                     newVirtualEdge.IsVirtualEdge = true;
                     kv.Value.Insert(kv.Value.Count/2, newVirtualEdge);
-                    IntGraph.AddEdge(newVirtualEdge);
+                    this.IntGraph.AddEdge(newVirtualEdge);
                 }
+            }
         }
 
-
-        int[] GetNodeCountsOfGluedDag() {
-            if (VerticalConstraints.IsEmpty) {
-                var ret = new int[IntGraph.NodeCount];
-                for (int i = 0; i < ret.Length; i++)
+        private int[] GetNodeCountsOfGluedDag() {
+            if (this.VerticalConstraints.IsEmpty) {
+                var ret = new int[this.IntGraph.NodeCount];
+                for (int i = 0; i < ret.Length; i++) {
                     ret[i] = 1;
+                }
+
                 return ret;
             }
-            return VerticalConstraints.GetGluedNodeCounts();
+            return this.VerticalConstraints.GetGluedNodeCounts();
         }
 
-        int[] ExtendLayeringToUngluedSameLayerVertices(int[] p) {
-            VerticalConstraintsForSugiyama vc = VerticalConstraints;
-            for (int i = 0; i < p.Length; i++)
+        private int[] ExtendLayeringToUngluedSameLayerVertices(int[] p) {
+            VerticalConstraintsForSugiyama vc = this.VerticalConstraints;
+            for (int i = 0; i < p.Length; i++) {
                 p[i] = p[vc.NodeToRepr(i)];
+            }
+
             return p;
         }
 
-        void CalculateEdgeSplines() {
+        private void CalculateEdgeSplines() {
 #if TEST_MSAGL
-            if (sugiyamaSettings.Reporting)
-                Report("calculating splines ... ");
+            if (this.sugiyamaSettings.Reporting) {
+                this.Report("calculating splines ... ");
+            }
 #endif
-            var routing = new Routing(sugiyamaSettings, originalGraph, database, engineLayerArrays, properLayeredGraph,
-                                      IntGraph);
+            var routing = new Routing(this.sugiyamaSettings, this.originalGraph, this.database, this.engineLayerArrays, this.properLayeredGraph,
+                                      this.IntGraph);
 #if TEST_MSAGL
             Timer t = null;
-            if (sugiyamaSettings.Reporting) {
+            if (this.sugiyamaSettings.Reporting) {
                 t = new Timer();
                 t.Start();
             }
 #endif
             routing.Run();
 #if TEST_MSAGL
-            if (sugiyamaSettings.Reporting) {
+            if (this.sugiyamaSettings.Reporting) {
                 t.Stop();
-                Report(String.Format(CultureInfo.CurrentCulture, " {0}\n", t.Duration));
+                this.Report(String.Format(CultureInfo.CurrentCulture, " {0}\n", t.Duration));
             }
 #endif
         }
@@ -1225,15 +1287,17 @@ namespace Microsoft.Msagl.Layout.Layered {
                                                   BasicGraph<Node, PolyIntEdge> intGraph, SugiyamaLayoutSettings settings) {
             database.Anchors = anchors = new Anchor[properLayeredGraph.NodeCount];
 
-            for (int i = 0; i < anchors.Length; i++)
+            for (int i = 0; i < anchors.Length; i++) {
                 anchors[i] = new Anchor(settings.LabelCornersPreserveCoefficient);
+            }
 
             //go over the old vertices
-            for (int i = 0; i < originalGraph.Nodes.Count; i++)
+            for (int i = 0; i < originalGraph.Nodes.Count; i++) {
                 CalcAnchorsForOriginalNode(i, intGraph, anchors, database, settings);
+            }
 
             //go over virtual vertices
-            foreach (PolyIntEdge intEdge in database.AllIntEdges)
+            foreach (PolyIntEdge intEdge in database.AllIntEdges) {
                 if (intEdge.LayerEdges != null) {
                     foreach (LayerEdge layerEdge in intEdge.LayerEdges) {
                         int v = layerEdge.Target;
@@ -1256,12 +1320,14 @@ namespace Microsoft.Msagl.Layout.Layered {
                         a.RightAnchor = w;
                         a.LeftAnchor = VirtualNodeWidth*8;
 
-                        if (a.TopAnchor < h/2.0)
+                        if (a.TopAnchor < h/2.0) {
                             a.TopAnchor = a.BottomAnchor = h/2.0;
+                        }
 
                         a.LabelToTheRightOfAnchorCenter = true;
                     }
                 }
+            }
         }
 
         /// <summary>
@@ -1281,10 +1347,13 @@ namespace Microsoft.Msagl.Layout.Layered {
                 double topAnchorMax = 0;
                 foreach (int j in yLayer) {
                     Anchor p = anchors[j];
-                    if (p.BottomAnchor > bottomAnchorMax)
+                    if (p.BottomAnchor > bottomAnchorMax) {
                         bottomAnchorMax = p.BottomAnchor;
-                    if (p.TopAnchor > topAnchorMax)
+                    }
+
+                    if (p.TopAnchor > topAnchorMax) {
                         topAnchorMax = p.TopAnchor;
+                    }
                 }
 
                 MakeVirtualNodesTall(yLayer, bottomAnchorMax, topAnchorMax, originalGraph.Nodes.Count, database.Anchors);
@@ -1295,7 +1364,9 @@ namespace Microsoft.Msagl.Layout.Layered {
                 double layerTop = layerCenter + topAnchorMax;
                 if (NeedToSnapTopsToGrid(settings)) {
                     layerTop += SnapDeltaUp(layerTop, settings.GridSizeByY);
-                    foreach (int j in yLayer) anchors[j].Top = layerTop;                   
+                    foreach (int j in yLayer) {
+                        anchors[j].Top = layerTop;
+                    }
                 } else if (NeedToSnapBottomsToGrid(settings)) {
                     double layerBottom = layerCenter - bottomAnchorMax;
                     layerBottom += SnapDeltaUp(layerBottom, layerBottom);
@@ -1305,8 +1376,12 @@ namespace Microsoft.Msagl.Layout.Layered {
                         layerTop = Math.Max(anchors[j].Top, layerTop);
                     }
                 }
-                else foreach (int j in yLayer) anchors[j].Y = layerCenter;
-                
+                else {
+                    foreach (int j in yLayer) {
+                        anchors[j].Y = layerCenter;
+                    }
+                }
+
                 double layerSep = settings.ActualLayerSeparation(layersAreDoubled);
                 ymax = layerTop + layerSep;
                 i++;
@@ -1325,10 +1400,11 @@ namespace Microsoft.Msagl.Layout.Layered {
             return settings.SnapToGridByY == SnapToGridByY.Bottom;
         }
 
-        static double SnapDeltaUp(double y, double gridSize)
+        private static double SnapDeltaUp(double y, double gridSize)
         {
-            if (gridSize == 0)
+            if (gridSize == 0) {
                 return 0;
+            }
             // how much to snap?
             int k =(int) (y / gridSize);
             double delta = y - k * gridSize;
@@ -1346,8 +1422,8 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         /// <returns>the width and height in X and Y respectively</returns>
         internal Point CalculateApproximateDimensions() {
-            CreateGluedDagSkeletonForLayering();
-            var ns = new NetworkSimplexForGeneralGraph(GluedDagSkeletonForLayering, null);
+            this.CreateGluedDagSkeletonForLayering();
+            var ns = new NetworkSimplexForGeneralGraph(this.GluedDagSkeletonForLayering, null);
 
             // layers[0] is the layer of the first node, layers[1]: layer of second node, etc...
             int[] layers = ns.GetLayers();
@@ -1357,10 +1433,10 @@ namespace Microsoft.Msagl.Layout.Layered {
             var layerMap = new Dictionary<int, Point>();
             double width, height;
 
-            Direction layoutDirection = GetLayoutDirection(sugiyamaSettings);
+            Direction layoutDirection = GetLayoutDirection(this.sugiyamaSettings);
             if (layoutDirection == Direction.North || layoutDirection == Direction.South) {
                 for (int i = 0; i < layers.Length; ++i) {
-                    Node v = originalGraph.Nodes[i];
+                    Node v = this.originalGraph.Nodes[i];
 #if SHARPKIT //https://github.com/SharpKit/SharpKit/issues/6 structs are not initialized
                     Point size = new Point(0.0, 0.0);
 #else
@@ -1369,11 +1445,11 @@ namespace Microsoft.Msagl.Layout.Layered {
                     int l = layers[i];
                     layerMap.TryGetValue(l, out size);
                     layerMap[l] = new Point(
-                        v.BoundingBox.Width + size.X + sugiyamaSettings.NodeSeparation,
+                        v.BoundingBox.Width + size.X + this.sugiyamaSettings.NodeSeparation,
                         Math.Max(v.BoundingBox.Height, size.Y));
                 }
                 width = 0;
-                height = sugiyamaSettings.LayerSeparation*(layerMap.Count - 1);
+                height = this.sugiyamaSettings.LayerSeparation*(layerMap.Count - 1);
 
                 foreach (Point size in layerMap.Values) {
                     width = Math.Max(size.X, width);
@@ -1381,15 +1457,15 @@ namespace Microsoft.Msagl.Layout.Layered {
                 }
             } else {
                 for (int i = 0; i < layers.Length; ++i) {
-                    Node v = originalGraph.Nodes[i];
+                    Node v = this.originalGraph.Nodes[i];
                     Point size;
                     int l = layers[i];
                     layerMap.TryGetValue(l, out size);
                     layerMap[l] = new Point(
                         Math.Max(v.BoundingBox.Width, size.X),
-                        v.BoundingBox.Height + size.Y + sugiyamaSettings.NodeSeparation);
+                        v.BoundingBox.Height + size.Y + this.sugiyamaSettings.NodeSeparation);
                 }
-                width = sugiyamaSettings.LayerSeparation*(layerMap.Count - 1);
+                width = this.sugiyamaSettings.LayerSeparation*(layerMap.Count - 1);
                 height = 0;
 
                 foreach (Point size in layerMap.Values) {
@@ -1400,7 +1476,7 @@ namespace Microsoft.Msagl.Layout.Layered {
             return new Point(width, height);
         }
 
-        static double SetFlatEdgesForLayer(Database database, LayerArrays layerArrays, int i,
+        private static double SetFlatEdgesForLayer(Database database, LayerArrays layerArrays, int i,
                                            BasicGraphOnEdges<PolyIntEdge> intGraph, SugiyamaLayoutSettings settings, double ymax) {
             double flatEdgesHeight = 0;
             if (i > 0) {
@@ -1425,7 +1501,7 @@ namespace Microsoft.Msagl.Layout.Layered {
             return dir.CompassDirection;
         }
 
-        static double SetFlatEdgesLabelsHeightAndPositionts(IntPair pair, double ymax, double dy, Database database) {
+        private static double SetFlatEdgesLabelsHeightAndPositionts(IntPair pair, double ymax, double dy, Database database) {
             double height = 0;
             List<PolyIntEdge> list = database.GetMultiedge(pair);
             foreach (PolyIntEdge edge in list) {
@@ -1439,8 +1515,7 @@ namespace Microsoft.Msagl.Layout.Layered {
             return height;
         }
 
-
-        static IEnumerable<IntPair> GetFlatPairs(int[] layer, int[] layering, BasicGraphOnEdges<PolyIntEdge> intGraph) {
+        private static IEnumerable<IntPair> GetFlatPairs(int[] layer, int[] layering, BasicGraphOnEdges<PolyIntEdge> intGraph) {
             return new Set<IntPair>(from v in layer
                                     where v < intGraph.NodeCount
                                     from edge in intGraph.OutEdges(v)
@@ -1448,25 +1523,30 @@ namespace Microsoft.Msagl.Layout.Layered {
                                     select new IntPair(edge.Source, edge.Target));
         }
 
-        static void MakeVirtualNodesTall(int[] yLayer, double bottomAnchorMax, double topAnchorMax,
+        private static void MakeVirtualNodesTall(int[] yLayer, double bottomAnchorMax, double topAnchorMax,
                                          int originalNodeCount, Anchor[] anchors) {
-            if (LayerIsOriginal(yLayer, originalNodeCount))
-                foreach (int j in yLayer)
+            if (LayerIsOriginal(yLayer, originalNodeCount)) {
+                foreach (int j in yLayer) {
                     if (j >= originalNodeCount) {
                         Anchor p = anchors[j];
                         p.BottomAnchor = bottomAnchorMax;
                         p.TopAnchor = topAnchorMax;
                     }
+                }
+            }
         }
 
-        static bool LayerIsOriginal(int[] yLayer, int origNodeCount) {
-            foreach (int j in yLayer)
-                if (j < origNodeCount)
+        private static bool LayerIsOriginal(int[] yLayer, int origNodeCount) {
+            foreach (int j in yLayer) {
+                if (j < origNodeCount) {
                     return true;
+                }
+            }
+
             return false;
         }
 
-        static void CalcAnchorsForOriginalNode(int i, BasicGraph<Node, PolyIntEdge> intGraph, Anchor[] anchors,
+        private static void CalcAnchorsForOriginalNode(int i, BasicGraph<Node, PolyIntEdge> intGraph, Anchor[] anchors,
                                                Database database, SugiyamaLayoutSettings settings) {
             double leftAnchor = 0;
             double rightAnchor = leftAnchor;
@@ -1483,16 +1563,23 @@ namespace Microsoft.Msagl.Layout.Layered {
             RightAnchorMultiSelfEdges(i, ref rightAnchor, ref topAnchor, ref bottomAnchor, database, settings);
 
             double hw = settings.MinNodeWidth/2;
-            if (leftAnchor < hw)
+            if (leftAnchor < hw) {
                 leftAnchor = hw;
-            if (rightAnchor < hw)
+            }
+
+            if (rightAnchor < hw) {
                 rightAnchor = hw;
+            }
+
             double hh = settings.MinNodeHeight/2;
 
-            if (topAnchor < hh)
+            if (topAnchor < hh) {
                 topAnchor = hh;
-            if (bottomAnchor < hh)
+            }
+
+            if (bottomAnchor < hh) {
                 bottomAnchor = hh;
+            }
 
             anchors[i] = new Anchor(leftAnchor, rightAnchor, topAnchor, bottomAnchor, intGraph.Nodes[i],
                                     settings.LabelCornersPreserveCoefficient) {Padding = intGraph.Nodes[i].Padding};
@@ -1501,7 +1588,7 @@ namespace Microsoft.Msagl.Layout.Layered {
 #endif
         }
 
-        static void RightAnchorMultiSelfEdges(int i, ref double rightAnchor, ref double topAnchor,
+        private static void RightAnchorMultiSelfEdges(int i, ref double rightAnchor, ref double topAnchor,
                                               ref double bottomAnchor, Database database,
                                               SugiyamaLayoutSettings settings) {
             double delta = WidthOfSelfEdge(database, i, ref rightAnchor, ref topAnchor, ref bottomAnchor, settings);
@@ -1509,25 +1596,27 @@ namespace Microsoft.Msagl.Layout.Layered {
             rightAnchor += delta;
         }
 
-        static double WidthOfSelfEdge(Database database, int i, ref double rightAnchor, ref double topAnchor,
+        private static double WidthOfSelfEdge(Database database, int i, ref double rightAnchor, ref double topAnchor,
                                       ref double bottomAnchor, SugiyamaLayoutSettings settings) {
             double delta = 0;
             List<PolyIntEdge> multiedges = database.GetMultiedge(i, i);
             //it could be a multiple self edge
             if (multiedges.Count > 0) {
-                foreach (PolyIntEdge e in multiedges)
+                foreach (PolyIntEdge e in multiedges) {
                     if (e.Edge.Label != null) {
                         rightAnchor += e.Edge.Label.Width;
-                        if (topAnchor < e.Edge.Label.Height/2.0)
+                        if (topAnchor < e.Edge.Label.Height/2.0) {
                             topAnchor = bottomAnchor = e.Edge.Label.Height/2.0f;
+                        }
                     }
+                }
 
                 delta += (settings.NodeSeparation + settings.MinNodeWidth)*multiedges.Count;
             }
             return delta;
         }
 
-        static void ExtendStandardAnchors(ref double leftAnchor, ref double rightAnchor, ref double topAnchor,
+        private static void ExtendStandardAnchors(ref double leftAnchor, ref double rightAnchor, ref double topAnchor,
                                           ref double bottomAnchor, Node node, SugiyamaLayoutSettings settings) {
             double w = node.Width;
             double h = node.Height;
@@ -1559,13 +1648,13 @@ namespace Microsoft.Msagl.Layout.Layered {
         ///// If v is the left neighbor of w, then Gў has an edge f = e(v,w) with d( f ) = r(v,w) and 
         ///// w( f ) = 0. This edge forces the nodes to be sufficiently 
         ///// separated but does not affect the cost of the layout.
-        XLayoutGraph CreateXLayoutGraph(LayerArrays layerArrays) {
-            int nOfVerts = properLayeredGraph.NodeCount;
+        private XLayoutGraph CreateXLayoutGraph(LayerArrays layerArrays) {
+            int nOfVerts = this.properLayeredGraph.NodeCount;
 
             //create edges of XLayoutGraph
             var edges = new List<PolyIntEdge>();
 
-            foreach (LayerEdge e in properLayeredGraph.Edges) {
+            foreach (LayerEdge e in this.properLayeredGraph.Edges) {
                 var n1 = new PolyIntEdge(nOfVerts, e.Source);
                 var n2 = new PolyIntEdge(nOfVerts, e.Target);
                 n1.Weight = n2.Weight = e.Weight;
@@ -1576,33 +1665,35 @@ namespace Microsoft.Msagl.Layout.Layered {
                 edges.Add(n2);
             }
 
-            foreach (var layer in layerArrays.Layers)
+            foreach (var layer in layerArrays.Layers) {
                 for (int i = layer.Length - 1; i > 0; i--) {
                     int source = layer[i];
                     int target = layer[i - 1];
                     var ie = new PolyIntEdge(source, target);
-                    Anchor sourceAnchor = database.Anchors[source];
-                    Anchor targetAnchor = database.Anchors[target];
+                    Anchor sourceAnchor = this.database.Anchors[source];
+                    Anchor targetAnchor = this.database.Anchors[target];
 
-                    double sep = sourceAnchor.LeftAnchor + targetAnchor.RightAnchor + sugiyamaSettings.NodeSeparation;
+                    double sep = sourceAnchor.LeftAnchor + targetAnchor.RightAnchor + this.sugiyamaSettings.NodeSeparation;
 
                     ie.Separation = (int) (sep + 1);
 
                     edges.Add(ie);
                 }
+            }
 
-            var ret = new XLayoutGraph(IntGraph, properLayeredGraph, layerArrays, edges, nOfVerts);
+            var ret = new XLayoutGraph(this.IntGraph, this.properLayeredGraph, layerArrays, edges, nOfVerts);
             ret.SetEdgeWeights();
             return ret;
         }
 
 #if TEST_MSAGL
         ~LayeredLayoutEngine() {
-            if (SugiyamaLayoutLogger != null)
-                SugiyamaLayoutLogger.Dispose();
+            if (this.SugiyamaLayoutLogger != null) {
+                this.SugiyamaLayoutLogger.Dispose();
+            }
         }
 #endif
 
-        internal SugiyamaLayoutSettings SugiyamaSettings { get { return sugiyamaSettings; } }
+        internal SugiyamaLayoutSettings SugiyamaSettings { get { return this.sugiyamaSettings; } }
     }
 }

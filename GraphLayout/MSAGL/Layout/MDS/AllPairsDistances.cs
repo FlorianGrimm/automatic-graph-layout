@@ -40,15 +40,15 @@ namespace Microsoft.Msagl.Layout.MDS
         /// </summary>
         protected override void RunInternal()
         {
-            this.StartListenToLocalProgress(graph.Nodes.Count);
-            Result = new double[graph.Nodes.Count][];
+            this.StartListenToLocalProgress(this.graph.Nodes.Count);
+            this.Result = new double[this.graph.Nodes.Count][];
             int i = 0;
-            foreach (Node source in graph.Nodes)
+            foreach (Node source in this.graph.Nodes)
             {
-                SingleSourceDistances distances = new SingleSourceDistances(graph, source);
+                SingleSourceDistances distances = new SingleSourceDistances(this.graph, source);
                 distances.Run();
 
-                Result[i] = distances.Result;
+                this.Result[i] = distances.Result;
                 ++i;
 
                 this.ProgressStep();  // This checks for cancel too.

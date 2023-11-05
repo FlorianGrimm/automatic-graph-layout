@@ -12,26 +12,28 @@ namespace Microsoft.Msagl.Core.Geometry
         /// <summary>
         /// disc centre
         /// </summary>
-         Point c;
+        private Point c;
         /// <summary>
         /// disc centre
         /// </summary>
         public Point Center
         {
-            get { return c; }
+            get { return this.c; }
         }
+
         /// <summary>
         /// radius
         /// </summary>
-         double r;
+        private double r;
         /// <summary>
         /// Radius of disc
         /// </summary>
         public double Radius
         {
-            get { return r; }
+            get { return this.r; }
         }
-         double r2;
+
+        private double r2;
         /// <summary>
         /// squared distance from the centre of this disc to point
         /// </summary>
@@ -39,7 +41,7 @@ namespace Microsoft.Msagl.Core.Geometry
         /// <returns></returns>
         public double Distance2(Point point)
         {
-            double dx = c.X - point.X, dy = c.Y - point.Y;
+            double dx = this.c.X - point.X, dy = this.c.Y - point.Y;
             return dx * dx + dy * dy;
         }
         /// <summary>
@@ -49,7 +51,7 @@ namespace Microsoft.Msagl.Core.Geometry
         /// <returns></returns>
         public bool Contains(Point point)
         {
-            return Distance2(point) - 1e-7 <= r2;
+            return this.Distance2(point) - 1e-7 <= this.r2;
         }
         /// <summary>
         /// test if all specified points (apart from the except list) are contained in this disc
@@ -62,7 +64,7 @@ namespace Microsoft.Msagl.Core.Geometry
             ValidateArg.IsNotNull(points, "points");
             for (int i = 0; i < points.Length; ++i)
             {
-                if (!except.Contains(i) && !Contains(points[i]))
+                if (!except.Contains(i) && !this.Contains(points[i]))
                 {
                     return false;
                 }
@@ -76,14 +78,15 @@ namespace Microsoft.Msagl.Core.Geometry
         public Disc(Point center)
         {
             this.c = center;
-            r2 = r = 0;
+            this.r2 = this.r = 0;
         }
+
         /// <summary>
         /// find the point mid-way between two points
         /// </summary>
         /// <param name="startPoint"></param>
         /// <param name="endPoint"></param>
-         static Point midPoint(Point startPoint, Point endPoint)
+        private static Point midPoint(Point startPoint, Point endPoint)
         {
             return new Point((endPoint.X + startPoint.X) / 2.0, (endPoint.Y + startPoint.Y) / 2.0);
         }
@@ -94,11 +97,11 @@ namespace Microsoft.Msagl.Core.Geometry
         /// <param name="secondBoundaryPoint"></param>
         public Disc(Point firstBoundaryPoint, Point secondBoundaryPoint)
         {
-            c = midPoint(firstBoundaryPoint, secondBoundaryPoint);
-            r2 = Distance2(firstBoundaryPoint);
-            r = Math.Sqrt(r2);
-            Debug.Assert(OnBoundary(firstBoundaryPoint));
-            Debug.Assert(OnBoundary(secondBoundaryPoint));
+            this.c = midPoint(firstBoundaryPoint, secondBoundaryPoint);
+            this.r2 = this.Distance2(firstBoundaryPoint);
+            this.r = Math.Sqrt(this.r2);
+            Debug.Assert(this.OnBoundary(firstBoundaryPoint));
+            Debug.Assert(this.OnBoundary(secondBoundaryPoint));
         }
         /// <summary>
         /// test if a point lies on (within a small delta of) the boundary of this disc
@@ -107,9 +110,10 @@ namespace Microsoft.Msagl.Core.Geometry
         /// <returns></returns>
         public bool OnBoundary(Point point)
         {
-            double d = Distance2(point);
-            return Math.Abs(d - r2) / (d + r2) < 1e-5;
+            double d = this.Distance2(point);
+            return Math.Abs(d - this.r2) / (d + this.r2) < 1e-5;
         }
+
         /// <summary>
         /// computes the centre of the disc with the 3 specified points on the boundary
         /// </summary>
@@ -117,7 +121,7 @@ namespace Microsoft.Msagl.Core.Geometry
         /// <param name="p2"></param>
         /// <param name="p3"></param>
         /// <returns></returns>
-         static Point centre(Point p1, Point p2, Point p3)
+        private static Point centre(Point p1, Point p2, Point p3)
         {
             Debug.Assert(p2.X != p1.X);
             Debug.Assert(p3.X != p2.X);
@@ -167,9 +171,9 @@ namespace Microsoft.Msagl.Core.Geometry
                       UR = new Point(
                         Math.Max(p1.X, Math.Max(p2.X, p3.X)),
                         Math.Max(p1.Y, Math.Max(p2.Y, p3.Y)));
-                c = midPoint(LL, UR);
-                r2 = Distance2(UR);
-                r = Math.Sqrt(r2);
+                this.c = midPoint(LL, UR);
+                this.r2 = this.Distance2(UR);
+                this.r = Math.Sqrt(this.r2);
             }
             else
             {
@@ -178,24 +182,24 @@ namespace Microsoft.Msagl.Core.Geometry
                 {
                     if (dx23 != 0)
                     {
-                        c = centre(p1, p2, p3);
+                        this.c = centre(p1, p2, p3);
                     }
                     else
                     {
                         Debug.Assert(dx13 != 0);
-                        c = centre(p2, p1, p3);
+                        this.c = centre(p2, p1, p3);
                     }
                 }
                 else
                 {
                     Debug.Assert(dx23 != 0); // because points are not collinear
-                    c = centre(p2, p3, p1);
+                    this.c = centre(p2, p3, p1);
                 }
-                r2 = Distance2(p1);
-                r = Math.Sqrt(r2);
-                Debug.Assert(OnBoundary(p1));
-                Debug.Assert(OnBoundary(p2));
-                Debug.Assert(OnBoundary(p3));
+                this.r2 = this.Distance2(p1);
+                this.r = Math.Sqrt(this.r2);
+                Debug.Assert(this.OnBoundary(p1));
+                Debug.Assert(this.OnBoundary(p2));
+                Debug.Assert(this.OnBoundary(p3));
             }
         }
     }

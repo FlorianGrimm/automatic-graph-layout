@@ -7,121 +7,150 @@ using Microsoft.Msagl.Core.Geometry.Curves;
 
 namespace Microsoft.Msagl.Routing.Spline.Bundling {
     internal class PathFixer {
-        MetroGraphData metroGraphData;
-        Func<Metroline, Point, bool> polylineAcceptsPoint;
-        Set<Point> foundCrossings = new Set<Point>();
-        Set<Point> crossingsThatShouldBecomeHubs = new Set<Point>();
-        Set<Point> pointsToDelete;
+        private MetroGraphData metroGraphData;
+        private Func<Metroline, Point, bool> polylineAcceptsPoint;
+        private Set<Point> foundCrossings = new Set<Point>();
+        private Set<Point> crossingsThatShouldBecomeHubs = new Set<Point>();
+        private Set<Point> pointsToDelete;
 
         public PathFixer(MetroGraphData metroGraphData, Func<Metroline, Point, bool> polylineAcceptsPoint) {
             this.metroGraphData = metroGraphData;
             this.polylineAcceptsPoint = polylineAcceptsPoint;
         }
 
-        IEnumerable<PolylinePoint> Vertices() {
-            return metroGraphData.Edges.Select(e => (Polyline)e.Curve).SelectMany(p => p.PolylinePoints);
+        private IEnumerable<PolylinePoint> Vertices() {
+            return this.metroGraphData.Edges.Select(e => (Polyline)e.Curve).SelectMany(p => p.PolylinePoints);
         }
 
-        IEnumerable<Polyline> Polylines { get { return metroGraphData.Edges.Select(e => (Polyline)e.Curve); } }
+        private IEnumerable<Polyline> Polylines { get { return this.metroGraphData.Edges.Select(e => (Polyline)e.Curve); } }
 
-        IEnumerable<PointPair> Edges() {
+        private IEnumerable<PointPair> Edges() {
             var set = new Set<PointPair>();
-            foreach (var pp in Vertices())
-              if (pp.Next != null)
+            foreach (var pp in this.Vertices()) {
+                if (pp.Next != null) {
                     set.Insert(FlipCollapser.OrderedPair(pp));
+                }
+            }
+
             return set;
         }
 
         internal bool Run() {
-            if (metroGraphData.Edges.Count() == 0) return false;
+            if (this.metroGraphData.Edges.Count() == 0) {
+                return false;
+            }
 
             var splittingPoints = new Dictionary<PointPair, List<Point>>();
             var treeOfVertices = new RTree<Point,Point>();
-            foreach (var vertex in Vertices()) {
+            foreach (var vertex in this.Vertices()) {
                 var r = new Rectangle(vertex.Point);
                 r.Pad(ApproximateComparer.IntersectionEpsilon);
                 treeOfVertices.Add(r, vertex.Point);
             }
 
-            var treeOfEdges = RectangleNode<PointPair,Point>.CreateRectangleNodeOnData(Edges(), e => new Rectangle(e.First, e.Second));
-            RectangleNodeUtils.CrossRectangleNodes<PointPair, Point>(treeOfEdges, treeOfEdges, (a, b) => IntersectTwoEdges(a, b, splittingPoints, treeOfVertices));
+            var treeOfEdges = RectangleNode<PointPair,Point>.CreateRectangleNodeOnData(this.Edges(), e => new Rectangle(e.First, e.Second));
+            RectangleNodeUtils.CrossRectangleNodes<PointPair, Point>(treeOfEdges, treeOfEdges, (a, b) => this.IntersectTwoEdges(a, b, splittingPoints, treeOfVertices));
 
-            SortInsertedPoints(splittingPoints);
-            bool pointsInserted = InsertPointsIntoPolylines(splittingPoints);
+            this.SortInsertedPoints(splittingPoints);
+            bool pointsInserted = this.InsertPointsIntoPolylines(splittingPoints);
 
-            bool progress = FixPaths();
+            bool progress = this.FixPaths();
 
-            bool pointsRemoved = RemoveUnimportantCrossings();
+            bool pointsRemoved = this.RemoveUnimportantCrossings();
 
             return progress || pointsInserted || pointsRemoved;
         }
 
-        bool FixPaths() {
+        private bool FixPaths() {
             bool progress = false;
-            if (RemoveSelfCycles()) progress = true;
+            if (this.RemoveSelfCycles()) {
+                progress = true;
+            }
             //if (CollapseCycles()) progress = true;
-            if (ReduceEdgeCrossings()) progress = true;
+            if (this.ReduceEdgeCrossings()) {
+                progress = true;
+            }
+
             return progress;
         }
 
-        void SortInsertedPoints(Dictionary<PointPair, List<Point>> splittingPoints) {
-            foreach (var pair in splittingPoints)
-                SortInsideSegment(pair.Key, pair.Value);
+        private void SortInsertedPoints(Dictionary<PointPair, List<Point>> splittingPoints) {
+            foreach (var pair in splittingPoints) {
+                this.SortInsideSegment(pair.Key, pair.Value);
+            }
         }
 
-        void SortInsideSegment(PointPair edge, List<Point> list) {
+        private void SortInsideSegment(PointPair edge, List<Point> list) {
             System.Diagnostics.Debug.Assert(list.Count > 0, "an edge should not be present with an empty list");
             list.Sort((a, b) => (a - edge.First).Length.CompareTo((b - edge.First).Length));
         }
 
-        bool InsertPointsIntoPolylines(Dictionary<PointPair, List<Point>> splittingPoints) {
+        private bool InsertPointsIntoPolylines(Dictionary<PointPair, List<Point>> splittingPoints) {
             bool inserted = false;
-            foreach (var metroline in metroGraphData.Metrolines) {
-                if (InsertPointsIntoPolyline(metroline, splittingPoints))
+            foreach (var metroline in this.metroGraphData.Metrolines) {
+                if (this.InsertPointsIntoPolyline(metroline, splittingPoints)) {
                     inserted = true;
+                }
             }
             return inserted;
         }
 
-        bool InsertPointsIntoPolyline(Metroline metroline, Dictionary<PointPair, List<Point>> splittingPoints) {
+        private bool InsertPointsIntoPolyline(Metroline metroline, Dictionary<PointPair, List<Point>> splittingPoints) {
             bool inserted = false;
-            for (var pp = metroline.Polyline.StartPoint; pp.Next != null; pp = pp.Next)
-                if (InsertPointsOnPolypoint(pp, splittingPoints, metroline)) inserted = true;
+            for (var pp = metroline.Polyline.StartPoint; pp.Next != null; pp = pp.Next) {
+                if (this.InsertPointsOnPolypoint(pp, splittingPoints, metroline)) {
+                    inserted = true;
+                }
+            }
+
             return inserted;
         }
 
-        bool InsertPointsOnPolypoint(PolylinePoint pp, Dictionary<PointPair, List<Point>> splittingPoints, Metroline metroline) {
+        private bool InsertPointsOnPolypoint(PolylinePoint pp, Dictionary<PointPair, List<Point>> splittingPoints, Metroline metroline) {
             var pointPair = FlipCollapser.OrderedPair(pp);
             var reversed = pp.Point != pointPair.First;
             List<Point> list;
-            if (!splittingPoints.TryGetValue(pointPair, out list))
+            if (!splittingPoints.TryGetValue(pointPair, out list)) {
                 return false;
+            }
 
             var endPolyPoint = pp.Next;
             var poly = pp.Polyline;
-            if (reversed)
+            if (reversed) {
                 for (int i = list.Count - 1; i >= 0; i--) {
-                    if ( polylineAcceptsPoint!=null && !polylineAcceptsPoint(metroline, list[i])) continue;
+                    if (this.polylineAcceptsPoint !=null && !this.polylineAcceptsPoint(metroline, list[i])) {
+                        continue;
+                    }
+
                     var p = new PolylinePoint(list[i]) { Prev = pp, Polyline = poly };
                     pp.Next = p;
                     pp = p;
                 }
-            else
+            } else {
                 for (int i = 0; i < list.Count; i++) {
-                    if (polylineAcceptsPoint!=null &&!polylineAcceptsPoint(metroline, list[i])) continue;
+                    if (this.polylineAcceptsPoint !=null &&!this.polylineAcceptsPoint(metroline, list[i])) {
+                        continue;
+                    }
+
                     var p = new PolylinePoint(list[i]) { Prev = pp, Polyline = poly };
                     pp.Next = p;
                     pp = p;
                 }
+            }
+
             pp.Next = endPolyPoint;
             endPolyPoint.Prev = pp;
             return true;
         }
 
-        bool RemoveSelfCycles() {
+        private bool RemoveSelfCycles() {
             bool progress = false;
-            foreach (var poly in Polylines)
-                if (RemoveSelfCyclesFromPolyline(poly)) progress = true;
+            foreach (var poly in this.Polylines) {
+                if (RemoveSelfCyclesFromPolyline(poly)) {
+                    progress = true;
+                }
+            }
+
             return progress;
         }
 
@@ -141,8 +170,9 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
                     pp.Next.Prev = previous;
                     progress = true;
                 }
-                else
+                else {
                     pointsToPp[pp.Point] = pp;
+                }
             }
             return progress;
         }
@@ -155,26 +185,30 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         //    return false;
         //}
 
-        bool ReduceEdgeCrossings() {
-            var cycleCollapser = new FlipSwitcher(metroGraphData);
+        private bool ReduceEdgeCrossings() {
+            var cycleCollapser = new FlipSwitcher(this.metroGraphData);
             cycleCollapser.Run();
-            crossingsThatShouldBecomeHubs.InsertRange(cycleCollapser.GetChangedHubs());
+            this.crossingsThatShouldBecomeHubs.InsertRange(cycleCollapser.GetChangedHubs());
             //TimeMeasurer.DebugOutput("#reduced crossings = " + cycleCollapser.NumberOfReducedCrossings());
             return cycleCollapser.NumberOfReducedCrossings() > 0;
         }
 
-        bool RemoveUnimportantCrossings() {
+        private bool RemoveUnimportantCrossings() {
             bool removed = false;
-            pointsToDelete = foundCrossings - crossingsThatShouldBecomeHubs;
-            foreach (var polyline in Polylines)
-                if (RemoveUnimportantCrossingsFromPolyline(polyline)) removed = true;
+            this.pointsToDelete = this.foundCrossings - this.crossingsThatShouldBecomeHubs;
+            foreach (var polyline in this.Polylines) {
+                if (this.RemoveUnimportantCrossingsFromPolyline(polyline)) {
+                    removed = true;
+                }
+            }
+
             return removed;
         }
 
-        bool RemoveUnimportantCrossingsFromPolyline(Polyline polyline) {
+        private bool RemoveUnimportantCrossingsFromPolyline(Polyline polyline) {
             bool removed = false;
-            for (var p = polyline.StartPoint.Next; p != null && p.Next != null; p = p.Next)
-                if (pointsToDelete.Contains(p.Point) && Point.GetTriangleOrientation(p.Prev.Point, p.Point, p.Next.Point) == TriangleOrientation.Collinear) {
+            for (var p = polyline.StartPoint.Next; p != null && p.Next != null; p = p.Next) {
+                if (this.pointsToDelete.Contains(p.Point) && Point.GetTriangleOrientation(p.Prev.Point, p.Point, p.Next.Point) == TriangleOrientation.Collinear) {
                     //forget p
                     var pp = p.Prev;
                     var pn = p.Next;
@@ -183,23 +217,27 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
                     p = pp;
                     removed = true;
                 }
+            }
+
             return removed;
         }
 
-        void IntersectTwoEdges(PointPair a, PointPair b, Dictionary<PointPair, List<Point>> splittingPoints, RTree<Point,Point> tree) {
+        private void IntersectTwoEdges(PointPair a, PointPair b, Dictionary<PointPair, List<Point>> splittingPoints, RTree<Point,Point> tree) {
             Point x;
             if (LineSegment.Intersect(a.First, a.Second, b.First, b.Second, out x)) {
-                Point vertex = FindExistingVertexOrCreateNew(tree, x);
-                if (AddVertexToSplittingList(a, splittingPoints, vertex) |
-                AddVertexToSplittingList(b, splittingPoints, vertex))
-                    foundCrossings.Insert(vertex);
+                Point vertex = this.FindExistingVertexOrCreateNew(tree, x);
+                if (this.AddVertexToSplittingList(a, splittingPoints, vertex) |
+                this.AddVertexToSplittingList(b, splittingPoints, vertex)) {
+                    this.foundCrossings.Insert(vertex);
+                }
             }
         }
 
-        Point FindExistingVertexOrCreateNew(RTree<Point,Point> tree, Point x) {
+        private Point FindExistingVertexOrCreateNew(RTree<Point,Point> tree, Point x) {
             var p = tree.RootNode.FirstHitNode(x);
-            if (p != null)
+            if (p != null) {
                 return p.UserData;
+            }
 
             var rect = new Rectangle(x);
             rect.Pad(ApproximateComparer.IntersectionEpsilon);
@@ -207,7 +245,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return x;
         }
 
-        bool AddVertexToSplittingList(PointPair a, Dictionary<PointPair, List<Point>> splittingPoints, Point intersectionPoint) {
+        private bool AddVertexToSplittingList(PointPair a, Dictionary<PointPair, List<Point>> splittingPoints, Point intersectionPoint) {
 #if TEST_MSAGL
             double t;
             System.Diagnostics.Debug.Assert(
@@ -218,8 +256,10 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             if (!ApproximateComparer.CloseIntersections(intersectionPoint, a.First) &&
                 !ApproximateComparer.CloseIntersections(intersectionPoint, a.Second)) {
                 List<Point> list;
-                if (!splittingPoints.TryGetValue(a, out list))
+                if (!splittingPoints.TryGetValue(a, out list)) {
                     splittingPoints[a] = list = new List<Point>();
+                }
+
                 if (!list.Contains(intersectionPoint)) {
                     list.Add(intersectionPoint);
                     return true;

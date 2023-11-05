@@ -14,8 +14,8 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// <summary>
         /// bundle lines
         /// </summary>
-        readonly List<Metroline> Metrolines;
-        Dictionary<PointPair, PointPairOrder> bundles;
+        private readonly List<Metroline> Metrolines;
+        private Dictionary<PointPair, PointPairOrder> bundles;
 
         /// <summary>
         /// Initialize bundle graph and build the ordering
@@ -23,7 +23,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         internal GeneralMetroMapOrdering(List<Metroline> Metrolines) {
             this.Metrolines = Metrolines;
 
-            BuildOrder();
+            this.BuildOrder();
         }
 
         /// <summary>
@@ -36,15 +36,16 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         IEnumerable<Metroline> IMetroMapOrderingAlgorithm.GetOrder(Station u, Station v) {
 #endif
             var pointPair = new PointPair(u.Position, v.Position);
-            var orderedMetrolineListForUv = bundles[pointPair].Metrolines;
+            var orderedMetrolineListForUv = this.bundles[pointPair].Metrolines;
             if (u.Position == pointPair.First) {
                 foreach (var Metroline in orderedMetrolineListForUv) {
                     yield return Metroline;
                 }
             }
             else {
-                for (int i = orderedMetrolineListForUv.Count - 1; i >= 0; i--)
+                for (int i = orderedMetrolineListForUv.Count - 1; i >= 0; i--) {
                     yield return orderedMetrolineListForUv[i];
+                }
             }
         }
 
@@ -59,45 +60,52 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 #endif
             var edge = new PointPair(u.Position, v.Position);
             var reversed = u.Position != edge.First;
-            var d = bundles[edge].LineIndexInOrder;
+            var d = this.bundles[edge].LineIndexInOrder;
             return !reversed ? d[Metroline] : d.Count - 1 - d[Metroline];
         }
 
 
-        
+
         /// <summary>
         /// Do the main job
         /// </summary>
-        void BuildOrder() {
-            bundles = new Dictionary<PointPair, PointPairOrder>();
+        private void BuildOrder() {
+            this.bundles = new Dictionary<PointPair, PointPairOrder>();
             
             //initialization
-            foreach (var Metroline in Metrolines) {
+            foreach (var Metroline in this.Metrolines) {
                 for (var p = Metroline.Polyline.StartPoint; p.Next != null; p = p.Next) {
                     var e = new PointPair(p.Point, p.Next.Point);
                     PointPairOrder li;
-                    if (!bundles.TryGetValue(e, out li))
-                        bundles[e] = li = new PointPairOrder();
+                    if (!this.bundles.TryGetValue(e, out li)) {
+                        this.bundles[e] = li = new PointPairOrder();
+                    }
+
                     li.Add(Metroline);
                 }
             }
 
-            foreach (var edge in bundles)
-                BuildOrder(edge.Key, edge.Value);
+            foreach (var edge in this.bundles) {
+                this.BuildOrder(edge.Key, edge.Value);
+            }
         }
 
         /// <summary>
         /// Build order for edge (u->v)
         /// </summary>
-        void BuildOrder(PointPair pair, PointPairOrder order) {
-            if (order.orderFixed) return;
-            order.Metrolines.Sort((line0, line1) => CompareLines(line0, line1, pair.First, pair.Second));
+        private void BuildOrder(PointPair pair, PointPairOrder order) {
+            if (order.orderFixed) {
+                return;
+            }
+
+            order.Metrolines.Sort((line0, line1) => this.CompareLines(line0, line1, pair.First, pair.Second));
 
             //save order
             order.orderFixed = true;
             order.LineIndexInOrder = new Dictionary<Metroline, int>();
-            for (int i = 0; i < order.Metrolines.Count; i++)
+            for (int i = 0; i < order.Metrolines.Count; i++) {
                 order.LineIndexInOrder[order.Metrolines[i]] = i;
+            }
         }
 
 
@@ -106,15 +114,15 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// <summary>
         /// Compare two lines on station u with respect to edge (u->v)
         /// </summary>
-        int CompareLines(Metroline ml0, Metroline ml1, Point u, Point v) {
+        private int CompareLines(Metroline ml0, Metroline ml1, Point u, Point v) {
             PolylinePoint polylinePoint0;
             Func<PolylinePoint, PolylinePoint> next0;
             Func<PolylinePoint, PolylinePoint> prev0;
-            FindStationOnLine(u, v, ml0, out polylinePoint0, out next0, out prev0);
+            this.FindStationOnLine(u, v, ml0, out polylinePoint0, out next0, out prev0);
             PolylinePoint polylinePoint1;
             Func<PolylinePoint, PolylinePoint> next1;
             Func<PolylinePoint, PolylinePoint> prev1;
-            FindStationOnLine(u, v, ml1, out polylinePoint1, out next1, out prev1);
+            this.FindStationOnLine(u, v, ml1, out polylinePoint1, out next1, out prev1);
 
             //go backward
             var p0 = polylinePoint0;
@@ -123,8 +131,8 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
             while ((p00 = prev0(p0)) != null && (p11 = prev1(p1)) != null && p00.Point == p11.Point) {
                 var edge = new PointPair(p00.Point, p0.Point);
-                if (bundles[edge].orderFixed) {
-                    return CompareOnFixedOrder(edge, ml0, ml1, p00.Point !=edge.First);
+                if (this.bundles[edge].orderFixed) {
+                    return this.CompareOnFixedOrder(edge, ml0, ml1, p00.Point !=edge.First);
                 }
                 p0 = p00;
                 p1 = p11;
@@ -143,8 +151,10 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             while ((p00 = next0(p0)) != null && (p11 = next1(p1)) != null && p00.Point == p11.Point) {
                 var edge = new PointPair(p00.Point, p0.Point);
 
-                if (bundles[edge].orderFixed)
-                    return CompareOnFixedOrder(edge, ml0, ml1, p0.Point!=edge.First);
+                if (this.bundles[edge].orderFixed) {
+                    return this.CompareOnFixedOrder(edge, ml0, ml1, p0.Point!=edge.First);
+                }
+
                 p0 = p00;
                 p1 = p11;
             }
@@ -161,8 +171,8 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return ml0.Index.CompareTo(ml1.Index);
         }
 
-        int CompareOnFixedOrder(PointPair edge, Metroline ml0, Metroline ml1, bool reverse) {
-            var mlToIndex = bundles[edge].LineIndexInOrder;
+        private int CompareOnFixedOrder(PointPair edge, Metroline ml0, Metroline ml1, bool reverse) {
+            var mlToIndex = this.bundles[edge].LineIndexInOrder;
             int r = reverse ? -1 : 1;
             return r * mlToIndex[ml0].CompareTo(mlToIndex[ml1]);
         }
@@ -171,7 +181,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// <summary>
         /// Reimplement it in more efficient way!!! (cache indexes)
         /// </summary>
-        void FindStationOnLine(Point u, Point v, Metroline Metroline, out PolylinePoint polyPoint, out Func<PolylinePoint, PolylinePoint> next,
+        private void FindStationOnLine(Point u, Point v, Metroline Metroline, out PolylinePoint polyPoint, out Func<PolylinePoint, PolylinePoint> next,
             out Func<PolylinePoint, PolylinePoint> prev) {
 
             for (var p = Metroline.Polyline.StartPoint; p.Next != null; p = p.Next) {
@@ -192,10 +202,11 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             throw new InvalidOperationException();
         }
 
-        static PolylinePoint Next(PolylinePoint p) {
+        private static PolylinePoint Next(PolylinePoint p) {
             return p.Next;
         }
-        static PolylinePoint Prev(PolylinePoint p) {
+
+        private static PolylinePoint Prev(PolylinePoint p) {
             return p.Prev;
         }
 
@@ -208,7 +219,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         ///   1  if v1 lyes to the right of v2
         ///   0  if v1 and v2 are collinear (and codirectinal)
         /// </returns>
-        static int IsLeft(Point v0, Point v1, Point v2) {
+        private static int IsLeft(Point v0, Point v1, Point v2) {
             return Point.GetOrientationOf3Vectors(v0, v1, v2);
         }
     }

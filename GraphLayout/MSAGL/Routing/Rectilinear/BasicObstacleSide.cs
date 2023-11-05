@@ -16,24 +16,25 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
     /// </summary>
     internal abstract class BasicObstacleSide : ObstacleSide {
         internal Obstacle Obstacle { get; private set; }
-        readonly PolylinePoint endVertex;
+
+        private readonly PolylinePoint endVertex;
         internal double Slope { get; private set; }
         internal double SlopeInverse { get; private set; }
 
         internal BasicObstacleSide(Obstacle obstacle, PolylinePoint startVertex, ScanDirection scanDir, bool traverseClockwise)
             : base(startVertex)
         {
-            Obstacle = obstacle;
-            endVertex = traverseClockwise ? startVertex.NextOnPolyline : startVertex.PrevOnPolyline;
-            if (!scanDir.IsPerpendicular(startVertex.Point, endVertex.Point))
+            this.Obstacle = obstacle;
+            this.endVertex = traverseClockwise ? startVertex.NextOnPolyline : startVertex.PrevOnPolyline;
+            if (!scanDir.IsPerpendicular(startVertex.Point, this.endVertex.Point))
             {
-                Slope = StaticGraphUtility.Slope(startVertex.Point, endVertex.Point, scanDir);
-                SlopeInverse = 1.0 / Slope;
+                this.Slope = StaticGraphUtility.Slope(startVertex.Point, this.endVertex.Point, scanDir);
+                this.SlopeInverse = 1.0 / this.Slope;
             }
         }
         
         internal override PolylinePoint EndVertex {
-            get { return endVertex; }
+            get { return this.endVertex; }
         }
     }
 }

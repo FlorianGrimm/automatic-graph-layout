@@ -19,14 +19,14 @@ namespace Microsoft.Msagl.Core.Layout
         ///<summary>
         ///</summary>
         public const double DefaultArrowheadLength = 10;
-        double length = DefaultArrowheadLength;
+        private double length = DefaultArrowheadLength;
 
         ///<summary>
         /// The overall length of the arrow head
         ///</summary>
         public double Length {
-            get { return length; }
-            set { length = value; }
+            get { return this.length; }
+            set { this.length = value; }
         }
 
         ///<summary>

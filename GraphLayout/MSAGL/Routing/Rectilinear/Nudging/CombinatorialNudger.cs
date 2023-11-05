@@ -10,64 +10,65 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
     /// sets the order of connector paths on the edges
     /// </summary>
     internal class CombinatorialNudger {
-
-        const int NotOrdered = int.MaxValue;
+        private const int NotOrdered = int.MaxValue;
 
         //A new visibility graph is needed; the DAG of AxisEdges.
-        readonly VisibilityGraph pathVisibilityGraph = new VisibilityGraph();
+        private readonly VisibilityGraph pathVisibilityGraph = new VisibilityGraph();
         internal VisibilityGraph PathVisibilityGraph {
-            get { return pathVisibilityGraph; }
+            get { return this.pathVisibilityGraph; }
         }
 
-    
-        readonly Dictionary<AxisEdge, List<PathEdge>> axisEdgesToPathOrders = new Dictionary<AxisEdge, List<PathEdge>>();
+        private readonly Dictionary<AxisEdge, List<PathEdge>> axisEdgesToPathOrders = new Dictionary<AxisEdge, List<PathEdge>>();
 
         internal CombinatorialNudger(IEnumerable<Path> paths) {
-            OriginalPaths = paths;
+            this.OriginalPaths = paths;
         }
 
-        IEnumerable<Path> OriginalPaths { get; set; }
+        private IEnumerable<Path> OriginalPaths { get; set; }
 
         internal Dictionary<AxisEdge, List<PathEdge>> GetOrder() {
-            FillTheVisibilityGraphByWalkingThePaths();
-            InitPathOrder();
-            OrderPaths();
-            return axisEdgesToPathOrders;
+            this.FillTheVisibilityGraphByWalkingThePaths();
+            this.InitPathOrder();
+            this.OrderPaths();
+            return this.axisEdgesToPathOrders;
         }
 
-        void FillTheVisibilityGraphByWalkingThePaths() {
-            foreach (var path in OriginalPaths)
-                FillTheVisibilityGraphByWalkingPath(path);
+        private void FillTheVisibilityGraphByWalkingThePaths() {
+            foreach (var path in this.OriginalPaths) {
+                this.FillTheVisibilityGraphByWalkingPath(path);
+            }
         }
 
-        void FillTheVisibilityGraphByWalkingPath(Path path){
-            var pathEdgesEnum = CreatePathEdgesFromPoints(path.PathPoints, path.Width).GetEnumerator();
+        private void FillTheVisibilityGraphByWalkingPath(Path path){
+            var pathEdgesEnum = this.CreatePathEdgesFromPoints(path.PathPoints, path.Width).GetEnumerator();
 
-            if (pathEdgesEnum.MoveNext())
+            if (pathEdgesEnum.MoveNext()) {
                 path.SetFirstEdge(pathEdgesEnum.Current);
-            
-            while(pathEdgesEnum.MoveNext())
+            }
+
+            while (pathEdgesEnum.MoveNext()) {
                 path.AddEdge(pathEdgesEnum.Current);
+            }
         }
 
-        IEnumerable<PathEdge> CreatePathEdgesFromPoints(IEnumerable<Point> pathPoints, double width) {
+        private IEnumerable<PathEdge> CreatePathEdgesFromPoints(IEnumerable<Point> pathPoints, double width) {
             var p0 = pathPoints.First();
             foreach (var p1 in pathPoints.Skip(1)) {
-                yield return CreatePathEdge(p0, p1, width);
+                yield return this.CreatePathEdge(p0, p1, width);
                 p0 = p1;
             }
         }
 
-        PathEdge CreatePathEdge(Point p0, Point p1, double width){
+        private PathEdge CreatePathEdge(Point p0, Point p1, double width){
             var dir = CompassVector.DirectionsFromPointToPoint(p0, p1);
             switch (dir){
                 case Direction.East:
                 case Direction.North:
-                    return new PathEdge(GetAxisEdge(p0, p1), width);
+                    return new PathEdge(this.GetAxisEdge(p0, p1), width);
                 case Direction.South:
                 case Direction.West:
                 
-                return new PathEdge(GetAxisEdge(p1,p0), width){Reversed = true};
+                return new PathEdge(this.GetAxisEdge(p1,p0), width){Reversed = true};
                 default:
                     throw new InvalidOperationException(
 #if TEST_MSAGL
@@ -77,38 +78,42 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
             }
         }
 
-        AxisEdge GetAxisEdge(Point p0, Point p1){
-            return PathVisibilityGraph.AddEdge(p0, p1, ((m, n) => new AxisEdge(m, n))) as AxisEdge;
+        private AxisEdge GetAxisEdge(Point p0, Point p1){
+            return this.PathVisibilityGraph.AddEdge(p0, p1, ((m, n) => new AxisEdge(m, n))) as AxisEdge;
         }
 
-        void InitPathOrder() {
-            foreach (var axisEdge in PathVisibilityGraph.Edges.Select(a => (AxisEdge) a))
-                axisEdgesToPathOrders[axisEdge] = new List<PathEdge>();
+        private void InitPathOrder() {
+            foreach (var axisEdge in this.PathVisibilityGraph.Edges.Select(a => (AxisEdge) a)) {
+                this.axisEdgesToPathOrders[axisEdge] = new List<PathEdge>();
+            }
 
-            foreach (var pathEdge in OriginalPaths.SelectMany(path => path.PathEdges))
-                axisEdgesToPathOrders[pathEdge.AxisEdge].Add(pathEdge);
+            foreach (var pathEdge in this.OriginalPaths.SelectMany(path => path.PathEdges)) {
+                this.axisEdgesToPathOrders[pathEdge.AxisEdge].Add(pathEdge);
+            }
         }
 
-
-        void OrderPaths() {
-            foreach (var axisEdge in WalkGraphEdgesInTopologicalOrderIfPossible(PathVisibilityGraph))
-                OrderPathEdgesSharingEdge(axisEdge);
+        private void OrderPaths() {
+            foreach (var axisEdge in WalkGraphEdgesInTopologicalOrderIfPossible(this.PathVisibilityGraph)) {
+                this.OrderPathEdgesSharingEdge(axisEdge);
+            }
         }
 
-        void OrderPathEdgesSharingEdge(AxisEdge edge) {
-            var pathOrder = PathOrderOfVisEdge(edge);
+        private void OrderPathEdgesSharingEdge(AxisEdge edge) {
+            var pathOrder = this.PathOrderOfVisEdge(edge);
             pathOrder.Sort(new Comparison<PathEdge>(CompareTwoPathEdges));
             var i = 0; //fill the index
-            foreach (var pathEdge in pathOrder)
+            foreach (var pathEdge in pathOrder) {
                 pathEdge.Index = i++;
-//            if (pathOrder.PathEdges.Count > 1)
-//                Nudger.ShowOrderedPaths(null,pathOrder.PathEdges.Select(e => e.Path), edge.SourcePoint, edge.TargetPoint);
+            }
+            //            if (pathOrder.PathEdges.Count > 1)
+            //                Nudger.ShowOrderedPaths(null,pathOrder.PathEdges.Select(e => e.Path), edge.SourcePoint, edge.TargetPoint);
         }
 
-
-        static int CompareTwoPathEdges(PathEdge x, PathEdge y) {
-            if (x == y)
+        private static int CompareTwoPathEdges(PathEdge x, PathEdge y) {
+            if (x == y) {
                 return 0;
+            }
+
             Debug.Assert(x.AxisEdge == y.AxisEdge);
             //Nudger.ShowOrderedPaths(null, new[] { x.Path, y.Path }, x.AxisEdge.SourcePoint, x.AxisEdge.TargetPoint);
             int r = CompareInDirectionStartingFromAxisEdge(x, y, x.AxisEdge, x.AxisEdge.Direction);
@@ -124,19 +129,26 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         /// <param name="axisEdge">axisEdge together with the axisEdgeIsReversed parameter define direction of the movement over the paths</param>
         /// <param name="direction"></param>
         /// <returns></returns>
-        static int CompareInDirectionStartingFromAxisEdge(PathEdge x, PathEdge y, AxisEdge axisEdge, Direction direction){
+        private static int CompareInDirectionStartingFromAxisEdge(PathEdge x, PathEdge y, AxisEdge axisEdge, Direction direction){
             while (true) {
                 x = GetNextPathEdgeInDirection(x, axisEdge, direction);
-                if (x == null)
+                if (x == null) {
                     return 0;
+                }
+
                 y = GetNextPathEdgeInDirection(y, axisEdge, direction);
-                if (y == null)
+                if (y == null) {
                     return 0;
+                }
+
                 if (x.AxisEdge == y.AxisEdge) {
                     direction = FindContinuedDirection(axisEdge, direction, x.AxisEdge);
                     axisEdge = x.AxisEdge;
                     int r = GetExistingOrder(x, y);
-                    if (r == NotOrdered) continue;
+                    if (r == NotOrdered) {
+                        continue;
+                    }
+
                     return direction == axisEdge.Direction ? r : -r;
                 }
                 //there is a fork
@@ -148,37 +160,41 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
             }
         }
 
-        static Direction FindContinuedDirection(AxisEdge edge, Direction direction, AxisEdge nextAxisEdge) {
-            if (edge.Direction == direction)
+        private static Direction FindContinuedDirection(AxisEdge edge, Direction direction, AxisEdge nextAxisEdge) {
+            if (edge.Direction == direction) {
                 return nextAxisEdge.Source == edge.Target
                            ? nextAxisEdge.Direction
                            : CompassVector.OppositeDir(nextAxisEdge.Direction);
+            }
 
             return nextAxisEdge.Source == edge.Source
                        ? nextAxisEdge.Direction
                        : CompassVector.OppositeDir(nextAxisEdge.Direction);
         }
 
-        static VisibilityVertex OtherVertex(VisibilityEdge axisEdge, VisibilityVertex v) {
+        private static VisibilityVertex OtherVertex(VisibilityEdge axisEdge, VisibilityVertex v) {
             return axisEdge.Source==v?axisEdge.Target:axisEdge.Source;
         }
 
-        static PointProjection ProjectionForCompare(AxisEdge axisEdge, bool isReversed) {
-            if (axisEdge.Direction == Direction.North)
+        private static PointProjection ProjectionForCompare(AxisEdge axisEdge, bool isReversed) {
+            if (axisEdge.Direction == Direction.North) {
                 return isReversed ? (p => -p.X) : (PointProjection)(p => p.X);
+            }
+
             return isReversed ? (p => p.Y) : (PointProjection)(p => -p.Y);
         }
 
-        static PathEdge GetNextPathEdgeInDirection(PathEdge e, AxisEdge axisEdge, Direction direction) {
+        private static PathEdge GetNextPathEdgeInDirection(PathEdge e, AxisEdge axisEdge, Direction direction) {
             Debug.Assert(e.AxisEdge==axisEdge);
             return axisEdge.Direction == direction ? (e.Reversed ? e.Prev : e.Next) : (e.Reversed ? e.Next : e.Prev);
         }
 
-
-        static int GetExistingOrder(PathEdge x, PathEdge y ) {
+        private static int GetExistingOrder(PathEdge x, PathEdge y ) {
             int xi = x.Index;
-            if (xi == -1)
+            if (xi == -1) {
                 return NotOrdered;
+            }
+
             int yi = y.Index;
             Debug.Assert(yi!=-1);
             return xi.CompareTo(yi);
@@ -186,15 +202,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
 
 
         internal List<PathEdge> PathOrderOfVisEdge(AxisEdge axisEdge) {
-            return axisEdgesToPathOrders[axisEdge];
+            return this.axisEdgesToPathOrders[axisEdge];
         }
 
-        static void InitQueueOfSources(Queue<VisibilityVertex> queue, IDictionary<VisibilityVertex, int> dictionary, VisibilityGraph graph) {
+        private static void InitQueueOfSources(Queue<VisibilityVertex> queue, IDictionary<VisibilityVertex, int> dictionary, VisibilityGraph graph) {
             foreach (var v in graph.Vertices()) {
                 int inDegree = v.InEdgesCount();
                 dictionary[v] = inDegree;
-                if (inDegree == 0)
+                if (inDegree == 0) {
                     queue.Enqueue(v);
+                }
             }
             Debug.Assert(queue.Count > 0);
 
@@ -211,7 +228,10 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
                 foreach (var edge in visVertex.OutEdges){
                     var incomingEdges = inDegreeLeftUnprocessed[edge.Target]--;
                     if(incomingEdges == 1)//it is already zero in the dictionary; all incoming edges have been processed
+{
                         sourcesQueue.Enqueue(edge.Target);
+                    }
+
                     yield return (AxisEdge)edge;
                 }
 

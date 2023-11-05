@@ -32,10 +32,10 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             private List<double> pendingPerpCoords;
 
             internal void AddPendingPerpendicularCoord(double coord) {
-                if (pendingPerpCoords == null) {
-                    pendingPerpCoords = new List<double>();
+                if (this.pendingPerpCoords == null) {
+                    this.pendingPerpCoords = new List<double>();
                 }
-                pendingPerpCoords.Add(coord);
+                this.pendingPerpCoords.Add(coord);
             }
 
             /// <summary>

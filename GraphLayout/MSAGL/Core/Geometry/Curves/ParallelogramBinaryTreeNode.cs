@@ -3,24 +3,24 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     /// Keeps left and right sons of the node. Is used in curve intersections routines.
     /// </summary>
     internal class ParallelogramBinaryTreeNode:ParallelogramNode {
-        
-        ParallelogramNode leftSon;
+        private ParallelogramNode leftSon;
         public ParallelogramNode LeftSon {
             get {
-                return leftSon;
+                return this.leftSon;
             }
             set {
-                leftSon = value;
+                this.leftSon = value;
             }
         }
-        ParallelogramNode rightSon;
+
+        private ParallelogramNode rightSon;
 
         public ParallelogramNode RightSon {
             get {
-                return rightSon;
+                return this.rightSon;
             }
             set {
-                rightSon = value;
+                this.rightSon = value;
             }
         }
     }

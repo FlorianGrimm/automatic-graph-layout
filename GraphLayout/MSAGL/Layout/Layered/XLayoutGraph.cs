@@ -13,19 +13,19 @@ namespace Microsoft.Msagl.Layout.Layered
     /// </summary>
     internal class XLayoutGraph : BasicGraphOnEdges<PolyIntEdge>
     {
+        private ProperLayeredGraph layeredGraph;//the result of layering
 
-        ProperLayeredGraph layeredGraph;//the result of layering
+        private LayerArrays layerArrays;//the result of layering
 
-        LayerArrays layerArrays;//the result of layering
-       
-       
-        int virtualVerticesStart;
-        int virtualVerticesEnd; // we have 0,,,virtualVerticesStart-1 - usual vertices
-        //virtualVerticesStart,...,virtualVerticesEnd -virtual vertices
-        //and virtualVirticesEnd+1, ...NumberOfVertices - nvertices
-        int weightMultiplierOfOriginalOriginal = 1; //weight multiplier for edges with Defaults or n end and start
-        int weightMultOfOneVirtual = 3; //weight multiplier for edges with only one virtual node
-        int weightMultiplierOfTwoVirtual = 8; //weight multiplier for edges with two virtual nodes
+
+        private int virtualVerticesStart;
+        private int virtualVerticesEnd; // we have 0,,,virtualVerticesStart-1 - usual vertices
+                                       //virtualVerticesStart,...,virtualVerticesEnd -virtual vertices
+                                       //and virtualVirticesEnd+1, ...NumberOfVertices - nvertices
+
+        private int weightMultiplierOfOriginalOriginal = 1; //weight multiplier for edges with Defaults or n end and start
+        private int weightMultOfOneVirtual = 3; //weight multiplier for edges with only one virtual node
+        private int weightMultiplierOfTwoVirtual = 8; //weight multiplier for edges with two virtual nodes
 
         internal XLayoutGraph(BasicGraphOnEdges<PolyIntEdge> graph, //DAG of the original graph with no multiple edges
                               ProperLayeredGraph layeredGraph,
@@ -54,9 +54,10 @@ namespace Microsoft.Msagl.Layout.Layered
             int t = edge.Target;
 
             if (s < this.layeredGraph.NodeCount &&
-                layerArrays.Y[s] == layerArrays.Y[t] &&
-                layerArrays.X[s] == layerArrays.X[t] + 1)
+                this.layerArrays.Y[s] == this.layerArrays.Y[t] &&
+                this.layerArrays.X[s] == this.layerArrays.X[t] + 1) {
                 return 0; //this edge needed only for separation vertices in the same layer
+            }
 
             int k = 0;
             System.Diagnostics.Debug.Assert(s >= this.layeredGraph.NodeCount); //check the graph on correctness`    
@@ -67,19 +68,22 @@ namespace Microsoft.Msagl.Layout.Layered
             //there are only two edges in graph.OutEdges(s)
             foreach (PolyIntEdge intEdge in this.OutEdges(s))
             {
-                if (s0 == -1)
+                if (s0 == -1) {
                     s0 = intEdge.Target;
-                else
+                } else {
                     t0 = intEdge.Target;
+                }
             }
 
-            if (s0 >= virtualVerticesStart && s0 <= virtualVerticesEnd)
+            if (s0 >= this.virtualVerticesStart && s0 <= this.virtualVerticesEnd) {
                 k++;
+            }
 
-            if (t0 >= virtualVerticesStart && t0 <= virtualVerticesEnd)
+            if (t0 >= this.virtualVerticesStart && t0 <= this.virtualVerticesEnd) {
                 k++;
+            }
 
-            int ret = k == 0 ? weightMultiplierOfOriginalOriginal : (k == 1 ? weightMultOfOneVirtual : weightMultiplierOfTwoVirtual);
+            int ret = k == 0 ? this.weightMultiplierOfOriginalOriginal : (k == 1 ? this.weightMultOfOneVirtual : this.weightMultiplierOfTwoVirtual);
             return ret;
         }
 
@@ -89,8 +93,9 @@ namespace Microsoft.Msagl.Layout.Layered
         internal void SetEdgeWeights()
         {
 
-            foreach (PolyIntEdge intEdge in this.Edges)
-                intEdge.Weight = intEdge.Weight * EdgeWeightMultiplier(intEdge);                            
+            foreach (PolyIntEdge intEdge in this.Edges) {
+                intEdge.Weight = intEdge.Weight * this.EdgeWeightMultiplier(intEdge);
+            }
         }
        
     }

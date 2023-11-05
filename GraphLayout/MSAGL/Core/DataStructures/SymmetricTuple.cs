@@ -6,9 +6,9 @@ namespace Microsoft.Msagl.Core.DataStructures {
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class SymmetricTuple<T> {
-        bool Equals(SymmetricTuple<T> other) {
-            return (A.Equals(other.A) && B.Equals(other.B)) ||
-                   (A.Equals(other.B) && B.Equals(other.A));
+        private bool Equals(SymmetricTuple<T> other) {
+            return (this.A.Equals(other.A) && this.B.Equals(other.B)) ||
+                   (this.A.Equals(other.B) && this.B.Equals(other.A));
         }
 
         /// <summary>
@@ -23,7 +23,7 @@ namespace Microsoft.Msagl.Core.DataStructures {
 #if !SHARPKIT
             unchecked {
 #endif
-                return A.GetHashCode() ^ B.GetHashCode(); // we need a symmetric hash code
+                return this.A.GetHashCode() ^ this.B.GetHashCode(); // we need a symmetric hash code
 #if !SHARPKIT
             }
 #endif
@@ -37,8 +37,8 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// <param name="a"></param>
         /// <param name="b"></param>
         public SymmetricTuple(T a, T b) {
-            A = a;
-            B = b;
+            this.A = a;
+            this.B = b;
         }
 
         /// <summary>
@@ -49,14 +49,23 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// </returns>
         /// <param name="obj">The object to compare with the current object. </param><filterpriority>2</filterpriority>
         public override bool Equals(object obj) {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((SymmetricTuple<T>)obj);
+            if (ReferenceEquals(null, obj)) {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj)) {
+                return true;
+            }
+
+            if (obj.GetType() != this.GetType()) {
+                return false;
+            }
+
+            return this.Equals((SymmetricTuple<T>)obj);
         }
 
         public override string ToString() {
-            return String.Format("({0},{1})", A, B);
+            return String.Format("({0},{1})", this.A, this.B);
         }
     }
 

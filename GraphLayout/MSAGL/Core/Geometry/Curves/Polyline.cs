@@ -16,21 +16,21 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     [Serializable]
 #endif
     public class Polyline : ICurve, IEnumerable<Point> {
-        bool needToInit = true;
+        private bool needToInit = true;
 
         /// <summary>
         /// 
         /// </summary>
         internal void RequireInit() {
-            needToInit = true;
+            this.needToInit = true;
         }
 
-        bool NeedToInit {
+        private bool NeedToInit {
             get {
-                return needToInit;
+                return this.needToInit;
             }
             set {
-                needToInit = value;
+                this.needToInit = value;
             }
         }
 
@@ -39,7 +39,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 		/// </summary>
 		public IEnumerable<PolylinePoint> PolylinePoints {
             get {
-                PolylinePoint p = StartPoint;
+                PolylinePoint p = this.StartPoint;
                 while (p != null) {
                     yield return p;
                     p = p.Next;
@@ -53,70 +53,74 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider", MessageId = "System.String.Format(System.String,System.Object,System.Object,System.Object)")]
         public override string ToString() {
-            return String.Format("{0},{1},count={2}", Start,End, Count);
+            return String.Format("{0},{1},count={2}", this.Start, this.End, this.Count);
         }
 #endif 
         internal Curve ToCurve() {
             var c = new Curve();
-            Curve.AddLineSegment(c, StartPoint.Point, StartPoint.Next.Point);
-            PolylinePoint p = StartPoint.Next;
-            while ((p = p.Next) != null)
+            Curve.AddLineSegment(c, this.StartPoint.Point, this.StartPoint.Next.Point);
+            PolylinePoint p = this.StartPoint.Next;
+            while ((p = p.Next) != null) {
                 Curve.ContinueWithLineSegment(c, p.Point);
-            if (Closed)
-                Curve.ContinueWithLineSegment(c, StartPoint.Point);
+            }
+
+            if (this.Closed) {
+                Curve.ContinueWithLineSegment(c, this.StartPoint.Point);
+            }
+
             return c;
         }
 
-
-        ParallelogramInternalTreeNode pBNode;
-
-        PolylinePoint startPoint;
+        private ParallelogramInternalTreeNode pBNode;
+        private PolylinePoint startPoint;
 
 		/// <summary>
 		/// 
 		/// </summary>
 		public PolylinePoint StartPoint {
-            get { return startPoint; }
+            get { return this.startPoint; }
             set {
-                RequireInit();
-                startPoint = value;
+                this.RequireInit();
+                this.startPoint = value;
             }
         }
 
-        PolylinePoint endPoint;
+        private PolylinePoint endPoint;
 
 		/// <summary>
 		/// 
 		/// </summary>
 		public PolylinePoint EndPoint {
-            get { return endPoint; }
+            get { return this.endPoint; }
             set {
-                RequireInit();
-                endPoint = value;
+                this.RequireInit();
+                this.endPoint = value;
             }
         }
 
-        int count;
+        private int count;
 
         internal int Count {
             get {
-                if (needToInit)
-                    Init();
-                return count;
+                if (this.needToInit) {
+                    this.Init();
+                }
+
+                return this.count;
             }            
         }
 
-        bool closed;
+        private bool closed;
 
         /// <summary>
         /// 
         /// </summary>
         public bool Closed {
-            get { return closed; }
+            get { return this.closed; }
             set {
-                if (closed != value) {
-                    closed = value;
-                    RequireInit();
+                if (this.closed != value) {
+                    this.closed = value;
+                    this.RequireInit();
                 }
             }
         }
@@ -131,17 +135,19 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         public Point this[double t] {
             get {
                 Point a, b;
-                if (NeedToInit)
-                    Init();
-                GetAdjustedParamAndStartEndPoints(ref t, out a, out b);
+                if (this.NeedToInit) {
+                    this.Init();
+                }
+
+                this.GetAdjustedParamAndStartEndPoints(ref t, out a, out b);
                 return (1 - t)*a + t*b;
             }
         }
 
-        void GetAdjustedParamAndStartEndPoints(ref double t, out Point a, out Point b) {
+        private void GetAdjustedParamAndStartEndPoints(ref double t, out Point a, out Point b) {
             Debug.Assert(t >= -ApproximateComparer.Tolerance);
-            Debug.Assert(StartPoint != null);
-            PolylinePoint s = StartPoint;
+            Debug.Assert(this.StartPoint != null);
+            PolylinePoint s = this.StartPoint;
 
             while (s.Next != null) {
                 if (t <= 1) {
@@ -153,10 +159,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                 t -= 1;
             }
 
-            if (Closed) {
+            if (this.Closed) {
                 if (t <= 1) {
-                    a = EndPoint.Point;
-                    b = StartPoint.Point;
+                    a = this.EndPoint.Point;
+                    b = this.StartPoint.Point;
                     return;
                 }
             }
@@ -172,9 +178,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         public Point Derivative(double t) {
             Point a, b;
-            if (NeedToInit)
-                Init();
-            GetAdjustedParamAndStartEndPoints(ref t, out a, out b);
+            if (this.NeedToInit) {
+                this.Init();
+            }
+
+            this.GetAdjustedParamAndStartEndPoints(ref t, out a, out b);
             return b - a;
         }
 
@@ -185,14 +193,20 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
         public Point LeftDerivative(double t) {
-            if(NeedToInit)
-                Init();
-            PolylinePoint pp = TryToGetPolylinePointCorrespondingToT(t);
-            if (pp == null)
-                return Derivative(t);
-            PolylinePoint prev = TryToGetPrevPointToPolylinePoint(pp);
-            if (prev != null)
+            if(this.NeedToInit) {
+                this.Init();
+            }
+
+            PolylinePoint pp = this.TryToGetPolylinePointCorrespondingToT(t);
+            if (pp == null) {
+                return this.Derivative(t);
+            }
+
+            PolylinePoint prev = this.TryToGetPrevPointToPolylinePoint(pp);
+            if (prev != null) {
                 return pp.Point - prev.Point;
+            }
+
             return pp.Next.Point - pp.Point;
         }
 
@@ -202,44 +216,55 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
         public Point RightDerivative(double t) {
-            if(NeedToInit)
-                Init();
-            var pp = TryToGetPolylinePointCorrespondingToT(t);
-            if (pp == null)
-                return Derivative(t);
-            PolylinePoint next = TryToGetNextPointToPolylinePoint(pp);
-            if (next != null)
+            if(this.NeedToInit) {
+                this.Init();
+            }
+
+            var pp = this.TryToGetPolylinePointCorrespondingToT(t);
+            if (pp == null) {
+                return this.Derivative(t);
+            }
+
+            PolylinePoint next = this.TryToGetNextPointToPolylinePoint(pp);
+            if (next != null) {
                 return next.Point - pp.Point;
+            }
+
             return pp.Point - pp.Prev.Point;
         }
 
-
-        PolylinePoint TryToGetPolylinePointCorrespondingToT(double t) {
-            for (PolylinePoint p = StartPoint; p != null; p = p.Next, t--)
-                if (Math.Abs(t) < ApproximateComparer.Tolerance)
+        private PolylinePoint TryToGetPolylinePointCorrespondingToT(double t) {
+            for (PolylinePoint p = this.StartPoint; p != null; p = p.Next, t--) {
+                if (Math.Abs(t) < ApproximateComparer.Tolerance) {
                     return p;
+                }
+            }
+
             return null;
         }
 
-        PolylinePoint TryToGetPrevPointToPolylinePoint(PolylinePoint p) {
-            if (p != StartPoint)
+        private PolylinePoint TryToGetPrevPointToPolylinePoint(PolylinePoint p) {
+            if (p != this.StartPoint) {
                 return p.Prev;
+            }
 
-            if (!Closed)
+            if (!this.Closed) {
                 return null;
+            }
 
-            return EndPoint;
+            return this.EndPoint;
         }
 
-
-        PolylinePoint TryToGetNextPointToPolylinePoint(PolylinePoint p) {
-            if (p != EndPoint)
+        private PolylinePoint TryToGetNextPointToPolylinePoint(PolylinePoint p) {
+            if (p != this.EndPoint) {
                 return p.Next;
+            }
 
-            if (!Closed)
+            if (!this.Closed) {
                 return null;
+            }
 
-            return StartPoint;
+            return this.StartPoint;
         }
 
 
@@ -273,9 +298,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 #if PPC
                 lock(this){
 #endif
-                if(NeedToInit)
-                    Init();
-                return pBNode;
+                if(this.NeedToInit) {
+                    this.Init();
+                }
+
+                return this.pBNode;
 
                 
                 
@@ -286,12 +313,12 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             }
         }
 
-        static Parallelogram ParallelogramOfLineSeg(Point a, Point b) {
+        private static Parallelogram ParallelogramOfLineSeg(Point a, Point b) {
             Point side = 0.5*(b - a);
             return new Parallelogram(a, side, side);
         }
 
-        Rectangle boundingBox = Rectangle.CreateAnEmptyBox();
+        private Rectangle boundingBox = Rectangle.CreateAnEmptyBox();
 
         /// <summary>
         /// bounding box of the polyline
@@ -301,50 +328,51 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 #if PPC
                 lock(this){
 #endif
-                if (NeedToInit)
-                    Init();
-                
-                return boundingBox;
+                if (this.NeedToInit) {
+                    this.Init();
+                }
+
+                return this.boundingBox;
 #if PPC
                 }
 #endif
             }
         }
 
-        void Init() {
-            
-            boundingBox = new Rectangle(StartPoint.Point);
-            count = 1;
+        private void Init() {
+
+            this.boundingBox = new Rectangle(this.StartPoint.Point);
+            this.count = 1;
             foreach (Point p in this.Skip(1)) {
-                boundingBox.Add(p);
-                count++;
+                this.boundingBox.Add(p);
+                this.count++;
             }
 
-            CalculatePbNode();
+            this.CalculatePbNode();
 
-            NeedToInit = false;
+            this.NeedToInit = false;
         }
 
-        void CalculatePbNode() {
-            pBNode = new ParallelogramInternalTreeNode(this, ParallelogramNodeOverICurve.DefaultLeafBoxesOffset);
+        private void CalculatePbNode() {
+            this.pBNode = new ParallelogramInternalTreeNode(this, ParallelogramNodeOverICurve.DefaultLeafBoxesOffset);
             var parallelograms = new List<Parallelogram>();
-            PolylinePoint pp = StartPoint;
+            PolylinePoint pp = this.StartPoint;
             int offset = 0;
             while (pp.Next != null) {
                 Parallelogram parallelogram = ParallelogramOfLineSeg(pp.Point, pp.Next.Point);
                 parallelograms.Add(parallelogram);
-                pBNode.AddChild(new ParallelogramLeaf(offset, offset + 1, parallelogram, this, 0));
+                this.pBNode.AddChild(new ParallelogramLeaf(offset, offset + 1, parallelogram, this, 0));
                 pp = pp.Next;
                 offset++;
             }
 
-            if (Closed) {
-                Parallelogram parallelogram = ParallelogramOfLineSeg(EndPoint.Point, StartPoint.Point);
+            if (this.Closed) {
+                Parallelogram parallelogram = ParallelogramOfLineSeg(this.EndPoint.Point, this.StartPoint.Point);
                 parallelograms.Add(parallelogram);
-                pBNode.AddChild(new ParallelogramLeaf(offset, offset + 1, parallelogram, this, 0));
+                this.pBNode.AddChild(new ParallelogramLeaf(offset, offset + 1, parallelogram, this, 0));
             }
 
-            pBNode.Parallelogram = Parallelogram.GetParallelogramOfAGroup(parallelograms);
+            this.pBNode.Parallelogram = Parallelogram.GetParallelogramOfAGroup(parallelograms);
         }
 
         /// <summary>
@@ -358,7 +386,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// the end of the parameter domain
         /// </summary>
         public double ParEnd {
-            get { return Closed ? Count : Count - 1; }
+            get { return this.Closed ? this.Count : this.Count - 1; }
         }
 
         /// <summary>
@@ -369,7 +397,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         public ICurve Trim(double start, double end) {
             //this is a very lazy version!
-            Curve curve = ToCurve();
+            Curve curve = this.ToCurve();
             curve = (Curve) curve.Trim(start, end);
 
             return PolylineFromCurve(curve);
@@ -392,8 +420,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         internal static Polyline PolylineFromCurve(Curve curve) {
             var ret = new Polyline();
             ret.AddPoint(curve.Start);
-            foreach (var ls in curve.Segments)
+            foreach (var ls in curve.Segments) {
                 ret.AddPoint(ls.End);
+            }
+
             ret.Closed = curve.Start == curve.End;
             return ret;
         }
@@ -403,14 +433,14 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         public void Translate(Point delta)
         {
-            PolylinePoint polyPoint = StartPoint;
+            PolylinePoint polyPoint = this.StartPoint;
             while (polyPoint != null)
             {
                 polyPoint.Point += delta;
                 polyPoint = polyPoint.Next;
             }
 
-            RequireInit();
+            this.RequireInit();
         }
 
         /// <summary>
@@ -422,34 +452,34 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         public ICurve ScaleFromOrigin(double xScale, double yScale)
         {
             var ret = new Polyline();
-            PolylinePoint polyPoint = StartPoint;
+            PolylinePoint polyPoint = this.StartPoint;
             while (polyPoint != null)
             {
                 ret.AddPoint(Point.Scale(xScale, yScale, polyPoint.Point));
                 polyPoint = polyPoint.Next;
             }
-            ret.Closed = Closed;
+            ret.Closed = this.Closed;
             return ret;
         }
 
         internal void AddPoint(double x, double y) {
-            AddPoint(new Point(x, y));
+            this.AddPoint(new Point(x, y));
         }
 
         internal void PrependPoint(Point p) {
-            Debug.Assert(EndPoint == null || !ApproximateComparer.Close(p, EndPoint.Point));           
+            Debug.Assert(this.EndPoint == null || !ApproximateComparer.Close(p, this.EndPoint.Point));           
             var pp = new PolylinePoint(p) {Polyline = this};
-            if (StartPoint != null) {
-                if (!ApproximateComparer.Close(p, StartPoint.Point))
+            if (this.StartPoint != null) {
+                if (!ApproximateComparer.Close(p, this.StartPoint.Point))
                 {
-                    StartPoint.Prev = pp;
-                    pp.Next = StartPoint;
-                    StartPoint = pp;
+                    this.StartPoint.Prev = pp;
+                    pp.Next = this.StartPoint;
+                    this.StartPoint = pp;
                 }
             } else {
-                StartPoint = EndPoint = pp;
+                this.StartPoint = this.EndPoint = pp;
             }
-            RequireInit();
+            this.RequireInit();
         }
 
         ///<summary>
@@ -458,16 +488,16 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         ///<param name="point"></param>
         public void AddPoint(Point point) {
             var pp = new PolylinePoint(point) {Polyline = this};
-            if (EndPoint != null) {
-               // if (!ApproximateComparer.Close(point, EndPoint.Point)) {
-                    EndPoint.Next = pp;
-                    pp.Prev = EndPoint;
-                    EndPoint = pp;
+            if (this.EndPoint != null) {
+                // if (!ApproximateComparer.Close(point, EndPoint.Point)) {
+                this.EndPoint.Next = pp;
+                    pp.Prev = this.EndPoint;
+                this.EndPoint = pp;
                // }
             } else {
-                StartPoint = EndPoint = pp;
+                this.StartPoint = this.EndPoint = pp;
             }
-            RequireInit();
+            this.RequireInit();
         }
 
         /// <summary>
@@ -475,7 +505,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         public Point Start
         {
-            get { return StartPoint.Point; }
+            get { return this.StartPoint.Point; }
         }
 
         /// <summary>
@@ -483,7 +513,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         public Point End
         {
-            get { return EndPoint.Point; }
+            get { return this.EndPoint.Point; }
         }
 
         /// <summary>
@@ -492,7 +522,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         public ICurve Reverse()
         {
-            return ReversePolyline();
+            return this.ReversePolyline();
         }
 
         /// <summary>
@@ -524,8 +554,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         {
             get {
                 double ret = 0;
-                if (StartPoint != null && StartPoint.Next != null) {
-                    PolylinePoint p = StartPoint.Next;
+                if (this.StartPoint != null && this.StartPoint.Next != null) {
+                    PolylinePoint p = this.StartPoint.Next;
                     do {
                         ret += (p.Point - p.Prev.Point).Length;
                         p = p.Next;
@@ -552,9 +582,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="transformation"></param>
         /// <returns></returns>
       public ICurve Transform(PlaneTransformation transformation) {
-            if (transformation == null)
+            if (transformation == null) {
                 return this;
-            var poly = new Polyline {Closed = Closed};
+            }
+
+            var poly = new Polyline {Closed = this.Closed };
             foreach (var p in this)
             {
                 poly.AddPoint(transformation*p);
@@ -574,7 +606,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             double ret = 0;
             double dist = Double.MaxValue;
             int offset = 0;
-            PolylinePoint pp = StartPoint;
+            PolylinePoint pp = this.StartPoint;
             while (pp.Next != null) {
                 if (offset <= high && offset + 1 >= low) {
                     var lowLocal = Math.Max(0, low - offset);
@@ -592,16 +624,17 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                 offset++;
             }
 
-            if (Closed) {
+            if (this.Closed) {
                 if (offset <= high && offset + 1 >= low) {
                     var lowLocal = Math.Max(0, low - offset);
                     var highLocal = Math.Min(1, high - offset);
-                    var ls = new LineSegment(EndPoint.Point, StartPoint.Point);
+                    var ls = new LineSegment(this.EndPoint.Point, this.StartPoint.Point);
                     double t = ls.ClosestParameterWithinBounds(targetPoint, lowLocal, highLocal);
                     Point delta = ls[t] - targetPoint;
                     double newDist = delta*delta;
-                    if (newDist < dist)
+                    if (newDist < dist) {
                         ret = t + offset;
+                    }
                 }
             }
             return ret;
@@ -616,7 +649,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             double ret = 0;
             double dist = Double.MaxValue;
             int offset = 0;
-            PolylinePoint pp = StartPoint;
+            PolylinePoint pp = this.StartPoint;
             while (pp.Next != null) {
                 var ls = new LineSegment(pp.Point, pp.Next.Point);
                 double t = ls.ClosestParameter(targetPoint);
@@ -630,13 +663,14 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                 offset++;
             }
 
-            if (Closed) {
-                var ls = new LineSegment(EndPoint.Point, StartPoint.Point);
+            if (this.Closed) {
+                var ls = new LineSegment(this.EndPoint.Point, this.StartPoint.Point);
                 double t = ls.ClosestParameter(targetPoint);
                 Point delta = ls[t] - targetPoint;
                 double newDist = delta*delta;
-                if (newDist < dist)
+                if (newDist < dist) {
                     ret = t + offset;
+                }
             }
             return ret;
         }
@@ -647,9 +681,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns>the cloned curve</returns>
         ICurve ICurve.Clone() {
             var ret = new Polyline();
-            foreach (Point p in this)
+            foreach (Point p in this) {
                 ret.AddPoint(p);
-            ret.Closed = Closed;
+            }
+
+            ret.Closed = this.Closed;
             return ret;
         }
 
@@ -679,22 +715,22 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Polyline ReversePolyline() {
             var ret = new Polyline();
-            PolylinePoint pp = EndPoint;
+            PolylinePoint pp = this.EndPoint;
             while (pp.Prev != null) {
                 ret.AddPoint(pp.Point);
                 pp = pp.Prev;
             }
-            ret.AddPoint(StartPoint.Point);
-            ret.Closed = Closed;
+            ret.AddPoint(this.StartPoint.Point);
+            ret.Closed = this.Closed;
             return ret;
         }
 
         internal PolylinePoint Next(PolylinePoint a) {
-            return a.Next ?? (Closed ? StartPoint : null);
+            return a.Next ?? (this.Closed ? this.StartPoint : null);
         }
 
         internal PolylinePoint Prev(PolylinePoint a) {
-            return a.Prev ?? (Closed ? EndPoint : null);
+            return a.Prev ?? (this.Closed ? this.EndPoint : null);
         }
 
         /// <summary>
@@ -703,8 +739,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="points"></param>
         public Polyline(IEnumerable<Point> points) {
             ValidateArg.IsNotNull(points, "points");
-            foreach (var p in points)
-                AddPoint(p);
+            foreach (var p in points) {
+                this.AddPoint(p);
+            }
         }
 
         /// <summary>
@@ -715,8 +752,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "b"),
          SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "a")]
         public Polyline(Point a, Point b) {
-            AddPoint(a);
-            AddPoint(b);
+            this.AddPoint(a);
+            this.AddPoint(b);
         }
 
 
@@ -738,22 +775,22 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <returns></returns>
         internal bool IsClockwise() {
-            return Point.GetTriangleOrientation(StartPoint.Point, StartPoint.Next.Point, StartPoint.Next.Next.Point) ==
+            return Point.GetTriangleOrientation(this.StartPoint.Point, this.StartPoint.Next.Point, this.StartPoint.Next.Next.Point) ==
                    TriangleOrientation.Clockwise;
         }
 
         internal void RemoveStartPoint() {
-            PolylinePoint p = StartPoint.Next;
+            PolylinePoint p = this.StartPoint.Next;
             p.Prev = null;
-            StartPoint = p;
-            RequireInit();
+            this.StartPoint = p;
+            this.RequireInit();
         }
 
         internal void RemoveEndPoint() {
-            PolylinePoint p = EndPoint.Prev;
+            PolylinePoint p = this.EndPoint.Prev;
             p.Next = null;
-            EndPoint = p;
-            RequireInit();
+            this.EndPoint = p;
+            this.RequireInit();
         }
 
         /// <summary>
@@ -764,20 +801,23 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         ///         the first point of the boundary segment containing p </param>
         /// <returns></returns>
         internal PointLocation GetPointLocation(Point point, out PolylinePoint witness) {
-            Debug.Assert(Closed && IsClockwise());
+            Debug.Assert(this.Closed && this.IsClockwise());
             witness = null;
 
-            foreach (PolylinePoint polyPoint in PolylinePoints) {
-                PolylinePoint secondPoint = Next(polyPoint);
+            foreach (PolylinePoint polyPoint in this.PolylinePoints) {
+                PolylinePoint secondPoint = this.Next(polyPoint);
                 TriangleOrientation triangleOrientation = Point.GetTriangleOrientation(point, polyPoint.Point,
                                                                                        secondPoint.Point);
-                if (triangleOrientation == TriangleOrientation.Counterclockwise)
+                if (triangleOrientation == TriangleOrientation.Counterclockwise) {
                     return PointLocation.Outside;
-                if (triangleOrientation == TriangleOrientation.Collinear)
+                }
+
+                if (triangleOrientation == TriangleOrientation.Collinear) {
                     if ((point - polyPoint.Point)*(secondPoint.Point - point) >= 0) {
                         witness = polyPoint;
                         return PointLocation.Boundary;
                     }
+                }
             }
 
             return PointLocation.Inside;
@@ -797,7 +837,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             PolylinePoint start;
             edgeStart = new Point();
             edgeEnd = new Point();
-            PointLocation loc = GetPointLocation(point, out start);
+            PointLocation loc = this.GetPointLocation(point, out start);
             if (PointLocation.Boundary == loc) {
                 edgeStart = start.Point;
                 edgeEnd = start.NextOnPolyline.Point;
@@ -810,8 +850,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <param name="delta"></param>
         public void Shift(Point delta) {
-            for (PolylinePoint pp = StartPoint; pp != null; pp = pp.Next)
+            for (PolylinePoint pp = this.StartPoint; pp != null; pp = pp.Next) {
                 pp.Point += delta;
+            }
         }
 
         #region ICurve Members
@@ -846,8 +887,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         #endregion
 
         internal void AddRangeOfPoints(IEnumerable<Point> points){
-            foreach (var point in points)
-                AddPoint(point);
+            foreach (var point in points) {
+                this.AddPoint(point);
+            }
         }
     }
 }

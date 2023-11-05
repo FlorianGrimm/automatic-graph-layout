@@ -10,7 +10,7 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing{
     /// holds the data needed to restore the edge after the editing
     /// </summary>
     public class EdgeRestoreData : RestoreData {
-        Point labelCenter;
+        private Point labelCenter;
 
         [SuppressMessage("Microsoft.Performance", "CA1804:RemoveUnusedLocals", MessageId = "p")]
         internal EdgeRestoreData(Edge edge) {
@@ -21,17 +21,21 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing{
                         new[] {edge.Source.Center}.Concat(Polyline.PolylineFromCurve(asCurve)).
                             Concat(new[] {edge.Target.Center}));
             }
-            UnderlyingPolyline = edge.UnderlyingPolyline.Clone();
+            this.UnderlyingPolyline = edge.UnderlyingPolyline.Clone();
 
-            Curve = edge.Curve.Clone();
-            if (edge.EdgeGeometry.SourceArrowhead != null)
-                ArrowheadAtSourcePosition = edge.EdgeGeometry.SourceArrowhead.TipPosition;
-            if (edge.EdgeGeometry.TargetArrowhead != null)
-                ArrowheadAtTargetPosition = edge.EdgeGeometry.TargetArrowhead.TipPosition;
+            this.Curve = edge.Curve.Clone();
+            if (edge.EdgeGeometry.SourceArrowhead != null) {
+                this.ArrowheadAtSourcePosition = edge.EdgeGeometry.SourceArrowhead.TipPosition;
+            }
+
+            if (edge.EdgeGeometry.TargetArrowhead != null) {
+                this.ArrowheadAtTargetPosition = edge.EdgeGeometry.TargetArrowhead.TipPosition;
+            }
+
             if (edge.Label != null && edge.UnderlyingPolyline != null) {
-                labelCenter = edge.Label.Center;
+                this.labelCenter = edge.Label.Center;
                 Curve untrimmedCurve = edge.UnderlyingPolyline.CreateCurve();
-                LabelAttachmentParameter = untrimmedCurve.ClosestParameter(labelCenter);
+                this.LabelAttachmentParameter = untrimmedCurve.ClosestParameter(this.labelCenter);
             }
         }
 
@@ -45,8 +49,8 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing{
         /// the initial center
         /// </summary>
         public Point LabelCenter {
-            get { return labelCenter; }
-            set { labelCenter = value; }
+            get { return this.labelCenter; }
+            set { this.labelCenter = value; }
         }
 
         /// <summary>

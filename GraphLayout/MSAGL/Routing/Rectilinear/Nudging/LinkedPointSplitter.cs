@@ -16,41 +16,44 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         /// <param name="horizontalPoints">no two horizontal segs overlap, but they can share an end point</param>
         /// <param name="verticalPoints">no two vertical segs overlap, but they can share an end point</param>
         internal LinkedPointSplitter(List<LinkedPoint> horizontalPoints, List<LinkedPoint> verticalPoints) {
-            VerticalPoints = verticalPoints;
-            HorizontalPoints=horizontalPoints;
+            this.VerticalPoints = verticalPoints;
+            this.HorizontalPoints =horizontalPoints;
         }
 
-        List<LinkedPoint> HorizontalPoints { get; set; }
+        private List<LinkedPoint> HorizontalPoints { get; set; }
 
-        List<LinkedPoint> VerticalPoints { get; set; }
+        private List<LinkedPoint> VerticalPoints { get; set; }
 
         internal void SplitPoints() {
-            if(VerticalPoints.Count==0 || HorizontalPoints.Count==0)
+            if(this.VerticalPoints.Count==0 || this.HorizontalPoints.Count==0) {
                 return; //there will be no intersections
-            InitEventQueue();
-            ProcessEvents();
+            }
+
+            this.InitEventQueue();
+            this.ProcessEvents();
         }
 
-        void ProcessEvents() {
-            while (!Queue.IsEmpty()) {
+        private void ProcessEvents() {
+            while (!this.Queue.IsEmpty()) {
                 double z;
-                var linkedPoint = Queue.Dequeue(out z);
-                ProcessEvent(linkedPoint, z);
+                var linkedPoint = this.Queue.Dequeue(out z);
+                this.ProcessEvent(linkedPoint, z);
             }
         }
 
-
-        void ProcessEvent(LinkedPoint linkedPoint, double z){
-            if(ApproximateComparer.Close(linkedPoint.Next.Point.X, linkedPoint.Point.X))
-                if(z==Low(linkedPoint))
-                    ProcessLowLinkedPointEvent(linkedPoint);
-                else
-                    ProcessHighLinkedPointEvent(linkedPoint);
-            else
-                IntersectWithTree(linkedPoint);
+        private void ProcessEvent(LinkedPoint linkedPoint, double z){
+            if(ApproximateComparer.Close(linkedPoint.Next.Point.X, linkedPoint.Point.X)) {
+                if (z==Low(linkedPoint)) {
+                    this.ProcessLowLinkedPointEvent(linkedPoint);
+                } else {
+                    this.ProcessHighLinkedPointEvent(linkedPoint);
+                }
+            } else {
+                this.IntersectWithTree(linkedPoint);
+            }
         }
 
-        void IntersectWithTree(LinkedPoint horizontalPoint) {
+        private void IntersectWithTree(LinkedPoint horizontalPoint) {
             double left, right;
             bool xAligned;
             Debug.Assert(ApproximateComparer.Close(horizontalPoint.Y,horizontalPoint.Next.Y));
@@ -64,30 +67,34 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
                 left = horizontalPoint.Next.Point.X;
                 xAligned=false;
             }
-            if(xAligned)
-            for( var node = tree.FindFirst(p => left<= p.Point.X); 
+            if(xAligned) {
+                for ( var node = this.tree.FindFirst(p => left<= p.Point.X); 
                 node!=null &&  node.Item.Point.X <= right ;
-                node=tree.Next(node)) {
+                node= this.tree.Next(node)) {
                 var p = new Point(node.Item.Point.X, y );
                 horizontalPoint = TrySplitHorizontalPoint(horizontalPoint, p, true);
                 TrySplitVerticalPoint(node.Item,p);
-            }else //xAligned==false
-                for (var node = tree.FindLast(p => p.Point.X <= right);
+            }
+            } else //xAligned==false
+{
+                for (var node = this.tree.FindLast(p => p.Point.X <= right);
                 node != null && node.Item.Point.X >= left;
-                node = tree.Previous(node)) {
+                node = this.tree.Previous(node)) {
                     var p = new Point(node.Item.Point.X, y);
                     horizontalPoint = TrySplitHorizontalPoint(horizontalPoint, p, false);
                     TrySplitVerticalPoint(node.Item, p);
                 }
+            }
         }
 
-        static void TrySplitVerticalPoint(LinkedPoint linkedPoint, Point point) {
+        private static void TrySplitVerticalPoint(LinkedPoint linkedPoint, Point point) {
             Debug.Assert(ApproximateComparer.Close(linkedPoint.X, linkedPoint.Next.X));
-            if (Low(linkedPoint) + ApproximateComparer.DistanceEpsilon < point.Y && point.Y + ApproximateComparer.DistanceEpsilon < High(linkedPoint))
+            if (Low(linkedPoint) + ApproximateComparer.DistanceEpsilon < point.Y && point.Y + ApproximateComparer.DistanceEpsilon < High(linkedPoint)) {
                 linkedPoint.SetNewNext(point);
+            }
         }
 
-        static LinkedPoint TrySplitHorizontalPoint(LinkedPoint horizontalPoint, Point point, bool xAligned) {
+        private static LinkedPoint TrySplitHorizontalPoint(LinkedPoint horizontalPoint, Point point, bool xAligned) {
             Debug.Assert(ApproximateComparer.Close(horizontalPoint.Y, horizontalPoint.Next.Y));
             if (xAligned && horizontalPoint.X + ApproximateComparer.DistanceEpsilon < point.X &&
                 point.X + ApproximateComparer.DistanceEpsilon < horizontalPoint.Next.X ||
@@ -99,34 +106,36 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
             return horizontalPoint;
         }
 
-        void ProcessHighLinkedPointEvent(LinkedPoint linkedPoint) {
-            tree.Remove(linkedPoint);
+        private void ProcessHighLinkedPointEvent(LinkedPoint linkedPoint) {
+            this.tree.Remove(linkedPoint);
         }
 
-        readonly RbTree<LinkedPoint> tree = new RbTree<LinkedPoint>((a, b) => a.Point.X.CompareTo(b.Point.X));
+        private readonly RbTree<LinkedPoint> tree = new RbTree<LinkedPoint>((a, b) => a.Point.X.CompareTo(b.Point.X));
 
-        void ProcessLowLinkedPointEvent(LinkedPoint linkedPoint) {
-            tree.Insert(linkedPoint);
+        private void ProcessLowLinkedPointEvent(LinkedPoint linkedPoint) {
+            this.tree.Insert(linkedPoint);
         }
 
-        void InitEventQueue() {
-            Queue = new GenericBinaryHeapPriorityQueue<LinkedPoint>();
-            foreach (var vertPoint in VerticalPoints)
-                Queue.Enqueue(vertPoint, Low(vertPoint));
+        private void InitEventQueue() {
+            this.Queue = new GenericBinaryHeapPriorityQueue<LinkedPoint>();
+            foreach (var vertPoint in this.VerticalPoints) {
+                this.Queue.Enqueue(vertPoint, Low(vertPoint));
+            }
             //a horizontal point will appear in the queue after a vertical point 
             // with the same coordinate low coorinate
-            foreach (var horizPoint in HorizontalPoints)
-                Queue.Enqueue(horizPoint, horizPoint.Point.Y);
+            foreach (var horizPoint in this.HorizontalPoints) {
+                this.Queue.Enqueue(horizPoint, horizPoint.Point.Y);
+            }
         }
 
-        static double Low(LinkedPoint vertPoint) {
+        private static double Low(LinkedPoint vertPoint) {
             return Math.Min(vertPoint.Point.Y, vertPoint.Next.Point.Y);
         }
 
-        static double High(LinkedPoint vertPoint) {
+        private static double High(LinkedPoint vertPoint) {
             return Math.Max(vertPoint.Point.Y, vertPoint.Next.Point.Y);
         }
 
-        GenericBinaryHeapPriorityQueue<LinkedPoint> Queue { get; set; }
+        private GenericBinaryHeapPriorityQueue<LinkedPoint> Queue { get; set; }
     }
 }

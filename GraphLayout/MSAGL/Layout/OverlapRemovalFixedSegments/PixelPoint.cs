@@ -9,8 +9,8 @@ internal struct PixelPoint {
         return new PixelPoint((int)(point.X / coefficient), (int)(point.Y / coefficient));
     }
     internal PixelPoint(int x, int y) {
-        X = x;
-        Y = y;
+        this.X = x;
+        this.Y = y;
     }
 
     public static PixelPoint operator -(PixelPoint a, PixelPoint b) {
@@ -28,6 +28,6 @@ internal struct PixelPoint {
     }
 
     public override string ToString() {
-        return String.Format("({0},{1})", X, Y);
+        return String.Format("({0},{1})", this.X, this.Y);
     }
 }

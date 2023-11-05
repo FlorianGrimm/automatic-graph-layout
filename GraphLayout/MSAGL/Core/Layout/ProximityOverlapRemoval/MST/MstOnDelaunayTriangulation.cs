@@ -50,8 +50,9 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.MinimumSpanningTre
         static internal List<CdtEdge> GetMstOnCdt(Cdt cdt, Func<CdtEdge, double> weights) {
             var siteArray = cdt.PointsToSites.Values.ToArray();
             var siteIndex = new Dictionary<CdtSite, int>();
-            for (int i = 0; i < siteArray.Length; i++)
+            for (int i = 0; i < siteArray.Length; i++) {
                 siteIndex[siteArray[i]] = i;
+            }
 
             Dictionary<IntPair, CdtEdge> intPairsToCdtEdges = GetEdges(siteArray, siteIndex);
 
@@ -62,13 +63,14 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.MinimumSpanningTre
             return new List<CdtEdge>(mstOnBasicGraph.GetTreeEdges().Select(e=>intPairsToCdtEdges[(IntPair)e]));
         }
 
-        static Dictionary<IntPair, CdtEdge> GetEdges(CdtSite[] siteArray, Dictionary<CdtSite, int> siteIndex) {
+        private static Dictionary<IntPair, CdtEdge> GetEdges(CdtSite[] siteArray, Dictionary<CdtSite, int> siteIndex) {
             var d = new Dictionary<IntPair, CdtEdge>();
             for (int i = 0; i < siteArray.Length; i++) {
                 var site = siteArray[i];
                 var sourceIndex = siteIndex[site];
-                foreach (var e in site.Edges)
+                foreach (var e in site.Edges) {
                     d[new IntPair(sourceIndex, siteIndex[e.lowerSite])] = e;
+                }
             }
             return d;
         }
@@ -82,18 +84,21 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.MinimumSpanningTre
             int count = 100;
             var random = new Random(3);
             var points = new List<Point>();
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < count; i++) {
                 points.Add(20 * new Point(random.NextDouble(), random.NextDouble()));
+            }
 
             var cdt = new Cdt(points, null, null);
             cdt.Run();
             var ret = GetMstOnCdt(cdt, e => (e.lowerSite.Point - e.upperSite.Point).Length);
             var l = new List<DebugCurve>();
-            foreach(var s in cdt.PointsToSites.Values)
+            foreach(var s in cdt.PointsToSites.Values) {
                 foreach (var e in s.Edges)
                 {
                     l.Add(new DebugCurve(100, 0.1, "black", new LineSegment(e.lowerSite.Point, e.upperSite.Point)));
                 }
+            }
+
             foreach (var e in ret)
             {
                 l.Add(new DebugCurve(100, 0.12, "red", new LineSegment(e.lowerSite.Point, e.upperSite.Point)));

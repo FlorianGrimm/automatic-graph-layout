@@ -12,16 +12,16 @@ namespace Microsoft.Msagl.Routing {
         internal TightLooseCouple() { }
 
         public TightLooseCouple(Polyline tightPolyline, Shape looseShape, double distance) {
-            TightPolyline = tightPolyline;
-            LooseShape = looseShape;
-            Distance = distance;
+            this.TightPolyline = tightPolyline;
+            this.LooseShape = looseShape;
+            this.Distance = distance;
         }
         /// <summary>
         /// the loose polyline has been created with this distance
         /// </summary>
         internal double Distance { get; set; }
         public override string ToString() {
-            return (TightPolyline == null ? "null" : TightPolyline.ToString().Substring(0, 5)) + "," + (LooseShape == null ? "null" : LooseShape.ToString().Substring(0, 5));
+            return (this.TightPolyline == null ? "null" : this.TightPolyline.ToString().Substring(0, 5)) + "," + (this.LooseShape == null ? "null" : this.LooseShape.ToString().Substring(0, 5));
         }
     }
 }

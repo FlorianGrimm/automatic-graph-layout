@@ -32,7 +32,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         internal LockPosition(Node node, Rectangle bounds, double weight)
             : this(node, bounds)
         {
-            Weight = weight;
+            this.Weight = weight;
         }
         /// <summary>
         /// Set the weight for this lock constraint, i.e. if this constraint conflicts with some other constraint,
@@ -40,7 +40,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         public double Weight {
             get {
-                return weight;
+                return this.weight;
             }
             set {
                 if (value > 1e20) {
@@ -49,7 +49,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
                 if (value < 1e-3) {
                     throw new ArgumentOutOfRangeException("value", "must be > 1e-3 or we run out of precision");
                 }
-                weight = value;
+                this.weight = value;
             }
         }
         /// <summary>
@@ -74,10 +74,10 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// I use stay weight in "project" of any constraints involving the locked node
         /// </summary>
         public virtual double Project() {
-            var delta = Bounds.LeftBottom - node.BoundingBox.LeftBottom;
+            var delta = this.Bounds.LeftBottom - this.node.BoundingBox.LeftBottom;
             double deltaLength = delta.Length;
             double displacement = deltaLength;
-            var cluster = node as Cluster;
+            var cluster = this.node as Cluster;
             if (cluster != null)
             {
                 foreach(var c in cluster.AllClustersDepthFirst())
@@ -88,7 +88,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
                         displacement += deltaLength;
                     }
                     if(c == cluster) {
-                        cluster.RectangularBoundary.Rect = Bounds;
+                        cluster.RectangularBoundary.Rect = this.Bounds;
                     }
                     else 
                     {
@@ -99,7 +99,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
             } 
             else
             {
-                node.BoundingBox = Bounds;
+                this.node.BoundingBox = this.Bounds;
             }
             return displacement;
         }
@@ -120,23 +120,23 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         internal void SetLockNodeWeight()
         {
-            Cluster cluster = node as Cluster;
+            Cluster cluster = this.node as Cluster;
             if (cluster != null)
             {
                 RectangularClusterBoundary cb = cluster.RectangularBoundary;
-                cb.Lock(Bounds.Left, Bounds.Right, Bounds.Top, Bounds.Bottom);
+                cb.Lock(this.Bounds.Left, this.Bounds.Right, this.Bounds.Top, this.Bounds.Bottom);
                 foreach (var c in cluster.AllClustersDepthFirst())
                 {
                     c.RectangularBoundary.GenerateFixedConstraints = true;
                     foreach (var child in  c.Nodes)
                     {
-                        SetFINodeWeight(child, weight);
+                        SetFINodeWeight(child, this.weight);
                     }
                 }
             }
             else
             {
-                SetFINodeWeight(node, weight);
+                SetFINodeWeight(this.node, this.weight);
             }
             foreach (Cluster ancestor in this.node.AllClusterAncestors)
             {
@@ -152,7 +152,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// Reverses the changes made by SetLockNodeWeight
         /// </summary>
         internal void RestoreNodeWeight() {
-            Cluster cluster = node as Cluster;
+            Cluster cluster = this.node as Cluster;
             if (cluster != null)
             {
                 cluster.RectangularBoundary.Unlock();
@@ -167,9 +167,9 @@ namespace Microsoft.Msagl.Layout.Incremental {
             }
             else
             {
-                SetFINodeWeight(node, 1);
+                SetFINodeWeight(this.node, 1);
             }
-            Cluster parent = node.ClusterParent;
+            Cluster parent = this.node.ClusterParent;
             while (parent != null)
             {
                 if (parent.RectangularBoundary != null)
@@ -197,14 +197,14 @@ namespace Microsoft.Msagl.Layout.Incremental {
             get
             {
                 var nodes = new List<Node>();
-                var cluster = node as Cluster;
+                var cluster = this.node as Cluster;
                 if(cluster!=null)
                 {
                     cluster.ForEachNode(nodes.Add);
                 }
                 else
                 {
-                    nodes.Add(node);
+                    nodes.Add(this.node);
                 }
                 return nodes;
             }

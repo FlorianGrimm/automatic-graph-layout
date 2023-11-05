@@ -11,17 +11,17 @@ namespace Microsoft.Msagl.Miscellaneous.RegularGrid
     /// </summary>
     public class GridTraversal
     {
-        readonly Rectangle _boundingBox;
-        readonly int _iLevel;
-        readonly ulong _numberOfTilesOnSide;
+        private readonly Rectangle _boundingBox;
+        private readonly int _iLevel;
+        private readonly ulong _numberOfTilesOnSide;
 
         public GridTraversal(Rectangle boundingBox, int iLevel)
         {
-            _boundingBox = boundingBox;
-            _iLevel = iLevel;
-            _numberOfTilesOnSide = (ulong)Math.Pow(2, iLevel);
-            TileWidth = boundingBox.Width / _numberOfTilesOnSide;
-            TileHeight = boundingBox.Height / _numberOfTilesOnSide;
+            this._boundingBox = boundingBox;
+            this._iLevel = iLevel;
+            this._numberOfTilesOnSide = (ulong)Math.Pow(2, iLevel);
+            this.TileWidth = boundingBox.Width / this._numberOfTilesOnSide;
+            this.TileHeight = boundingBox.Height / this._numberOfTilesOnSide;
         }
 
         public double TileWidth { get; private set; }
@@ -29,15 +29,15 @@ namespace Microsoft.Msagl.Miscellaneous.RegularGrid
         public double TileHeight{ get; private set; }
 
         public int ILevel {
-            get { return _iLevel; }
+            get { return this._iLevel; }
         }
 
         public Tuple<int, int> PointToTuple(Point point)
         {
-            var dx = (int)(point.X - _boundingBox.Left);
-            var dy = (int)(point.Y - _boundingBox.Bottom);
-            var ix = (int)(dx / TileWidth);
-            var iy = (int)(dy / TileHeight);
+            var dx = (int)(point.X - this._boundingBox.Left);
+            var dy = (int)(point.Y - this._boundingBox.Bottom);
+            var ix = (int)(dx / this.TileWidth);
+            var iy = (int)(dy / this.TileHeight);
             return new Tuple<int, int>(ix, iy);
         }
 
@@ -47,8 +47,8 @@ namespace Microsoft.Msagl.Miscellaneous.RegularGrid
             List<Tuple<int, int>> tiles = new List<Tuple<int, int>>();
 
 
-            var tile1 = PointToTuple(p1);
-            var tile2 = PointToTuple(p2);
+            var tile1 = this.PointToTuple(p1);
+            var tile2 = this.PointToTuple(p2);
 
             tiles.Add(tile1);
             if (tile1.Equals(tile2))
@@ -58,43 +58,47 @@ namespace Microsoft.Msagl.Miscellaneous.RegularGrid
 
             tiles.Add(tile2);
             var midPoint = (p1 + p2) / 2;
-            InsertTilesLeftHalf(tile1, p1, midPoint, tiles);
-            InsertTilesRightHalf(midPoint, p2, tile2, tiles);
+            this.InsertTilesLeftHalf(tile1, p1, midPoint, tiles);
+            this.InsertTilesRightHalf(midPoint, p2, tile2, tiles);
             return tiles;
         }
 
-        void InsertTilesLeftHalf(Tuple<int, int> leftTile, Point p1, Point p2, List<Tuple<int, int>> tiles)
+        private void InsertTilesLeftHalf(Tuple<int, int> leftTile, Point p1, Point p2, List<Tuple<int, int>> tiles)
         {
-            Debug.Assert(PointToTuple(p1).Equals(leftTile));
-            var rightTile = PointToTuple(p2);
-            if (rightTile.Equals(leftTile) || ApproximateComparer.Close(p1, p2, ((double)TileWidth) / 10))
+            Debug.Assert(this.PointToTuple(p1).Equals(leftTile));
+            var rightTile = this.PointToTuple(p2);
+            if (rightTile.Equals(leftTile) || ApproximateComparer.Close(p1, p2, ((double)this.TileWidth) / 10)) {
                 return;
+            }
+
             tiles.Add(rightTile);
             var midPoint = (p1 + p2) / 2;
-            InsertTilesLeftHalf(leftTile, p1, midPoint, tiles);
-            InsertTilesRightHalf(midPoint, p2, rightTile, tiles);
+            this.InsertTilesLeftHalf(leftTile, p1, midPoint, tiles);
+            this.InsertTilesRightHalf(midPoint, p2, rightTile, tiles);
         }
 
-        void InsertTilesRightHalf(Point p1, Point p2, Tuple<int, int> rightTile, List<Tuple<int, int>> tiles)
+        private void InsertTilesRightHalf(Point p1, Point p2, Tuple<int, int> rightTile, List<Tuple<int, int>> tiles)
         {
-            var leftTile = PointToTuple(p1);
-            if (leftTile.Equals(rightTile) || ApproximateComparer.Close(p1, p2, ((double)TileWidth) / 10))
+            var leftTile = this.PointToTuple(p1);
+            if (leftTile.Equals(rightTile) || ApproximateComparer.Close(p1, p2, ((double)this.TileWidth) / 10)) {
                 return;
+            }
+
             tiles.Add(leftTile);
             var midPoint = (p1 + p2) / 2;
-            InsertTilesLeftHalf(leftTile, p1, midPoint, tiles);
-            InsertTilesRightHalf(midPoint, p2, rightTile, tiles);
+            this.InsertTilesLeftHalf(leftTile, p1, midPoint, tiles);
+            this.InsertTilesRightHalf(midPoint, p2, rightTile, tiles);
         }
 
         public Rectangle GetTileRect(int ix, int iy)
         {
-            var lb = _boundingBox.LeftBottom + new Point(ix * TileWidth, iy * TileHeight);
-            return new Rectangle(lb, lb + new Point(TileWidth, TileHeight));
+            var lb = this._boundingBox.LeftBottom + new Point(ix * this.TileWidth, iy * this.TileHeight);
+            return new Rectangle(lb, lb + new Point(this.TileWidth, this.TileHeight));
         }
 
         public List<string> SplitTileNameOnDirectories(int ix, int iy) {
             List<string> ret = new List<string>();
-            ulong tileIndex = (ulong) iy*_numberOfTilesOnSide + (ulong) ix;
+            ulong tileIndex = (ulong) iy* this._numberOfTilesOnSide + (ulong) ix;
             const ulong maxInDirectory = 500; // there will be no more than 500 files in each sub-directory
             do {
                 if (tileIndex < maxInDirectory) {
@@ -107,12 +111,12 @@ namespace Microsoft.Msagl.Miscellaneous.RegularGrid
                 tileIndex = k;
             } while (true);
 
-            ret.Add(ILevel.ToString());
+            ret.Add(this.ILevel.ToString());
             return ret;
         }
 
         public Point GetTileCenter(int ix, int iy) {
-            return _boundingBox.LeftBottom + new Point(ix*TileWidth + 0.5*TileWidth, iy*TileHeight + 0.5*TileHeight);
+            return this._boundingBox.LeftBottom + new Point(ix* this.TileWidth + 0.5* this.TileWidth, iy* this.TileHeight + 0.5* this.TileHeight);
 
         }
     }

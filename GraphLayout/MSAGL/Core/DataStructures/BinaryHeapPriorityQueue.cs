@@ -9,46 +9,48 @@ namespace Microsoft.Msagl.Core.DataStructures {
     internal class BinaryHeapPriorityQueue {
         //indexing for A starts from 1
 
-        readonly int[] _heap;//array of heap elements
-        readonly int[] _reverse_heap; // the map from [0,..., n-1] to their places in heap
+        private readonly int[] _Heap; //array of heap elements
+        private readonly int[] _ReverseHeap; // the map from [0,..., n-1] to their places in heap
+
         /// <summary>
         /// the array of priorities
         /// </summary>
-        readonly double[] _priors;
-        internal int Count { get { return heapSize; } }
-        int heapSize;
+        private readonly double[] _Priorities;
+
+        private int _HeapSize;
+        internal int Count { get { return this._HeapSize; } }
+
         /// <summary>
         /// the constructor
         /// we suppose that all integers inserted into the queue will be less then n
         /// </summary>
         /// <param name="n">it is the number of different integers that will be inserted into the queue </param>
         internal BinaryHeapPriorityQueue(int n) {
-            _priors = new double[n];
-            _heap = new int[n + 1];//because indexing for A starts from 1
-            _reverse_heap = new int[n];
+            this._Priorities = new double[n];
+            this._Heap = new int[n + 1];//because indexing for A starts from 1
+            this._ReverseHeap = new int[n];
         }
 
-
-        void SwapWithParent(int i) {
-            int parent = _heap[i >> 1];
-            PutAtI(i >> 1, _heap[i]);
-            PutAtI(i, parent);
+        private void SwapWithParent(int i) {
+            int parent = this._Heap[i >> 1];
+            this.PutAtI(i >> 1, this._Heap[i]);
+            this.PutAtI(i, parent);
         }
 
         internal void Enqueue(int o, double priority) {
-            heapSize++;
-            int i = heapSize;
-            _priors[o] = priority;
-            PutAtI(i, o);
-            while (i > 1 && _priors[_heap[i >> 1]] > priority) {
-                SwapWithParent(i);
+            this._HeapSize++;
+            int i = this._HeapSize;
+            this._Priorities[o] = priority;
+            this.PutAtI(i, o);
+            while (i > 1 && this._Priorities[this._Heap[i >> 1]] > priority) {
+                this.SwapWithParent(i);
                 i >>= 1;
             }
         }
 
-        void PutAtI(int i, int h) {
-            _heap[i] = h;
-            _reverse_heap[h] = i;
+        private void PutAtI(int i, int h) {
+            this._Heap[i] = h;
+            this._ReverseHeap[h] = i;
         }
 
         /// <summary>
@@ -56,36 +58,41 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// </summary>
         /// <returns></returns>
         internal int Dequeue() {
-            if (heapSize == 0)
+            if (this._HeapSize == 0) {
                 throw new InvalidOperationException();
-            int ret = _heap[1];
-            if (heapSize > 1)
+            }
+
+            int ret = this._Heap[1];
+            if (this._HeapSize > 1)
             {
-                PutAtI(1, _heap[heapSize]);
+                this.PutAtI(1, this._Heap[this._HeapSize]);
                 int i = 1;
                 while (true)
                 {
                     int smallest = i;
                     int l = i << 1;
 
-                    if (l <= heapSize && _priors[_heap[l]] <_priors[ _heap[i]])
+                    if (l <= this._HeapSize && this._Priorities[this._Heap[l]] < this._Priorities[this._Heap[i]]) {
                         smallest = l;
+                    }
 
                     int r = l + 1;
 
-                    if (r <= heapSize && _priors[_heap[r]] < _priors[_heap[smallest]])
+                    if (r <= this._HeapSize && this._Priorities[this._Heap[r]] < this._Priorities[this._Heap[smallest]]) {
                         smallest = r;
+                    }
 
-                    if (smallest != i)
-                        SwapWithParent(smallest);
-                    else
+                    if (smallest != i) {
+                        this.SwapWithParent(smallest);
+                    } else {
                         break;
+                    }
 
                     i = smallest;
 
                 }
             }
-            heapSize--;
+            this._HeapSize--;
             return ret;
         }
 
@@ -97,13 +104,15 @@ namespace Microsoft.Msagl.Core.DataStructures {
 
             //System.Diagnostics.Debug.WriteLine("delcrease "+ o.ToString()+" to "+ newPriority.ToString());
 
-            _priors[o] = newPriority;
-            int i = _reverse_heap[o];
+            this._Priorities[o] = newPriority;
+            int i = this._ReverseHeap[o];
             while (i > 1) {
-                if (_priors[_heap[i]] < _priors[_heap[i >> 1]])
-                    SwapWithParent(i);
-                else
+                if (this._Priorities[this._Heap[i]] < this._Priorities[this._Heap[i >> 1]]) {
+                    this.SwapWithParent(i);
+                } else {
                     break;
+                }
+
                 i >>= 1;
             }
         }
@@ -121,8 +130,9 @@ namespace Microsoft.Msagl.Core.DataStructures {
             q.Enqueue(7, 7);
             q.Enqueue(6, 6);
             q.Enqueue(0, 0);
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 10; i++) {
                 System.Diagnostics.Debug.WriteLine(q.Dequeue());
+            }
         }
     }
 }

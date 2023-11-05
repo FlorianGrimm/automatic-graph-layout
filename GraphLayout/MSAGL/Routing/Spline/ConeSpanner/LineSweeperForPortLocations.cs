@@ -18,7 +18,7 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
     /// Sweeps a given direction of cones and adds discovered edges to the graph.
     /// The cones can only start at ports here.
     /// </summary>
-    class LineSweeperForPortLocations : LineSweeperBase, IConeSweeper {
+    internal class LineSweeperForPortLocations : LineSweeperBase, IConeSweeper {
         public Point ConeRightSideDirection {
             get;
             set;
@@ -29,28 +29,24 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
             set;
         }
 
-        readonly ConeSideComparer coneSideComparer;
+        private readonly ConeSideComparer coneSideComparer;
+        private readonly VisibilityGraph visibilityGraph;
+        private readonly RbTree<ConeSide> rightConeSides;
+        private readonly RbTree<ConeSide> leftConeSides;
 
-
-        readonly VisibilityGraph visibilityGraph;
-
-        readonly RbTree<ConeSide> rightConeSides;
-        readonly RbTree<ConeSide> leftConeSides;
- 
-
-        LineSweeperForPortLocations(IEnumerable<Polyline> obstacles, Point direction, Point coneRsDir, Point coneLsDir,
+        private LineSweeperForPortLocations(IEnumerable<Polyline> obstacles, Point direction, Point coneRsDir, Point coneLsDir,
                                     VisibilityGraph visibilityGraph, IEnumerable<Point> portLocations)
             : base(obstacles, direction) {
             this.visibilityGraph = visibilityGraph;
-            ConeRightSideDirection = coneRsDir;
-            ConeLeftSideDirection = coneLsDir;
-            coneSideComparer = new ConeSideComparer(this);
-            leftConeSides = new RbTree<ConeSide>(coneSideComparer);
-            rightConeSides = new RbTree<ConeSide>(coneSideComparer);
-            PortLocations = portLocations;
+            this.ConeRightSideDirection = coneRsDir;
+            this.ConeLeftSideDirection = coneLsDir;
+            this.coneSideComparer = new ConeSideComparer(this);
+            this.leftConeSides = new RbTree<ConeSide>(this.coneSideComparer);
+            this.rightConeSides = new RbTree<ConeSide>(this.coneSideComparer);
+            this.PortLocations = portLocations;
         }
 
-        IEnumerable<Point> PortLocations {
+        private IEnumerable<Point> PortLocations {
             get;
             set;
         }
@@ -63,152 +59,164 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
             cs.Calculate();
         }
 
-        void Calculate() {
-            InitQueueOfEvents();
-            foreach (Point portLocation in PortLocations)
-                EnqueueEvent(new PortLocationEvent(portLocation));
-            while (EventQueue.Count > 0)
-                ProcessEvent(EventQueue.Dequeue());
+        private void Calculate() {
+            this.InitQueueOfEvents();
+            foreach (Point portLocation in this.PortLocations) {
+                this.EnqueueEvent(new PortLocationEvent(portLocation));
+            }
+
+            while (this.EventQueue.Count > 0) {
+                this.ProcessEvent(this.EventQueue.Dequeue());
+            }
         }
 
-        void ProcessEvent(SweepEvent p) {
+        private void ProcessEvent(SweepEvent p) {
             var vertexEvent = p as VertexEvent;
             // ShowTrees(CurveFactory.CreateDiamond(3, 3, p.Site));
-            if (vertexEvent != null)
-                ProcessVertexEvent(vertexEvent);
-            else {
+            if (vertexEvent != null) {
+                this.ProcessVertexEvent(vertexEvent);
+            } else {
                 var rightIntersectionEvent = p as RightIntersectionEvent;
-                if (rightIntersectionEvent != null)
-                    ProcessRightIntersectionEvent(rightIntersectionEvent);
-                else {
+                if (rightIntersectionEvent != null) {
+                    this.ProcessRightIntersectionEvent(rightIntersectionEvent);
+                } else {
                     var leftIntersectionEvent = p as LeftIntersectionEvent;
-                    if (leftIntersectionEvent != null)
-                        ProcessLeftIntersectionEvent(leftIntersectionEvent);
-                    else {
+                    if (leftIntersectionEvent != null) {
+                        this.ProcessLeftIntersectionEvent(leftIntersectionEvent);
+                    } else {
                         var coneClosure = p as ConeClosureEvent;
                         if (coneClosure != null) {
-                            if (!coneClosure.ConeToClose.Removed)
-                                RemoveCone(coneClosure.ConeToClose);
+                            if (!coneClosure.ConeToClose.Removed) {
+                                this.RemoveCone(coneClosure.ConeToClose);
+                            }
                         } else {
                             var portLocationEvent = p as PortLocationEvent;
-                            if (portLocationEvent != null)
-                                ProcessPortLocationEvent(portLocationEvent);
-                            else
-                                ProcessPointObstacleEvent((PortObstacleEvent) p);
+                            if (portLocationEvent != null) {
+                                this.ProcessPortLocationEvent(portLocationEvent);
+                            } else {
+                                this.ProcessPointObstacleEvent((PortObstacleEvent) p);
+                            }
                         }
-                        Z = GetZ(p);
+                        this.Z = this.GetZ(p);
                     }
                 }
             }
             //     ShowTrees(CurveFactory.CreateEllipse(3,3,p.Site));
         }
 
-        void ProcessPointObstacleEvent(PortObstacleEvent portObstacleEvent) {
-            Z = GetZ(portObstacleEvent);
-            GoOverConesSeeingVertexEvent(portObstacleEvent);
+        private void ProcessPointObstacleEvent(PortObstacleEvent portObstacleEvent) {
+            this.Z = this.GetZ(portObstacleEvent);
+            this.GoOverConesSeeingVertexEvent(portObstacleEvent);
         }
 
-        void CreateConeOnPortLocation(SweepEvent sweepEvent) {
+        private void CreateConeOnPortLocation(SweepEvent sweepEvent) {
             var cone = new Cone(sweepEvent.Site, this);
-            RBNode<ConeSide> leftNode = InsertToTree(leftConeSides, cone.LeftSide = new ConeLeftSide(cone));
-            RBNode<ConeSide> rightNode = InsertToTree(rightConeSides, cone.RightSide = new ConeRightSide(cone));
-            LookForIntersectionWithConeRightSide(rightNode);
-            LookForIntersectionWithConeLeftSide(leftNode);
+            RBNode<ConeSide> leftNode = this.InsertToTree(this.leftConeSides, cone.LeftSide = new ConeLeftSide(cone));
+            RBNode<ConeSide> rightNode = this.InsertToTree(this.rightConeSides, cone.RightSide = new ConeRightSide(cone));
+            this.LookForIntersectionWithConeRightSide(rightNode);
+            this.LookForIntersectionWithConeLeftSide(leftNode);
         }
 
-        void ProcessPortLocationEvent(PortLocationEvent portEvent) {
-            Z = GetZ(portEvent);
-            GoOverConesSeeingVertexEvent(portEvent);
-            CreateConeOnPortLocation(portEvent);
+        private void ProcessPortLocationEvent(PortLocationEvent portEvent) {
+            this.Z = this.GetZ(portEvent);
+            this.GoOverConesSeeingVertexEvent(portEvent);
+            this.CreateConeOnPortLocation(portEvent);
         }
 
-
-        void ProcessLeftIntersectionEvent(LeftIntersectionEvent leftIntersectionEvent) {
+        private void ProcessLeftIntersectionEvent(LeftIntersectionEvent leftIntersectionEvent) {
             if (leftIntersectionEvent.coneLeftSide.Removed == false) {
-                if (Math.Abs((leftIntersectionEvent.EndVertex.Point - leftIntersectionEvent.Site)*SweepDirection) <
+                if (Math.Abs((leftIntersectionEvent.EndVertex.Point - leftIntersectionEvent.Site)* this.SweepDirection) <
                     ApproximateComparer.DistanceEpsilon) {
                     //the cone is totally covered by a horizontal segment
-                    RemoveCone(leftIntersectionEvent.coneLeftSide.Cone);
+                    this.RemoveCone(leftIntersectionEvent.coneLeftSide.Cone);
                 } else {
-                    RemoveSegFromLeftTree(leftIntersectionEvent.coneLeftSide);
-                    Z = SweepDirection*leftIntersectionEvent.Site; //it is safe now to restore the order
+                    this.RemoveSegFromLeftTree(leftIntersectionEvent.coneLeftSide);
+                    this.Z = this.SweepDirection *leftIntersectionEvent.Site; //it is safe now to restore the order
                     var leftSide = new BrokenConeSide(
                         leftIntersectionEvent.Site,
                         leftIntersectionEvent.EndVertex, leftIntersectionEvent.coneLeftSide);
-                    InsertToTree(leftConeSides, leftSide);
+                    this.InsertToTree(this.leftConeSides, leftSide);
                     leftIntersectionEvent.coneLeftSide.Cone.LeftSide = leftSide;
-                    LookForIntersectionOfObstacleSideAndLeftConeSide(leftIntersectionEvent.Site,
+                    this.LookForIntersectionOfObstacleSideAndLeftConeSide(leftIntersectionEvent.Site,
                                                                      leftIntersectionEvent.EndVertex);
-                    TryCreateConeClosureForLeftSide(leftSide);
+                    this.TryCreateConeClosureForLeftSide(leftSide);
                 }
-            } else
-                Z = SweepDirection*leftIntersectionEvent.Site;
+            } else {
+                this.Z = this.SweepDirection *leftIntersectionEvent.Site;
+            }
         }
 
-        void TryCreateConeClosureForLeftSide(BrokenConeSide leftSide) {
+        private void TryCreateConeClosureForLeftSide(BrokenConeSide leftSide) {
             var coneRightSide = leftSide.Cone.RightSide as ConeRightSide;
-            if (coneRightSide != null)
+            if (coneRightSide != null) {
                 if (
                     Point.GetTriangleOrientation(coneRightSide.Start, coneRightSide.Start + coneRightSide.Direction,
-                                                 leftSide.EndVertex.Point) == TriangleOrientation.Clockwise)
-                    CreateConeClosureEvent(leftSide, coneRightSide);
+                                                 leftSide.EndVertex.Point) == TriangleOrientation.Clockwise) {
+                    this.CreateConeClosureEvent(leftSide, coneRightSide);
+                }
+            }
         }
 
-        void CreateConeClosureEvent(BrokenConeSide brokenConeSide, ConeSide otherSide) {
+        private void CreateConeClosureEvent(BrokenConeSide brokenConeSide, ConeSide otherSide) {
             Point x;
             bool r = Point.RayIntersectsRayInteriors(brokenConeSide.start, brokenConeSide.Direction, otherSide.Start,
                                                      otherSide.Direction, out x);
             Debug.Assert(r);
-            EnqueueEvent(new ConeClosureEvent(x, brokenConeSide.Cone));
+            this.EnqueueEvent(new ConeClosureEvent(x, brokenConeSide.Cone));
         }
 
-        void ProcessRightIntersectionEvent(RightIntersectionEvent rightIntersectionEvent) {
+        private void ProcessRightIntersectionEvent(RightIntersectionEvent rightIntersectionEvent) {
             //restore Z for the time being
             // Z = PreviousZ;
             if (rightIntersectionEvent.coneRightSide.Removed == false) {
                 //it can happen that the cone side participating in the intersection is gone;
                 //obstracted by another obstacle or because of a vertex found inside of the cone
                 //PrintOutRightSegTree();
-                RemoveSegFromRightTree(rightIntersectionEvent.coneRightSide);
-                Z = SweepDirection*rightIntersectionEvent.Site;
+                this.RemoveSegFromRightTree(rightIntersectionEvent.coneRightSide);
+                this.Z = this.SweepDirection *rightIntersectionEvent.Site;
                 var rightSide = new BrokenConeSide(
                     rightIntersectionEvent.Site,
                     rightIntersectionEvent.EndVertex, rightIntersectionEvent.coneRightSide);
-                InsertToTree(rightConeSides, rightSide);
+                this.InsertToTree(this.rightConeSides, rightSide);
                 rightIntersectionEvent.coneRightSide.Cone.RightSide = rightSide;
-                LookForIntersectionOfObstacleSideAndRightConeSide(rightIntersectionEvent.Site,
+                this.LookForIntersectionOfObstacleSideAndRightConeSide(rightIntersectionEvent.Site,
                                                                   rightIntersectionEvent.EndVertex);
 
-                TryCreateConeClosureForRightSide(rightSide);
-            } else
-                Z = SweepDirection*rightIntersectionEvent.Site;
+                this.TryCreateConeClosureForRightSide(rightSide);
+            } else {
+                this.Z = this.SweepDirection *rightIntersectionEvent.Site;
+            }
         }
 
-        void TryCreateConeClosureForRightSide(BrokenConeSide rightSide) {
+        private void TryCreateConeClosureForRightSide(BrokenConeSide rightSide) {
             var coneLeftSide = rightSide.Cone.LeftSide as ConeLeftSide;
-            if (coneLeftSide != null)
+            if (coneLeftSide != null) {
                 if (
                     Point.GetTriangleOrientation(coneLeftSide.Start, coneLeftSide.Start + coneLeftSide.Direction,
-                                                 rightSide.EndVertex.Point) == TriangleOrientation.Counterclockwise)
-                    CreateConeClosureEvent(rightSide, coneLeftSide);
+                                                 rightSide.EndVertex.Point) == TriangleOrientation.Counterclockwise) {
+                    this.CreateConeClosureEvent(rightSide, coneLeftSide);
+                }
+            }
         }
 
-        void RemoveConesClosedBySegment(Point leftPoint, Point rightPoint) {
-            CloseConesCoveredBySegment(leftPoint, rightPoint,
-                                       SweepDirection*leftPoint > SweepDirection*rightPoint
-                                           ? leftConeSides
-                                           : rightConeSides);
+        private void RemoveConesClosedBySegment(Point leftPoint, Point rightPoint) {
+            this.CloseConesCoveredBySegment(leftPoint, rightPoint,
+                                       this.SweepDirection *leftPoint > this.SweepDirection *rightPoint
+                                           ? this.leftConeSides
+                                           : this.rightConeSides);
         }
 
-        void CloseConesCoveredBySegment(Point leftPoint, Point rightPoint, RbTree<ConeSide> tree) {
+        private void CloseConesCoveredBySegment(Point leftPoint, Point rightPoint, RbTree<ConeSide> tree) {
             RBNode<ConeSide> node = tree.FindFirst(
                 s => Point.GetTriangleOrientation(s.Start, s.Start + s.Direction, leftPoint) ==
                      TriangleOrientation.Counterclockwise);
 
             Point x;
             if (node == null || !Point.IntervalIntersectsRay(leftPoint, rightPoint,
-                                                             node.Item.Start, node.Item.Direction, out x))
+                                                             node.Item.Start, node.Item.Direction, out x)) {
                 return;
+            }
+
             var conesToRemove = new List<Cone>();
             do {
                 conesToRemove.Add(node.Item.Cone);
@@ -217,27 +225,28 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
                                                                  node.Item.Start, node.Item.Direction, out x));
 
 
-            foreach (Cone cone in conesToRemove)
-                RemoveCone(cone);
+            foreach (Cone cone in conesToRemove) {
+                this.RemoveCone(cone);
+            }
         }
 
-        void ProcessVertexEvent(VertexEvent vertexEvent) {
-            Z = GetZ(vertexEvent);
-            GoOverConesSeeingVertexEvent(vertexEvent);
-            AddConeAndEnqueueEvents(vertexEvent);
+        private void ProcessVertexEvent(VertexEvent vertexEvent) {
+            this.Z = this.GetZ(vertexEvent);
+            this.GoOverConesSeeingVertexEvent(vertexEvent);
+            this.AddConeAndEnqueueEvents(vertexEvent);
         }
 
 #if TEST_MSAGL
     // ReSharper disable UnusedMember.Local
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        static Ellipse EllipseOnVert(SweepEvent vertexEvent) {
+        private static Ellipse EllipseOnVert(SweepEvent vertexEvent) {
             // ReSharper restore UnusedMember.Local
             return new Ellipse(2, 2, vertexEvent.Site);
         }
 
         // ReSharper disable UnusedMember.Local
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        static Ellipse EllipseOnPolylinePoint(PolylinePoint pp) {
+        private static Ellipse EllipseOnPolylinePoint(PolylinePoint pp) {
             // ReSharper restore UnusedMember.Local
             return new Ellipse(2, 2, pp.Point);
         }
@@ -248,45 +257,46 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
 #if TEST_MSAGL
     // ReSharper disable UnusedMember.Local
         [SuppressMessage("Microsoft.Globalization", "CA1303:Do not pass literals as localized parameters", MessageId = "System.Diagnostics.Debug.WriteLine(System.String)"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void CheckConsistency() {
+        private void CheckConsistency() {
             // ReSharper restore UnusedMember.Local
-            foreach (var s in rightConeSides) {
-                coneSideComparer.SetOperand(s);
+            foreach (var s in this.rightConeSides) {
+                this.coneSideComparer.SetOperand(s);
             }
-            foreach (var s in leftConeSides) {
-                coneSideComparer.SetOperand(s);
-                if (!rightConeSides.Contains(s.Cone.RightSide)) {
-                    PrintOutRightSegTree();
-                    PrintOutLeftSegTree();
+            foreach (var s in this.leftConeSides) {
+                this.coneSideComparer.SetOperand(s);
+                if (!this.rightConeSides.Contains(s.Cone.RightSide)) {
+                    this.PrintOutRightSegTree();
+                    this.PrintOutLeftSegTree();
                 }
             }
         }
 
         // ReSharper disable UnusedMember.Local
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void ShowTrees(params ICurve[] curves) {
+        private void ShowTrees(params ICurve[] curves) {
             // ReSharper restore UnusedMember.Local
-            var l = Obstacles.Select(c => new DebugCurve(100, 1, "blue", c));
-            l = l.Concat(rightConeSides.Select(s => new DebugCurve(200, 1, "brown", ExtendSegmentToZ(s))));
-            l = l.Concat(leftConeSides.Select(s => new DebugCurve(200, 1, "gree", ExtendSegmentToZ(s))));
+            var l = this.Obstacles.Select(c => new DebugCurve(100, 1, "blue", c));
+            l = l.Concat(this.rightConeSides.Select(s => new DebugCurve(200, 1, "brown", this.ExtendSegmentToZ(s))));
+            l = l.Concat(this.leftConeSides.Select(s => new DebugCurve(200, 1, "gree", this.ExtendSegmentToZ(s))));
             l = l.Concat(curves.Select(c => new DebugCurve("red", c)));
             l =
                 l.Concat(
-                    visibilityGraph.Edges.Select(e => new LineSegment(e.SourcePoint, e.TargetPoint)).Select(
+                    this.visibilityGraph.Edges.Select(e => new LineSegment(e.SourcePoint, e.TargetPoint)).Select(
                         c => new DebugCurve("marine", c)));
             LayoutAlgorithmSettings.ShowDebugCurvesEnumeration(l);
         }
 
-        void ShowLeftTree(params ICurve[] curves) {
-            var l = Obstacles.Select(c => new DebugCurve(c));
-            l = l.Concat(leftConeSides.Select(s => new DebugCurve("brown", ExtendSegmentToZ(s))));
+        private void ShowLeftTree(params ICurve[] curves) {
+            var l = this.Obstacles.Select(c => new DebugCurve(c));
+            l = l.Concat(this.leftConeSides.Select(s => new DebugCurve("brown", this.ExtendSegmentToZ(s))));
             l = l.Concat(curves.Select(c => new DebugCurve("red", c)));
             LayoutAlgorithmSettings.ShowDebugCurvesEnumeration(l);
 
         }
-        void ShowRightTree(params ICurve[] curves) {
-            var l = Obstacles.Select(c => new DebugCurve(c));
-            l = l.Concat(rightConeSides.Select(s => new DebugCurve("brown", ExtendSegmentToZ(s))));
+
+        private void ShowRightTree(params ICurve[] curves) {
+            var l = this.Obstacles.Select(c => new DebugCurve(c));
+            l = l.Concat(this.rightConeSides.Select(s => new DebugCurve("brown", this.ExtendSegmentToZ(s))));
             l = l.Concat(curves.Select(c => new DebugCurve("red", c)));
             LayoutAlgorithmSettings.ShowDebugCurvesEnumeration(l);
         }
@@ -294,7 +304,7 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
         // ReSharper disable UnusedMember.Global
         internal void Show(params ICurve[] curves) {
             // ReSharper restore UnusedMember.Global
-            var l = Obstacles.Select(c => new DebugCurve(100, 1, "black", c));
+            var l = this.Obstacles.Select(c => new DebugCurve(100, 1, "black", c));
 
             l = l.Concat(curves.Select(c => new DebugCurve(200, 1, "red", c)));
             //            foreach (var s in rightConeSides){
@@ -306,7 +316,7 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
 
             l =
                 l.Concat(
-                    visibilityGraph.Edges.Select(edge => new LineSegment(edge.SourcePoint, edge.TargetPoint)).Select(
+                    this.visibilityGraph.Edges.Select(edge => new LineSegment(edge.SourcePoint, edge.TargetPoint)).Select(
                         c => new DebugCurve(100, 1, "blue", c)));
 
 
@@ -314,10 +324,10 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
 
         }
 
-        ICurve ExtendSegmentToZ(ConeSide segment) {
-            double den = segment.Direction * SweepDirection;
+        private ICurve ExtendSegmentToZ(ConeSide segment) {
+            double den = segment.Direction * this.SweepDirection;
             Debug.Assert(Math.Abs(den) > ApproximateComparer.DistanceEpsilon);
-            double t = (Z - segment.Start * SweepDirection) / den;
+            double t = (this.Z - segment.Start * this.SweepDirection) / den;
 
             return new LineSegment(segment.Start, segment.Start + segment.Direction * t);
         }
@@ -325,60 +335,66 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
 
 
 #endif
-        void AddConeAndEnqueueEvents(VertexEvent vertexEvent) {
+        private void AddConeAndEnqueueEvents(VertexEvent vertexEvent) {
             var leftVertexEvent = vertexEvent as LeftVertexEvent;
             if (leftVertexEvent != null) {
                 PolylinePoint nextPoint = vertexEvent.Vertex.NextOnPolyline;
-                CloseConesAtLeftVertex(leftVertexEvent, nextPoint);
+                this.CloseConesAtLeftVertex(leftVertexEvent, nextPoint);
             } else {
                 var rightVertexEvent = vertexEvent as RightVertexEvent;
                 if (rightVertexEvent != null) {
                     PolylinePoint nextPoint = vertexEvent.Vertex.PrevOnPolyline;
-                    CloseConesAtRightVertex(rightVertexEvent, nextPoint);
+                    this.CloseConesAtRightVertex(rightVertexEvent, nextPoint);
                 } else {
-                    CloseConesAtLeftVertex(vertexEvent, vertexEvent.Vertex.NextOnPolyline);
-                    CloseConesAtRightVertex(vertexEvent, vertexEvent.Vertex.PrevOnPolyline);
+                    this.CloseConesAtLeftVertex(vertexEvent, vertexEvent.Vertex.NextOnPolyline);
+                    this.CloseConesAtRightVertex(vertexEvent, vertexEvent.Vertex.PrevOnPolyline);
                 }
             }
         }
 
-        void CloseConesAtRightVertex(VertexEvent rightVertexEvent,
+        private void CloseConesAtRightVertex(VertexEvent rightVertexEvent,
                                      PolylinePoint nextVertex) {
             Point prevSite = rightVertexEvent.Vertex.NextOnPolyline.Point;
-            double prevZ = prevSite*SweepDirection;
-            if (prevZ <= Z && Z - prevZ < ApproximateComparer.DistanceEpsilon)
-                RemoveConesClosedBySegment(prevSite, rightVertexEvent.Vertex.Point);
+            double prevZ = prevSite* this.SweepDirection;
+            if (prevZ <= this.Z && this.Z - prevZ < ApproximateComparer.DistanceEpsilon) {
+                this.RemoveConesClosedBySegment(prevSite, rightVertexEvent.Vertex.Point);
+            }
 
             Point site = rightVertexEvent.Site;
-            Point coneLp = site + ConeLeftSideDirection;
-            Point coneRp = site + ConeRightSideDirection;
+            Point coneLp = site + this.ConeLeftSideDirection;
+            Point coneRp = site + this.ConeRightSideDirection;
             Point nextSite = nextVertex.Point;
             //SugiyamaLayoutSettings.Show(new LineSegment(site, coneLP), new LineSegment(site, coneRP), new LineSegment(site, nextSite));
             //try to remove the right side
-            if ((site - prevSite)*SweepDirection > ApproximateComparer.DistanceEpsilon)
-                RemoveRightSide(new RightObstacleSide(rightVertexEvent.Vertex.NextOnPolyline));
-            if (GetZ(nextSite) + ApproximateComparer.DistanceEpsilon < GetZ(rightVertexEvent))
+            if ((site - prevSite)* this.SweepDirection > ApproximateComparer.DistanceEpsilon) {
+                this.RemoveRightSide(new RightObstacleSide(rightVertexEvent.Vertex.NextOnPolyline));
+            }
+
+            if (this.GetZ(nextSite) + ApproximateComparer.DistanceEpsilon < this.GetZ(rightVertexEvent)) {
                 return;
+            }
+
             if (!Point.PointToTheRightOfLineOrOnLine(nextSite, site, coneLp)) {
                 //if (angle <= -coneAngle / 2) {
                 //   CreateConeOnVertex(rightVertexEvent);
-                if (Point.PointToTheLeftOfLineOrOnLine(nextSite + DirectionPerp, nextSite, site))
-                    EnqueueEvent(new RightVertexEvent(nextVertex));
+                if (Point.PointToTheLeftOfLineOrOnLine(nextSite + this.DirectionPerp, nextSite, site)) {
+                    this.EnqueueEvent(new RightVertexEvent(nextVertex));
+                }
                 //  TryEnqueueRighVertexEvent(nextVertex);
             } else if (Point.PointToTheLeftOfLineOrOnLine(nextSite, site, coneRp)) {
                 //if (angle < coneAngle / 2) {
-                CaseToTheLeftOfLineOrOnLineConeRp(rightVertexEvent, nextVertex);
+                this.CaseToTheLeftOfLineOrOnLineConeRp(rightVertexEvent, nextVertex);
             } else {
-                if ((nextSite - site)*SweepDirection > ApproximateComparer.DistanceEpsilon) {
-                    LookForIntersectionOfObstacleSideAndLeftConeSide(rightVertexEvent.Site, nextVertex);
-                    InsertRightSide(new RightObstacleSide(rightVertexEvent.Vertex));
+                if ((nextSite - site)* this.SweepDirection > ApproximateComparer.DistanceEpsilon) {
+                    this.LookForIntersectionOfObstacleSideAndLeftConeSide(rightVertexEvent.Site, nextVertex);
+                    this.InsertRightSide(new RightObstacleSide(rightVertexEvent.Vertex));
                 }
-                EnqueueEvent(new RightVertexEvent(nextVertex));
+                this.EnqueueEvent(new RightVertexEvent(nextVertex));
             }
         }
 
-        void CaseToTheLeftOfLineOrOnLineConeRp(VertexEvent rightVertexEvent, PolylinePoint nextVertex) {
-            EnqueueEvent(new RightVertexEvent(nextVertex));
+        private void CaseToTheLeftOfLineOrOnLineConeRp(VertexEvent rightVertexEvent, PolylinePoint nextVertex) {
+            this.EnqueueEvent(new RightVertexEvent(nextVertex));
             //the obstacle side is inside of the cone
             //we need to create an obstacle left side segment instead of the left cone side
             //                var cone = new Cone(rightVertexEvent.Vertex.Point, this);
@@ -388,90 +404,97 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
             //                var rnode = InsertToTree(rightConeSides, cone.RightSide);
             //                LookForIntersectionWithConeRightSide(rnode);
             RBNode<ConeSide> lnode =
-                leftConeSides.FindFirst(side => PointIsToTheLeftOfSegment(rightVertexEvent.Site, side));
-            FixConeLeftSideIntersections(rightVertexEvent.Vertex, nextVertex, lnode);
-            if ((nextVertex.Point - rightVertexEvent.Site)*SweepDirection > ApproximateComparer.DistanceEpsilon)
-                InsertRightSide(new RightObstacleSide(rightVertexEvent.Vertex));
+                this.leftConeSides.FindFirst(side => PointIsToTheLeftOfSegment(rightVertexEvent.Site, side));
+            this.FixConeLeftSideIntersections(rightVertexEvent.Vertex, nextVertex, lnode);
+            if ((nextVertex.Point - rightVertexEvent.Site)* this.SweepDirection > ApproximateComparer.DistanceEpsilon) {
+                this.InsertRightSide(new RightObstacleSide(rightVertexEvent.Vertex));
+            }
         }
 
-
-        void LookForIntersectionOfObstacleSideAndRightConeSide(Point obstacleSideStart,
+        private void LookForIntersectionOfObstacleSideAndRightConeSide(Point obstacleSideStart,
                                                                PolylinePoint obstacleSideVertex) {
-            RBNode<ConeSide> node = GetLastNodeToTheLeftOfPointInRightSegmentTree(obstacleSideStart);
+            RBNode<ConeSide> node = this.GetLastNodeToTheLeftOfPointInRightSegmentTree(obstacleSideStart);
 
             if (node != null) {
                 var coneRightSide = node.Item as ConeRightSide;
                 if (coneRightSide != null) {
                     Point intersection;
                     if (Point.IntervalIntersectsRay(obstacleSideStart, obstacleSideVertex.Point,
-                                                    coneRightSide.Start, ConeRightSideDirection, out intersection) &&
-                        SegmentIsNotHorizontal(intersection, obstacleSideVertex.Point)) {
-                        EnqueueEvent(CreateRightIntersectionEvent(coneRightSide, intersection, obstacleSideVertex));
+                                                    coneRightSide.Start, this.ConeRightSideDirection, out intersection) &&
+                        this.SegmentIsNotHorizontal(intersection, obstacleSideVertex.Point)) {
+                        this.EnqueueEvent(this.CreateRightIntersectionEvent(coneRightSide, intersection, obstacleSideVertex));
                     }
                 }
             }
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        RightIntersectionEvent CreateRightIntersectionEvent(ConeRightSide coneRightSide, Point intersection,
+        private RightIntersectionEvent CreateRightIntersectionEvent(ConeRightSide coneRightSide, Point intersection,
                                                             PolylinePoint obstacleSideVertex) {
-            Debug.Assert(Math.Abs((obstacleSideVertex.Point - intersection)*SweepDirection) >
+            Debug.Assert(Math.Abs((obstacleSideVertex.Point - intersection)* this.SweepDirection) >
                          ApproximateComparer.DistanceEpsilon);
             return new RightIntersectionEvent(coneRightSide,
                                               intersection, obstacleSideVertex);
         }
 
-        RBNode<ConeSide> GetLastNodeToTheLeftOfPointInRightSegmentTree(Point obstacleSideStart) {
-            return rightConeSides.FindLast(
+        private RBNode<ConeSide> GetLastNodeToTheLeftOfPointInRightSegmentTree(Point obstacleSideStart) {
+            return this.rightConeSides.FindLast(
                 s => PointIsToTheRightOfSegment(obstacleSideStart, s));
         }
 
-        void LookForIntersectionOfObstacleSideAndLeftConeSide(Point obstacleSideStart,
+        private void LookForIntersectionOfObstacleSideAndLeftConeSide(Point obstacleSideStart,
                                                               PolylinePoint obstacleSideVertex) {
-            RBNode<ConeSide> node = GetFirstNodeToTheRightOfPoint(obstacleSideStart);
+            RBNode<ConeSide> node = this.GetFirstNodeToTheRightOfPoint(obstacleSideStart);
             //          ShowLeftTree(Box(obstacleSideStart));
-            if (node == null) return;
+            if (node == null) {
+                return;
+            }
+
             var coneLeftSide = node.Item as ConeLeftSide;
-            if (coneLeftSide == null) return;
+            if (coneLeftSide == null) {
+                return;
+            }
+
             Point intersection;
             if (Point.IntervalIntersectsRay(obstacleSideStart, obstacleSideVertex.Point, coneLeftSide.Start,
-                                            ConeLeftSideDirection, out intersection)) {
-                EnqueueEvent(new LeftIntersectionEvent(coneLeftSide, intersection, obstacleSideVertex));
+                                            this.ConeLeftSideDirection, out intersection)) {
+                this.EnqueueEvent(new LeftIntersectionEvent(coneLeftSide, intersection, obstacleSideVertex));
             }
         }
 
-        RBNode<ConeSide> GetFirstNodeToTheRightOfPoint(Point p) {
-            return leftConeSides.FindFirst(s => PointIsToTheLeftOfSegment(p, s));
+        private RBNode<ConeSide> GetFirstNodeToTheRightOfPoint(Point p) {
+            return this.leftConeSides.FindFirst(s => PointIsToTheLeftOfSegment(p, s));
         }
 
 #if TEST_MSAGL
     // ReSharper disable UnusedMember.Local
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        static ICurve Box(Point p) {
+        private static ICurve Box(Point p) {
             // ReSharper restore UnusedMember.Local
             return CurveFactory.CreateRectangle(2, 2, p);
         }
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1303:Do not pass literals as localized parameters", MessageId = "System.Diagnostics.Debug.WriteLine(System.String)")]
-        void PrintOutRightSegTree() {
+        private void PrintOutRightSegTree() {
             System.Diagnostics.Debug.WriteLine("right segment tree");
-            foreach (var t in rightConeSides)
+            foreach (var t in this.rightConeSides) {
                 System.Diagnostics.Debug.WriteLine(t);
+            }
+
             System.Diagnostics.Debug.WriteLine("end of right segments");
         }
 #endif
 
-        static bool PointIsToTheLeftOfSegment(Point p, ConeSide seg) {
+        private static bool PointIsToTheLeftOfSegment(Point p, ConeSide seg) {
             return (Point.GetTriangleOrientation(seg.Start, seg.Start + seg.Direction, p) ==
                     TriangleOrientation.Counterclockwise);
         }
 
-        static bool PointIsToTheRightOfSegment(Point p, ConeSide seg) {
+        private static bool PointIsToTheRightOfSegment(Point p, ConeSide seg) {
             return (Point.GetTriangleOrientation(seg.Start, seg.Start + seg.Direction, p) ==
                     TriangleOrientation.Clockwise);
         }
 
-
-        void FixConeLeftSideIntersections(PolylinePoint obstSideStart, PolylinePoint obstSideEnd,
+        private void FixConeLeftSideIntersections(PolylinePoint obstSideStart, PolylinePoint obstSideEnd,
                                           RBNode<ConeSide> rbNode) {
             if (rbNode != null) {
                 Point intersection;
@@ -479,53 +502,51 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
                 if (seg != null &&
                     Point.IntervalIntersectsRay(obstSideStart.Point, obstSideEnd.Point, seg.Start, seg.Direction,
                                                 out intersection)) {
-                    EnqueueEvent(new LeftIntersectionEvent(seg, intersection, obstSideEnd));
+                    this.EnqueueEvent(new LeftIntersectionEvent(seg, intersection, obstSideEnd));
                 }
             }
         }
 
-
-        RBNode<ConeSide> InsertToTree(RbTree<ConeSide> tree, ConeSide coneSide) {
-            Debug.Assert(coneSide.Direction*SweepDirection > ApproximateComparer.DistanceEpsilon);
-            coneSideComparer.SetOperand(coneSide);
+        private RBNode<ConeSide> InsertToTree(RbTree<ConeSide> tree, ConeSide coneSide) {
+            Debug.Assert(coneSide.Direction* this.SweepDirection > ApproximateComparer.DistanceEpsilon);
+            this.coneSideComparer.SetOperand(coneSide);
             return tree.Insert(coneSide);
         }
 
-
-        void CloseConesAtLeftVertex(VertexEvent leftVertexEvent, PolylinePoint nextVertex) {
+        private void CloseConesAtLeftVertex(VertexEvent leftVertexEvent, PolylinePoint nextVertex) {
             //close segments first
             Point prevSite = leftVertexEvent.Vertex.PrevOnPolyline.Point;
-            double prevZ = prevSite*SweepDirection;
-            if (prevZ <= Z && Z - prevZ < ApproximateComparer.DistanceEpsilon) {
+            double prevZ = prevSite* this.SweepDirection;
+            if (prevZ <= this.Z && this.Z - prevZ < ApproximateComparer.DistanceEpsilon) {
                 //Show(
                 //    new Ellipse(1, 1, prevSite),
                 //    CurveFactory.CreateBox(2, 2, leftVertexEvent.Vertex.Point));
 
-                RemoveConesClosedBySegment(leftVertexEvent.Vertex.Point, prevSite);
+                this.RemoveConesClosedBySegment(leftVertexEvent.Vertex.Point, prevSite);
             }
 
             Point site = leftVertexEvent.Site;
-            Point coneLp = site + ConeLeftSideDirection;
-            Point coneRp = site + ConeRightSideDirection;
+            Point coneLp = site + this.ConeLeftSideDirection;
+            Point coneRp = site + this.ConeRightSideDirection;
             Point nextSite = nextVertex.Point;
             // SugiyamaLayoutSettings.Show(new LineSegment(site, coneLP), new LineSegment(site, coneRP), new LineSegment(site, nextSite));
 
-            if ((site - prevSite)*SweepDirection > ApproximateComparer.DistanceEpsilon)
-                RemoveLeftSide(new LeftObstacleSide(leftVertexEvent.Vertex.PrevOnPolyline));
+            if ((site - prevSite)* this.SweepDirection > ApproximateComparer.DistanceEpsilon) {
+                this.RemoveLeftSide(new LeftObstacleSide(leftVertexEvent.Vertex.PrevOnPolyline));
+            }
 
-
-            if (Point.PointToTheRightOfLineOrOnLine(nextSite, site, site + DirectionPerp)) {
+            if (Point.PointToTheRightOfLineOrOnLine(nextSite, site, site + this.DirectionPerp)) {
                 //if (angle > Math.PI / 2)
                 //   CreateConeOnVertex(leftVertexEvent); //it is the last left vertex on this obstacle
             } else if (!Point.PointToTheLeftOfLineOrOnLine(nextSite, site, coneRp)) {
                 //if (angle >= coneAngle / 2) {
                 // CreateConeOnVertex(leftVertexEvent);
-                EnqueueEvent(new LeftVertexEvent(nextVertex));
+                this.EnqueueEvent(new LeftVertexEvent(nextVertex));
                 //we schedule LeftVertexEvent for a vertex with horizontal segment to the left on the top of the obstace
             } else if (!Point.PointToTheLeftOfLineOrOnLine(nextSite, site, coneLp)) {
                 //if (angle >= -coneAngle / 2) {
                 //we cannot completely obscure the cone here
-                EnqueueEvent(new LeftVertexEvent(nextVertex));
+                this.EnqueueEvent(new LeftVertexEvent(nextVertex));
                 //the obstacle side is inside of the cone
                 //we need to create an obstacle right side segment instead of the cone side
                 //                var cone = new Cone(leftVertexEvent.Vertex.Point, this);
@@ -534,48 +555,48 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
                 //                cone.RightSide = rightSide;
                 //                cone.LeftSide = new ConeLeftSide(cone);
                 //                LookForIntersectionWithConeLeftSide(InsertToTree(leftConeSides, cone.LeftSide));
-                RBNode<ConeSide> rbNode = rightConeSides.FindLast(s => PointIsToTheRightOfSegment(site, s));
-                FixConeRightSideIntersections(leftVertexEvent.Vertex, nextVertex, rbNode);
-                if ((nextVertex.Point - leftVertexEvent.Site)*SweepDirection > ApproximateComparer.DistanceEpsilon)
-                    InsertLeftSide(new LeftObstacleSide(leftVertexEvent.Vertex));
+                RBNode<ConeSide> rbNode = this.rightConeSides.FindLast(s => PointIsToTheRightOfSegment(site, s));
+                this.FixConeRightSideIntersections(leftVertexEvent.Vertex, nextVertex, rbNode);
+                if ((nextVertex.Point - leftVertexEvent.Site)* this.SweepDirection > ApproximateComparer.DistanceEpsilon) {
+                    this.InsertLeftSide(new LeftObstacleSide(leftVertexEvent.Vertex));
+                }
             } else {
-                EnqueueEvent(new LeftVertexEvent(nextVertex));
-                if ((nextVertex.Point - leftVertexEvent.Site)*SweepDirection > ApproximateComparer.DistanceEpsilon) {
+                this.EnqueueEvent(new LeftVertexEvent(nextVertex));
+                if ((nextVertex.Point - leftVertexEvent.Site)* this.SweepDirection > ApproximateComparer.DistanceEpsilon) {
                     //if( angle >- Pi/2
                     // Debug.Assert(angle > -Math.PI / 2);
-                    LookForIntersectionOfObstacleSideAndRightConeSide(leftVertexEvent.Site, nextVertex);
-                    InsertLeftSide(new LeftObstacleSide(leftVertexEvent.Vertex));
+                    this.LookForIntersectionOfObstacleSideAndRightConeSide(leftVertexEvent.Site, nextVertex);
+                    this.InsertLeftSide(new LeftObstacleSide(leftVertexEvent.Vertex));
                 }
             }
         }
 
-        void RemoveCone(Cone cone) {
+        private void RemoveCone(Cone cone) {
             Debug.Assert(cone.Removed == false);
             cone.Removed = true;
-            RemoveSegFromLeftTree(cone.LeftSide);
-            RemoveSegFromRightTree(cone.RightSide);
+            this.RemoveSegFromLeftTree(cone.LeftSide);
+            this.RemoveSegFromRightTree(cone.RightSide);
         }
 
-
-        void RemoveSegFromRightTree(ConeSide coneSide) {
+        private void RemoveSegFromRightTree(ConeSide coneSide) {
             //   ShowRightTree();
             Debug.Assert(coneSide.Removed == false);
-            coneSideComparer.SetOperand(coneSide);
-            RBNode<ConeSide> b = rightConeSides.Remove(coneSide);
+            this.coneSideComparer.SetOperand(coneSide);
+            RBNode<ConeSide> b = this.rightConeSides.Remove(coneSide);
             coneSide.Removed = true;
             if (b == null) {
-                double tmpZ = Z;
-                Z = Math.Max(GetZ(coneSide.Start), Z - 0.01);
+                double tmpZ = this.Z;
+                this.Z = Math.Max(this.GetZ(coneSide.Start), this.Z - 0.01);
                 //we need to return to the past a little bit when the order was still correc
-                coneSideComparer.SetOperand(coneSide);
-                b = rightConeSides.Remove(coneSide);
-                Z = tmpZ;
+                this.coneSideComparer.SetOperand(coneSide);
+                b = this.rightConeSides.Remove(coneSide);
+                this.Z = tmpZ;
 
 #if TEST_MSAGL
                 if (b == null) {
-                    PrintOutRightSegTree();
-                    ShowRightTree(CurveFactory.CreateDiamond(3, 4, coneSide.Start));
-                    GeometryGraph gg = CreateGraphFromObstacles(Obstacles);
+                    this.PrintOutRightSegTree();
+                    this.ShowRightTree(CurveFactory.CreateDiamond(3, 4, coneSide.Start));
+                    GeometryGraph gg = CreateGraphFromObstacles(this.Obstacles);
                     GeometryGraphWriter.Write(gg, "c:\\tmp\\bug1");
                 }
 #endif
@@ -583,23 +604,23 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
             Debug.Assert(b != null);
         }
 
-        void RemoveSegFromLeftTree(ConeSide coneSide) {
+        private void RemoveSegFromLeftTree(ConeSide coneSide) {
             Debug.Assert(coneSide.Removed == false);
             coneSide.Removed = true;
-            coneSideComparer.SetOperand(coneSide);
-            RBNode<ConeSide> b = leftConeSides.Remove(coneSide);
+            this.coneSideComparer.SetOperand(coneSide);
+            RBNode<ConeSide> b = this.leftConeSides.Remove(coneSide);
 
             if (b == null) {
-                double tmpZ = Z;
-                Z = Math.Max(GetZ(coneSide.Start), Z - 0.01);
-                coneSideComparer.SetOperand(coneSide);
+                double tmpZ = this.Z;
+                this.Z = Math.Max(this.GetZ(coneSide.Start), this.Z - 0.01);
+                this.coneSideComparer.SetOperand(coneSide);
 
-                b = leftConeSides.Remove(coneSide);
-                Z = tmpZ;
+                b = this.leftConeSides.Remove(coneSide);
+                this.Z = tmpZ;
 #if TEST_MSAGL
                 if (b == null) {
-                    PrintOutLeftSegTree();
-                    ShowLeftTree(new Ellipse(2, 2, coneSide.Start));
+                    this.PrintOutLeftSegTree();
+                    this.ShowLeftTree(new Ellipse(2, 2, coneSide.Start));
                 }
 #endif
             }
@@ -613,7 +634,7 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
         /// <param name="obstSideEndVertex"></param>
         /// <param name="rbNode">represents a node of the right cone side</param>
         /// <param name="obstSideStartVertex"></param>
-        void FixConeRightSideIntersections(PolylinePoint obstSideStartVertex, PolylinePoint obstSideEndVertex,
+        private void FixConeRightSideIntersections(PolylinePoint obstSideStartVertex, PolylinePoint obstSideEndVertex,
                                            RBNode<ConeSide> rbNode) {
             if (rbNode != null) {
                 Point intersection;
@@ -622,13 +643,12 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
                     Point.IntervalIntersectsRay(obstSideStartVertex.Point, obstSideEndVertex.Point, seg.Start,
                                                 seg.Direction,
                                                 out intersection)) {
-                    EnqueueEvent(CreateRightIntersectionEvent(seg, intersection, obstSideEndVertex));
+                    this.EnqueueEvent(this.CreateRightIntersectionEvent(seg, intersection, obstSideEndVertex));
                 }
             }
         }
 
-
-        void LookForIntersectionWithConeLeftSide(RBNode<ConeSide> leftNode) {
+        private void LookForIntersectionWithConeLeftSide(RBNode<ConeSide> leftNode) {
             //Show(new Ellipse(1, 1, leftNode.item.Start));
 
 
@@ -641,22 +661,23 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
                 //        TryIntersectionOfConeLeftSideAndObstacleConeSide(coneLeftSide, seg);
                 //}
 
-                RightObstacleSide rightObstacleSide = FindFirstObstacleSideToTheLeftOfPoint(coneLeftSide.Start);
-                if (rightObstacleSide != null)
-                    TryIntersectionOfConeLeftSideAndObstacleSide(coneLeftSide, rightObstacleSide);
+                RightObstacleSide rightObstacleSide = this.FindFirstObstacleSideToTheLeftOfPoint(coneLeftSide.Start);
+                if (rightObstacleSide != null) {
+                    this.TryIntersectionOfConeLeftSideAndObstacleSide(coneLeftSide, rightObstacleSide);
+                }
             } else {
                 var seg = (BrokenConeSide) leftNode.Item;
-                leftNode = leftConeSides.Next(leftNode);
+                leftNode = this.leftConeSides.Next(leftNode);
                 if (leftNode != null) {
                     coneLeftSide = leftNode.Item as ConeLeftSide;
-                    if (coneLeftSide != null)
-                        TryIntersectionOfConeLeftSideAndObstacleConeSide(coneLeftSide, seg);
+                    if (coneLeftSide != null) {
+                        this.TryIntersectionOfConeLeftSideAndObstacleConeSide(coneLeftSide, seg);
+                    }
                 }
             }
         }
 
-
-        void LookForIntersectionWithConeRightSide(RBNode<ConeSide> rightNode) {
+        private void LookForIntersectionWithConeRightSide(RBNode<ConeSide> rightNode) {
             //Show(new Ellipse(10, 5, rightNode.item.Start));
             var coneRightSide = rightNode.Item as ConeRightSide;
             if (coneRightSide != null) {
@@ -667,77 +688,85 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
                 //        TryIntersectionOfConeRightSideAndObstacleConeSide(coneRightSide, seg);
                 //}
 
-                LeftObstacleSide leftObstacleSide = FindFirstObstacleSideToToTheRightOfPoint(coneRightSide.Start);
-                if (leftObstacleSide != null)
-                    TryIntersectionOfConeRightSideAndObstacleSide(coneRightSide, leftObstacleSide);
+                LeftObstacleSide leftObstacleSide = this.FindFirstObstacleSideToToTheRightOfPoint(coneRightSide.Start);
+                if (leftObstacleSide != null) {
+                    this.TryIntersectionOfConeRightSideAndObstacleSide(coneRightSide, leftObstacleSide);
+                }
             } else {
                 var seg = (BrokenConeSide) rightNode.Item;
-                rightNode = rightConeSides.Previous(rightNode);
+                rightNode = this.rightConeSides.Previous(rightNode);
                 if (rightNode != null) {
                     coneRightSide = rightNode.Item as ConeRightSide;
-                    if (coneRightSide != null)
-                        TryIntersectionOfConeRightSideAndObstacleConeSide(coneRightSide, seg);
+                    if (coneRightSide != null) {
+                        this.TryIntersectionOfConeRightSideAndObstacleConeSide(coneRightSide, seg);
+                    }
                 }
             }
         }
 
-        void TryIntersectionOfConeRightSideAndObstacleConeSide(ConeRightSide coneRightSide,
+        private void TryIntersectionOfConeRightSideAndObstacleConeSide(ConeRightSide coneRightSide,
                                                                BrokenConeSide seg) {
             Point x;
             if (Point.IntervalIntersectsRay(seg.Start, seg.End, coneRightSide.Start,
                                             coneRightSide.Direction, out x)) {
-                EnqueueEvent(CreateRightIntersectionEvent(coneRightSide, x, seg.EndVertex));
+                this.EnqueueEvent(this.CreateRightIntersectionEvent(coneRightSide, x, seg.EndVertex));
                 //Show(CurveFactory.CreateDiamond(3, 3, x));
             }
         }
 
-        void TryIntersectionOfConeRightSideAndObstacleSide(ConeRightSide coneRightSide, ObstacleSide side) {
+        private void TryIntersectionOfConeRightSideAndObstacleSide(ConeRightSide coneRightSide, ObstacleSide side) {
             Point x;
             if (Point.IntervalIntersectsRay(side.Start, side.End, coneRightSide.Start,
                                             coneRightSide.Direction, out x)) {
-                EnqueueEvent(CreateRightIntersectionEvent(coneRightSide, x, side.EndVertex));
+                this.EnqueueEvent(this.CreateRightIntersectionEvent(coneRightSide, x, side.EndVertex));
                 //Show(CurveFactory.CreateDiamond(3, 3, x));
             }
         }
 
-        void TryIntersectionOfConeLeftSideAndObstacleConeSide(ConeLeftSide coneLeftSide, BrokenConeSide seg) {
+        private void TryIntersectionOfConeLeftSideAndObstacleConeSide(ConeLeftSide coneLeftSide, BrokenConeSide seg) {
             Point x;
             if (Point.IntervalIntersectsRay(seg.Start, seg.End, coneLeftSide.Start, coneLeftSide.Direction, out x)) {
-                EnqueueEvent(new LeftIntersectionEvent(coneLeftSide, x, seg.EndVertex));
+                this.EnqueueEvent(new LeftIntersectionEvent(coneLeftSide, x, seg.EndVertex));
                 //Show(CurveFactory.CreateDiamond(3, 3, x));
             }
         }
 
-        void TryIntersectionOfConeLeftSideAndObstacleSide(ConeLeftSide coneLeftSide, ObstacleSide side) {
+        private void TryIntersectionOfConeLeftSideAndObstacleSide(ConeLeftSide coneLeftSide, ObstacleSide side) {
             Point x;
             if (Point.IntervalIntersectsRay(side.Start, side.End, coneLeftSide.Start, coneLeftSide.Direction, out x)) {
-                EnqueueEvent(new LeftIntersectionEvent(coneLeftSide, x, side.EndVertex));
+                this.EnqueueEvent(new LeftIntersectionEvent(coneLeftSide, x, side.EndVertex));
                 //    Show(CurveFactory.CreateDiamond(3, 3, x));
             }
         }
 
 
         //        static int count;
-        void GoOverConesSeeingVertexEvent(SweepEvent vertexEvent) {
-            RBNode<ConeSide> rbNode = FindFirstSegmentInTheRightTreeNotToTheLeftOfVertex(vertexEvent);
+        private void GoOverConesSeeingVertexEvent(SweepEvent vertexEvent) {
+            RBNode<ConeSide> rbNode = this.FindFirstSegmentInTheRightTreeNotToTheLeftOfVertex(vertexEvent);
 
-            if (rbNode == null) return;
+            if (rbNode == null) {
+                return;
+            }
+
             ConeSide coneRightSide = rbNode.Item;
             Cone cone = coneRightSide.Cone;
             ConeSide leftConeSide = cone.LeftSide;
-            if (VertexIsToTheLeftOfSegment(vertexEvent, leftConeSide)) return;
+            if (VertexIsToTheLeftOfSegment(vertexEvent, leftConeSide)) {
+                return;
+            }
+
             var visibleCones = new List<Cone> {cone};
-            coneSideComparer.SetOperand(leftConeSide);
-            rbNode = leftConeSides.Find(leftConeSide);
+            this.coneSideComparer.SetOperand(leftConeSide);
+            rbNode = this.leftConeSides.Find(leftConeSide);
 
             if (rbNode == null) {
-                double tmpZ = Z;
+                double tmpZ = this.Z;
 
-                Z = Math.Max(GetZ(leftConeSide.Start), PreviousZ);
+                this.Z = Math.Max(this.GetZ(leftConeSide.Start), this.PreviousZ);
                 //we need to return to the past when the order was still correct
-                coneSideComparer.SetOperand(leftConeSide);
-                rbNode = leftConeSides.Find(leftConeSide);
-                Z = tmpZ;
+                this.coneSideComparer.SetOperand(leftConeSide);
+                rbNode = this.leftConeSides.Find(leftConeSide);
+                this.Z = tmpZ;
 
 
 #if TEST_MSAGL
@@ -746,30 +775,30 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
                     //gg.Save("c:\\tmp\\bug");
 
 
-                    PrintOutLeftSegTree();
+                    this.PrintOutLeftSegTree();
                     System.Diagnostics.Debug.WriteLine(leftConeSide);
-                    ShowLeftTree(new Ellipse(3, 3, vertexEvent.Site));
-                    ShowRightTree(new Ellipse(3, 3, vertexEvent.Site));
+                    this.ShowLeftTree(new Ellipse(3, 3, vertexEvent.Site));
+                    this.ShowRightTree(new Ellipse(3, 3, vertexEvent.Site));
                 }
 #endif
             }
 
-            rbNode = leftConeSides.Next(rbNode);
+            rbNode = this.leftConeSides.Next(rbNode);
             while (rbNode != null && !VertexIsToTheLeftOfSegment(vertexEvent, rbNode.Item)) {
                 visibleCones.Add(rbNode.Item.Cone);
-                rbNode = leftConeSides.Next(rbNode);
+                rbNode = this.leftConeSides.Next(rbNode);
             }
 
             //Show(new Ellipse(1, 1, vertexEvent.Site));
 
             foreach (Cone c in visibleCones) {
-                AddEdge(c.Apex, vertexEvent.Site);
-                RemoveCone(c);
+                this.AddEdge(c.Apex, vertexEvent.Site);
+                this.RemoveCone(c);
             }
         }
 
-        void AddEdge(Point a, Point b) {
-            Debug.Assert(PortLocations.Contains(a));
+        private void AddEdge(Point a, Point b) {
+            Debug.Assert(this.PortLocations.Contains(a));
             /*********************
             A complication arises when we have overlaps. Loose obstacles become large enough to contain several
             ports. We need to avoid a situation when a port has degree more than one. 
@@ -781,7 +810,7 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
             *******************/
 
 
-            VisibilityEdge ab = visibilityGraph.AddEdge(a, b);
+            VisibilityEdge ab = this.visibilityGraph.AddEdge(a, b);
             VisibilityVertex av = ab.Source;
             Debug.Assert(av.Point == a && ab.TargetPoint == b);
             //all edges adjacent to a which are different from ab
@@ -790,14 +819,14 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
             foreach (VisibilityEdge edge in edgesToFix) {
                 Point c = (edge.Target == av ? edge.Source : edge.Target).Point;
                 VisibilityGraph.RemoveEdge(edge);
-                visibilityGraph.AddEdge(c, b);
+                this.visibilityGraph.AddEdge(c, b);
             }
         }
 
 
 #if TEST_MSAGL
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider", MessageId = "System.Int32.ToString")]
-        static GeometryGraph CreateGraphFromObstacles(IEnumerable<Polyline> obstacles) {
+        private static GeometryGraph CreateGraphFromObstacles(IEnumerable<Polyline> obstacles) {
             var gg = new GeometryGraph();
             foreach (var ob in obstacles) {
                 gg.Nodes.Add(new Node(ob.ToCurve()));
@@ -806,35 +835,38 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1303:Do not pass literals as localized parameters", MessageId = "System.Diagnostics.Debug.WriteLine(System.String)")]
-        void PrintOutLeftSegTree() {
+        private void PrintOutLeftSegTree() {
             System.Diagnostics.Debug.WriteLine("Left cone segments");
-            foreach (var t in leftConeSides)
+            foreach (var t in this.leftConeSides) {
                 System.Diagnostics.Debug.WriteLine(t);
+            }
+
             System.Diagnostics.Debug.WriteLine("end of left cone segments");
         }
 #endif
 
-        static bool VertexIsToTheLeftOfSegment(SweepEvent vertexEvent, ConeSide seg) {
+        private static bool VertexIsToTheLeftOfSegment(SweepEvent vertexEvent, ConeSide seg) {
             return (Point.GetTriangleOrientation(seg.Start, seg.Start + seg.Direction,
                                                  vertexEvent.Site) == TriangleOrientation.Counterclockwise);
         }
 
-        static bool VertexIsToTheRightOfSegment(SweepEvent vertexEvent, ConeSide seg) {
+        private static bool VertexIsToTheRightOfSegment(SweepEvent vertexEvent, ConeSide seg) {
             return (Point.GetTriangleOrientation(seg.Start, seg.Start + seg.Direction,
                                                  vertexEvent.Site) == TriangleOrientation.Clockwise);
         }
 
-        RBNode<ConeSide> FindFirstSegmentInTheRightTreeNotToTheLeftOfVertex(SweepEvent vertexEvent) {
-            return rightConeSides.FindFirst(
+        private RBNode<ConeSide> FindFirstSegmentInTheRightTreeNotToTheLeftOfVertex(SweepEvent vertexEvent) {
+            return this.rightConeSides.FindFirst(
                 s => !VertexIsToTheRightOfSegment(vertexEvent, s)
                 );
         }
 
-        void EnqueueEvent(RightVertexEvent vertexEvent) {
-            if (SweepDirection*(vertexEvent.Site - vertexEvent.Vertex.PrevOnPolyline.Point) >
-                ApproximateComparer.Tolerance)
+        private void EnqueueEvent(RightVertexEvent vertexEvent) {
+            if (this.SweepDirection *(vertexEvent.Site - vertexEvent.Vertex.PrevOnPolyline.Point) >
+                ApproximateComparer.Tolerance) {
                 return;
-                    //otherwise we enqueue the vertex twice; once as a LeftVertexEvent and once as a RightVertexEvent
+            }
+            //otherwise we enqueue the vertex twice; once as a LeftVertexEvent and once as a RightVertexEvent
             base.EnqueueEvent(vertexEvent);
         }
     }

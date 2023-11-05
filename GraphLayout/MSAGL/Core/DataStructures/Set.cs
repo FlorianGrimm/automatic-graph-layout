@@ -9,30 +9,30 @@ namespace Microsoft.Msagl.Core.DataStructures {
     /// <typeparam name="T"></typeparam>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1716:IdentifiersShouldNotMatchKeywords", MessageId = "Set")]
     public class Set<T> : MarshalByRefObject, ICollection<T> {
-        HashSet<T> hashSet = new HashSet<T>();
+        private HashSet<T> hashSet = new HashSet<T>();
         /// <summary>
         /// inserts an element into the set
         /// </summary>
         /// <param name="element"></param>
         public void Insert(T element) {
-            hashSet.Add(element);
+            this.hashSet.Add(element);
 #if SHARPKIT
             UpdateHashKey();
 #endif
         }
-        void System.Collections.Generic.ICollection<T>.Add(T t) { Insert(t); }
+        void System.Collections.Generic.ICollection<T>.Add(T t) { this.Insert(t); }
         /// <summary>
         /// returns true when the set contains the element
         /// </summary>
         /// <param name="item"></param>
         /// <returns></returns>
-        public bool Contains(T item) { return hashSet.Contains(item); }
+        public bool Contains(T item) { return this.hashSet.Contains(item); }
         /// <summary>
         /// deletes the element from the set
         /// </summary>
         /// <param name="item"></param>
         public void Delete(T item) {
-            hashSet.Remove(item);
+            this.hashSet.Remove(item);
 #if SHARPKIT
             UpdateHashKey();
 #endif
@@ -43,7 +43,7 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// <param name="item"></param>
         /// <returns></returns>
         public bool Remove(T item) {
-            var ret = hashSet.Remove(item);
+            var ret = this.hashSet.Remove(item);
 #if SHARPKIT
             UpdateHashKey();
 #endif
@@ -52,14 +52,14 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// <summary>
         /// returns the number elements in the set
         /// </summary>
-        public int Count { get { return hashSet.Count; } }
+        public int Count { get { return this.hashSet.Count; } }
         /// <summary>
         /// returns the set entities enumerator
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<T> GetEnumerator() { return hashSet.GetEnumerator(); }
+        public IEnumerator<T> GetEnumerator() { return this.hashSet.GetEnumerator(); }
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
-            return hashSet.GetEnumerator();
+            return this.hashSet.GetEnumerator();
         }
 
 
@@ -79,7 +79,7 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// <param name="array"></param>
         /// <param name="arrayIndex"></param>
         public void CopyTo(T[] array, int arrayIndex) {
-            hashSet.CopyTo(array, arrayIndex);
+            this.hashSet.CopyTo(array, arrayIndex);
         }
 
         /// <summary>
@@ -92,8 +92,9 @@ namespace Microsoft.Msagl.Core.DataStructures {
             foreach (T o in this) {
                 r += o.ToString();
                 i++;
-                if (i < Count)
+                if (i < this.Count) {
                     r += ",";
+                }
             }
             r += "}";
             return r;
@@ -126,8 +127,9 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// <param name="enumerableCollection"></param>
         public Set(IEnumerable<T> enumerableCollection) {
             ValidateArg.IsNotNull(enumerableCollection, "enumerableCollection");
-            foreach (T j in enumerableCollection)
+            foreach (T j in enumerableCollection) {
                 this.Insert(j);
+            }
 #if SHARPKIT
             UpdateHashKey();
 #endif
@@ -161,8 +163,10 @@ namespace Microsoft.Msagl.Core.DataStructures {
         static public Set<T> operator +(Set<T> set0, Set<T> set1) {
             ValidateArg.IsNotNull(set1, "set1");
             Set<T> ret = new Set<T>(set0);
-            foreach (T t in set1)
+            foreach (T t in set1) {
                 ret.Insert(t);
+            }
+
             return ret;
         }
 
@@ -176,8 +180,10 @@ namespace Microsoft.Msagl.Core.DataStructures {
         static public Set<T> operator -(Set<T> set0, Set<T> set1) {
             ValidateArg.IsNotNull(set1, "set1");
             Set<T> ret = new Set<T>(set0);
-            foreach (T t in set1)
+            foreach (T t in set1) {
                 ret.Remove(t);
+            }
+
             return ret;
         }
         /// <summary>
@@ -188,21 +194,29 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "1"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "0")]
         static public bool operator ==(Set<T> set0, Set<T> set1) {
-            if ((object)set0 == null && (object)set1 == null)
+            if ((object)set0 == null && (object)set1 == null) {
                 return true;
-            if ((object)set0 == null && (object)set1 != null)
+            }
+
+            if ((object)set0 == null && (object)set1 != null) {
                 return false;
+            }
 
-            if ((object)set1 == null && (object)set0 != null)
+            if ((object)set1 == null && (object)set0 != null) {
                 return false;
+            }
 
-            foreach (T t in set0)
-                if (!set1.Contains(t))
+            foreach (T t in set0) {
+                if (!set1.Contains(t)) {
                     return false;
+                }
+            }
 
-            foreach (T t in set1)
-                if (!set0.Contains(t))
+            foreach (T t in set1) {
+                if (!set0.Contains(t)) {
                     return false;
+                }
+            }
 
             return true;
         }
@@ -238,8 +252,10 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// <returns></returns>
         public override bool Equals(object obj) {
             Set<T> set = obj as Set<T>;
-            if (set == null)
+            if (set == null) {
                 return false;
+            }
+
             return set == this;
         }
 
@@ -249,8 +265,10 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// <returns></returns>
         public override int GetHashCode() {
             int ret = 0;
-            foreach (T t in this)
+            foreach (T t in this) {
                 ret |= t.GetHashCode();
+            }
+
             return ret;
         }
 
@@ -271,8 +289,9 @@ namespace Microsoft.Msagl.Core.DataStructures {
         public void InsertRange(IEnumerable<T> elements )
         {
             ValidateArg.IsNotNull(elements,"elements");
-            foreach (var element in elements)
-                Insert(element);
+            foreach (var element in elements) {
+                this.Insert(element);
+            }
         }
 
         ///<summary>
@@ -287,7 +306,7 @@ namespace Microsoft.Msagl.Core.DataStructures {
         ///</summary>
         ///<param name="otherSet"></param>
         ///<returns></returns>
-        public bool Contains(Set<T> otherSet) { return otherSet.All(p => Contains(p)); }
+        public bool Contains(Set<T> otherSet) { return otherSet.All(p => this.Contains(p)); }
 
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289
         private SharpKit.JavaScript.JsString _hashKey;

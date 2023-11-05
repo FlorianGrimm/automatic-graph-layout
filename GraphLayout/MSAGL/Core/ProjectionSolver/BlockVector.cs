@@ -13,34 +13,34 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
 {
     /// <summary>
     /// </summary>
-    class BlockVector
+    internal class BlockVector
     {
         internal List<Block> Vector { get; private set; }
-        internal int Count { get { return Vector.Count; } }
-        internal Block this[int index] { get { return Vector[index]; } }
+        internal int Count { get { return this.Vector.Count; } }
+        internal Block this[int index] { get { return this.Vector[index]; } }
 
         internal BlockVector()
         {
-            Vector = new List<Block>();
+            this.Vector = new List<Block>();
         }
 
         internal void Add(Block block)
         {
-            block.VectorIndex = Vector.Count;
-            Vector.Add(block);
-            Debug.Assert(Vector[block.VectorIndex] == block, "Inconsistent block.VectorIndex");
+            block.VectorIndex = this.Vector.Count;
+            this.Vector.Add(block);
+            Debug.Assert(this.Vector[block.VectorIndex] == block, "Inconsistent block.VectorIndex");
         }
 
         internal void Remove(Block block)
         {
-            Debug.Assert(Vector[block.VectorIndex] == block, "Inconsistent block.VectorIndex");
-            Block swapBlock = Vector[Vector.Count - 1];
-            Vector[block.VectorIndex] = swapBlock;
+            Debug.Assert(this.Vector[block.VectorIndex] == block, "Inconsistent block.VectorIndex");
+            Block swapBlock = this.Vector[this.Vector.Count - 1];
+            this.Vector[block.VectorIndex] = swapBlock;
             swapBlock.VectorIndex = block.VectorIndex;
-            Vector.RemoveAt(Vector.Count - 1);
-            Debug.Assert((0 == Vector.Count) || (block == swapBlock) || (Vector[swapBlock.VectorIndex] == swapBlock),
+            this.Vector.RemoveAt(this.Vector.Count - 1);
+            Debug.Assert((0 == this.Vector.Count) || (block == swapBlock) || (this.Vector[swapBlock.VectorIndex] == swapBlock),
                     "Inconsistent swapBlock.VectorIndex");
-            Debug.Assert((0 == Vector.Count) || (Vector[Vector.Count - 1].VectorIndex == (Vector.Count - 1)),
+            Debug.Assert((0 == this.Vector.Count) || (this.Vector[this.Vector.Count - 1].VectorIndex == (this.Vector.Count - 1)),
                     "Inconsistent finalBlock.VectorIndex");
         }
 
@@ -48,7 +48,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         /// </summary>
         public override string ToString()
         {
-            return Vector.ToString();
+            return this.Vector.ToString();
         }
     }
 }

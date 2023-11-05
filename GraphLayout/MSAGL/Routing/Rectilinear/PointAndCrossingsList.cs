@@ -16,40 +16,41 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
     internal class PointAndCrossingsList {
         // Internal to allow testing.
         internal List<PointAndCrossings> ListOfPointsAndCrossings { get; private set; }
-        int index;
 
-        internal int Count { get { return ListOfPointsAndCrossings.Count; } }
+        private int index;
+
+        internal int Count { get { return this.ListOfPointsAndCrossings.Count; } }
 
         internal PointAndCrossingsList() {
-            ListOfPointsAndCrossings = new List<PointAndCrossings>();
+            this.ListOfPointsAndCrossings = new List<PointAndCrossings>();
         }
         
         internal void Add(Point intersect, List<GroupBoundaryCrossing> crossings) {
-            ListOfPointsAndCrossings.Add(new PointAndCrossings(intersect, crossings));
+            this.ListOfPointsAndCrossings.Add(new PointAndCrossings(intersect, crossings));
         }
 
         internal PointAndCrossings Pop() {
             // Next should only be called after CurrentIsBeforeOrAt returns true.
-            Debug.Assert(index < ListOfPointsAndCrossings.Count, "Unexpected call to Next()");
-            return ListOfPointsAndCrossings[index++];
+            Debug.Assert(this.index < this.ListOfPointsAndCrossings.Count, "Unexpected call to Next()");
+            return this.ListOfPointsAndCrossings[this.index++];
         }
 
         internal bool CurrentIsBeforeOrAt(Point comparand) {
-            if (index >= ListOfPointsAndCrossings.Count) {
+            if (this.index >= this.ListOfPointsAndCrossings.Count) {
                 return false;
             }
-            return PointComparer.Compare(ListOfPointsAndCrossings[index].Location, comparand) <= 0;
+            return PointComparer.Compare(this.ListOfPointsAndCrossings[this.index].Location, comparand) <= 0;
         }
 
         internal PointAndCrossings First { get { return this.ListOfPointsAndCrossings[0]; } }
         internal PointAndCrossings Last { get { return this.ListOfPointsAndCrossings[this.ListOfPointsAndCrossings.Count - 1]; } }
 
         internal void Reset() {
-            index = 0;
+            this.index = 0;
         }
 
         internal void MergeFrom(PointAndCrossingsList other) {
-            Reset();
+            this.Reset();
             if ((null == other) || (0 == other.ListOfPointsAndCrossings.Count)) {
                 return;
             }
@@ -97,12 +98,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         internal void Trim(Point start, Point end) {
-            Reset();
-            if ((null == ListOfPointsAndCrossings) || (0 == ListOfPointsAndCrossings.Count)) {
+            this.Reset();
+            if ((null == this.ListOfPointsAndCrossings) || (0 == this.ListOfPointsAndCrossings.Count)) {
                 return;
             }
 
-            ListOfPointsAndCrossings = new List<PointAndCrossings>(ListOfPointsAndCrossings.Where(
+            this.ListOfPointsAndCrossings = new List<PointAndCrossings>(this.ListOfPointsAndCrossings.Where(
                     pair => (PointComparer.Compare(pair.Location, start) >= 0) && (PointComparer.Compare(pair.Location, end) <= 0)));
         }
 
@@ -138,7 +139,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// <returns></returns>
         public override string ToString() {
             return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0} [{1}]",
-                                ListOfPointsAndCrossings.Count, index);
+                                this.ListOfPointsAndCrossings.Count, this.index);
         }
     }
 }

@@ -5,8 +5,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     /// solves a linear system of two equations with to unknown variables
     /// </summary>
     internal class LinearSystem2 {
-        LinearSystem2() { }
-        static double eps = 1.0E-8;
+        private LinearSystem2() { }
+
+        private static double eps = 1.0E-8;
 
         internal static double Eps {
             get { return LinearSystem2.eps; }

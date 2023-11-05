@@ -3,7 +3,7 @@ using Microsoft.Msagl.Core;
 
 namespace Microsoft.Msagl.Layout.Layered {
     internal class EdgeComparerBySource : IComparer<LayerEdge> {
-        int[] X;
+        private int[] X;
         internal EdgeComparerBySource(int[] X) {
             this.X = X;
         }
@@ -16,11 +16,12 @@ namespace Microsoft.Msagl.Layout.Layered {
 #endif
             ValidateArg.IsNotNull(a, "a");
             ValidateArg.IsNotNull(b, "b");
-            int r = X[a.Source] - X[b.Source];
-            if (r != 0)
+            int r = this.X[a.Source] - this.X[b.Source];
+            if (r != 0) {
                 return r;
+            }
 
-            return X[a.Target] - X[b.Target];
+            return this.X[a.Target] - this.X[b.Target];
         }
 
     }

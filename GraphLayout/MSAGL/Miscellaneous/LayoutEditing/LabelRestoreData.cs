@@ -12,8 +12,8 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         /// the label center
         /// </summary>
         public Point Center {
-            get { return center; }
-            set { center = value; }
+            get { return this.center; }
+            set { this.center = value; }
         }
 
         /// <summary>

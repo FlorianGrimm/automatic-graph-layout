@@ -24,42 +24,45 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     internal
 #endif
         class MinDistCurveCurve {
-
-        ICurve curveA;
-        ICurve curveB;
-        double aMin;
-        double aMax;
-        double bMin; double bMax;
-        double aGuess; double bGuess;
-        double aSolution;
+        private ICurve curveA;
+        private ICurve curveB;
+        private double aMin;
+        private double aMax;
+        private double bMin;
+        private double bMax;
+        private double aGuess;
+        private double bGuess;
+        private double aSolution;
         internal double ASolution {
-            get { return aSolution; }
+            get { return this.aSolution; }
         }
-        double bSolution;
+
+        private double bSolution;
         internal double BSolution {
-            get { return bSolution; }
+            get { return this.bSolution; }
         }
 
-        Point aPoint;
-        internal Point APoint { get { return aPoint; } }
+        private Point aPoint;
+        internal Point APoint { get { return this.aPoint; } }
 
-        Point bPoint;
-        internal Point BPoint { get { return bPoint; } }
-        bool status;
-        internal bool Status { get { return status; } }
-        double si;
-        double ti;
+        private Point bPoint;
+        internal Point BPoint { get { return this.bPoint; } }
 
-        Point a, b, a_b, ad, bd, add, bdd;
+        private bool status;
+        internal bool Status { get { return this.status; } }
 
-        void InitValues() {
-            a = curveA[si];
-            b = curveB[ti];
-            a_b = a - b;
-            ad = curveA.Derivative(si);
-            add = curveA.SecondDerivative(si);
-            bd = curveB.Derivative(ti);
-            bdd = curveB.SecondDerivative(ti);
+        private double si;
+        private double ti;
+        private Point a, b, a_b, ad, bd, add, bdd;
+
+        private void InitValues() {
+            this.a = this.curveA[this.si];
+            this.b = this.curveB[this.ti];
+            this.a_b = this.a - this.b;
+            this.ad = this.curveA.Derivative(this.si);
+            this.add = this.curveA.SecondDerivative(this.si);
+            this.bd = this.curveB.Derivative(this.ti);
+            this.bdd = this.curveB.SecondDerivative(this.ti);
         }
 /// <summary>
 /// constructor
@@ -94,35 +97,34 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
 
         //we ignore the mulitplier 2 here fore efficiency reasons
-        double Fs {
+        private double Fs {
             get {
-                return /*2**/a_b * ad;
+                return /*2**/this.a_b * this.ad;
             }
         }
 
-        double Fss {
+        private double Fss {
             get {
-                return /*2**/(a_b * add + ad * ad);
+                return /*2**/(this.a_b * this.add + this.ad * this.ad);
             }
         }
 
-        double Fst //equals to Fts
+        private double Fst //equals to Fts
         {
             get {
-                return - /*2**/bd * ad;
+                return - /*2**/this.bd * this.ad;
             }
         }
 
-        double Ftt {
+        private double Ftt {
             get {
-                return /*2**/(-a_b * bdd + bd * bd);
+                return /*2**/(-this.a_b * this.bdd + this.bd * this.bd);
             }
         }
 
-
-        double Ft {
+        private double Ft {
             get {
-                return -/*2**/a_b * bd;
+                return -/*2**/this.a_b * this.bd;
             }
         }
 
@@ -150,19 +152,19 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
             bool abort = false;
 
-            InitValues();
+            this.InitValues();
 
-            if (curveA is LineSegment && curveB is LineSegment ) {
-                Point bd1 = curveB.Derivative(0);
+            if (this.curveA is LineSegment && this.curveB is LineSegment ) {
+                Point bd1 = this.curveB.Derivative(0);
                 bd1 /= bd1.Length;
-                Point an = (curveA as LineSegment).Normal;
+                Point an = (this.curveA as LineSegment).Normal;
 
                 double del = Math.Abs(an * bd1);
 
 
-                if (Math.Abs(del) < ApproximateComparer.DistanceEpsilon || Delta(Fss, Fst, Fst, Ftt) < ApproximateComparer.Tolerance) {
-                    status = true;
-                    ParallelLineSegLineSegMinDist();
+                if (Math.Abs(del) < ApproximateComparer.DistanceEpsilon || Delta(this.Fss, this.Fst, this.Fst, this.Ftt) < ApproximateComparer.Tolerance) {
+                    this.status = true;
+                    this.ParallelLineSegLineSegMinDist();
                     return;
                 }
             }
@@ -171,44 +173,46 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             do {
 
                 //hopefully it will be inlined by the compiler
-                double delta = Delta(Fss, Fst, Fst, Ftt);
+                double delta = Delta(this.Fss, this.Fst, this.Fst, this.Ftt);
                 if (Math.Abs(delta) < ApproximateComparer.Tolerance) {
-                    status = false;
+                    this.status = false;
                     abort = true;
                     break;
                 }
 
-                ds = Delta(-Fs, Fst, -Ft, Ftt) / delta;
-                dt = Delta(Fss, -Fs, Fst, -Ft) / delta;
+                ds = Delta(-this.Fs, this.Fst, -this.Ft, this.Ftt) / delta;
+                dt = Delta(this.Fss, -this.Fs, this.Fst, -this.Ft) / delta;
 
 
-                double nsi = si + ds;
-                double nti = ti + dt;
+                double nsi = this.si + ds;
+                double nti = this.ti + dt;
 
                 bool bc;
 
-                if (nsi > aMax + ApproximateComparer.DistanceEpsilon || nsi < aMin - ApproximateComparer.DistanceEpsilon || nti > bMax + ApproximateComparer.DistanceEpsilon || nti < bMin - ApproximateComparer.DistanceEpsilon) {
+                if (nsi > this.aMax + ApproximateComparer.DistanceEpsilon || nsi < this.aMin - ApproximateComparer.DistanceEpsilon || nti > this.bMax + ApproximateComparer.DistanceEpsilon || nti < this.bMin - ApproximateComparer.DistanceEpsilon) {
                     numberOfBoundaryCrossings++;
-                    ChopDsDt(ref ds, ref dt);
-                    si += ds;
-                    ti += dt;
+                    this.ChopDsDt(ref ds, ref dt);
+                    this.si += ds;
+                    this.ti += dt;
                     bc = true;
                 } else {
                     bc = false;
-                    si = nsi;
-                    ti = nti;
-                    if (si > aMax)
-                        si = aMax;
-                    else if (si < aMin)
-                        si = aMin;
+                    this.si = nsi;
+                    this.ti = nti;
+                    if (this.si > this.aMax) {
+                        this.si = this.aMax;
+                    } else if (this.si < this.aMin) {
+                        this.si = this.aMin;
+                    }
 
-                    if (ti > bMax)
-                        ti = bMax;
-                    else if (ti < bMin)
-                        ti = bMin;
+                    if (this.ti > this.bMax) {
+                        this.ti = this.bMax;
+                    } else if (this.ti < this.bMin) {
+                        this.ti = this.bMin;
+                    }
                 }
 
-                InitValues();
+                this.InitValues();
 
                 numberOfTotalReps++;
 
@@ -219,65 +223,69 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
             if (abort) {
                 //may be the initial values were just OK
-                Point t = curveA[aGuess] - curveB[bGuess];
+                Point t = this.curveA[this.aGuess] - this.curveB[this.bGuess];
                 if (t * t < ApproximateComparer.DistanceEpsilon * ApproximateComparer.DistanceEpsilon) {
-                    aSolution = aGuess;
-                    bSolution = bGuess;
-                    aPoint = curveA[aGuess];
-                    bPoint = curveB[bGuess];
-                    status = true;
+                    this.aSolution = this.aGuess;
+                    this.bSolution = this.bGuess;
+                    this.aPoint = this.curveA[this.aGuess];
+                    this.bPoint = this.curveB[this.bGuess];
+                    this.status = true;
                     return;
 
                 }
             }
 
 
-            aSolution = si;
-            bSolution = ti;
-            aPoint = a;
-            bPoint = b;
-            status = !abort;
+            this.aSolution = this.si;
+            this.bSolution = this.ti;
+            this.aPoint = this.a;
+            this.bPoint = this.b;
+            this.status = !abort;
 
         }
 
-
-
-        void ChopDsDt(ref double ds, ref double dt) {
+        private void ChopDsDt(ref double ds, ref double dt) {
             if (ds != 0 && dt != 0) {
                 double k1 = 1; //we are looking for a chopped vector of the form k(ds,dt)
 
-                if (si + ds > aMax)  //we have si+k*ds=aMax           
-                    k1 = (aMax - si) / ds;
-                else if (si + ds < aMin)
-                    k1 = (aMin - si) / ds;
+                if (this.si + ds > this.aMax)  //we have si+k*ds=aMax           
+{
+                    k1 = (this.aMax - this.si) / ds;
+                } else if (this.si + ds < this.aMin) {
+                    k1 = (this.aMin - this.si) / ds;
+                }
 
                 double k2 = 1;
 
-                if (ti + dt > bMax)  //we need to have ti+k*dt=bMax  or ti+k*dt=bMin 
-                    k2 = (bMax - ti) / dt;
-                else if (ti + dt < bMin)
-                    k2 = (bMin - ti) / dt;
+                if (this.ti + dt > this.bMax)  //we need to have ti+k*dt=bMax  or ti+k*dt=bMin 
+{
+                    k2 = (this.bMax - this.ti) / dt;
+                } else if (this.ti + dt < this.bMin) {
+                    k2 = (this.bMin - this.ti) / dt;
+                }
 
                 double k = Math.Min(k1, k2);
                 ds *= k;
                 dt *= k;
 
             } else if (ds == 0) {
-                if (ti + dt > bMax)
-                    dt = bMax - ti;
-                else if (ti + dt < bMin)
-                    dt = bMin - ti;
+                if (this.ti + dt > this.bMax) {
+                    dt = this.bMax - this.ti;
+                } else if (this.ti + dt < this.bMin) {
+                    dt = this.bMin - this.ti;
+                }
             } else {   //dt==0)
-                if (si + ds > aMax)
-                    ds = aMax - si;
-                else if (si + ds < aMin)
-                    ds = aMin - si;
+                if (this.si + ds > this.aMax) {
+                    ds = this.aMax - this.si;
+                } else if (this.si + ds < this.aMin) {
+                    ds = this.aMin - this.si;
+                }
             }
         }
 
-        void ParallelLineSegLineSegMinDist() {
-            LineSegment l0 = curveA as LineSegment;
-            LineSegment l1 = curveB as LineSegment;
+        private void ParallelLineSegLineSegMinDist() {
+            LineSegment l0 = this.curveA as LineSegment;
+            LineSegment l1 = this.curveB as LineSegment;
 
             Point v0 = l0.Start;
             Point v1 = l0.End;
@@ -306,19 +314,19 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                 }
 
                 if (r3 < r0) {
-                    aSolution = 0;
-                    bSolution = swapped ? 0 : 1;
+                    this.aSolution = 0;
+                    this.bSolution = swapped ? 0 : 1;
                 } else if (r2 > r1) {
-                    aSolution = 1;
-                    bSolution = swapped ? 1 : 0;
+                    this.aSolution = 1;
+                    this.bSolution = swapped ? 1 : 0;
 
                 } else {
                     double r = Math.Min(r1, r3);
-                    aSolution = r / (r1 - r0);
-                    bSolution = (r - r2) / (r3 - r2);
-                    if (swapped)
-                        bSolution = 1 - bSolution;
-
+                    this.aSolution = r / (r1 - r0);
+                    this.bSolution = (r - r2) / (r3 - r2);
+                    if (swapped) {
+                        this.bSolution = 1 - this.bSolution;
+                    }
                 }
             } else {
                 Point d1 = v3 - v2;
@@ -332,25 +340,25 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
 
                     if (r2 < r0) {
-                        bSolution = 0;
-                        aSolution = 1;
+                        this.bSolution = 0;
+                        this.aSolution = 1;
                     } else if (r2 > r1) {
-                        bSolution = 1;
-                        aSolution = 0;
+                        this.bSolution = 1;
+                        this.aSolution = 0;
 
                     } else {
                         double r = Math.Min(r1, r2);
-                        bSolution = r / (r1 - r0);
-                        aSolution = 0;
+                        this.bSolution = r / (r1 - r0);
+                        this.aSolution = 0;
                     }
 
                 } else {
-                    aSolution = 0;
-                    bSolution = 0;
+                    this.aSolution = 0;
+                    this.bSolution = 0;
                 }
             }
-            aPoint = curveA[aSolution];
-            bPoint = curveB[bSolution];
+            this.aPoint = this.curveA[this.aSolution];
+            this.bPoint = this.curveB[this.bSolution];
         }
     }
 

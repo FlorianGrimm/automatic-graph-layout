@@ -14,8 +14,8 @@ namespace Microsoft.Msagl.Core.Layout {
     [Serializable]
 #endif
     public class EdgeGeometry {
-        ICurve curve;
-        SmoothedPolyline smoothedPolyline;
+        private ICurve? _Curve;
+        private SmoothedPolyline smoothedPolyline;
 
         /// <summary>
         /// </summary>
@@ -23,8 +23,8 @@ namespace Microsoft.Msagl.Core.Layout {
         }
 
         internal EdgeGeometry(Port sourcePort, Port targetPort) {
-            SourcePort = sourcePort;
-            TargetPort = targetPort;
+            this.SourcePort = sourcePort;
+            this.TargetPort = targetPort;
         }
 
         /// <summary>
@@ -39,20 +39,20 @@ namespace Microsoft.Msagl.Core.Layout {
         ///     Defines the way the edge connects to the source.
         ///     The member is used at the moment only when adding an edge to the graph.
         /// </summary>
-        public Port SourcePort { get; set; }
+        public Port? SourcePort { get; set; }
 
         /// <summary>
         ///     defines the way the edge connects to the target
         ///     The member is used at the moment only when adding an edge to the graph.
         /// </summary>
-        public Port TargetPort { get; set; }
+        public Port? TargetPort { get; set; }
 
         
         /// <summary>
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return String.Format(CultureInfo.InvariantCulture, "{0}->{1}", SourcePort.Location, TargetPort.Location);
+            return String.Format(CultureInfo.InvariantCulture, "{0}->{1}", this.SourcePort.Location, this.TargetPort.Location);
         }
 
         /// <summary>
@@ -64,11 +64,11 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <summary>
         ///     A curve representing the edge
         /// </summary>
-        public ICurve Curve {
-            get { return curve; }
+        public ICurve? Curve {
+            get { return this._Curve; }
             set {
-                RaiseLayoutChangeEvent(value);
-                curve = value;                
+                this.RaiseLayoutChangeEvent(value);
+                this._Curve = value;                
             }
         }
 
@@ -77,8 +77,8 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Polyline")]
         public SmoothedPolyline SmoothedPolyline {
-            get { return smoothedPolyline; }
-            set { smoothedPolyline = value; }
+            get { return this.smoothedPolyline; }
+            set { this.smoothedPolyline = value; }
         }
 
         /// <summary>
@@ -86,12 +86,16 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         public Rectangle BoundingBox {
             get {
-                Rectangle bBox = Curve.BoundingBox;
-                if (SourceArrowhead != null)
-                    bBox.Add(SourceArrowhead.TipPosition);
-                if (TargetArrowhead != null)
-                    bBox.Add(TargetArrowhead.TipPosition);
-                double del = 0.5*LineWidth;
+                Rectangle bBox = this.Curve.BoundingBox;
+                if (this.SourceArrowhead != null) {
+                    bBox.Add(this.SourceArrowhead.TipPosition);
+                }
+
+                if (this.TargetArrowhead != null) {
+                    bBox.Add(this.TargetArrowhead.TipPosition);
+                }
+
+                double del = 0.5* this.LineWidth;
                 var delta = new Point(-del, del);
                 bBox.Add(bBox.LeftTop + delta);
                 bBox.Add(bBox.RightBottom - delta);
@@ -100,8 +104,8 @@ namespace Microsoft.Msagl.Core.Layout {
         }
         
         internal void SetSmoothedPolylineAndCurve(SmoothedPolyline poly) {
-            SmoothedPolyline = poly;
-            Curve = poly.CreateCurve();
+            this.SmoothedPolyline = poly;
+            this.Curve = poly.CreateCurve();
         }
 
         /// <summary>
@@ -109,30 +113,42 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <param name="delta">vector by which to translate</param>
         public void Translate(Point delta) {
-            if (delta.X == 0 && delta.Y == 0) return;
-            RaiseLayoutChangeEvent(delta);
-            if (Curve != null)
-                Curve.Translate(delta);
+            if (delta.X == 0 && delta.Y == 0) {
+                return;
+            }
 
-            if (SmoothedPolyline != null)
-                for (CornerSite s = SmoothedPolyline.HeadSite, s0 = SmoothedPolyline.HeadSite;
+            this.RaiseLayoutChangeEvent(delta);
+            if (this.Curve != null) {
+                this.Curve.Translate(delta);
+            }
+
+            if (this.SmoothedPolyline != null) {
+                for (CornerSite s = this.SmoothedPolyline.HeadSite, s0 = this.SmoothedPolyline.HeadSite;
                      s != null;
-                     s = s.Next, s0 = s0.Next)
+                     s = s.Next, s0 = s0.Next) {
                     s.Point = s0.Point + delta;
+                }
+            }
 
-            if (SourceArrowhead != null)
-                SourceArrowhead.TipPosition += delta;
-            if (TargetArrowhead != null)
-                TargetArrowhead.TipPosition += delta;
+            if (this.SourceArrowhead != null) {
+                this.SourceArrowhead.TipPosition += delta;
+            }
 
+            if (this.TargetArrowhead != null) {
+                this.TargetArrowhead.TipPosition += delta;
+            }
         }
 
         internal double GetMaxArrowheadLength() {
             double l = 0;
-            if (SourceArrowhead != null)
-                l = SourceArrowhead.Length;
-            if (TargetArrowhead != null && TargetArrowhead.Length > l)
-                return TargetArrowhead.Length;
+            if (this.SourceArrowhead != null) {
+                l = this.SourceArrowhead.Length;
+            }
+
+            if (this.TargetArrowhead != null && this.TargetArrowhead.Length > l) {
+                return this.TargetArrowhead.Length;
+            }
+
             return l;
         }
 
@@ -146,8 +162,9 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <param name="newValue"></param>
         public void RaiseLayoutChangeEvent(object newValue) {
-            if (LayoutChangeEvent != null)
+            if (LayoutChangeEvent != null) {
                 LayoutChangeEvent(this, new LayoutChangeEventArgs{DataAfterChange = newValue});
+            }
         }
     }
 }

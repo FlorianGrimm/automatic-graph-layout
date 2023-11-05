@@ -74,7 +74,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         /// <summary>
         /// The derivative value - essentially the weighted difference in position.
         /// </summary>
-        internal double DfDv { get { return (2 * Weight * (ActualPos - DesiredPos)) / this.Scale; } }
+        internal double DfDv { get { return (2 * this.Weight * (this.ActualPos - this.DesiredPos)) / this.Scale; } }
 
         // Updated through Solve().
         internal double OffsetInBlock { get; set; }
@@ -95,11 +95,11 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
 
         internal int ActiveConstraintCount
         {
-            get { return activeConstraintCount; }
+            get { return this.activeConstraintCount; }
             set
             {
                 Debug.Assert(value >= 0, "ActiveConstraintCount must be >= 0");
-                activeConstraintCount = value;
+                this.activeConstraintCount = value;
             }
         }
         private int activeConstraintCount;
@@ -198,7 +198,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                                 this.Name, ActualPos, DesiredPos, OffsetInBlock, Weight, Scale);
 #else  // VERBOSE
                                 "{0} {1:F5} ({2:F5}) {3:F5} {4:F5}",
-                                this.Name, ActualPos, DesiredPos, Weight, Scale);
+                                this.Name, this.ActualPos, this.DesiredPos, this.Weight, this.Scale);
 #endif // VERBOSE
         }
 

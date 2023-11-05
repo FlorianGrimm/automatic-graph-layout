@@ -12,7 +12,7 @@ namespace Microsoft.Msagl.Routing.ConstrainedDelaunayTriangulation {
 
         internal PerimeterEdge(CdtEdge edge) {
             Debug.Assert(edge.CcwTriangle==null || edge.CwTriangle==null);
-            Edge = edge;
+            this.Edge = edge;
         }
     }
 }

@@ -4,7 +4,7 @@ using Microsoft.Msagl.Core.Geometry.Curves;
 
 namespace Microsoft.Msagl.GraphmapsWithMesh
 {
-    class PlanarGraphUtilities
+    internal class PlanarGraphUtilities
     {
         /*
          * input: a geometric straight line planar graph
@@ -28,8 +28,9 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                     clockwiseAngularDistance[neighborIndex] = Angle.getClockwiseAngle(apex, referrence, current);
                 }
                 Array.Sort(clockwiseAngularDistance, sortedEdgeList);
-                for (int neighborIndex = 0; neighborIndex < g.DegList[nodeIndex]; neighborIndex++)
+                for (int neighborIndex = 0; neighborIndex < g.DegList[nodeIndex]; neighborIndex++) {
                     g.EList[nodeIndex, neighborIndex] = sortedEdgeList[neighborIndex];
+                }
             }
             g.isPlanar = true;
 
@@ -39,11 +40,15 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 {
                     int neighbor = g.EList[nodeIndex, neighborIndex].NodeId;
                     bool consistent = false;
-                    for (int neighborIndex2 = 0; neighborIndex2 < g.DegList[neighbor]; neighborIndex2++)
-                        if (g.EList[neighbor, neighborIndex2].NodeId == nodeIndex) consistent = true;
+                    for (int neighborIndex2 = 0; neighborIndex2 < g.DegList[neighbor]; neighborIndex2++) {
+                        if (g.EList[neighbor, neighborIndex2].NodeId == nodeIndex) {
+                            consistent = true;
+                        }
+                    }
 
-                    if (!consistent)
+                    if (!consistent) {
                         System.Diagnostics.Debug.WriteLine("Beware! Graph is Not Consistent!");
+                    }
                 }
             }
         }
@@ -113,10 +118,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                     Vertex tailVertex = gPlanar.VList[nodeIndex];
                     Vertex headVertex = gPlanar.VList[gPlanar.EList[nodeIndex, neighborIndex].NodeId];
                     List<Vertex> boundary = GetRightIncidentFace(gPlanar, tailVertex, headVertex, out degenerate);
-                    if (degenerate) continue; // Found a degenerate face!
+                    if (degenerate) {
+                        continue; // Found a degenerate face!
+                    }
 
                     //check whether if all the boundary vertices are junctions
-                    if (AllBoundaryVerticesAreJunctions(gPlanar, boundary) == false) continue;
+                    if (AllBoundaryVerticesAreJunctions(gPlanar, boundary) == false) {
+                        continue;
+                    }
 
                     faces.Add(new Face(boundary));
                 }
@@ -124,9 +133,13 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             foreach (var face in faces)
             {
                 //if not a valid boundary continue
-                if (!FaceIsStillValid(gPlanar, face.boundary)) continue;
+                if (!FaceIsStillValid(gPlanar, face.boundary)) {
+                    continue;
+                }
                 //check whether the face is thin, and if so, find the longest edge in this face and remove it                      
-                if (GetFacewidth(face.boundary) > gPlanar.thinness) continue;
+                if (GetFacewidth(face.boundary) > gPlanar.thinness) {
+                    continue;
+                }
                 //searchFurther = 
                 RemoveLongestEdge(gPlanar, face.boundary);
             }
@@ -140,10 +153,15 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 if (index + 1 == b.Length)
                 {
-                    if (g.IsAnEdge(b[index].Id, b[0].Id) == false) return false;
+                    if (g.IsAnEdge(b[index].Id, b[0].Id) == false) {
+                        return false;
+                    }
+
                     continue;
                 }
-                if (g.IsAnEdge(b[index].Id, b[index + 1].Id) == false) return false;
+                if (g.IsAnEdge(b[index].Id, b[index + 1].Id) == false) {
+                    return false;
+                }
             }
             return true;
         }
@@ -153,17 +171,19 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             public List<Vertex> boundary;
             public Face(List<Vertex> b)
             {
-                boundary = b;
+                this.boundary = b;
             }
         }
 
         private static bool AllBoundaryVerticesAreJunctions(Tiling gPlanar, List<Vertex> face)
         {
-            foreach (Vertex boundaryVertex in face)
+            foreach (Vertex boundaryVertex in face) {
                 if (boundaryVertex.Id < gPlanar.N)
                 {
                     return false;
                 }
+            }
+
             return true;
         }
 
@@ -202,24 +222,39 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 for (int j = 0; j < face.Count; j++)
                 {
-                    if (i == j) continue;
+                    if (i == j) {
+                        continue;
+                    }
+
                     if (segments[i].Start == segments[j].Start || segments[i].End == segments[j].End ||
-                        segments[i].End == segments[j].Start || segments[i].Start == segments[j].End) continue;
+                        segments[i].End == segments[j].Start || segments[i].Start == segments[j].End) {
+                        continue;
+                    }
 
                     double width;
                     width = PointToSegmentDistance.GetDistance(segmentVertices[i, 0], segmentVertices[i, 1],
                         segmentVertices[j, 0]);
-                    if (facewidth > width) facewidth = width;
+                    if (facewidth > width) {
+                        facewidth = width;
+                    }
+
                     width = PointToSegmentDistance.GetDistance(segmentVertices[i, 0], segmentVertices[i, 1],
                         segmentVertices[j, 1]);
-                    if (facewidth > width) facewidth = width;
+                    if (facewidth > width) {
+                        facewidth = width;
+                    }
+
                     width = PointToSegmentDistance.GetDistance(segmentVertices[j, 0], segmentVertices[j, 1],
                         segmentVertices[i, 0]);
-                    if (facewidth > width) facewidth = width;
+                    if (facewidth > width) {
+                        facewidth = width;
+                    }
+
                     width = PointToSegmentDistance.GetDistance(segmentVertices[j, 0], segmentVertices[j, 1],
                         segmentVertices[i, 1]);
-                    if (facewidth > width) facewidth = width;
-
+                    if (facewidth > width) {
+                        facewidth = width;
+                    }
                 }
             }
             return facewidth;

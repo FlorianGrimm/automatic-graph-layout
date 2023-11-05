@@ -6,7 +6,7 @@ namespace Microsoft.Msagl.Core.Layout {
     /// floating port: specifies that the edge is routed to the Location 
     /// </summary>
     public class FloatingPort : Port {
-        ICurve curve; //a curve associated with the port
+        private ICurve curve; //a curve associated with the port
 
         /// <summary>
         /// constructor
@@ -22,14 +22,12 @@ namespace Microsoft.Msagl.Core.Layout {
 #endif
         }
 
-
-        
-        Point location;
+        private Point location;
         /// <summary>
         /// the location of the port
         /// </summary>
         override public Point Location {
-            get { return location; }
+            get { return this.location; }
         }
         /// <summary>
         /// translate the port location by delta
@@ -37,14 +35,14 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <param name="delta"></param>
         public virtual void Translate(Point delta)
         {
-            location += delta;
+            this.location += delta;
         }
 /// <summary>
 /// the port's curve
 /// </summary>
         public override ICurve Curve {
-            get { return curve; }
-            set { curve = value; }
+            get { return this.curve; }
+            set { this.curve = value; }
         }
 
         /// <summary>
@@ -52,7 +50,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <returns>a string representation of the Port location</returns>
         public override string ToString() {
-            return Location.ToString();
+            return this.Location.ToString();
         }
     }
 }

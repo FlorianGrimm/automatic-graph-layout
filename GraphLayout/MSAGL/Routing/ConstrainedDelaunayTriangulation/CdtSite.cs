@@ -37,14 +37,16 @@ namespace Microsoft.Msagl.Routing
         ///<param name="isolatedSite"></param>
         public CdtSite(Point isolatedSite)
         {
-            Point = isolatedSite;
+            this.Point = isolatedSite;
         }
 
         internal void AddEdgeToSite(CdtEdge edge)
         {
-            if (Edges == null)
-                Edges = new List<CdtEdge>();
-            Edges.Add(edge);
+            if (this.Edges == null) {
+                this.Edges = new List<CdtEdge>();
+            }
+
+            this.Edges.Add(edge);
         }
 #if TEST_MSAGL
         /// <summary>
@@ -56,25 +58,31 @@ namespace Microsoft.Msagl.Routing
         /// <filterpriority>2</filterpriority>
         public override string ToString()
         {
-            return Point.ToString();
+            return this.Point.ToString();
         }
 #endif
 
         internal CdtEdge EdgeBetweenUpperSiteAndLowerSite(CdtSite b)
         {
             Debug.Assert(Cdt.Above(this, b) > 0);
-            if (Edges != null)
-                foreach (var edge in Edges)
-                    if (edge.lowerSite == b)
+            if (this.Edges != null) {
+                foreach (var edge in this.Edges) {
+                    if (edge.lowerSite == b) {
                         return edge;
+                    }
+                }
+            }
+
             return null;
         }
 
         internal void AddInEdge(CdtEdge e)
         {
-            if (InEdges == null)
-                InEdges = new List<CdtEdge>();
-            InEdges.Add(e);
+            if (this.InEdges == null) {
+                this.InEdges = new List<CdtEdge>();
+            }
+
+            this.InEdges.Add(e);
         }
         /// <summary>
         /// enumerates over all site triangles
@@ -85,11 +93,13 @@ namespace Microsoft.Msagl.Routing
             get
             {
                 CdtEdge edge;
-                if (Edges != null && Edges.Count>0)
-                    edge = Edges[0];
-                else if (InEdges != null && InEdges.Count>0)
-                    edge = InEdges[0];
-                else yield break;
+                if (this.Edges != null && this.Edges.Count>0) {
+                    edge = this.Edges[0];
+                } else if (this.InEdges != null && this.InEdges.Count>0) {
+                    edge = this.InEdges[0];
+                } else {
+                    yield break;
+                }
 
                 //going counterclockwise around the site
                 var e = edge;

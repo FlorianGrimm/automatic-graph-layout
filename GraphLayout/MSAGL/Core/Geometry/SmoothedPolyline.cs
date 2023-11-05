@@ -38,13 +38,12 @@ namespace Microsoft.Msagl.Core.Geometry {
             return ret;
         }
 
-
-        readonly CornerSite headSite;
+        private readonly CornerSite headSite;
         /// <summary>
         /// the first site of the polyline
         /// </summary>
         public CornerSite HeadSite {
-            get { return headSite; }
+            get { return this.headSite; }
         }
 /// <summary>
 /// clones the polyline
@@ -52,16 +51,18 @@ namespace Microsoft.Msagl.Core.Geometry {
 /// <returns></returns>
         public SmoothedPolyline Clone() {
             CornerSite h; //the site of teh clone
-            CornerSite s = headSite; //the old site
+            CornerSite s = this.headSite; //the old site
             CornerSite prev = null;
             CornerSite headOfTheClone=null;
             while (s != null) {
                 h=s.Clone();
                 h.Previous=prev;
-                if (prev != null)
+                if (prev != null) {
                     prev.Next = h;
-                else
+                } else {
                     headOfTheClone = h;
+                }
+
                 s = s.Next;
                 prev = h;
             }
@@ -80,9 +81,11 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// </summary>
         public CornerSite LastSite {
             get {
-                CornerSite ret = headSite;
-                while (ret.Next != null)
+                CornerSite ret = this.headSite;
+                while (ret.Next != null) {
                     ret = ret.Next;
+                }
+
                 return ret;
             }
         }
@@ -94,8 +97,8 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
         public IEnumerable<LineSegment> GetSegments() {
-            CornerSite s0 = headSite;
-            CornerSite s1 = headSite.Next;
+            CornerSite s0 = this.headSite;
+            CornerSite s1 = this.headSite.Next;
             while (s1 != null) {
                yield return new LineSegment(s0.Point,s1.Point);
                 s0=s1;
@@ -110,17 +113,20 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <returns></returns>
         public Curve CreateCurve() {
             Curve curve = new Curve();
-            CornerSite a = HeadSite;//the corner start
+            CornerSite a = this.HeadSite;//the corner start
             CornerSite b; //the corner origin
             CornerSite c;//the corner other end
 
             while (Curve.FindCorner(a, out b, out c)) {
                 CubicBezierSegment bezierSeg = CreateBezierSegOnSite(b);
                 if (curve.Segments.Count == 0) {
-                    if (!ApproximateComparer.Close(a.Point, bezierSeg.Start))
+                    if (!ApproximateComparer.Close(a.Point, bezierSeg.Start)) {
                         Curve.AddLineSegment(curve, a.Point, bezierSeg.Start);
-                } else if (!ApproximateComparer.Close(curve.End, bezierSeg.Start))
+                    }
+                } else if (!ApproximateComparer.Close(curve.End, bezierSeg.Start)) {
                     Curve.ContinueWithLineSegment(curve, bezierSeg.Start);
+                }
+
                 curve.AddSegment(bezierSeg);
                 a = b;
             }
@@ -134,8 +140,10 @@ namespace Microsoft.Msagl.Core.Geometry {
                     double w = 5;
                     curve.Segments.Add(new CubicBezierSegment(a.Point, a.Point + new Point(w, w), a.Point + new Point(-w, w), b.Point));
                 }
-            } else if (!ApproximateComparer.Close(curve.End, a.Next.Point))
+            } else if (!ApproximateComparer.Close(curve.End, a.Next.Point)) {
                 Curve.ContinueWithLineSegment(curve, a.Next.Point);
+            }
+
             return curve;
         }
 

@@ -18,51 +18,53 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
 {
     internal class SteinerCdt
     {
-        Dictionary<Point, int> _pointsToIndices = new Dictionary<Point, int>();
-        readonly List<Point> _pointList = new List<Point>();
-        readonly Set<SymmetricTuple<int>> _segments = new Set<SymmetricTuple<int>>();
+        private Dictionary<Point, int> _pointsToIndices = new Dictionary<Point, int>();
+        private readonly List<Point> _pointList = new List<Point>();
+        private readonly Set<SymmetricTuple<int>> _segments = new Set<SymmetricTuple<int>>();
 
         public Dictionary<int, VisibilityVertex> _outPoints = new Dictionary<int, VisibilityVertex>();
         public VisibilityGraph _visGraph;
-        readonly IEnumerable<LgNodeInfo> _nodeInfos;
-        Rectangle _boundingBox;
-        readonly Random _random = new Random(3);
+        private readonly IEnumerable<LgNodeInfo> _nodeInfos;
+        private Rectangle _boundingBox;
+        private readonly Random _random = new Random(3);
         public SteinerCdt(VisibilityGraph visGraph, IEnumerable<LgNodeInfo> nodeInfos)
         {
-            _visGraph = visGraph;
-            _nodeInfos = nodeInfos;
+            this._visGraph = visGraph;
+            this._nodeInfos = nodeInfos;
             //comment out by jyoti
             //MakeSureThatNodeBoundariesAreInVisGraph(nodeInfos);
         }
 
-        void MakeSureThatNodeBoundariesAreInVisGraph(IEnumerable<LgNodeInfo> nodeInfos)
+        private void MakeSureThatNodeBoundariesAreInVisGraph(IEnumerable<LgNodeInfo> nodeInfos)
         {
-            foreach (var nodeInfo in nodeInfos)
-                foreach (var polypoint in nodeInfo.BoundaryOnLayer.PolylinePoints)
-                    _visGraph.AddVertex(polypoint.Point);
+            foreach (var nodeInfo in nodeInfos) {
+                foreach (var polypoint in nodeInfo.BoundaryOnLayer.PolylinePoints) {
+                    this._visGraph.AddVertex(polypoint.Point);
+                }
+            }
         }
 
         public void SaveInputFilePoly(string path)
         {
-            IndexPoints();
-            InitSegments();
+            this.IndexPoints();
+            this.InitSegments();
 
-            Debug.Assert(TopologyForCallingTriangleIsCorrect());
+            Debug.Assert(this.TopologyForCallingTriangleIsCorrect());
 
             using (var file = new StreamWriter(path))
             {
-                WritePoints(file);
-                WriteSegments(file);
-                WriteHoles(file);
+                this.WritePoints(file);
+                this.WriteSegments(file);
+                this.WriteHoles(file);
             }
         }
 
-        void WriteHoles(StreamWriter file)
+        private void WriteHoles(StreamWriter file)
         {
             file.WriteLine("# holes");
-            file.WriteLine(_nodeInfos.Count());
+            file.WriteLine(this._nodeInfos.Count());
             int j = 0;
-            foreach (var ni in _nodeInfos)
+            foreach (var ni in this._nodeInfos)
             {
                 var c = ni.Center;
                 file.WriteLine((j + 1) + " " + c.X + " " + c.Y);
@@ -70,23 +72,23 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
             }
         }
 
-        void WriteSegments(StreamWriter file)
+        private void WriteSegments(StreamWriter file)
         {
             file.WriteLine("# segments");
-            file.WriteLine(_segments.Count + " 0");
+            file.WriteLine(this._segments.Count + " 0");
             int i = 1;
-            foreach (var seg in _segments)
+            foreach (var seg in this._segments)
             {
                 file.WriteLine(i + " " + (seg.A + 1) + " " + (seg.B + 1));
                 i++;
             }
         }
 
-        void WritePoints(StreamWriter file)
+        private void WritePoints(StreamWriter file)
         {
             file.WriteLine("# vertices");
-            file.WriteLine(_pointsToIndices.Count + " 2 0 0");
-            foreach (var tuple in _pointsToIndices)
+            file.WriteLine(this._pointsToIndices.Count + " 2 0 0");
+            foreach (var tuple in this._pointsToIndices)
             {
                 file.WriteLine(tuple.Value + 1 + " " + tuple.Key.X + " " + tuple.Key.Y);
             }
@@ -94,11 +96,14 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
 
         public void LoadOutputFileNode(string path)
         {
-            int oldPoints = _pointList.Count;
+            int oldPoints = this._pointList.Count;
             using (var file = new StreamReader(path))
             {
                 string line = file.ReadLine();
-                if (line == null) throw new InvalidOperationException("unexpected end of file");
+                if (line == null) {
+                    throw new InvalidOperationException("unexpected end of file");
+                }
+
                 Regex.Split(line, @"\s{2,}");
 
                 int numVertices = Int32.Parse(line.Split(' ').First());
@@ -106,18 +111,20 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
                 for (int i = 0; i < numVertices; i++)
                 {
                     line = file.ReadLine();
-                    if (line == null) break;
+                    if (line == null) {
+                        break;
+                    }
 
                     line = line.TrimStart(' ');
                     var lineParsed = Regex.Split(line, @"\s{2,}");
                     int ind = Int32.Parse(lineParsed[0]) - 1;
-                    if (ind < oldPoints)
-                        _outPoints[ind] = _visGraph.FindVertex(_pointList[ind]);
-                    else
+                    if (ind < oldPoints) {
+                        this._outPoints[ind] = this._visGraph.FindVertex(this._pointList[ind]);
+                    } else
                     {
                         double x = Double.Parse(lineParsed[1]);
                         double y = Double.Parse(lineParsed[2]);
-                        _outPoints[ind] = _visGraph.AddVertex(new Point(x, y));
+                        this._outPoints[ind] = this._visGraph.AddVertex(new Point(x, y));
                     }
                 }
             }
@@ -126,11 +133,14 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
 
         public void LoadOutputFileSides(string path)
         {
-            _visGraph.ClearEdges();
+            this._visGraph.ClearEdges();
             using (var file = new StreamReader(path))
             {
                 var line = file.ReadLine();
-                if (line == null) throw new Exception("unexpected end of file");
+                if (line == null) {
+                    throw new Exception("unexpected end of file");
+                }
+
                 line = line.TrimStart(' ');
 
                 int numTriangles = Int32.Parse(line.Split(' ').First());
@@ -138,7 +148,9 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
                 for (int i = 0; i < numTriangles; i++)
                 {
                     line = file.ReadLine();
-                    if (line == null) break;
+                    if (line == null) {
+                        break;
+                    }
 
                     line = line.TrimStart(' ');
                     var lineParsed = Regex.Split(line, @"\s{2,}");
@@ -146,12 +158,12 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
                     int id1 = Int32.Parse(lineParsed[2]) - 1;
                     int id2 = Int32.Parse(lineParsed[3]) - 1;
 
-                    var v0 = _outPoints[id0];
-                    var v1 = _outPoints[id1];
-                    var v2 = _outPoints[id2];
-                    AddVisEdge(v0, v1);
-                    AddVisEdge(v1, v2);
-                    AddVisEdge(v2, v0);
+                    var v0 = this._outPoints[id0];
+                    var v1 = this._outPoints[id1];
+                    var v2 = this._outPoints[id2];
+                    this.AddVisEdge(v0, v1);
+                    this.AddVisEdge(v1, v2);
+                    this.AddVisEdge(v2, v0);
                 }
             }
         }
@@ -164,82 +176,90 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
             }
         }
 
-        void InitSegment(Point p1, Point p2)
+        private void InitSegment(Point p1, Point p2)
         {
-            int id0 = _pointsToIndices[p1];
-            int id1 = _pointsToIndices[p2];
-            _segments.Insert(new SymmetricTuple<int>(id0, id1));
+            int id0 = this._pointsToIndices[p1];
+            int id1 = this._pointsToIndices[p2];
+            this._segments.Insert(new SymmetricTuple<int>(id0, id1));
         }
 
-        void IndexPoints()
+        private void IndexPoints()
         {
-            _pointsToIndices.Clear();
-            IndexVisGraphVertices();
-            IndexNodeInfos();
-            CreateAndIndexBoundingBox();
+            this._pointsToIndices.Clear();
+            this.IndexVisGraphVertices();
+            this.IndexNodeInfos();
+            this.CreateAndIndexBoundingBox();
         }
 
-        void IndexNodeInfos()
+        private void IndexNodeInfos()
         {
-            foreach (var ni in _nodeInfos)
+            foreach (var ni in this._nodeInfos)
             {
-                AddNodeBoundaryToPointIndices(ni);
+                this.AddNodeBoundaryToPointIndices(ni);
             }
         }
 
-        void IndexVisGraphVertices()
+        private void IndexVisGraphVertices()
         {
-            if (_visGraph == null) return;
-            foreach (var v in _visGraph.Vertices())
+            if (this._visGraph == null) {
+                return;
+            }
+
+            foreach (var v in this._visGraph.Vertices())
             {
-                _pointsToIndices[v.Point] = _pointsToIndices.Count;
-                _pointList.Add(v.Point);
+                this._pointsToIndices[v.Point] = this._pointsToIndices.Count;
+                this._pointList.Add(v.Point);
             }
         }
 
-        void CreateAndIndexBoundingBox()
+        private void CreateAndIndexBoundingBox()
         {
-            _boundingBox = Rectangle.CreateAnEmptyBox();
-            foreach (var p in _pointsToIndices.Keys) _boundingBox.Add(p);
-            _boundingBox.Pad(1);
-            IndexAPoint(_boundingBox.LeftBottom);
-            IndexAPoint(_boundingBox.RightBottom);
-            IndexAPoint(_boundingBox.LeftTop);
-            IndexAPoint(_boundingBox.RightTop);
+            this._boundingBox = Rectangle.CreateAnEmptyBox();
+            foreach (var p in this._pointsToIndices.Keys) {
+                this._boundingBox.Add(p);
+            }
+
+            this._boundingBox.Pad(1);
+            this.IndexAPoint(this._boundingBox.LeftBottom);
+            this.IndexAPoint(this._boundingBox.RightBottom);
+            this.IndexAPoint(this._boundingBox.LeftTop);
+            this.IndexAPoint(this._boundingBox.RightTop);
             //SplineRouter.ShowVisGraph(_visGraph, null, new[] { _boundingBox.Perimeter() }, null);
         }
 
-        void AddNodeBoundaryToPointIndices(LgNodeInfo ni)
+        private void AddNodeBoundaryToPointIndices(LgNodeInfo ni)
         {
-            foreach (var polylinePoint in ni.BoundaryOnLayer.PolylinePoints)
-                IndexAPoint(polylinePoint.Point);
-        }
-
-        void IndexAPoint(Point p)
-        {
-            if (!_pointsToIndices.ContainsKey(p))
-            {
-                _pointsToIndices[p] = _pointsToIndices.Count;
-                _pointList.Add(p);
-                _visGraph.AddVertex(p);
+            foreach (var polylinePoint in ni.BoundaryOnLayer.PolylinePoints) {
+                this.IndexAPoint(polylinePoint.Point);
             }
         }
 
-        bool TopologyForCallingTriangleIsCorrect()
+        private void IndexAPoint(Point p)
         {
-            Point[] indexToPoints = new Point[_pointsToIndices.Count];
-            foreach (var pp in _pointsToIndices)
+            if (!this._pointsToIndices.ContainsKey(p))
+            {
+                this._pointsToIndices[p] = this._pointsToIndices.Count;
+                this._pointList.Add(p);
+                this._visGraph.AddVertex(p);
+            }
+        }
+
+        private bool TopologyForCallingTriangleIsCorrect()
+        {
+            Point[] indexToPoints = new Point[this._pointsToIndices.Count];
+            foreach (var pp in this._pointsToIndices)
             {
                 indexToPoints[pp.Value] = pp.Key;
             }
 
             var tree =
-                new RTree<Point,Point>(_pointsToIndices.Keys.Select(p => new KeyValuePair<IRectangle<Point>, Point>(new Rectangle(p), p)));
-            var badSegs = (from e in _segments let overlaps = GetPointsOverlappingSeg(e, tree, indexToPoints) where overlaps.Count > 2 select e).ToList();
+                new RTree<Point,Point>(this._pointsToIndices.Keys.Select(p => new KeyValuePair<IRectangle<Point>, Point>(new Rectangle(p), p)));
+            var badSegs = (from e in this._segments let overlaps = this.GetPointsOverlappingSeg(e, tree, indexToPoints) where overlaps.Count > 2 select e).ToList();
 
 #if TEST_MSAGL
-            if (badSegs.Any())
-                ShowInputSegments(badSegs, indexToPoints);
+            if (badSegs.Any()) {
+                this.ShowInputSegments(badSegs, indexToPoints);
+            }
 #endif
             return !badSegs.Any();
         }
@@ -247,7 +267,7 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
 #if TEST_MSAGL
         private void ShowInputSegments(List<SymmetricTuple<int>> badSegs, Point[] indexToPoints) {
             var l = new List<DebugCurve>();
-            foreach (var seg in _segments)
+            foreach (var seg in this._segments)
             {
                 var p1 = indexToPoints[seg.A];
                 var p2 = indexToPoints[seg.B];
@@ -261,7 +281,7 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
         }
 #endif
 
-        List<Point> GetPointsOverlappingSeg(SymmetricTuple<int> seg, RTree<Point, Point> tree, Point[] indexToPoints)
+        private List<Point> GetPointsOverlappingSeg(SymmetricTuple<int> seg, RTree<Point, Point> tree, Point[] indexToPoints)
         {
             Point p0 = indexToPoints[seg.A];
             Point p1 = indexToPoints[seg.B];
@@ -277,47 +297,57 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
             return vtsOverlapping;
         }
 
-        void InitSegments()
+        private void InitSegments()
         {
-            _segments.Clear();
-            InitSegsOfVisGraph();
-            foreach (var lgNodeInfo in _nodeInfos)
-                InitSegsOfPolyline(lgNodeInfo.BoundaryOnLayer);
-            InitSegments(_boundingBox.LeftTop, _boundingBox.RightTop, _boundingBox.RightBottom, _boundingBox.LeftBottom);
+            this._segments.Clear();
+            this.InitSegsOfVisGraph();
+            foreach (var lgNodeInfo in this._nodeInfos) {
+                this.InitSegsOfPolyline(lgNodeInfo.BoundaryOnLayer);
+            }
+
+            this.InitSegments(this._boundingBox.LeftTop, this._boundingBox.RightTop, this._boundingBox.RightBottom, this._boundingBox.LeftBottom);
         }
 
-        void InitSegsOfPolyline(Polyline polyline)
+        private void InitSegsOfPolyline(Polyline polyline)
         {
             var pp = polyline.StartPoint;
-            int startId = _pointsToIndices[pp.Point];
+            int startId = this._pointsToIndices[pp.Point];
             int id = startId;
             do
             {
                 pp = pp.Next;
-                if (pp == null) break;
-                int nextId = _pointsToIndices[pp.Point];
-                _segments.Insert(new SymmetricTuple<int>(id, nextId));
+                if (pp == null) {
+                    break;
+                }
+
+                int nextId = this._pointsToIndices[pp.Point];
+                this._segments.Insert(new SymmetricTuple<int>(id, nextId));
                 id = nextId;
             } while (true);
-            _segments.Insert(new SymmetricTuple<int>(id, startId));
+            this._segments.Insert(new SymmetricTuple<int>(id, startId));
         }
 
-        void InitSegments(params Point[] pts)
+        private void InitSegments(params Point[] pts)
         {
-            for (int i = 0; i < pts.Length - 1; i++)
-                InitSegment(pts[i], pts[i + 1]);
+            for (int i = 0; i < pts.Length - 1; i++) {
+                this.InitSegment(pts[i], pts[i + 1]);
+            }
 
-            InitSegment(pts[pts.Length - 1], pts[0]);
+            this.InitSegment(pts[pts.Length - 1], pts[0]);
         }
 
-        void InitSegsOfVisGraph()
+        private void InitSegsOfVisGraph()
         {
-            if (_visGraph == null) return;
-            foreach (var v in _visGraph.Vertices())
+            if (this._visGraph == null) {
+                return;
+            }
+
+            foreach (var v in this._visGraph.Vertices())
             {
-                int vId = _pointsToIndices[v.Point];
-                foreach (var e in v.OutEdges)
-                    _segments.Insert(new SymmetricTuple<int>(vId, _pointsToIndices[e.Target.Point]));
+                int vId = this._pointsToIndices[v.Point];
+                foreach (var e in v.OutEdges) {
+                    this._segments.Insert(new SymmetricTuple<int>(vId, this._pointsToIndices[e.Target.Point]));
+                }
             }
         }
 
@@ -346,8 +376,9 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
                         Environment.Exit(1);
                     }
                     exeProcess.WaitForExit();
-                    if (exeProcess.ExitCode != 0)
+                    if (exeProcess.ExitCode != 0) {
                         Environment.Exit(exeProcess.ExitCode);
+                    }
                 }
             }
             catch (Exception e)
@@ -362,13 +393,13 @@ namespace Microsoft.Msagl.Miscellaneous.ConstrainedSkeleton
 
         internal void ReadTriangleOutputAndPopulateTheLevelVisibilityGraphFromTriangulation()
         {
-            string outPath = Path.Combine(Path.GetTempPath(), "pointssegments" + _random.Next(10000));
-            SaveInputFilePoly(outPath + ".poly");
+            string outPath = Path.Combine(Path.GetTempPath(), "pointssegments" + this._random.Next(10000));
+            this.SaveInputFilePoly(outPath + ".poly");
             const string exePath = "triangle.exe";
             string arguments = outPath + ".poly -c -q10 -S100000000";
-            LaunchTriangleExe(exePath, arguments);
-            LoadOutputFileNode(outPath + ".1.node");
-            LoadOutputFileSides(outPath + ".1.ele");
+            this.LaunchTriangleExe(exePath, arguments);
+            this.LoadOutputFileNode(outPath + ".1.node");
+            this.LoadOutputFileSides(outPath + ".1.ele");
             File.Delete(outPath + ".poly");
             File.Delete(outPath + ".1.node");
             File.Delete(outPath + ".1.ele");

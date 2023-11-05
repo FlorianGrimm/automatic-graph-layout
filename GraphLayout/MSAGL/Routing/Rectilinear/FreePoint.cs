@@ -22,17 +22,17 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
 
         // The VisibilityVertex for this path point; created if it does not already exist.
         internal VisibilityVertex Vertex { get; private set; }
-        internal Point Point { get { return Vertex.Point; } }
+        internal Point Point { get { return this.Vertex.Point; } }
         internal bool IsOverlapped { get; set; }
         internal double InitialWeight { get { return this.IsOverlapped ? ScanSegment.OverlappedWeight : ScanSegment.NormalWeight; } }
         internal Direction OutOfBoundsDirectionFromGraph { get; set; }
-        internal bool IsOutOfBounds { get { return Direction. None != OutOfBoundsDirectionFromGraph; }}
+        internal bool IsOutOfBounds { get { return Direction. None != this.OutOfBoundsDirectionFromGraph; }}
 
         private readonly SegmentAndCrossings[] maxVisibilitySegmentsAndCrossings = new SegmentAndCrossings[4];
 
         // Called if we must create the vertex.
         internal FreePoint(TransientGraphUtility transUtil, Point point) {
-            OutOfBoundsDirectionFromGraph = Direction. None;
+            this.OutOfBoundsDirectionFromGraph = Direction. None;
             this.GetVertex(transUtil, point);
         }
 
@@ -48,21 +48,21 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
             Point targetIntersect = StaticGraphUtility.SegmentIntersection(targetEdge, this.Point);
             VisibilityVertex targetVertex = transUtil.VisGraph.FindVertex(targetIntersect);
             if (null != targetVertex) {
-                AddToAdjacentVertex(transUtil, targetVertex, dirToExtend, limitRect);
+                this.AddToAdjacentVertex(transUtil, targetVertex, dirToExtend, limitRect);
             }
             else {
                 targetVertex = transUtil.AddEdgeToTargetEdge(this.Vertex, targetEdge, targetIntersect);
             }
-            ExtendEdgeChain(transUtil, targetVertex, dirToExtend, limitRect);
+            this.ExtendEdgeChain(transUtil, targetVertex, dirToExtend, limitRect);
             return targetVertex;
         }
 
         internal void AddToAdjacentVertex(TransientGraphUtility transUtil
                     , VisibilityVertex targetVertex, Direction dirToExtend, Rectangle limitRect) {
             if (!PointComparer.Equal(this.Point, targetVertex.Point)) {
-                transUtil.FindOrAddEdge(this.Vertex, targetVertex, InitialWeight);
+                transUtil.FindOrAddEdge(this.Vertex, targetVertex, this.InitialWeight);
             }
-            ExtendEdgeChain(transUtil, targetVertex, dirToExtend, limitRect);
+            this.ExtendEdgeChain(transUtil, targetVertex, dirToExtend, limitRect);
         }
 
         internal void ExtendEdgeChain(TransientGraphUtility transUtil, VisibilityVertex targetVertex, Direction dirToExtend, Rectangle limitRect) {
@@ -71,7 +71,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
                         || (PointComparer.GetPureDirection(this.Point, targetVertex.Point) == dirToExtend)
                         , "input dir does not match with to-targetVertex direction", transUtil.ObstacleTree, transUtil.VisGraph);
 
-            var extendOverlapped = IsOverlapped;
+            var extendOverlapped = this.IsOverlapped;
             if (extendOverlapped)
             {
                 // The initial vertex we connected to may be on the border of the enclosing obstacle,
@@ -81,7 +81,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
 
             // If we're inside an obstacle's boundaries we'll never extend past the end of the obstacle
             // due to encountering the boundary from the inside.  So start the extension at targetVertex.
-            SegmentAndCrossings segmentAndCrossings = GetSegmentAndCrossings(this.IsOverlapped ? targetVertex : this.Vertex, dirToExtend, transUtil);
+            SegmentAndCrossings segmentAndCrossings = this.GetSegmentAndCrossings(this.IsOverlapped ? targetVertex : this.Vertex, dirToExtend, transUtil);
             transUtil.ExtendEdgeChain(targetVertex, limitRect, segmentAndCrossings.Item1, segmentAndCrossings.Item2, extendOverlapped);
         }
 
@@ -105,12 +105,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
 
         internal Point MaxVisibilityInDirectionForNonOverlappedFreePoint(Direction dirToExtend, TransientGraphUtility transUtil) {
             Debug.Assert(!this.IsOverlapped, "Do not precalculate overlapped obstacle visibility as we should extend from the outer target vertex instead");
-            SegmentAndCrossings segmentAndCrossings = GetSegmentAndCrossings(this.Vertex, dirToExtend, transUtil);
+            SegmentAndCrossings segmentAndCrossings = this.GetSegmentAndCrossings(this.Vertex, dirToExtend, transUtil);
             return segmentAndCrossings.Item1.End;
         }
 
         internal void AddOobEdgesFromGraphCorner(TransientGraphUtility transUtil, Point cornerPoint) {
-            Direction dirs = PointComparer.GetDirections(cornerPoint, Vertex.Point);
+            Direction dirs = PointComparer.GetDirections(cornerPoint, this.Vertex.Point);
             VisibilityVertex cornerVertex = transUtil.VisGraph.FindVertex(cornerPoint);
 
             // For waypoints we want to be able to enter in both directions. 
@@ -120,14 +120,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
 
         internal void RemoveFromGraph() {
             // Currently all transient removals and edge restorations are done by TransientGraphUtility itself.
-            Vertex = null;
+            this.Vertex = null;
         }
 
         /// <summary>
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return Vertex.ToString();
+            return this.Vertex.ToString();
         }
     }
 }

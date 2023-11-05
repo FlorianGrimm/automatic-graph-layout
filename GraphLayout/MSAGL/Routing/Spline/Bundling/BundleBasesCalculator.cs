@@ -12,15 +12,16 @@ using Microsoft.Msagl.Core.DataStructures;
 
 namespace Microsoft.Msagl.Routing.Spline.Bundling {
     internal class BundleBasesCalculator {
-        readonly IMetroMapOrderingAlgorithm metroOrdering;
-        readonly MetroGraphData metroGraphData;
-        readonly BundlingSettings bundlingSettings;
+        private readonly IMetroMapOrderingAlgorithm metroOrdering;
+        private readonly MetroGraphData metroGraphData;
+        private readonly BundlingSettings bundlingSettings;
+        private List<BundleInfo> Bundles;
 
-        List<BundleInfo> Bundles;
         //boundary curve with bases going outside the hub
-        Dictionary<ICurve, List<BundleBase>> externalBases;
+        private Dictionary<ICurve, List<BundleBase>> externalBases;
+
         //boundary curve with bases going inside the cluster
-        Dictionary<ICurve, List<BundleBase>> internalBases;
+        private Dictionary<ICurve, List<BundleBase>> internalBases;
 
         internal BundleBasesCalculator(IMetroMapOrderingAlgorithm metroOrdering, MetroGraphData metroGraphData, BundlingSettings bundlingSettings) {
             this.metroOrdering = metroOrdering;
@@ -32,30 +33,31 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             //HubDebugger.ShowHubsTurnByTurn(metroGraphData, bundlingSettings, true);
             //HubDebugger.ShowHubsWithAdditionalICurves(metroGraphData, bundlingSettings);
 
-            AllocateBundleBases();
-            SetBasesRightLeftParamsToTheMiddles();
-            if (bundlingSettings.KeepOverlaps) {
-                UpdateSourceAndTargetBases();
-                CreateOrientedSegs();
+            this.AllocateBundleBases();
+            this.SetBasesRightLeftParamsToTheMiddles();
+            if (this.bundlingSettings.KeepOverlaps) {
+                this.UpdateSourceAndTargetBases();
+                this.CreateOrientedSegs();
             }
             else {
-                SetRightLeftParamsFeasiblySymmetrically();
+                this.SetRightLeftParamsFeasiblySymmetrically();
                 //EdgeNudger.ShowHubs(metroGraphData, metroOrdering, null);
                 //these bases can be too wide and overlap each other, so we need to adjust them
-                AdjustStartEndParamsToAvoidBaseOverlaps();
-                UpdateSourceAndTargetBases();
+                this.AdjustStartEndParamsToAvoidBaseOverlaps();
+                this.UpdateSourceAndTargetBases();
                 //EdgeNudger.ShowHubs(metroGraphData, metroOrdering, null);
 
-                CreateOrientedSegs();
+                this.CreateOrientedSegs();
                 //EdgeNudger.ShowHubs(metroGraphData, metroOrdering, null);
 
                 //optimization: moving bases to reduce cost
                 //TimeMeasurer.DebugOutput("Initial cost of bundle bases: " + Cost());
-                if (bundlingSettings.RotateBundles)
-                    RotateBasesToDiminishCost();
+                if (this.bundlingSettings.RotateBundles) {
+                    this.RotateBasesToDiminishCost();
+                }
                 //EdgeNudger.ShowHubs(metroGraphData, metroOrdering, null);
-                AdjustStartEndParamsToAvoidBaseOverlaps();
-                UpdateSourceAndTargetBases();
+                this.AdjustStartEndParamsToAvoidBaseOverlaps();
+                this.UpdateSourceAndTargetBases();
             }
 
             //TimeMeasurer.DebugOutput("Optimized cost of bundle bases: " + Cost());
@@ -64,72 +66,73 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
         #region Initialization
 
-        void AllocateBundleBases() {
-            externalBases = new Dictionary<ICurve, List<BundleBase>>();
-            internalBases = new Dictionary<ICurve, List<BundleBase>>();
-            Bundles = new List<BundleInfo>();
+        private void AllocateBundleBases() {
+            this.externalBases = new Dictionary<ICurve, List<BundleBase>>();
+            this.internalBases = new Dictionary<ICurve, List<BundleBase>>();
+            this.Bundles = new List<BundleInfo>();
 
-            foreach (var station in metroGraphData.Stations) {
-                if (station.BoundaryCurve == null)
+            foreach (var station in this.metroGraphData.Stations) {
+                if (station.BoundaryCurve == null) {
                     station.BoundaryCurve = new Ellipse(station.Radius, station.Radius, station.Position);
+                }
             }
 
-            foreach (var station in metroGraphData.Stations) {
+            foreach (var station in this.metroGraphData.Stations) {
                 foreach (Station neighbor in station.Neighbors) {
                     if (station < neighbor) {
-                        var bb = new BundleBase(metroGraphData.RealEdgeCount(station, neighbor), station.BoundaryCurve, station.Position, station.IsRealNode, neighbor.SerialNumber);
+                        var bb = new BundleBase(this.metroGraphData.RealEdgeCount(station, neighbor), station.BoundaryCurve, station.Position, station.IsRealNode, neighbor.SerialNumber);
                         station.BundleBases[neighbor] = bb;
 
-                        var bb2 = new BundleBase(metroGraphData.RealEdgeCount(station, neighbor), neighbor.BoundaryCurve, neighbor.Position, neighbor.IsRealNode, station.SerialNumber);
+                        var bb2 = new BundleBase(this.metroGraphData.RealEdgeCount(station, neighbor), neighbor.BoundaryCurve, neighbor.Position, neighbor.IsRealNode, station.SerialNumber);
                         neighbor.BundleBases[station] = bb2;
 
                         if (Curve.PointRelativeToCurveLocation(neighbor.Position, station.BoundaryCurve) != PointLocation.Outside) {
                             bb.IsParent = true;
-                            CollectionUtilities.AddToMap(internalBases, station.BoundaryCurve, bb);
-                            CollectionUtilities.AddToMap(externalBases, neighbor.BoundaryCurve, bb2);
+                            CollectionUtilities.AddToMap(this.internalBases, station.BoundaryCurve, bb);
+                            CollectionUtilities.AddToMap(this.externalBases, neighbor.BoundaryCurve, bb2);
                         }
                         else if (Curve.PointRelativeToCurveLocation(station.Position, neighbor.BoundaryCurve) != PointLocation.Outside) {
                             bb2.IsParent = true;
-                            CollectionUtilities.AddToMap(externalBases, station.BoundaryCurve, bb);
-                            CollectionUtilities.AddToMap(internalBases, neighbor.BoundaryCurve, bb2);
+                            CollectionUtilities.AddToMap(this.externalBases, station.BoundaryCurve, bb);
+                            CollectionUtilities.AddToMap(this.internalBases, neighbor.BoundaryCurve, bb2);
                         }
                         else {
-                            CollectionUtilities.AddToMap(externalBases, station.BoundaryCurve, bb);
-                            CollectionUtilities.AddToMap(externalBases, neighbor.BoundaryCurve, bb2);
+                            CollectionUtilities.AddToMap(this.externalBases, station.BoundaryCurve, bb);
+                            CollectionUtilities.AddToMap(this.externalBases, neighbor.BoundaryCurve, bb2);
                         }
 
-                        Set<Polyline> obstaclesToIgnore = metroGraphData.tightIntersections.ObstaclesToIgnoreForBundle(station, neighbor);
-                        var bundle = new BundleInfo(bb, bb2, obstaclesToIgnore, bundlingSettings.EdgeSeparation, metroOrdering.GetOrder(station, neighbor).Select(l => l.Width / 2).ToArray());
+                        Set<Polyline> obstaclesToIgnore = this.metroGraphData.tightIntersections.ObstaclesToIgnoreForBundle(station, neighbor);
+                        var bundle = new BundleInfo(bb, bb2, obstaclesToIgnore, this.bundlingSettings.EdgeSeparation, this.metroOrdering.GetOrder(station, neighbor).Select(l => l.Width / 2).ToArray());
                         bb.OutgoingBundleInfo = bb2.IncomingBundleInfo = bundle;
-                        Bundles.Add(bundle);
+                        this.Bundles.Add(bundle);
                     }
 
                 }
             }
 
             //neighbors
-            SetBundleBaseNeighbors();
+            this.SetBundleBaseNeighbors();
         }
 
-        void SetBundleBaseNeighbors() {
-            foreach (var c in externalBases.Keys) {
-                List<BundleBase> list = externalBases[c];
-                SortBundlesCounterClockwise(list);
+        private void SetBundleBaseNeighbors() {
+            foreach (var c in this.externalBases.Keys) {
+                List<BundleBase> list = this.externalBases[c];
+                this.SortBundlesCounterClockwise(list);
 
                 //set left
-                SetLeftRightBases(list);
+                this.SetLeftRightBases(list);
             }
 
-            foreach (var c in internalBases.Keys) {
-                List<BundleBase> list = internalBases[c];
-                SortBundlesCounterClockwise(list);
+            foreach (var c in this.internalBases.Keys) {
+                List<BundleBase> list = this.internalBases[c];
+                this.SortBundlesCounterClockwise(list);
 
                 //set left
-                SetLeftRightBases(list);
+                this.SetLeftRightBases(list);
             }
         }
 
-        void SortBundlesCounterClockwise(List<BundleBase> list) {
+        private void SortBundlesCounterClockwise(List<BundleBase> list) {
             if (list.Count > 2) {
                 Point pivot = list[0].OppositeBase.Position;
                 Point center = list[0].CurveCenter;
@@ -139,61 +142,66 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             }
         }
 
-        void SetLeftRightBases(List<BundleBase> bases) {
+        private void SetLeftRightBases(List<BundleBase> bases) {
             int count = bases.Count;
-            if (count <= 1)
+            if (count <= 1) {
                 return;
+            }
+
             for (int i = 0; i < count; i++) {
                 bases[i].Prev = bases[(i - 1 + count) % count];
                 bases[i].Next = bases[(i + 1) % count];
             }
         }
 
-        void CreateOrientedSegs() {
-            foreach (var metroline in metroGraphData.Metrolines) {
-                CreateOrientedSegsOnLine(metroline);
+        private void CreateOrientedSegs() {
+            foreach (var metroline in this.metroGraphData.Metrolines) {
+                this.CreateOrientedSegsOnLine(metroline);
             }
         }
 
-        void CreateOrientedSegsOnLine(Metroline line) {
-            for (PolylinePoint polyPoint = line.Polyline.StartPoint.Next; polyPoint.Next != null; polyPoint = polyPoint.Next)
-                CreateOrientedSegsOnLineVertex(line, polyPoint);
+        private void CreateOrientedSegsOnLine(Metroline line) {
+            for (PolylinePoint polyPoint = line.Polyline.StartPoint.Next; polyPoint.Next != null; polyPoint = polyPoint.Next) {
+                this.CreateOrientedSegsOnLineVertex(line, polyPoint);
+            }
         }
 
-        void CreateOrientedSegsOnLineVertex(Metroline line, PolylinePoint polyPoint) {
-            Station u = metroGraphData.PointToStations[polyPoint.Prev.Point];
-            Station v = metroGraphData.PointToStations[polyPoint.Point];
-            Station w = metroGraphData.PointToStations[polyPoint.Next.Point];
+        private void CreateOrientedSegsOnLineVertex(Metroline line, PolylinePoint polyPoint) {
+            Station u = this.metroGraphData.PointToStations[polyPoint.Prev.Point];
+            Station v = this.metroGraphData.PointToStations[polyPoint.Point];
+            Station w = this.metroGraphData.PointToStations[polyPoint.Next.Point];
             BundleBase h0 = v.BundleBases[u];
             BundleBase h1 = v.BundleBases[w];
-            int j0 = metroOrdering.GetLineIndexInOrder(u, v, line);
-            int j1 = metroOrdering.GetLineIndexInOrder(w, v, line);
+            int j0 = this.metroOrdering.GetLineIndexInOrder(u, v, line);
+            int j1 = this.metroOrdering.GetLineIndexInOrder(w, v, line);
             OrientedHubSegment or0 = h0.OrientedHubSegments[j0] = new OrientedHubSegment(null, false, j0, h0);
             OrientedHubSegment or1 = h1.OrientedHubSegments[j1] = new OrientedHubSegment(null, true, j1, h1);
             or1.Other = or0;
             or0.Other = or1;
         }
 
-        void UpdateSourceAndTargetBases() {
-            foreach (var bundleInfo in Bundles)
+        private void UpdateSourceAndTargetBases() {
+            foreach (var bundleInfo in this.Bundles) {
                 bundleInfo.UpdateSourceAndTargetBases(true, true);
+            }
         }
 
-        void SetBasesRightLeftParamsToTheMiddles() {
-            foreach (var bundle in Bundles) {
+        private void SetBasesRightLeftParamsToTheMiddles() {
+            foreach (var bundle in this.Bundles) {
                 var sbase = bundle.SourceBase;
                 var tbase = bundle.TargetBase;
-                sbase.ParRight = sbase.ParLeft = GetBaseMiddleParamInDirection(sbase, sbase.Position, tbase.Position);
-                tbase.ParRight = tbase.ParLeft = GetBaseMiddleParamInDirection(tbase, tbase.Position, sbase.Position);
+                sbase.ParRight = sbase.ParLeft = this.GetBaseMiddleParamInDirection(sbase, sbase.Position, tbase.Position);
+                tbase.ParRight = tbase.ParLeft = this.GetBaseMiddleParamInDirection(tbase, tbase.Position, sbase.Position);
            //     HubDebugger.ShowHubsWithAdditionalICurves(metroGraphData, bundlingSettings, new LineSegment(tbase.Curve[tbase.ParRight], sbase.Curve[sbase.ParRight]), tbase.Curve, sbase.Curve);
             }
         }
 
-        double GetBaseMiddleParamInDirection(BundleBase targetBase, Point sPos, Point neighbPos) {
+        private double GetBaseMiddleParamInDirection(BundleBase targetBase, Point sPos, Point neighbPos) {
             var curve = targetBase.Curve;
             var circle = curve as Ellipse;
-            if (circle != null && circle.IsArc())
+            if (circle != null && circle.IsArc()) {
                 return Point.Angle(circle.AxisA, neighbPos - sPos);
+            }
 
             var intersections = Curve.GetAllIntersections(curve, new LineSegment(sPos, neighbPos), true);
             foreach (var intersectionInfo in intersections) {
@@ -206,39 +214,41 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             throw new InvalidOperationException();
         }
 
-        void SetRightLeftParamsFeasiblySymmetrically() {
-            foreach (var bundle in Bundles) {
-                bundle.SetParamsFeasiblySymmetrically(metroGraphData.TightTree);
+        private void SetRightLeftParamsFeasiblySymmetrically() {
+            foreach (var bundle in this.Bundles) {
+                bundle.SetParamsFeasiblySymmetrically(this.metroGraphData.TightTree);
             }
         }
 
-        void AdjustStartEndParamsToAvoidBaseOverlaps() {
-            foreach (var c in externalBases.Keys) {
-                AdjustCurrentBundleWidthsOnCurve(externalBases[c]);
+        private void AdjustStartEndParamsToAvoidBaseOverlaps() {
+            foreach (var c in this.externalBases.Keys) {
+                this.AdjustCurrentBundleWidthsOnCurve(this.externalBases[c]);
             }
 
-            foreach (var c in internalBases.Keys) {
-                AdjustCurrentBundleWidthsOnCurve(internalBases[c]);
+            foreach (var c in this.internalBases.Keys) {
+                this.AdjustCurrentBundleWidthsOnCurve(this.internalBases[c]);
             }
         }
 
-        void AdjustCurrentBundleWidthsOnCurve(List<BundleBase> bases) {
+        private void AdjustCurrentBundleWidthsOnCurve(List<BundleBase> bases) {
             int count = bases.Count;
-            if (count <= 1)
+            if (count <= 1) {
                 return;
+            }
 
             for (int i = 0; i < count; i++) {
                 BundleBase rBase = bases[i];
                 BundleBase lBase = rBase.Next;
 
-                ShrinkBasesToMakeTwoConsecutiveNeighborsHappy(rBase, lBase);
+                this.ShrinkBasesToMakeTwoConsecutiveNeighborsHappy(rBase, lBase);
                 Debug.Assert(!rBase.Intersect(lBase));
             }
         }
 
-        void ShrinkBasesToMakeTwoConsecutiveNeighborsHappy(BundleBase rBase, BundleBase lBase) {
-            if (!rBase.Intersect(lBase))
+        private void ShrinkBasesToMakeTwoConsecutiveNeighborsHappy(BundleBase rBase, BundleBase lBase) {
+            if (!rBase.Intersect(lBase)) {
                 return;
+            }
 
             //segments are now [l1..r1] and [l2..r2]
             double l1 = rBase.ParRight;
@@ -249,10 +259,13 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             double span = lBase.ParameterSpan;
 
             //make them regular
-            if (l1 > r1)
+            if (l1 > r1) {
                 l1 -= span;
-            if (l2 > r2)
+            }
+
+            if (l2 > r2) {
                 l2 -= span;
+            }
 
             //make them intersecting
             if (l2 > r1) {
@@ -268,7 +281,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             //they do intersect!
             Debug.Assert(!(l2 >= r1) && !(l1 >= r2));
 
-            double t = RegularCut(l1, r1, l2, r2, rBase.Span, lBase.Span);
+            double t = this.RegularCut(l1, r1, l2, r2, rBase.Span, lBase.Span);
             TriangleOrientation to = Point.GetTriangleOrientation(lBase.CurveCenter, lBase.OppositeBase.InitialMidPoint, rBase.OppositeBase.InitialMidPoint);
 
             if (to == TriangleOrientation.Clockwise) {
@@ -302,15 +315,18 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// find a cut point for 2 segments
         /// </summary>
         /// <returns>true if the segment interiors intersect</returns>
-        double RegularCut(double l1, double r1, double l2, double r2, double span1, double span2) {
+        private double RegularCut(double l1, double r1, double l2, double r2, double span1, double span2) {
             double cutParam = (span1 * r2 + span2 * l1) / (span1 + span2);
             double mn = Math.Min(r1, r2);
             double mx = Math.Max(l1, l2);
             Debug.Assert(ApproximateComparer.LessOrEqual(mx, cutParam) && ApproximateComparer.LessOrEqual(cutParam, mn));
-            if (cutParam < mx)
+            if (cutParam < mx) {
                 cutParam = mx;
-            if (cutParam > mn)
+            }
+
+            if (cutParam > mn) {
                 cutParam = mn;
+            }
 
             return cutParam;
         }
@@ -319,7 +335,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
         #region Optimization
 
-        static readonly int[][] Deltas = new[] {
+        private static readonly int[][] Deltas = new[] {
               new [] {1,1},//rotating both point ccw
               new [] {0,1},//rotating both point ccw
               new [] {-1,1},//rotating both point ccw
@@ -330,24 +346,20 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
               new [] {-1,-1},//rotating both point ccw
               new [] {0,0},//rotating both point ccw
             };
+        private const double SeparationCoeff = 1;
+        private const double SqueezeCoeff = 1;
+        private const double CenterCoeff = 10;
+        private const double AssymetryCoeff = 1;
+        private const int MaxIterations = 200;
+        private const double MaxParameterChange = 8 / 360.0;//it would be one degree for a circle
+        private const double MinParameterChange = 0.1 / 360.0;
+        private const double CostThreshold = 0.00001;
+        private const double CostDeltaThreshold = 0.01;
+        private HashSet<BundleInfo> fixedBundles = new HashSet<BundleInfo>();
 
-        const double SeparationCoeff = 1;
-        const double SqueezeCoeff = 1;
-        const double CenterCoeff = 10;
-        const double AssymetryCoeff = 1;
-
-        const int MaxIterations = 200;
-        const double MaxParameterChange = 8 / 360.0;//it would be one degree for a circle
-        const double MinParameterChange = 0.1 / 360.0;
-
-        const double CostThreshold = 0.00001;
-        const double CostDeltaThreshold = 0.01;
-
-        HashSet<BundleInfo> fixedBundles = new HashSet<BundleInfo>();
-
-        void RotateBasesToDiminishCost() {
+        private void RotateBasesToDiminishCost() {
             double parameterChange = MaxParameterChange;
-            double cost = Cost();
+            double cost = this.Cost();
 
             int iteration = 0;
             //HubDebugger.ShowHubs(metroGraphData, bundlingSettings, true);
@@ -355,13 +367,12 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             while (iteration++ < MaxIterations) {
 
                 double oldCost = cost;
-                RotateBasesToDiminishCostOneIteration(parameterChange, ref cost);
+                this.RotateBasesToDiminishCostOneIteration(parameterChange, ref cost);
 
-                parameterChange = UpdateParameterChange(parameterChange, oldCost, cost);
-                if (parameterChange < MinParameterChange)
+                parameterChange = this.UpdateParameterChange(parameterChange, oldCost, cost);
+                if (parameterChange < MinParameterChange) {
                     break;
-
-               
+                }
             }
 
             //TimeMeasurer.DebugOutput("bases optimization completed after " + iteration + " iterations (cost=" + cost + ")");
@@ -369,63 +380,67 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
 
         //the cooling scheme follows Yifan Hu, Efficient and high quality force-directed graph drawing
-        int stepsWithProgress = 0;
-        double UpdateParameterChange(double step, double oldEnergy, double newEnergy) {
+        private int stepsWithProgress = 0;
+
+        private double UpdateParameterChange(double step, double oldEnergy, double newEnergy) {
             //cooling factor
             double T = 0.8;
             if (newEnergy + 1.0 < oldEnergy) {
-                stepsWithProgress++;
-                if (stepsWithProgress >= 5) {
-                    stepsWithProgress = 0;
+                this.stepsWithProgress++;
+                if (this.stepsWithProgress >= 5) {
+                    this.stepsWithProgress = 0;
                     //step = Math.Min(MaxParameterChange, step / T);
-                    fixedBundles.Clear();
+                    this.fixedBundles.Clear();
                 }
             }
             else {
-                stepsWithProgress = 0;
+                this.stepsWithProgress = 0;
                 step *= T;
-                fixedBundles.Clear();
+                this.fixedBundles.Clear();
             }
 
             return step;
         }
 
-        bool RotateBasesToDiminishCostOneIteration(double parameterChange, ref double cost) {
+        private bool RotateBasesToDiminishCostOneIteration(double parameterChange, ref double cost) {
             var progress = false;
-            foreach (var bundleInfo in Bundles) {
-                if (fixedBundles.Contains(bundleInfo))
+            foreach (var bundleInfo in this.Bundles) {
+                if (this.fixedBundles.Contains(bundleInfo)) {
                     continue;
+                }
 
-                if (RotateBundle(bundleInfo, parameterChange, ref cost)) {
+                if (this.RotateBundle(bundleInfo, parameterChange, ref cost)) {
                     progress = true;
                     /*bool isClusterS = bundleInfo.SourceBase.CurveCenter != bundleInfo.SourceBase.Position;
                     bool isClusterT = bundleInfo.TargetBase.CurveCenter != bundleInfo.TargetBase.Position;
                     while ((isClusterS || isClusterT) && OptimizeBundle(bundleInfo, parameterChange, ref cost)) { }*/
                 }
-                else
-                    fixedBundles.Add(bundleInfo);
+                else {
+                    this.fixedBundles.Add(bundleInfo);
+                }
             }
             return progress;
         }
 
-        bool RotateBundle(BundleInfo bundleInfo, double parameterChange, ref double cost) {
-            double bundleCost = Cost(bundleInfo);
-            if (bundleCost < CostThreshold)
+        private bool RotateBundle(BundleInfo bundleInfo, double parameterChange, ref double cost) {
+            double bundleCost = this.Cost(bundleInfo);
+            if (bundleCost < CostThreshold) {
                 return false;
+            }
 
             //choose the best step
             double bestDelta = 0;
             int bestI = -1, bestJ = -1;
 
             for (int i = 0; i < Deltas.Length - 1; i++) {
-                double delta = DeltaWithChangedAngles(Deltas[i][0], Deltas[i][1], 0, 0, bundleInfo, bundleCost, parameterChange);
+                double delta = this.DeltaWithChangedAngles(Deltas[i][0], Deltas[i][1], 0, 0, bundleInfo, bundleCost, parameterChange);
                 if (delta > CostDeltaThreshold && delta > bestDelta) {
                     bestI = i;
                     bestJ = Deltas.Length - 1;
                     bestDelta = delta;
                 }
 
-                delta = DeltaWithChangedAngles(0, 0, Deltas[i][0], Deltas[i][1], bundleInfo, bundleCost, parameterChange);
+                delta = this.DeltaWithChangedAngles(0, 0, Deltas[i][0], Deltas[i][1], bundleInfo, bundleCost, parameterChange);
                 if (delta > CostDeltaThreshold && delta > bestDelta) {
                     bestI = Deltas.Length - 1;
                     bestJ = i;
@@ -433,8 +448,9 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
                 }
             }
 
-            if (bestDelta < CostDeltaThreshold)
+            if (bestDelta < CostDeltaThreshold) {
                 return false;
+            }
             //do the change
             cost -= bestDelta;
 
@@ -443,13 +459,14 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return true;
         }
 
-        double DeltaWithChangedAngles(int rotationOfSourceRigthPoint, int rotationOfSourceLeftPoint, int rotationOfTargetRigthPoint, int rotationOfTargetLeftPoint,
+        private double DeltaWithChangedAngles(int rotationOfSourceRigthPoint, int rotationOfSourceLeftPoint, int rotationOfTargetRigthPoint, int rotationOfTargetLeftPoint,
             BundleInfo bundleInfo, double bundleCost, double parameterChange) {
-            if (!bundleInfo.RotationIsLegal(rotationOfSourceRigthPoint, rotationOfSourceLeftPoint, rotationOfTargetRigthPoint, rotationOfTargetLeftPoint, parameterChange))
+            if (!bundleInfo.RotationIsLegal(rotationOfSourceRigthPoint, rotationOfSourceLeftPoint, rotationOfTargetRigthPoint, rotationOfTargetLeftPoint, parameterChange)) {
                 return 0;
+            }
 
             bundleInfo.RotateBy(rotationOfSourceRigthPoint, rotationOfSourceLeftPoint, rotationOfTargetRigthPoint, rotationOfTargetLeftPoint, parameterChange);
-            var newCost = Cost(bundleInfo, bundleCost);
+            var newCost = this.Cost(bundleInfo, bundleCost);
 
             //restoring
             bundleInfo.RotateBy(-rotationOfSourceRigthPoint, -rotationOfSourceLeftPoint, -rotationOfTargetRigthPoint, -rotationOfTargetLeftPoint, parameterChange);
@@ -457,31 +474,37 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return bundleCost - newCost;
         }
 
-        double Cost(BundleInfo bundleInfo) {
+        private double Cost(BundleInfo bundleInfo) {
             return
-                SeparationCoeff * SeparationCost(bundleInfo) +
-                SqueezeCoeff * SqueezeCost(bundleInfo) +
-                AssymetryCoeff * AssymetryCost(bundleInfo) +
-                CenterCoeff * CenterCost(bundleInfo);
+                SeparationCoeff * this.SeparationCost(bundleInfo) +
+                SqueezeCoeff * this.SqueezeCost(bundleInfo) +
+                AssymetryCoeff * this.AssymetryCost(bundleInfo) +
+                CenterCoeff * this.CenterCost(bundleInfo);
         }
 
         //this is an accelerated version of the above function (calculate cost partly)
-        double Cost(BundleInfo bundleInfo, double limit) {
+        private double Cost(BundleInfo bundleInfo, double limit) {
             double cost = 0;
-            cost += CenterCoeff * CenterCost(bundleInfo);
-            if (cost > limit)
+            cost += CenterCoeff * this.CenterCost(bundleInfo);
+            if (cost > limit) {
                 return cost;
-            cost += SeparationCoeff * SeparationCost(bundleInfo);
-            if (cost > limit)
+            }
+
+            cost += SeparationCoeff * this.SeparationCost(bundleInfo);
+            if (cost > limit) {
                 return cost;
-            cost += SqueezeCoeff * SqueezeCost(bundleInfo);
-            if (cost > limit)
+            }
+
+            cost += SqueezeCoeff * this.SqueezeCost(bundleInfo);
+            if (cost > limit) {
                 return cost;
-            cost += AssymetryCoeff * AssymetryCost(bundleInfo);
+            }
+
+            cost += AssymetryCoeff * this.AssymetryCost(bundleInfo);
             return cost;
         }
 
-        double SqueezeCost(BundleInfo bundleInfo) {
+        private double SqueezeCost(BundleInfo bundleInfo) {
             var middleLineDir = (bundleInfo.TargetBase.MidPoint - bundleInfo.SourceBase.MidPoint).Normalize();
             var perp = middleLineDir.Rotate90Ccw();
             var projecton0 = Math.Abs((bundleInfo.SourceBase.RightPoint - bundleInfo.SourceBase.LeftPoint) * perp);
@@ -494,34 +517,38 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return Math.Exp(del0 * 10) - 1 + Math.Exp(del1 * 10) - 1 + del;
         }
 
-        double CenterCost(BundleInfo bundleInfo) {
-            if (!bundleInfo.SourceBase.BelongsToRealNode && !bundleInfo.TargetBase.BelongsToRealNode)
+        private double CenterCost(BundleInfo bundleInfo) {
+            if (!bundleInfo.SourceBase.BelongsToRealNode && !bundleInfo.TargetBase.BelongsToRealNode) {
                 return 0;
+            }
 
-            return CenterCost(bundleInfo.SourceBase) + CenterCost(bundleInfo.TargetBase);
+            return this.CenterCost(bundleInfo.SourceBase) + this.CenterCost(bundleInfo.TargetBase);
         }
 
-        double CenterCost(BundleBase bundleBase) {
-            if (!bundleBase.BelongsToRealNode)
+        private double CenterCost(BundleBase bundleBase) {
+            if (!bundleBase.BelongsToRealNode) {
                 return 0;
+            }
 
             double currentMid = bundleBase.ParMid;
             double mn = Math.Min(bundleBase.InitialMidParameter, currentMid);
             double mx = Math.Max(bundleBase.InitialMidParameter, currentMid);
             double dist = Math.Min(mx - mn, mn + bundleBase.ParameterSpan - mx);
-            if (bundleBase.CurveCenter == bundleBase.Position || bundleBase.IsParent)
+            if (bundleBase.CurveCenter == bundleBase.Position || bundleBase.IsParent) {
                 return 25 * dist * dist;
-            else
+            } else {
                 return 500 * dist * dist;
+            }
         }
 
-        double AssymetryCost(BundleInfo bundleInfo) {
-            return GetAssymetryCostForBase(bundleInfo.SourceBase) + GetAssymetryCostForBase(bundleInfo.TargetBase);
+        private double AssymetryCost(BundleInfo bundleInfo) {
+            return this.GetAssymetryCostForBase(bundleInfo.SourceBase) + this.GetAssymetryCostForBase(bundleInfo.TargetBase);
         }
 
-        double GetAssymetryCostForBase(BundleBase bundleBase) {
-            if (bundleBase.BelongsToRealNode)
+        private double GetAssymetryCostForBase(BundleBase bundleBase) {
+            if (bundleBase.BelongsToRealNode) {
                 return 0;
+            }
 
             double assymetryWeight = bundleBase.OppositeBase.BelongsToRealNode ? 200 : 500;
             double cost = 0;
@@ -537,17 +564,19 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
                 var tb = oppositeBase.Tangents[i1];
 
                 double s = bundleBase.Count + oppositeBase.Count;
-                cost += GetAssymetryCostOnData(a, ta, b, tb, assymetryWeight) / s;
+                cost += this.GetAssymetryCostOnData(a, ta, b, tb, assymetryWeight) / s;
             }
 
             return cost;
         }
 
-        double GetAssymetryCostOnData(Point a, Point tangentA, Point b, Point tangentB, double assymetryWeight) {
+        private double GetAssymetryCostOnData(Point a, Point tangentA, Point b, Point tangentB, double assymetryWeight) {
             var xAxis = (a - b);
             var len = xAxis.Length;
-            if (len < ApproximateComparer.DistanceEpsilon)
+            if (len < ApproximateComparer.DistanceEpsilon) {
                 return 0;
+            }
+
             xAxis /= len;
             //Tangents both have length 1. If they compensate each other on x-asis,
             //then their projections on y-axis are the same.
@@ -567,22 +596,23 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return 10 * ac + assymetryWeight * bc;
         }
 
-        double SeparationCost(BundleInfo bundleInfo) {
-            return SeparationCostForBundleBase(bundleInfo.SourceBase) + SeparationCostForBundleBase(bundleInfo.TargetBase);
+        private double SeparationCost(BundleInfo bundleInfo) {
+            return this.SeparationCostForBundleBase(bundleInfo.SourceBase) + this.SeparationCostForBundleBase(bundleInfo.TargetBase);
         }
 
-        double SeparationCostForBundleBase(BundleBase bBase) {
-            if (bBase.Prev == null)
+        private double SeparationCostForBundleBase(BundleBase bBase) {
+            if (bBase.Prev == null) {
                 return 0;
+            }
 
-            return SeparationCostForAdjacentBundleBases(bBase, bBase.Prev) + SeparationCostForAdjacentBundleBases(bBase, bBase.Next);
+            return this.SeparationCostForAdjacentBundleBases(bBase, bBase.Prev) + this.SeparationCostForAdjacentBundleBases(bBase, bBase.Next);
         }
 
-        double SeparationCostForAdjacentBundleBases(BundleBase base0, BundleBase base1) {
+        private double SeparationCostForAdjacentBundleBases(BundleBase base0, BundleBase base1) {
             Debug.Assert(base0.Curve == base1.Curve);
 
             ICurve boundaryCurve = base0.Curve;
-            double len = IntervalsOverlapLength(base0.ParRight, base0.ParLeft, base1.ParRight, base1.ParLeft, boundaryCurve);
+            double len = this.IntervalsOverlapLength(base0.ParRight, base0.ParLeft, base1.ParRight, base1.ParLeft, boundaryCurve);
             double mn = Math.Min(base0.Span, base1.Span);
             Debug.Assert(ApproximateComparer.LessOrEqual(len, mn));
             Debug.Assert(mn > 0);
@@ -597,21 +627,24 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// <param name="c"></param>
         /// <param name="d"></param>
         /// <param name="curve"></param>
-        double IntervalsOverlapLength(double a, double b, double c, double d, ICurve curve) {
+        private double IntervalsOverlapLength(double a, double b, double c, double d, ICurve curve) {
             var s = curve.ParStart;
             var e = curve.ParEnd;
             if (a < b) {
-                if (c < d)
-                    return IntersectRegularIntervals(a, b, c, d);
-                return IntersectRegularIntervals(a, b, c, e) + IntersectRegularIntervals(a, b, s, d);
-            }
-            if (c < d)
-                return IntersectRegularIntervals(a, e, c, d) + IntersectRegularIntervals(s, b, c, d);
+                if (c < d) {
+                    return this.IntersectRegularIntervals(a, b, c, d);
+                }
 
-            return IntersectRegularIntervals(a, e, c, e) + IntersectRegularIntervals(s, b, s, d);
+                return this.IntersectRegularIntervals(a, b, c, e) + this.IntersectRegularIntervals(a, b, s, d);
+            }
+            if (c < d) {
+                return this.IntersectRegularIntervals(a, e, c, d) + this.IntersectRegularIntervals(s, b, c, d);
+            }
+
+            return this.IntersectRegularIntervals(a, e, c, e) + this.IntersectRegularIntervals(s, b, s, d);
         }
 
-        double IntersectRegularIntervals(double a, double b, double c, double d) {
+        private double IntersectRegularIntervals(double a, double b, double c, double d) {
             var low = Math.Max(a, c);
             var up = Math.Min(b, d);
             if (low < up) {
@@ -620,13 +653,13 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return 0;
         }
 
-        double Cost() {
+        private double Cost() {
             double cost = 0;
-            foreach (var bundleInfo in Bundles) {
-                double c1 = SeparationCoeff * SeparationCost(bundleInfo);
-                double c2 = AssymetryCoeff * AssymetryCost(bundleInfo);
-                double c3 = SqueezeCoeff * SqueezeCost(bundleInfo);
-                double c4 = CenterCoeff * CenterCost(bundleInfo);
+            foreach (var bundleInfo in this.Bundles) {
+                double c1 = SeparationCoeff * this.SeparationCost(bundleInfo);
+                double c2 = AssymetryCoeff * this.AssymetryCost(bundleInfo);
+                double c3 = SqueezeCoeff * this.SqueezeCost(bundleInfo);
+                double c4 = CenterCoeff * this.CenterCost(bundleInfo);
 
                 cost += c1 / 2.0 + c2 / 2.0 + c3 + c4;
                 Debug.Assert(cost < double.PositiveInfinity);

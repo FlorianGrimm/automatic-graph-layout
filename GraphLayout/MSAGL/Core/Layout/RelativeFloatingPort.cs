@@ -45,9 +45,9 @@ namespace Microsoft.Msagl.Core.Layout {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1062:Validate arguments of public methods", MessageId = "1")]
         public RelativeFloatingPort(Func<ICurve> curveDelegate, Func<Point> centerDelegate, Point locationOffset)
             : base(null, centerDelegate() + locationOffset) {
-            LocationOffset = locationOffset;
-            CurveDelegate = curveDelegate;
-            CenterDelegate = centerDelegate;
+            this.LocationOffset = locationOffset;
+            this.CurveDelegate = curveDelegate;
+            this.CenterDelegate = centerDelegate;
         }
         
         /// <summary>
@@ -64,7 +64,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         public override Point Location {
             get {
-                return CenterDelegate() + LocationOffset;
+                return this.CenterDelegate() + this.LocationOffset;
             }
         }
         /// <summary>
@@ -72,7 +72,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         public override ICurve Curve {
             get {
-                return CurveDelegate();
+                return this.CurveDelegate();
             }
         }
     }

@@ -52,19 +52,23 @@ namespace Microsoft.Msagl.Layout.Layered
         /// </summary>
         protected override void RunInternal()
         {
-            PreRunTransform(geometryGraph, settings.Transformation);
+            PreRunTransform(this.geometryGraph, this.settings.Transformation);
 
-            engine.Run();
-            geometryGraph.AlgorithmData = engine;
+            this.engine.Run();
+            this.geometryGraph.AlgorithmData = this.engine;
 
-            PostRunTransform(geometryGraph, settings.Transformation);
+            PostRunTransform(this.geometryGraph, this.settings.Transformation);
         }
 
         internal static void PreRunTransform(GeometryGraph geomGraph, PlaneTransformation matrix) {
-            if (matrix.IsIdentity) return;
+            if (matrix.IsIdentity) {
+                return;
+            }
+
             var matrixInverse = matrix.Inverse;
-            foreach (Node n in geomGraph.Nodes)
+            foreach (Node n in geomGraph.Nodes) {
                 n.Transform(matrixInverse);
+            }
             //calculate new label widths and heights
             foreach (Edge e in geomGraph.Edges) {
                 if (e.Label != null) {
@@ -79,8 +83,7 @@ namespace Microsoft.Msagl.Layout.Layered
             geomGraph.UpdateBoundingBox();
         }
 
-
-        static void PostRunTransform(GeometryGraph geometryGraph, PlaneTransformation transformation)
+        private static void PostRunTransform(GeometryGraph geometryGraph, PlaneTransformation transformation)
         {
             bool transform = !transformation.IsIdentity;
             if (transform)
@@ -106,30 +109,36 @@ namespace Microsoft.Msagl.Layout.Layered
             geometryGraph.UpdateBoundingBox();
         }
 
-        static void TransformCurves(GeometryGraph geometryGraph, PlaneTransformation transformation)
+        private static void TransformCurves(GeometryGraph geometryGraph, PlaneTransformation transformation)
         {
             geometryGraph.BoundingBox = new Rectangle(transformation * geometryGraph.LeftBottom, transformation * geometryGraph.RightTop);
             foreach (Edge e in geometryGraph.Edges) {
-                if (e.Label != null)
+                if (e.Label != null) {
                     e.Label.Center = transformation * e.Label.Center;
+                }
+
                 TransformEdgeCurve(transformation, e);
             }
         }
 
-        static void TransformEdgeCurve(PlaneTransformation transformation, Edge e) {
+        private static void TransformEdgeCurve(PlaneTransformation transformation, Edge e) {
             if (e.Curve != null)
             {
                 e.Curve = e.Curve.Transform(transformation);
                 var eg = e.EdgeGeometry;
-                if (eg.SourceArrowhead != null)
+                if (eg.SourceArrowhead != null) {
                     eg.SourceArrowhead.TipPosition = transformation * eg.SourceArrowhead.TipPosition;
-                if (eg.TargetArrowhead != null)
+                }
+
+                if (eg.TargetArrowhead != null) {
                     eg.TargetArrowhead.TipPosition = transformation * eg.TargetArrowhead.TipPosition;
+                }
+
                 TransformUnderlyingPolyline(e, transformation);
             }
         }
 
-        static void TransformUnderlyingPolyline(Edge e, PlaneTransformation transformation)
+        private static void TransformUnderlyingPolyline(Edge e, PlaneTransformation transformation)
         {
             if (e.UnderlyingPolyline != null)
             {
@@ -156,7 +165,10 @@ namespace Microsoft.Msagl.Layout.Layered
             ValidateArg.IsNotNull(geometryGraph, "geometryGraph");
 
             LayeredLayoutEngine engine = geometryGraph.AlgorithmData as LayeredLayoutEngine;
-            if (engine == null) return;
+            if (engine == null) {
+                return;
+            }
+
             PreRunTransform(geometryGraph, engine.SugiyamaSettings.Transformation);
             engine.IncrementalRun(node);
             PostRunTransform(geometryGraph, engine.SugiyamaSettings.Transformation);

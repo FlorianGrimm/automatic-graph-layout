@@ -41,8 +41,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         // Extension of port visibility splices into the visibility graph.
         internal bool LimitPortVisibilitySpliceToEndpointBoundingBox 
         {
-            get { return TransUtil.LimitPortVisibilitySpliceToEndpointBoundingBox; }
-            set { TransUtil.LimitPortVisibilitySpliceToEndpointBoundingBox = value; }
+            get { return this.TransUtil.LimitPortVisibilitySpliceToEndpointBoundingBox; }
+            set { this.TransUtil.LimitPortVisibilitySpliceToEndpointBoundingBox = value; }
         }
 
         // A control point is a source, target, or waypoint (terminology only, there's no ControlPoint
@@ -57,11 +57,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         private readonly List<Obstacle> activeAncestors = new List<Obstacle>();
 
         // Typing shortcuts
-        private VisibilityGraph VisGraph { get { return graphGenerator.VisibilityGraph; } }
-        private ScanSegmentTree HScanSegments { get { return graphGenerator.HorizontalScanSegments; } }
-        private ScanSegmentTree VScanSegments { get { return graphGenerator.VerticalScanSegments; } }
-        private ObstacleTree ObstacleTree { get { return graphGenerator.ObsTree; } }
-        private Dictionary<Shape, Set<Shape>> AncestorSets { get { return ObstacleTree.AncestorSets; } }
+        private VisibilityGraph VisGraph { get { return this.graphGenerator.VisibilityGraph; } }
+        private ScanSegmentTree HScanSegments { get { return this.graphGenerator.HorizontalScanSegments; } }
+        private ScanSegmentTree VScanSegments { get { return this.graphGenerator.VerticalScanSegments; } }
+        private ObstacleTree ObstacleTree { get { return this.graphGenerator.ObsTree; } }
+        private Dictionary<Shape, Set<Shape>> AncestorSets { get { return this.ObstacleTree.AncestorSets; } }
 
         internal PortManager(VisibilityGraphGenerator graphGenerator) {
             this.TransUtil = new TransientGraphUtility(graphGenerator);
@@ -69,8 +69,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         internal void Clear() {
-            TransUtil.RemoveFromGraph();    // Probably nothing in here when this is called
-            obstaclePortMap.Clear();
+            this.TransUtil.RemoveFromGraph();    // Probably nothing in here when this is called
+            this.obstaclePortMap.Clear();
         }
 
         internal void CreateObstaclePorts(Obstacle obstacle) {
@@ -78,13 +78,13 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // ObstaclePort object; we don't add its edges/vertices to the graph until we
             // do the actual routing.
             foreach (var port in obstacle.Ports) {
-                CreateObstaclePort(obstacle, port);
+                this.CreateObstaclePort(obstacle, port);
             }
         }
 
         private ObstaclePort CreateObstaclePort(Obstacle obstacle, Port port) {
             // This will replace any previous specification for the port (last one wins).
-            Debug.Assert(!obstaclePortMap.ContainsKey(port), "Port is used by more than one obstacle");
+            Debug.Assert(!this.obstaclePortMap.ContainsKey(port), "Port is used by more than one obstacle");
 
             if (port.Curve==null) {
                 return null;
@@ -103,15 +103,15 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             }
 
             var oport = new ObstaclePort(port, obstacle);
-            obstaclePortMap[port] = oport;
+            this.obstaclePortMap[port] = oport;
             return oport;
         }
 
         internal List<VisibilityVertex> FindVertices(Port port) {
             var vertices = new List<VisibilityVertex>();
             ObstaclePort oport;
-            if (obstaclePortMap.TryGetValue(port, out oport)) {
-                if (RouteToCenterOfObstacles) {
+            if (this.obstaclePortMap.TryGetValue(port, out oport)) {
+                if (this.RouteToCenterOfObstacles) {
                     vertices.Add(oport.CenterVertex);
                 }
                 else {
@@ -125,7 +125,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 }
             }
             else {
-                vertices.Add(VisGraph.FindVertex(ApproximateComparer.Round(port.Location)));
+                vertices.Add(this.VisGraph.FindVertex(ApproximateComparer.Round(port.Location)));
             }
             return vertices;
         }
@@ -134,33 +134,33 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             foreach (var port in obstacle.Ports) {
                 // Since we remove the port from the visibility graph after each routing, all we
                 // have to do here is remove it from the dictionary.
-                RemoveObstaclePort(port);
+                this.RemoveObstaclePort(port);
             }
         }
 
-        void RemoveObstaclePort(Port port) {
-            obstaclePortMap.Remove(port);
+        private void RemoveObstaclePort(Port port) {
+            this.obstaclePortMap.Remove(port);
         }
 
         // Add path control points - source, target, and any waypoints.
         internal void AddControlPointsToGraph(EdgeGeometry edgeGeom, Dictionary<Shape, Obstacle> shapeToObstacleMap) {
             this.GetPortSpliceLimitRectangle(edgeGeom);
-            activeAncestors.Clear();
+            this.activeAncestors.Clear();
 
             ObstaclePort sourceOport, targetOport;
-            var ssAncs = FindAncestorsAndObstaclePort(edgeGeom.SourcePort, out sourceOport);
-            var ttAncs = FindAncestorsAndObstaclePort(edgeGeom.TargetPort, out targetOport);
+            var ssAncs = this.FindAncestorsAndObstaclePort(edgeGeom.SourcePort, out sourceOport);
+            var ttAncs = this.FindAncestorsAndObstaclePort(edgeGeom.TargetPort, out targetOport);
 
-            if ((AncestorSets.Count > 0) && (sourceOport != null) && (targetOport != null)) {
+            if ((this.AncestorSets.Count > 0) && (sourceOport != null) && (targetOport != null)) {
                 // Make non-common ancestors' boundaries transparent (we don't want to route outside common ancestors).
                 var ttAncsOnly = ttAncs - ssAncs;
                 var ssAncsOnly = ssAncs - ttAncs;
-                ActivateAncestors(ssAncsOnly, ttAncsOnly, shapeToObstacleMap);
+                this.ActivateAncestors(ssAncsOnly, ttAncsOnly, shapeToObstacleMap);
             }
 
             // Now that we've set any active ancestors, splice in the port visibility.
-            AddPortToGraph(edgeGeom.SourcePort, sourceOport);
-            AddPortToGraph(edgeGeom.TargetPort, targetOport);            
+            this.AddPortToGraph(edgeGeom.SourcePort, sourceOport);
+            this.AddPortToGraph(edgeGeom.TargetPort, targetOport);            
         }
 
         
@@ -173,9 +173,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // OOB in two directions so call once for each axis.
             var endpointVertices = this.FindVertices(port);
             var dirFromGraph = oobWaypoint.OutOfBoundsDirectionFromGraph & (Direction.North | Direction.South);
-            ConnectToGraphAtPointsCollinearWithVertices(oobWaypoint, dirFromGraph, endpointVertices);
+            this.ConnectToGraphAtPointsCollinearWithVertices(oobWaypoint, dirFromGraph, endpointVertices);
             dirFromGraph = oobWaypoint.OutOfBoundsDirectionFromGraph & (Direction.East | Direction.West);
-            ConnectToGraphAtPointsCollinearWithVertices(oobWaypoint, dirFromGraph, endpointVertices);
+            this.ConnectToGraphAtPointsCollinearWithVertices(oobWaypoint, dirFromGraph, endpointVertices);
         }
 
         private void ConnectToGraphAtPointsCollinearWithVertices(FreePoint oobWaypoint, Direction dirFromGraph,
@@ -195,21 +195,21 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         internal bool SetAllAncestorsActive(EdgeGeometry edgeGeom, Dictionary<Shape, Obstacle> shapeToObstacleMap) {
-            if (0 == AncestorSets.Count) {
+            if (0 == this.AncestorSets.Count) {
                 return false;
             }
-            ObstacleTree.AdjustSpatialAncestors();
+            this.ObstacleTree.AdjustSpatialAncestors();
 
-            ClearActiveAncestors();
+            this.ClearActiveAncestors();
 
             ObstaclePort sourceOport, targetOport;
-            var ssAncs = FindAncestorsAndObstaclePort(edgeGeom.SourcePort, out sourceOport);
-            var ttAncs = FindAncestorsAndObstaclePort(edgeGeom.TargetPort, out targetOport);
+            var ssAncs = this.FindAncestorsAndObstaclePort(edgeGeom.SourcePort, out sourceOport);
+            var ttAncs = this.FindAncestorsAndObstaclePort(edgeGeom.TargetPort, out targetOport);
 
-            if ((AncestorSets.Count > 0) && (ssAncs != null) && (ttAncs != null)) {
+            if ((this.AncestorSets.Count > 0) && (ssAncs != null) && (ttAncs != null)) {
                 // Make all ancestors boundaries transparent; in this case we've already tried with only
                 // non-common and found no path, so perhaps an obstacle is outside its parent group's bounds.
-                ActivateAncestors(ssAncs, ttAncs, shapeToObstacleMap);
+                this.ActivateAncestors(ssAncs, ttAncs, shapeToObstacleMap);
                 return true;
             }
             return false;
@@ -218,24 +218,24 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal void SetAllGroupsActive() {
             // We couldn't get a path when we activated all hierarchical and spatial group ancestors of the shapes,
             // so assume we may be landlocked and activate all groups, period.
-            ClearActiveAncestors();
-            foreach (var group in ObstacleTree.GetAllGroups()) {
+            this.ClearActiveAncestors();
+            foreach (var group in this.ObstacleTree.GetAllGroups()) {
                 group.IsTransparentAncestor = true;
-                activeAncestors.Add(group);
+                this.activeAncestors.Add(group);
             }
         }
 
         internal Set<Shape> FindAncestorsAndObstaclePort(Port port, out ObstaclePort oport) {
-            oport = FindObstaclePort(port);
-            if (0 == AncestorSets.Count) {
+            oport = this.FindObstaclePort(port);
+            if (0 == this.AncestorSets.Count) {
                 return null;
             }
             if (oport != null) {
-                return AncestorSets[oport.Obstacle.InputShape];
+                return this.AncestorSets[oport.Obstacle.InputShape];
             }
 
             // This is a free Port (not associated with an obstacle) or a Waypoint; return all spatial parents.
-            return new Set<Shape>(ObstacleTree.Root.AllHitItems(new Rectangle(port.Location, port.Location), shape => shape.IsGroup)
+            return new Set<Shape>(this.ObstacleTree.Root.AllHitItems(new Rectangle(port.Location, port.Location), shape => shape.IsGroup)
                                         .Select(obs => obs.InputShape));
         }
 
@@ -244,22 +244,22 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 var group = shapeToObstacleMap[shape];
                 Debug.Assert(group.IsGroup, "Ancestor shape is not a group");
                 group.IsTransparentAncestor = true;
-                activeAncestors.Add(group);
+                this.activeAncestors.Add(group);
             }
         }
 
-        void ClearActiveAncestors() {
-            foreach (var group in activeAncestors) {
+        private void ClearActiveAncestors() {
+            foreach (var group in this.activeAncestors) {
                 group.IsTransparentAncestor = false;
             }
-            activeAncestors.Clear();
+            this.activeAncestors.Clear();
         }
 
         internal void RemoveControlPointsFromGraph() {
-            ClearActiveAncestors();
-            RemoveObstaclePortsFromGraph();
-            RemoveFreePointsFromGraph();
-            TransUtil.RemoveFromGraph();
+            this.ClearActiveAncestors();
+            this.RemoveObstaclePortsFromGraph();
+            this.RemoveFreePointsFromGraph();
+            this.TransUtil.RemoveFromGraph();
             this.portSpliceLimitRectangle = new Rectangle();
         }
 
@@ -293,7 +293,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal void ClearVisibility() {
             // Most of the retained freepoint stuff is about precalculated visibility.
             this.freePointMap.Clear();
-            foreach (var oport in obstaclePortMap.Values) {
+            foreach (var oport in this.obstaclePortMap.Values) {
                 oport.ClearVisibility();
             }
         }
@@ -309,7 +309,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         internal ObstaclePort FindObstaclePort(Port port) {
             ObstaclePort oport;
-            if (obstaclePortMap.TryGetValue(port, out oport)) {
+            if (this.obstaclePortMap.TryGetValue(port, out oport)) {
                 // First see if the obstacle's port list has changed without UpdateObstacles() being called.
                 // Unfortunately we don't have a way to update the obstacle's ports until we enter
                 // this block; there is no direct Port->Shape/Obstacle mapping.  So UpdateObstacle must still
@@ -317,14 +317,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 Set<Port> addedPorts, removedPorts;
                 if (oport.Obstacle.GetPortChanges(out addedPorts, out removedPorts)) {
                     foreach (var newPort in addedPorts) {
-                        CreateObstaclePort(oport.Obstacle, newPort);
+                        this.CreateObstaclePort(oport.Obstacle, newPort);
                     }
                     foreach (var oldPort in removedPorts) {
-                        RemoveObstaclePort(oldPort);
+                        this.RemoveObstaclePort(oldPort);
                     }
 
                     // If it's not still there, it was moved outside the obstacle so we'll just add it as a FreePoint.
-                    if (!obstaclePortMap.TryGetValue(port, out oport)) {
+                    if (!this.obstaclePortMap.TryGetValue(port, out oport)) {
                         oport = null;
                     }
                 }
@@ -335,34 +335,34 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         private void AddPortToGraph(Port port, ObstaclePort oport) {
             if (oport != null) {
-                AddObstaclePortToGraph(oport);
+                this.AddObstaclePortToGraph(oport);
                 return;
             }
 
             // This is a FreePoint, either a Waypoint or a Port not in an Obstacle.Ports list.
-            AddFreePointToGraph(port.Location);
+            this.AddFreePointToGraph(port.Location);
         }
 
         private void AddObstaclePortToGraph(ObstaclePort oport) {
             // If the port's position has changed without UpdateObstacles() being called, recreate it.
             if (oport.LocationHasChanged) {
-                RemoveObstaclePort(oport.Port);
-                oport = CreateObstaclePort(oport.Obstacle, oport.Port);
+                this.RemoveObstaclePort(oport.Port);
+                oport = this.CreateObstaclePort(oport.Obstacle, oport.Port);
                 if ( oport == null)
                 {
                     // Port has been moved outside obstacle; return and let caller add it as a FreePoint.
                     return;
                 }
             }
-            oport.AddToGraph(TransUtil, RouteToCenterOfObstacles);
-            obstaclePortsInGraph.Add(oport);
+            oport.AddToGraph(this.TransUtil, this.RouteToCenterOfObstacles);
+            this.obstaclePortsInGraph.Add(oport);
 
             this.CreateObstaclePortEntrancesIfNeeded(oport);
 
             // We've determined the entrypoints on the obstacle boundary for each PortEntry,
             // so now add them to the VisGraph.
             foreach (var entrance in oport.PortEntrances) {
-                AddObstaclePortEntranceToGraph(entrance);
+                this.AddObstaclePortEntranceToGraph(entrance);
             }
             return;
         }
@@ -445,7 +445,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         private void CreateObstaclePortEntrancesFromPoints(ObstaclePort oport) {
-            var graphBox = graphGenerator.ObsTree.GraphBox;
+            var graphBox = this.graphGenerator.ObsTree.GraphBox;
             var curveBox = new Rectangle(ApproximateComparer.Round(oport.PortCurve.BoundingBox.LeftBottom)
                                              , ApproximateComparer.Round(oport.PortCurve.BoundingBox.RightTop));
 
@@ -468,7 +468,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                     && !PointComparer.Equal(location.Y, curveBox.Bottom)) {
                 found = true;
                 var hSeg = new LineSegment(graphBox.Left, location.Y, graphBox.Right, location.Y);
-                GetBorderIntersections(location, hSeg, oport.PortCurve, out xx0, out xx1);
+                this.GetBorderIntersections(location, hSeg, oport.PortCurve, out xx0, out xx1);
                 var wBorderIntersect = new Point(Math.Min(xx0.X, xx1.X), location.Y);
                 if (wBorderIntersect.X < curveBox.Left) {        // Handle rounding error
                     wBorderIntersect.X = curveBox.Left;
@@ -477,14 +477,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 if (eBorderIntersect.X > curveBox.Right) {
                     eBorderIntersect.X = curveBox.Right;
                 }
-                CreatePortEntrancesAtBorderIntersections(curveBox, oport, location, wBorderIntersect, eBorderIntersect);
+                this.CreatePortEntrancesAtBorderIntersections(curveBox, oport, location, wBorderIntersect, eBorderIntersect);
             } // endif horizontal pass is not at vertical extreme
 
             if (!PointComparer.Equal(location.X, curveBox.Left)
                     && !PointComparer.Equal(location.X, curveBox.Right)) {
                 found = true;
                 var vSeg = new LineSegment(location.X, graphBox.Bottom, location.X, graphBox.Top);
-                GetBorderIntersections(location, vSeg, oport.PortCurve, out xx0, out xx1);
+                this.GetBorderIntersections(location, vSeg, oport.PortCurve, out xx0, out xx1);
                 var sBorderIntersect = new Point(location.X, Math.Min(xx0.Y, xx1.Y));
                 if (sBorderIntersect.Y < graphBox.Bottom) {      // Handle rounding error
                     sBorderIntersect.Y = graphBox.Bottom;
@@ -493,7 +493,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 if (nBorderIntersect.Y > graphBox.Top) {
                     nBorderIntersect.Y = graphBox.Top;
                 }
-                CreatePortEntrancesAtBorderIntersections(curveBox, oport, location, sBorderIntersect, nBorderIntersect);
+                this.CreatePortEntrancesAtBorderIntersections(curveBox, oport, location, sBorderIntersect, nBorderIntersect);
             } // endif vertical pass is not at horizontal extreme
 
             if (!found) {
@@ -517,10 +517,10 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // Allow entry from both sides, except from the opposite side of a point on the border.
             Direction dir = PointComparer.GetPureDirection(unpaddedBorderIntersect0, unpaddedBorderIntersect1);
             if (!PointComparer.Equal(unpaddedBorderIntersect0, location)) {
-                CreatePortEntrance(curveBox, oport, unpaddedBorderIntersect1, dir);
+                this.CreatePortEntrance(curveBox, oport, unpaddedBorderIntersect1, dir);
             }
             if (!PointComparer.Equal(unpaddedBorderIntersect1, location)) {
-                CreatePortEntrance(curveBox, oport, unpaddedBorderIntersect0, CompassVector.OppositeDir(dir));
+                this.CreatePortEntrance(curveBox, oport, unpaddedBorderIntersect0, CompassVector.OppositeDir(dir));
             }
         }
 
@@ -586,9 +586,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // on a border shared with another obstacle, in which case we'll extend into that obstacle.  This
             // should be fine if we're consistent about "touching means overlapped", so that a path that comes
             // through the other obstacle on the shared border is OK.
-            VisibilityVertex borderVertex = VisGraph.FindVertex(entrance.VisibilityBorderIntersect);
+            VisibilityVertex borderVertex = this.VisGraph.FindVertex(entrance.VisibilityBorderIntersect);
             if (borderVertex != null) {
-                entrance.ExtendEdgeChain(TransUtil, borderVertex, borderVertex, this.portSpliceLimitRectangle, RouteToCenterOfObstacles);
+                entrance.ExtendEdgeChain(this.TransUtil, borderVertex, borderVertex, this.portSpliceLimitRectangle, this.RouteToCenterOfObstacles);
                 return;
             }
 
@@ -599,12 +599,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             VisibilityEdge edge = this.FindorCreateNearestPerpEdge(entrance.MaxVisibilitySegment.End, entrance.VisibilityBorderIntersect,
                     entrance.OutwardDirection, weight /*checkForObstacle*/, out targetVertex);
             if (edge != null) {
-                entrance.AddToAdjacentVertex(TransUtil, targetVertex, this.portSpliceLimitRectangle, RouteToCenterOfObstacles);
+                entrance.AddToAdjacentVertex(this.TransUtil, targetVertex, this.portSpliceLimitRectangle, this.RouteToCenterOfObstacles);
             }
         }
 
         private Point InBoundsGraphBoxIntersect(Point point, Direction dir) {
-            return StaticGraphUtility.RectangleBorderIntersect(graphGenerator.ObsTree.GraphBox, point, dir);
+            return StaticGraphUtility.RectangleBorderIntersect(this.graphGenerator.ObsTree.GraphBox, point, dir);
         }
 
         private VisibilityEdge FindorCreateNearestPerpEdge(Point first, Point second, Direction dir, double weight) {
@@ -620,7 +620,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             Tuple<Point, Point> couple = StaticGraphUtility.SortAscending(first, second);
             Point low = couple.Item1;
             Point high = couple.Item2;
-            ScanSegmentTree perpendicularScanSegments = StaticGraphUtility.IsVertical(dir) ? HScanSegments : VScanSegments;
+            ScanSegmentTree perpendicularScanSegments = StaticGraphUtility.IsVertical(dir) ? this.HScanSegments : this.VScanSegments;
 
             // Look up the nearest intersection.  For obstacles, we cannot just look for the bounding box
             // corners because nonrectilinear obstacles may have other obstacles overlapping the bounding
@@ -639,7 +639,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
             // We now know the nearest perpendicular segment that intersects start->end.  Next we'll find a close
             // parallel scansegment that intersects the perp segment, then walk to find the nearest perp edge.
-            return FindOrCreateNearestPerpEdgeFromNearestPerpSegment(StaticGraphUtility.IsAscending(dir) ? low : high,
+            return this.FindOrCreateNearestPerpEdgeFromNearestPerpSegment(StaticGraphUtility.IsAscending(dir) ? low : high,
                             nearestPerpSeg, edgeIntersect, weight, out targetVertex);
         }
 
@@ -655,7 +655,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // pointLocation->edgeIntersect, return the edge for which it is Source, else split the edge.
 
             // If there is already a vertex at edgeIntersect, we do not need to look for the intersecting ScanSegment.
-            VisibilityVertex segsegVertex = VisGraph.FindVertex(edgeIntersect);
+            VisibilityVertex segsegVertex = this.VisGraph.FindVertex(edgeIntersect);
             if ( segsegVertex == null) {
                 var edge = this.FindOrCreateSegmentIntersectionVertexAndAssociatedEdge(pointLocation, edgeIntersect, scanSeg, weight,
                             out segsegVertex, out targetVertex);
@@ -667,8 +667,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 // The initial pointLocation was on scanSeg at an existing vertex so return an edge
                 // from that vertex along scanSeg. Look in both directions in case of dead ends.
                 targetVertex = segsegVertex;
-                return TransUtil.FindNextEdge(targetVertex, scanSeg.ScanDirection.Direction)
-                    ?? TransUtil.FindNextEdge(targetVertex, CompassVector.OppositeDir(scanSeg.ScanDirection.Direction));
+                return this.TransUtil.FindNextEdge(targetVertex, scanSeg.ScanDirection.Direction)
+                    ?? this.TransUtil.FindNextEdge(targetVertex, CompassVector.OppositeDir(scanSeg.ScanDirection.Direction));
             }
 
             // pointLocation is not on the initial scanSeg, so see if there is a transient edge between
@@ -683,14 +683,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                                     , out targetVertex, out bracketTarget);
 
                 // Return an edge. Look in both directions in case of dead ends.
-                return TransUtil.FindNextEdge(targetVertex, CompassVector.RotateLeft(dirTowardLocation))
-                    ?? TransUtil.FindNextEdge(targetVertex, CompassVector.RotateRight(dirTowardLocation));
+                return this.TransUtil.FindNextEdge(targetVertex, CompassVector.RotateLeft(dirTowardLocation))
+                    ?? this.TransUtil.FindNextEdge(targetVertex, CompassVector.RotateRight(dirTowardLocation));
             }
 
             // Now make perpDir have only the perpendicular component.
             perpDir &= ~dirTowardLocation;              // if this is Directions. None, pointLocation == edgeIntersect
             StaticGraphUtility.Assert(Direction. None != perpDir
-                    , "pointLocation == initial segsegVertex.Point should already have exited", ObstacleTree, VisGraph);
+                    , "pointLocation == initial segsegVertex.Point should already have exited", this.ObstacleTree, this.VisGraph);
 
             // Other TransientVE edge chains may have been added between the control point and the
             // ScanSegment (which is always non-transient), and they may have split ScanSegment VEs.
@@ -704,16 +704,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             //  - location is on a VE that is perpendicular to scanSeg.  In that case the vertex on ScanSeg
             //    already exists; TransUtil.FindOrAddEdge just returns the edge starting at that intersection.
             // FreePoint tests of this are in RectilinearTests.FreePortLocationRelativeToTransientVisibilityEdges*.
-            VisibilityEdge perpendicularEdge = TransUtil.FindNearestPerpendicularOrContainingEdge(segsegVertex, perpDir, pointLocation);
+            VisibilityEdge perpendicularEdge = this.TransUtil.FindNearestPerpendicularOrContainingEdge(segsegVertex, perpDir, pointLocation);
             if ( perpendicularEdge == null) {
                 // Dead end; we're above the highest point at which there is an intersection of scanSeg.
                 // Create a new vertex and edge higher than the ScanSegment's HighestVisibilityVertex
                 // if that doesn't cross an obstacle (if we are between two ScanSegment dead-ends, we may).
                 // We hit this in RectilinearFileTests.Nudger_Many_Paths_In_Channel and .Nudger_Overlap*.
                 StaticGraphUtility.Assert(edgeIntersect > scanSeg.HighestVisibilityVertex.Point
-                            , "edgeIntersect is not > scanSeg.HighestVisibilityVertex", ObstacleTree, VisGraph);
-                targetVertex = TransUtil.AddVertex(edgeIntersect);
-                return TransUtil.FindOrAddEdge(targetVertex, scanSeg.HighestVisibilityVertex, scanSeg.Weight);
+                            , "edgeIntersect is not > scanSeg.HighestVisibilityVertex", this.ObstacleTree, this.VisGraph);
+                targetVertex = this.TransUtil.AddVertex(edgeIntersect);
+                return this.TransUtil.FindOrAddEdge(targetVertex, scanSeg.HighestVisibilityVertex, scanSeg.Weight);
             }
 
             // We have an intersecting perp edge, which may be on the original scanSeg or closer to pointLocation.
@@ -726,12 +726,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // point, we're done.  
             if (PointComparer.Equal(segsegVertex.Point, edgeIntersect)) {
                 targetVertex = segsegVertex;
-                return TransUtil.FindNextEdge(segsegVertex, perpDir);
+                return this.TransUtil.FindNextEdge(segsegVertex, perpDir);
             }
 
             // The targetVertex doesn't exist; this will split the edge and add it.
-            targetVertex = TransUtil.FindOrAddVertex(edgeIntersect);
-            return TransUtil.FindOrAddEdge(segsegVertex, targetVertex, weight);
+            targetVertex = this.TransUtil.FindOrAddVertex(edgeIntersect);
+            return this.TransUtil.FindOrAddEdge(segsegVertex, targetVertex, weight);
         }
 
         private VisibilityEdge FindOrCreateSegmentIntersectionVertexAndAssociatedEdge(Point pointLocation, Point edgeIntersect, ScanSegment scanSeg,
@@ -787,20 +787,20 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         private void GetPortSpliceLimitRectangle(EdgeGeometry edgeGeom) {
             if (!this.LimitPortVisibilitySpliceToEndpointBoundingBox) {
-                this.portSpliceLimitRectangle = graphGenerator.ObsTree.GraphBox;
+                this.portSpliceLimitRectangle = this.graphGenerator.ObsTree.GraphBox;
                 return;
             }
 
             // Return the endpoint-containing rectangle marking the limits of edge-chain extension for a single path.
-            this.portSpliceLimitRectangle = GetPortRectangle(edgeGeom.SourcePort);
-            this.portSpliceLimitRectangle.Add(GetPortRectangle(edgeGeom.TargetPort));
+            this.portSpliceLimitRectangle = this.GetPortRectangle(edgeGeom.SourcePort);
+            this.portSpliceLimitRectangle.Add(this.GetPortRectangle(edgeGeom.TargetPort));
             
         }
 
-        Rectangle GetPortRectangle(Port port)
+        private Rectangle GetPortRectangle(Port port)
         {
             ObstaclePort oport;
-            obstaclePortMap.TryGetValue(port, out oport);
+            this.obstaclePortMap.TryGetValue(port, out oport);
             if (oport != null) {
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=369 there are no structs in js
                 return (oport.Obstacle.VisibilityBoundingBox).Clone();
@@ -813,9 +813,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             return new Rectangle(ApproximateComparer.Round(port.Location));
         }
 
-        void AddToLimitRectangle(Point location)
+        private void AddToLimitRectangle(Point location)
         {
-            if (graphGenerator.IsInBounds(location))
+            if (this.graphGenerator.IsInBounds(location))
             {
                 this.portSpliceLimitRectangle.Add(location);
             }
@@ -830,13 +830,13 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         private FreePoint FindOrCreateFreePoint(Point location) {
             FreePoint freePoint;
             if (!this.freePointMap.TryGetValue(location, out freePoint)) {
-                freePoint = new FreePoint(TransUtil, location);
+                freePoint = new FreePoint(this.TransUtil, location);
                 this.freePointMap[location] = freePoint;
             } else {
-                freePoint.GetVertex(TransUtil, location);
+                freePoint.GetVertex(this.TransUtil, location);
             }
-            freePointsInGraph.Insert(freePoint);
-            freePointLocationsUsedByRouteEdges.Insert(location);
+            this.freePointsInGraph.Insert(freePoint);
+            this.freePointLocationsUsedByRouteEdges.Insert(location);
             return freePoint;
         }
 
@@ -848,14 +848,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             location = ApproximateComparer.Round(location);
 
             // If the point already exists before FreePoint creation, there's nothing to do.
-            var vertex = VisGraph.FindVertex(location);
+            var vertex = this.VisGraph.FindVertex(location);
             var freePoint = this.FindOrCreateFreePoint(location);
             if (vertex != null) {
                 return freePoint;
             }
 
-            if (!graphGenerator.IsInBounds(location)) {
-                CreateOutOfBoundsFreePoint(freePoint);
+            if (!this.graphGenerator.IsInBounds(location)) {
+                this.CreateOutOfBoundsFreePoint(freePoint);
                 return freePoint;
             }
 
@@ -864,14 +864,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             //  - point is not on any edge (it's in free space so it's in the middle of some rectangle
             //    (possibly not closed) formed by ScanSegment intersections)
             VisibilityEdge edge = null;
-            freePoint.IsOverlapped = this.ObstacleTree.PointIsInsideAnObstacle(freePoint.Point, HScanSegments.ScanDirection);
-            var scanSegment = HScanSegments.FindSegmentContainingPoint(location, true /*allowUnfound*/) ??
-                          VScanSegments.FindSegmentContainingPoint(location, true /*allowUnfound*/);
+            freePoint.IsOverlapped = this.ObstacleTree.PointIsInsideAnObstacle(freePoint.Point, this.HScanSegments.ScanDirection);
+            var scanSegment = this.HScanSegments.FindSegmentContainingPoint(location, true /*allowUnfound*/) ??
+                          this.VScanSegments.FindSegmentContainingPoint(location, true /*allowUnfound*/);
             if (scanSegment!=null) {
                 // The location is on one ScanSegment.  Find the intersector and split an edge along the segment
                 // (or extend the VisibilityEdges of the segment in the desired direction).
                 VisibilityVertex targetVertex;
-                edge = FindOrCreateNearestPerpEdgeFromNearestPerpSegment(location, scanSegment, location, freePoint.InitialWeight, out targetVertex);
+                edge = this.FindOrCreateNearestPerpEdgeFromNearestPerpSegment(location, scanSegment, location, freePoint.InitialWeight, out targetVertex);
             }
 
             Direction edgeDir = Direction.South;
@@ -879,8 +879,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 // The freePoint is on one (but not two) segments, and has already been spliced into 
                 // that segment's edge chain.  Add edges laterally to the parallel edges.
                 edgeDir = StaticGraphUtility.EdgeDirection(edge);
-                ConnectFreePointToLateralEdge(freePoint, CompassVector.RotateLeft(edgeDir));
-                ConnectFreePointToLateralEdge(freePoint, CompassVector.RotateRight(edgeDir));
+                this.ConnectFreePointToLateralEdge(freePoint, CompassVector.RotateLeft(edgeDir));
+                this.ConnectFreePointToLateralEdge(freePoint, CompassVector.RotateRight(edgeDir));
             }
             else {
                 // The freePoint is not on ScanSegment so we must splice to 4 surrounding edges (or it may be on a
@@ -889,7 +889,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 // freepoint is inside a non-overlapped obstacle, so take a second pass to connect to the nearest
                 // edge regardless of obstacle boundaries.
                 for (int ii = 0; ii < 4; ++ii) {
-                    ConnectFreePointToLateralEdge(freePoint, edgeDir);
+                    this.ConnectFreePointToLateralEdge(freePoint, edgeDir);
                     edgeDir = CompassVector.RotateLeft(edgeDir);
                 }
             }
@@ -901,14 +901,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // out of bounds in only one direction; if in two, we'll add a bend. Currently we don't need
             // to do any more because multiple waypoints are processed as multiple subpaths.
             var oobLocation = freePoint.Point;
-            Point inboundsLocation = graphGenerator.MakeInBoundsLocation(oobLocation);
+            Point inboundsLocation = this.graphGenerator.MakeInBoundsLocation(oobLocation);
             Direction dirFromGraph = PointComparer.GetDirections(inboundsLocation, oobLocation);
             freePoint.OutOfBoundsDirectionFromGraph = dirFromGraph;
             if (!PointComparer.IsPureDirection(dirFromGraph)) {
                 // It's OOB in two directions so will need a bend, but we know inboundsLocation
                 // is a graph corner so it has a vertex already and we don't need to look up sides.
-                StaticGraphUtility.Assert(VisGraph.FindVertex(inboundsLocation) != null, "graph corner vertex not found", ObstacleTree, VisGraph);
-                freePoint.AddOobEdgesFromGraphCorner(TransUtil, inboundsLocation);
+                StaticGraphUtility.Assert(this.VisGraph.FindVertex(inboundsLocation) != null, "graph corner vertex not found", this.ObstacleTree, this.VisGraph);
+                freePoint.AddOobEdgesFromGraphCorner(this.TransUtil, inboundsLocation);
                 return;
             }
 
@@ -949,7 +949,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
             // There may be no VisibilityEdge between the current point and any adjoining obstacle in that direction.
             if (lateralEdge != null) {
-                freePoint.AddEdgeToAdjacentEdge(TransUtil, lateralEdge, lateralDir, this.portSpliceLimitRectangle);
+                freePoint.AddEdgeToAdjacentEdge(this.TransUtil, lateralEdge, lateralDir, this.portSpliceLimitRectangle);
             }
         }
     }

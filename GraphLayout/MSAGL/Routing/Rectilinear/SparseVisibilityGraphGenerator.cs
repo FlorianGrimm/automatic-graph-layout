@@ -124,28 +124,28 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             this.GenerateSparseIntersectionsFromVertexPoints();
             this.CreateScanSegmentTrees();
 
-            HorizontalScanSegments.DevTraceVerifyVisibility();
-            VerticalScanSegments.DevTraceVerifyVisibility();
-            Debug_AssertGraphIsRectilinear(VisibilityGraph, ObsTree);
+            this.HorizontalScanSegments.DevTraceVerifyVisibility();
+            this.VerticalScanSegments.DevTraceVerifyVisibility();
+            Debug_AssertGraphIsRectilinear(this.VisibilityGraph, this.ObsTree);
 
             this.Cleanup();
         }
 
-        void AccumulateVertexCoords() {
+        private void AccumulateVertexCoords() {
             // Unlike the paper we only generate lines for extreme vertices (i.e. on the horizontal pass we
             // don't generate a horizontal vertex projection to the Y axis for a vertex that is not on the top
             // or bottom of the obstacle).  So we can just use the bounding box.
             foreach (var obstacle in this.ObsTree.GetAllObstacles()) {
-                xCoordAccumulator.Insert(obstacle.VisibilityBoundingBox.Left);
-                xCoordAccumulator.Insert(obstacle.VisibilityBoundingBox.Right);
-                yCoordAccumulator.Insert(obstacle.VisibilityBoundingBox.Top);
-                yCoordAccumulator.Insert(obstacle.VisibilityBoundingBox.Bottom);
+                this.xCoordAccumulator.Insert(obstacle.VisibilityBoundingBox.Left);
+                this.xCoordAccumulator.Insert(obstacle.VisibilityBoundingBox.Right);
+                this.yCoordAccumulator.Insert(obstacle.VisibilityBoundingBox.Top);
+                this.yCoordAccumulator.Insert(obstacle.VisibilityBoundingBox.Bottom);
             }
         }
 
         private void CreateSegmentVectorsAndPopulateCoordinateMaps() {
-            this.horizontalScanSegmentVector = new ScanSegmentVector(yCoordAccumulator, true);
-            this.verticalScanSegmentVector = new ScanSegmentVector(xCoordAccumulator, false);
+            this.horizontalScanSegmentVector = new ScanSegmentVector(this.yCoordAccumulator, true);
+            this.verticalScanSegmentVector = new ScanSegmentVector(this.xCoordAccumulator, false);
 
             for (int slot = 0; slot < this.horizontalScanSegmentVector.Length; ++slot) {
                 this.horizontalCoordMap[this.horizontalScanSegmentVector[slot].Coord] = slot;
@@ -175,18 +175,18 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         private void AddAxisCoordinateEvents(ScanDirection scanDir) {
             // Normal event ordering will apply - and will thus order the ScanSegments created in the vectors.
             if (scanDir.IsHorizontal) {
-                foreach (var coord in yCoordAccumulator) {
-                    base.eventQueue.Enqueue(new AxisCoordinateEvent(new Point(ObsTree.GraphBox.Left - SentinelOffset, coord)));
+                foreach (var coord in this.yCoordAccumulator) {
+                    base.eventQueue.Enqueue(new AxisCoordinateEvent(new Point(this.ObsTree.GraphBox.Left - SentinelOffset, coord)));
                 }
                 return;
             }
-            foreach (var coord in xCoordAccumulator) {
-                base.eventQueue.Enqueue(new AxisCoordinateEvent(new Point(coord, ObsTree.GraphBox.Bottom - SentinelOffset)));
+            foreach (var coord in this.xCoordAccumulator) {
+                base.eventQueue.Enqueue(new AxisCoordinateEvent(new Point(coord, this.ObsTree.GraphBox.Bottom - SentinelOffset)));
             }
         }
 
         protected override void ProcessCustomEvent(SweepEvent evt) {
-            if (!ProcessAxisCoordinate(evt)) {
+            if (!this.ProcessAxisCoordinate(evt)) {
                 base.ProcessCustomEvent(evt);
             }
         }
@@ -221,25 +221,25 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             vertexPoints.Insert(vertexEvent.Site);
 
             // For easier reading...
-            var lowNborSide = LowNeighborSides.LowNeighbor.Item;
-            var highNborSide = HighNeighborSides.HighNeighbor.Item;
+            var lowNborSide = this.LowNeighborSides.LowNeighbor.Item;
+            var highNborSide = this.HighNeighborSides.HighNeighbor.Item;
             var highDir = base.ScanDirection.Direction;
             var lowDir = base.ScanDirection.OppositeDirection;
 
             // Generate the neighbor side intersections, regardless of overlaps; these are the type-2 Steiner points.
-            var lowSteiner = ScanLineIntersectSide(vertexEvent.Site, lowNborSide);
-            var highSteiner = ScanLineIntersectSide(vertexEvent.Site, highNborSide);
+            var lowSteiner = this.ScanLineIntersectSide(vertexEvent.Site, lowNborSide);
+            var highSteiner = this.ScanLineIntersectSide(vertexEvent.Site, highNborSide);
 
             // Add the intersections at the neighbor bounding boxes if the intersection is not at a sentinel.  
             // Go in the opposite direction from the neighbor intersection to find the border between the Steiner 
             // point and vertexEvent.Site (unless vertexEvent.Site is inside the bounding box).
-            if (ObsTree.GraphBox.Contains(lowSteiner)) {
+            if (this.ObsTree.GraphBox.Contains(lowSteiner)) {
                 var bboxIntersectBeforeLowSteiner = StaticGraphUtility.RectangleBorderIntersect(lowNborSide.Obstacle.VisibilityBoundingBox, lowSteiner, highDir);
                 if (PointComparer.IsPureLower(bboxIntersectBeforeLowSteiner, vertexEvent.Site)) {
                     this.boundingBoxSteinerPoints.Insert(bboxIntersectBeforeLowSteiner);
                 }
             }
-            if (ObsTree.GraphBox.Contains(highSteiner)) {
+            if (this.ObsTree.GraphBox.Contains(highSteiner)) {
                 var bboxIntersectBeforeHighSteiner = StaticGraphUtility.RectangleBorderIntersect(highNborSide.Obstacle.VisibilityBoundingBox, highSteiner, lowDir);
                 if (PointComparer.IsPureLower(vertexEvent.Site, bboxIntersectBeforeHighSteiner)) {
                     this.boundingBoxSteinerPoints.Insert(bboxIntersectBeforeHighSteiner);
@@ -279,14 +279,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             var start = site;
             bool isInsideOverlappedObstacle = false;
             for (; null != nextNode; nextNode = base.scanLine.NextHigh(nextNode)) {
-                if (SkipSide(start, nextNode.Item)) {
+                if (this.SkipSide(start, nextNode.Item)) {
                     continue;
                 }
 
                 if (nextNode.Item.Obstacle.IsGroup) {
                     // Do not create internal group crossings in non-overlapped obstacles.
                     if ((overlapDepth == 0) || isInsideOverlappedObstacle) {
-                        HandleGroupCrossing(site, nextNode.Item);
+                        this.HandleGroupCrossing(site, nextNode.Item);
                     }
                     continue;
                 }
@@ -300,7 +300,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
                     // We are not overlapped, so create a ScanSegment from the previous side intersection to the
                     // intersection with the side in nextNode.Item.
-                    start = CreateScanSegment(start, nextNode.Item, ScanSegment.NormalWeight);
+                    start = this.CreateScanSegment(start, nextNode.Item, ScanSegment.NormalWeight);
                     base.CurrentGroupBoundaryCrossingMap.Clear();
                     overlapDepth = 1;
                     isInsideOverlappedObstacle = nextNode.Item.Obstacle.IsOverlapped;
@@ -325,8 +325,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
             // The final piece.
             var end = base.ScanDirection.IsHorizontal
-                    ? new Point(ObsTree.GraphBox.Right + SentinelOffset, start.Y)
-                    : new Point(start.X, ObsTree.GraphBox.Top + SentinelOffset);
+                    ? new Point(this.ObsTree.GraphBox.Right + SentinelOffset, start.Y)
+                    : new Point(start.X, this.ObsTree.GraphBox.Top + SentinelOffset);
             this.parallelSegmentVector.CreateScanSegment(start, end, ScanSegment.NormalWeight,
                     base.CurrentGroupBoundaryCrossingMap.GetOrderedListBetween(start, end));
             this.parallelSegmentVector.ScanSegmentsCompleteForCurrentSlot();
@@ -347,11 +347,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // The vertex crossing the edge is perpendicular to the group boundary.  A rectilinear group will also have
             // an edge parallel to that group boundary that includes the point of that crossing vertex; therefore we must
             // split that non-crossing edge at that vertex.
-            AddPerpendicularCoordForGroupCrossing(intersect);
+            this.AddPerpendicularCoordForGroupCrossing(intersect);
 
             // Similarly, the crossing edge's opposite vertex may be on a perpendicular segment.
             var interiorPoint = crossing.GetInteriorVertexPoint(intersect);
-            AddPerpendicularCoordForGroupCrossing(interiorPoint);
+            this.AddPerpendicularCoordForGroupCrossing(interiorPoint);
         }
 
         private void AddPerpendicularCoordForGroupCrossing(Point intersect) {
@@ -375,9 +375,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         private Point CreateScanSegment(Point start, BasicObstacleSide side, double weight) {
-            var end = ScanLineIntersectSide(start, side);
+            var end = this.ScanLineIntersectSide(start, side);
             if (start != end) {
-                this.parallelSegmentVector.CreateScanSegment(start, end, weight, CurrentGroupBoundaryCrossingMap.GetOrderedListBetween(start, end));
+                this.parallelSegmentVector.CreateScanSegment(start, end, weight, this.CurrentGroupBoundaryCrossingMap.GetOrderedListBetween(start, end));
             }
             return end;
         }
@@ -386,8 +386,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             this.VisibilityGraph = NewVisibilityGraph();
 
             // Generate the sparse intersections between ScanSegments based upon the ordered vertexPoints.
-            GenerateSparseIntersectionsAlongHorizontalAxis();
-            GenerateSparseIntersectionsAlongVerticalAxis();
+            this.GenerateSparseIntersectionsAlongHorizontalAxis();
+            this.GenerateSparseIntersectionsAlongVerticalAxis();
 
             this.ConnectAdjoiningScanSegments();
 
@@ -401,7 +401,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             var vertexPoints = this.horizontalVertexPoints.OrderBy(point => point, this.currentAxisPointComparer).ToArray();
             var bboxSteinerPoints = this.boundingBoxSteinerPoints.OrderBy(point => point, this.currentAxisPointComparer).ToList();
             base.ScanDirection = ScanDirection.HorizontalInstance;
-            SetVectorsAndCoordMaps(base.ScanDirection);
+            this.SetVectorsAndCoordMaps(base.ScanDirection);
             this.GenerateSparseIntersections(vertexPoints, bboxSteinerPoints);
         }
 
@@ -410,7 +410,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             var vertexPoints = this.verticalVertexPoints.OrderBy(point => point, this.currentAxisPointComparer).ToArray();
             var bboxSteinerPoints = this.boundingBoxSteinerPoints.OrderBy(point => point, this.currentAxisPointComparer).ToList();
             base.ScanDirection = ScanDirection.VerticalInstance;
-            SetVectorsAndCoordMaps(base.ScanDirection);
+            this.SetVectorsAndCoordMaps(base.ScanDirection);
             this.GenerateSparseIntersections(vertexPoints, bboxSteinerPoints);
         }
 
@@ -456,7 +456,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             //vertexPoints.MoveNext();
             int j = 0;
             int i = 0;
-            foreach (var item in parallelSegmentVector.Items) {
+            foreach (var item in this.parallelSegmentVector.Items) {
                 for (; ; ) {
                     if (!item.CurrentSegment.ContainsPoint(vertexPoints[i])) {
                         // Done accumulating intersections for the current segment; move to the next segment.
@@ -490,7 +490,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         private bool AddSteinerPointsToInterveningSegments(Point currentVertexPoint, List<Point> bboxSteinerPoints, ref int j, ScanSegmentVectorItem item) {
             // With overlaps, we may have bboxSteinerPoints on segments that do not contain vertices.
-            while (j < boundingBoxSteinerPoints.Count && (this.currentAxisPointComparer.Compare(bboxSteinerPoints[j], currentVertexPoint) == -1)) {
+            while (j < this.boundingBoxSteinerPoints.Count && (this.currentAxisPointComparer.Compare(bboxSteinerPoints[j], currentVertexPoint) == -1)) {
                 if (!item.TraverseToSegmentContainingPoint(bboxSteinerPoints[j])) {
                     // Done with this vectorItem, move to the next item.
                     return false;
@@ -531,7 +531,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
  
         // These are called when the site may not be in the vector.
         private int FindPerpendicularSlot(Point site, int directionIfMiss) {
-            return FindIntersectingSlot(perpendicularSegmentVector, perpendicularCoordMap, site, directionIfMiss);
+            return FindIntersectingSlot(this.perpendicularSegmentVector, this.perpendicularCoordMap, site, directionIfMiss);
         }
 
         private static int FindIntersectingSlot(ScanSegmentVector segmentVector, Dictionary<double, int> coordMap, Point site, int directionIfMiss) {

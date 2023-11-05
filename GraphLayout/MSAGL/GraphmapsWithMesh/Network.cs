@@ -14,37 +14,40 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
         public Network(int numV, int numE, bool Random)
         {
-            N = numV;
-            E = numE;
+            this.N = numV;
+            this.E = numE;
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=340
             throw new InvalidOperationException();
 #else
-            M = new int[numV + 1, numV + 1];
+            this.M = new int[numV + 1, numV + 1];
 #endif
         }
         public Network(int numV, int numE)
         {
-            N = numV;
+            this.N = numV;
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=340
             throw new InvalidOperationException();
 #else
-            M = new int[numV + 1, numV + 1];
+            this.M = new int[numV + 1, numV + 1];
 #endif
             int v2;
-            while (E < numE)
+            while (this.E < numE)
             {
                 Random r = new Random(1);
                 var v1 = r.Next(1, numV);
                 v2 = r.Next(1, numV);
 
-                if (v1 == v2) continue;
-                var newEdge = Edges.All(x => (v1 != x.A || v2 != x.B) && (v1 != x.B || v2 != x.A));
+                if (v1 == v2) {
+                    continue;
+                }
+
+                var newEdge = this.Edges.All(x => (v1 != x.A || v2 != x.B) && (v1 != x.B || v2 != x.A));
                 if (newEdge)
                 {
-                    E++;
-                    Edges.Add(new Twin(v1, v2));
-                    M[v1, v2] = 1;
-                    M[v2, v1] = 1;
+                    this.E++;
+                    this.Edges.Add(new Twin(v1, v2));
+                    this.M[v1, v2] = 1;
+                    this.M[v2, v1] = 1;
                 }
             }
         }

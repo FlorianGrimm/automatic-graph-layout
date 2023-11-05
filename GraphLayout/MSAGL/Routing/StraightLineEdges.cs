@@ -32,9 +32,9 @@ namespace Microsoft.Msagl.Routing
         /// </summary>
         protected override void RunInternal()
         {
-            this.StartListenToLocalProgress(edges.Count());
-            SplineRouter.CreatePortsIfNeeded(edges);
-            foreach (Edge edge in edges)
+            this.StartListenToLocalProgress(this.edges.Count());
+            SplineRouter.CreatePortsIfNeeded(this.edges);
+            foreach (Edge edge in this.edges)
             {
                 RouteEdge(edge, this.padding);
                 this.ProgressStep();
@@ -87,8 +87,10 @@ namespace Microsoft.Msagl.Routing
         internal static bool ContainmentLoop(EdgeGeometry eg, double padding) {
             var sourceCurve = eg.SourcePort.Curve;
             var targetCurve = eg.TargetPort.Curve;
-            if (sourceCurve == null || targetCurve == null)
+            if (sourceCurve == null || targetCurve == null) {
                 return false;
+            }
+
             Rectangle targetBox = sourceCurve.BoundingBox;
             Rectangle sourceBox = targetCurve.BoundingBox;
             bool targetInSource = targetBox.Contains(sourceBox);
@@ -121,8 +123,10 @@ namespace Microsoft.Msagl.Routing
             var vert=Math.Abs(dir.X)<ApproximateComparer.DistanceEpsilon;
             var maxWidth=(vert? Math.Min(center.Y-targetBox.Bottom, targetBox.Top-center.Y): Math.Min(center.X-targetBox.Left, targetBox.Right-center.X))/2; //divide over 2 to not miss the rect
             var width = Math.Min(howMuchToStickOut, maxWidth);
-            if (dir.Length <= ApproximateComparer.DistanceEpsilon)
+            if (dir.Length <= ApproximateComparer.DistanceEpsilon) {
                 dir = new Point(1, 0);
+            }
+
             var hookDir=dir.Normalize();
             var hookPerp=hookDir.Rotate(Math.PI/2);
             var p1 = closestPoint + hookDir * howMuchToStickOut;
@@ -134,7 +138,7 @@ namespace Microsoft.Msagl.Routing
             return smoothedPoly.CreateCurve();
         }
 
-        static Point FindClosestPointOnBoxBoundary(Point c, Rectangle targetBox){
+        private static Point FindClosestPointOnBoxBoundary(Point c, Rectangle targetBox){
             var x = c.X - targetBox.Left < targetBox.Right - c.X ? targetBox.Left : targetBox.Right;
             var y = c.Y - targetBox.Bottom < targetBox.Top - c.Y ? targetBox.Bottom : targetBox.Top;
             return Math.Abs(x - c.X) < Math.Abs(y - c.Y) ? new Point(x, c.Y) : new Point(c.X, y);
@@ -244,8 +248,9 @@ namespace Microsoft.Msagl.Routing
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", MessageId = "Microsoft.Msagl.Site")]
         static internal void SetStraightLineEdgesWithUnderlyingPolylines(GeometryGraph graph) {
             SplineRouter.CreatePortsIfNeeded(graph.Edges);
-            foreach (Edge edge in graph.Edges) 
+            foreach (Edge edge in graph.Edges) {
                 CreateSimpleEdgeCurveWithUnderlyingPolyline(edge);
+            }
         }
     }
 }

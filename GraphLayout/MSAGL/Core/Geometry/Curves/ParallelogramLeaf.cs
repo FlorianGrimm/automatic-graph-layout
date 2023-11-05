@@ -10,24 +10,25 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     [Serializable]
 #endif
     internal class ParallelogramLeaf : ParallelogramNodeOverICurve {
-        double low;
+        private double low;
 
         internal double Low {
             get {
-                return low;
+                return this.low;
             }
             set {
-                low = value;
+                this.low = value;
             }
         }
-        double high;
+
+        private double high;
 
         internal double High {
             get {
-                return high;
+                return this.high;
             }
             set {
-                high = value;
+                this.high = value;
             }
         }
 
@@ -38,16 +39,15 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             this.Parallelogram = box;
         }
 
-
-
-        LineSegment chord;
+        private LineSegment chord;
 
         internal LineSegment Chord {
-            get { return chord; }
+            get { return this.chord; }
             set {
-                chord = value;
-                if (!ApproximateComparer.Close(Seg[low], chord.Start))
+                this.chord = value;
+                if (!ApproximateComparer.Close(this.Seg[this.low], this.chord.Start)) {
                     throw new InvalidOperationException();
+                }
             }
         }
     }

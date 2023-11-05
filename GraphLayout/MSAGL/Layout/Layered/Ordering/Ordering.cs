@@ -11,72 +11,68 @@ namespace Microsoft.Msagl.Layout.Layered {
     internal partial class Ordering : AlgorithmBase{
         #region Fields
 
-        bool hasCrossWeights;
-
-        LayerArrays layerArrays;
-        int[][] layerArraysCopy;
-        int[] layering;
-        int[][] layers;
-        OrderingMeasure measure;
-
-        int nOfLayers;
-        double[] optimalOriginalGroupSize;
-        double[] optimalVirtualGroupSize;
-        ProperLayeredGraph properLayeredGraph;
+        private bool hasCrossWeights;
+        private LayerArrays layerArrays;
+        private int[][] layerArraysCopy;
+        private int[] layering;
+        private int[][] layers;
+        private OrderingMeasure measure;
+        private int nOfLayers;
+        private double[] optimalOriginalGroupSize;
+        private double[] optimalVirtualGroupSize;
+        private ProperLayeredGraph properLayeredGraph;
 
         /// <summary>
         /// this field is needed to randomly choose between transposing
         /// and not transposing in the adjacent exchange
         /// </summary>
-        Random random;
+        private Random random;
+        private SugiyamaLayoutSettings settings;
+        private int startOfVirtNodes;
+        private bool tryReverse = true;
 
-        SugiyamaLayoutSettings settings;
-        int startOfVirtNodes;
-
-        bool tryReverse = true;
-
-        int NoGainStepsBound {
+        private int NoGainStepsBound {
             get {
-                return SugiyamaLayoutSettings.NoGainAdjacentSwapStepsBound*
-                       SugiyamaLayoutSettings.RepetitionCoefficientForOrdering;
+                return this.SugiyamaLayoutSettings.NoGainAdjacentSwapStepsBound*
+                       this.SugiyamaLayoutSettings.RepetitionCoefficientForOrdering;
             }
         }
 
-        SugiyamaLayoutSettings SugiyamaLayoutSettings {
-            get { return settings; }
+        private SugiyamaLayoutSettings SugiyamaLayoutSettings {
+            get { return this.settings; }
         }
 
         /// <summary>
         /// gets the random seed for some random choices inside of layer ordering
         /// </summary>
-        int SeedOfRandom {
-            get { return SugiyamaLayoutSettings.RandomSeedForOrdering; }
+        private int SeedOfRandom {
+            get { return this.SugiyamaLayoutSettings.RandomSeedForOrdering; }
         }
 
         #endregion
 
-        int[] X;
+        private int[] X;
 
-        Ordering(ProperLayeredGraph graphPar, bool tryReverse, LayerArrays layerArraysParam, int startOfVirtualNodes, bool hasCrossWeights, SugiyamaLayoutSettings settings) {
+        private Ordering(ProperLayeredGraph graphPar, bool tryReverse, LayerArrays layerArraysParam, int startOfVirtualNodes, bool hasCrossWeights, SugiyamaLayoutSettings settings) {
             this.tryReverse = tryReverse;
-            startOfVirtNodes = startOfVirtualNodes;
-            layerArrays = layerArraysParam;
-            layering = layerArraysParam.Y;
-            nOfLayers = layerArraysParam.Layers.Length;
-            layers = layerArraysParam.Layers;
-            properLayeredGraph = graphPar;
+            this.startOfVirtNodes = startOfVirtualNodes;
+            this.layerArrays = layerArraysParam;
+            this.layering = layerArraysParam.Y;
+            this.nOfLayers = layerArraysParam.Layers.Length;
+            this.layers = layerArraysParam.Layers;
+            this.properLayeredGraph = graphPar;
             this.hasCrossWeights = hasCrossWeights;
             this.settings = settings;
-            random = new Random(SeedOfRandom);
+            this.random = new Random(this.SeedOfRandom);
         }
 
         /// <summary>
         /// an upper limit on a number of passes in layer ordering
         /// </summary>
-        int MaxOfIterations {
+        private int MaxOfIterations {
             get {
-                return SugiyamaLayoutSettings.MaxNumberOfPassesInOrdering*
-                       SugiyamaLayoutSettings.RepetitionCoefficientForOrdering;
+                return this.SugiyamaLayoutSettings.MaxNumberOfPassesInOrdering*
+                       this.SugiyamaLayoutSettings.RepetitionCoefficientForOrdering;
             }
         }
 
@@ -85,11 +81,12 @@ namespace Microsoft.Msagl.Layout.Layered {
                                          int startOfVirtualNodes,
                                          SugiyamaLayoutSettings settings, CancelToken cancelToken) {
             bool hasCrossWeight = false;
-            foreach (LayerEdge le in graph.Edges)
+            foreach (LayerEdge le in graph.Edges) {
                 if (le.CrossingWeight != 1) {
                     hasCrossWeight = true;
                     break;
                 }
+            }
 
             var o = new Ordering(graph, true, layerArrays, startOfVirtualNodes, hasCrossWeight, settings);
             o.Run(cancelToken);
@@ -134,57 +131,58 @@ namespace Microsoft.Msagl.Layout.Layered {
                 }
             }
 #else
-            Calculate();
+            this.Calculate();
 
-            if ( /*orderingMeasure.x>0 &&*/ tryReverse) {
-                LayerArrays secondLayers = layerArrays.ReversedClone();
+            if ( /*orderingMeasure.x>0 &&*/ this.tryReverse) {
+                LayerArrays secondLayers = this.layerArrays.ReversedClone();
 
-                var revOrdering = new Ordering(properLayeredGraph.ReversedClone(), false, secondLayers, startOfVirtNodes, 
-                                               hasCrossWeights, settings);
+                var revOrdering = new Ordering(this.properLayeredGraph.ReversedClone(), false, secondLayers, this.startOfVirtNodes,
+                                               this.hasCrossWeights, this.settings);
 
                 revOrdering.Run();
 
-                if (revOrdering.measure < measure) {
-                    for (int j = 0; j < nOfLayers; j++)
-                        secondLayers.Layers[j].CopyTo(layerArrays.Layers[nOfLayers - 1 - j], 0);
+                if (revOrdering.measure < this.measure) {
+                    for (int j = 0; j < this.nOfLayers; j++) {
+                        secondLayers.Layers[j].CopyTo(this.layerArrays.Layers[this.nOfLayers - 1 - j], 0);
+                    }
 
-                    layerArrays.UpdateXFromLayers();
+                    this.layerArrays.UpdateXFromLayers();
                 }
             }
 #endif
         }
 
-        void Calculate() {
-            Init();
+        private void Calculate() {
+            this.Init();
 
-            CloneLayers(layers, ref layerArraysCopy);
+            CloneLayers(this.layers, ref this.layerArraysCopy);
             int countOfNoGainSteps = 0;
-            measure = new OrderingMeasure(layerArraysCopy, GetCrossingsTotal(properLayeredGraph, layerArrays),
-                                          startOfVirtNodes, optimalOriginalGroupSize,
-                                          optimalVirtualGroupSize);
+            this.measure = new OrderingMeasure(this.layerArraysCopy, GetCrossingsTotal(this.properLayeredGraph, this.layerArrays),
+                                          this.startOfVirtNodes, this.optimalOriginalGroupSize,
+                                          this.optimalVirtualGroupSize);
 
             //Stopwatch sw = Stopwatch.StartNew();
-            for (int i = 0; i < MaxOfIterations && countOfNoGainSteps < NoGainStepsBound && !measure.IsPerfect(); i++) {
+            for (int i = 0; i < this.MaxOfIterations && countOfNoGainSteps < this.NoGainStepsBound && !this.measure.IsPerfect(); i++) {
                 this.ProgressStep();
 
                 bool up = i%2 == 0;
 
-                LayerByLayerSweep(up);
+                this.LayerByLayerSweep(up);
 
-                AdjacentExchange();
+                this.AdjacentExchange();
 
-                var newMeasure = new OrderingMeasure(layerArrays.Layers,
-                                                     GetCrossingsTotal(properLayeredGraph, layerArrays),
-                                                     startOfVirtNodes,
-                                                     optimalOriginalGroupSize, optimalVirtualGroupSize);
+                var newMeasure = new OrderingMeasure(this.layerArrays.Layers,
+                                                     GetCrossingsTotal(this.properLayeredGraph, this.layerArrays),
+                                                     this.startOfVirtNodes,
+                                                     this.optimalOriginalGroupSize, this.optimalVirtualGroupSize);
 
-                if (measure < newMeasure) {
-                    Restore();
+                if (this.measure < newMeasure) {
+                    this.Restore();
                     countOfNoGainSteps++;
-                } else if (newMeasure < measure || HeadOfTheCoin()) {
+                } else if (newMeasure < this.measure || this.HeadOfTheCoin()) {
                     countOfNoGainSteps = 0;
-                    CloneLayers(layers, ref layerArraysCopy);
-                    measure = newMeasure;
+                    CloneLayers(this.layers, ref this.layerArraysCopy);
+                    this.measure = newMeasure;
                 }
             }
         }
@@ -192,24 +190,30 @@ namespace Microsoft.Msagl.Layout.Layered {
         internal static void CloneLayers(int[][] layers, ref int[][] layerArraysCopy) {
             if (layerArraysCopy == null) {
                 layerArraysCopy = (int[][]) layers.Clone();
-                for (int i = 0; i < layers.Length; i++)
+                for (int i = 0; i < layers.Length; i++) {
                     layerArraysCopy[i] = (int[]) layers[i].Clone();
-            } else
-                for (int i = 0; i < layers.Length; i++)
+                }
+            } else {
+                for (int i = 0; i < layers.Length; i++) {
                     layers[i].CopyTo(layerArraysCopy[i], 0);
+                }
+            }
         }
 
-        void Restore() {
-            layerArrays.UpdateLayers(layerArraysCopy);
+        private void Restore() {
+            this.layerArrays.UpdateLayers(this.layerArraysCopy);
         }
 
-        void LayerByLayerSweep(bool up) {
+        private void LayerByLayerSweep(bool up) {
             if (up) {
-                for (int i = 1; i < nOfLayers; i++)
-                    SweepLayer(i, true);
-            } else
-                for (int i = nOfLayers - 2; i >= 0; i--)
-                    SweepLayer(i, false);
+                for (int i = 1; i < this.nOfLayers; i++) {
+                    this.SweepLayer(i, true);
+                }
+            } else {
+                for (int i = this.nOfLayers - 2; i >= 0; i--) {
+                    this.SweepLayer(i, false);
+                }
+            }
         }
 
         //static int count;
@@ -223,21 +227,23 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="layer"></param>
         /// <param name="upperLayer">upperLayer means if "layer" is the upperLayer 
         /// of the strip</param>
-        void SweepLayer(int layer, bool upperLayer) {
+        private void SweepLayer(int layer, bool upperLayer) {
             this.ProgressStep();
 
-            int[] l = layers[layer];
+            int[] l = this.layers[layer];
             var medianValues = new float[l.Length];
 
-            for (int i = 0; i < medianValues.Length; i++)
-                medianValues[i] = WMedian(l[i], upperLayer);
+            for (int i = 0; i < medianValues.Length; i++) {
+                medianValues[i] = this.WMedian(l[i], upperLayer);
+            }
 
-            Sort(layer, medianValues);
+            this.Sort(layer, medianValues);
 
             //update X
-            int[] vertices = layerArrays.Layers[layer];
-            for (int i = 0; i < vertices.Length; i++)
-                layerArrays.X[vertices[i]] = i;
+            int[] vertices = this.layerArrays.Layers[layer];
+            for (int i = 0; i < vertices.Length; i++) {
+                this.layerArrays.X[vertices[i]] = i;
+            }
         }
 
         /// <summary>
@@ -246,27 +252,28 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         /// <param name="layerToSort"></param>
         /// <param name="medianValues"></param>
-        void Sort(int layerToSort, float[] medianValues) {
+        private void Sort(int layerToSort, float[] medianValues) {
             var s = new SortedDictionary<float, object>();
-            int[] vertices = layers[layerToSort];
+            int[] vertices = this.layers[layerToSort];
             int i = 0;
 
             foreach (float m in medianValues) {
                 int v = vertices[i++];
-                if (m == -1.0)
+                if (m == -1.0) {
                     continue;
+                }
 
-                if (!s.ContainsKey(m))
+                if (!s.ContainsKey(m)) {
                     s[m] = v;
-                else {
+                } else {
                     object o = s[m];
                     var al = o as List<int>;
                     if (al != null) {
-                        if (HeadOfTheCoin())
+                        if (this.HeadOfTheCoin()) {
                             al.Add(v);
-                        else {
+                        } else {
 //stick it in the middle 
-                            int j = random.Next(al.Count);
+                            int j = this.random.Next(al.Count);
                             int k = al[j];
                             al[j] = v;
                             al.Add(k);
@@ -275,7 +282,7 @@ namespace Microsoft.Msagl.Layout.Layered {
                         var io = (int) o;
                         al = new List<int>();
                         s[m] = al;
-                        if (HeadOfTheCoin()) {
+                        if (this.HeadOfTheCoin()) {
                             al.Add(io);
                             al.Add(v);
                         } else {
@@ -304,50 +311,58 @@ namespace Microsoft.Msagl.Layout.Layered {
                         var al = o as List<int>;
                         foreach (int v in al) {
 //find the first empty spot
-                            while (medianValues[i] == -1)
+                            while (medianValues[i] == -1) {
                                 i++;
+                            }
+
                             vertices[i++] = v;
                         }
                     }
-                } else
+                } else {
                     i++;
+                }
             }
         }
 
-
-        float WMedian(int node, bool theMedianGoingDown) {
+        private float WMedian(int node, bool theMedianGoingDown) {
             IEnumerable<LayerEdge> edges;
             int p;
             if (theMedianGoingDown) {
-                edges = properLayeredGraph.OutEdges(node);
-                p = properLayeredGraph.OutEdgesCount(node);
+                edges = this.properLayeredGraph.OutEdges(node);
+                p = this.properLayeredGraph.OutEdgesCount(node);
             } else {
-                edges = properLayeredGraph.InEdges(node);
-                p = properLayeredGraph.InEdgesCount(node);
+                edges = this.properLayeredGraph.InEdges(node);
+                p = this.properLayeredGraph.InEdgesCount(node);
             }
 
-            if (p == 0)
+            if (p == 0) {
                 return -1.0f;
+            }
 
             var parray = new int[p]; //we have no multiple edges
 
             int i = 0;
-            if (theMedianGoingDown)
-                foreach (LayerEdge e in edges)
-                    parray[i++] = X[e.Target];
-            else
-                foreach (LayerEdge e in edges)
-                    parray[i++] = X[e.Source];
+            if (theMedianGoingDown) {
+                foreach (LayerEdge e in edges) {
+                    parray[i++] = this.X[e.Target];
+                }
+            } else {
+                foreach (LayerEdge e in edges) {
+                    parray[i++] = this.X[e.Source];
+                }
+            }
 
             Array.Sort(parray);
 
             int m = p/2;
 
-            if (p%2 == 1)
+            if (p%2 == 1) {
                 return parray[m];
+            }
 
-            if (p == 2)
+            if (p == 2) {
                 return 0.5f*((float) parray[0] + (float) parray[1]);
+            }
 
             float left = parray[m - 1] - parray[0];
 
@@ -360,71 +375,77 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <summary>
         /// Just depth search and assign the index saying when the node was visited
         /// </summary>
-        void Init() {
-            var counts = new int[nOfLayers];
+        private void Init() {
+            var counts = new int[this.nOfLayers];
 
             //the initial layers are set by following the order of the 
             //depth first traversal inside one layer
             var q = new Stack<int>();
             //enqueue all sources of the graph 
-            for (int i = 0; i < properLayeredGraph.NodeCount; i++)
-                if (properLayeredGraph.InEdgesCount(i) == 0)
+            for (int i = 0; i < this.properLayeredGraph.NodeCount; i++) {
+                if (this.properLayeredGraph.InEdgesCount(i) == 0) {
                     q.Push(i);
+                }
+            }
 
-
-            var visited = new bool[properLayeredGraph.NodeCount];
+            var visited = new bool[this.properLayeredGraph.NodeCount];
 
             while (q.Count > 0) {
                 int u = q.Pop();
-                int l = layerArrays.Y[u];
+                int l = this.layerArrays.Y[u];
 
 
-                layerArrays.Layers[l][counts[l]] = u;
-                layerArrays.X[u] = counts[l];
+                this.layerArrays.Layers[l][counts[l]] = u;
+                this.layerArrays.X[u] = counts[l];
                 counts[l]++;
 
-                foreach (int v in properLayeredGraph.Succ(u))
+                foreach (int v in this.properLayeredGraph.Succ(u)) {
                     if (!visited[v]) {
                         visited[v] = true;
                         q.Push(v);
                     }
+                }
             }
 
-            X = layerArrays.X;
+            this.X = this.layerArrays.X;
 
         }
 
-        void InitOptimalGroupSizes() {
-            optimalOriginalGroupSize = new double[nOfLayers];
-            optimalVirtualGroupSize = new double[nOfLayers];
+        private void InitOptimalGroupSizes() {
+            this.optimalOriginalGroupSize = new double[this.nOfLayers];
+            this.optimalVirtualGroupSize = new double[this.nOfLayers];
 
-            for (int i = 0; i < nOfLayers; i++)
-                InitOptimalGroupSizesForLayer(i);
+            for (int i = 0; i < this.nOfLayers; i++) {
+                this.InitOptimalGroupSizesForLayer(i);
+            }
         }
 
-        void InitOptimalGroupSizesForLayer(int i) {
+        private void InitOptimalGroupSizesForLayer(int i) {
             //count original and virtual nodes
             int originals = 0;
-            foreach (int j in layers[i])
-                if (j < startOfVirtNodes)
+            foreach (int j in this.layers[i]) {
+                if (j < this.startOfVirtNodes) {
                     originals++;
+                }
+            }
 
-            int virtuals = layers[i].Length - originals;
+            int virtuals = this.layers[i].Length - originals;
 
             if (originals < virtuals) {
-                optimalOriginalGroupSize[i] = 1;
-                optimalVirtualGroupSize[i] = (double) virtuals/(originals + 1);
+                this.optimalOriginalGroupSize[i] = 1;
+                this.optimalVirtualGroupSize[i] = (double) virtuals/(originals + 1);
             } else {
-                optimalVirtualGroupSize[i] = 1;
-                optimalOriginalGroupSize[i] = (double) originals/(virtuals + 1);
+                this.optimalVirtualGroupSize[i] = 1;
+                this.optimalOriginalGroupSize[i] = (double) originals/(virtuals + 1);
             }
         }
 
 
         internal static int GetCrossingsTotal(ProperLayeredGraph properLayeredGraph, LayerArrays layerArrays) {
             int x = 0;
-            for (int i = 0; i < layerArrays.Layers.Length - 1; i++)
+            for (int i = 0; i < layerArrays.Layers.Length - 1; i++) {
                 x += GetCrossingCountFromStrip(i, properLayeredGraph, layerArrays);
+            }
 
             return x;
         }
@@ -437,25 +458,27 @@ namespace Microsoft.Msagl.Layout.Layered {
         ///// <param name="layerArrays"></param>
         ///// <param name="bottom">bottom of the strip</param>
         ///// <returns></returns>
-        static int GetCrossingCountFromStrip(int bottom, ProperLayeredGraph properLayeredGraph, LayerArrays layerArrays) {
+        private static int GetCrossingCountFromStrip(int bottom, ProperLayeredGraph properLayeredGraph, LayerArrays layerArrays) {
             int[] topVerts = layerArrays.Layers[bottom + 1];
             int[] bottomVerts = layerArrays.Layers[bottom];
-            if (bottomVerts.Length <= topVerts.Length)
+            if (bottomVerts.Length <= topVerts.Length) {
                 return GetCrossingCountFromStripWhenBottomLayerIsShorter(bottomVerts, properLayeredGraph, layerArrays);
-            else
+            } else {
                 return GetCrossingCountFromStripWhenTopLayerIsShorter(topVerts, bottomVerts, properLayeredGraph,
                                                                       layerArrays);
+            }
         }
 
-        static int GetCrossingCountFromStripWhenTopLayerIsShorter(int[] topVerts, int[] bottomVerts,
+        private static int GetCrossingCountFromStripWhenTopLayerIsShorter(int[] topVerts, int[] bottomVerts,
                                                                   ProperLayeredGraph properLayeredGraph,
                                                                   LayerArrays layerArrays) {
             LayerEdge[] edges = EdgesOfStrip(bottomVerts, properLayeredGraph);
             Array.Sort(edges, new EdgeComparerByTarget(layerArrays.X));
             //find first n such that 2^n >=topVerts.Length
             int n = 1;
-            while (n < topVerts.Length)
+            while (n < topVerts.Length) {
                 n *= 2;
+            }
             //init the accumulator tree
 
             var tree = new int[2*n - 1];
@@ -468,8 +491,10 @@ namespace Microsoft.Msagl.Layout.Layered {
                 int ew = edge.CrossingWeight;
                 tree[index] += ew;
                 while (index > 0) {
-                    if (index%2 != 0)
+                    if (index%2 != 0) {
                         cc += ew*tree[index + 1]; //intersect everything accumulated in the right sibling 
+                    }
+
                     index = (index - 1)/2;
                     tree[index] += ew;
                 }
@@ -477,16 +502,16 @@ namespace Microsoft.Msagl.Layout.Layered {
             return cc;
         }
 
-
-        static int GetCrossingCountFromStripWhenBottomLayerIsShorter(int[] bottomVerts,
+        private static int GetCrossingCountFromStripWhenBottomLayerIsShorter(int[] bottomVerts,
                                                                      ProperLayeredGraph properLayeredGraph,
                                                                      LayerArrays layerArrays) {
             LayerEdge[] edges = EdgesOfStrip(bottomVerts, properLayeredGraph);
             Array.Sort(edges, new EdgeComparerBySource(layerArrays.X));
             //find first n such that 2^n >=bottomVerts.Length
             int n = 1;
-            while (n < bottomVerts.Length)
+            while (n < bottomVerts.Length) {
                 n *= 2;
+            }
             //init accumulator
 
             var tree = new int[2*n - 1];
@@ -499,8 +524,10 @@ namespace Microsoft.Msagl.Layout.Layered {
                 int ew = edge.CrossingWeight;
                 tree[index] += ew;
                 while (index > 0) {
-                    if (index%2 != 0)
+                    if (index%2 != 0) {
                         cc += ew*tree[index + 1]; //intersect everything accumulated in the right sibling 
+                    }
+
                     index = (index - 1)/2;
                     tree[index] += ew;
                 }
@@ -509,7 +536,7 @@ namespace Microsoft.Msagl.Layout.Layered {
             return cc;
         }
 
-        static LayerEdge[] EdgesOfStrip(int[] bottomVerts, ProperLayeredGraph properLayeredGraph) {
+        private static LayerEdge[] EdgesOfStrip(int[] bottomVerts, ProperLayeredGraph properLayeredGraph) {
             LayerEdge[] edges = (from v in bottomVerts
                                  from e in properLayeredGraph.InEdges(v)
                                  select e).ToArray();

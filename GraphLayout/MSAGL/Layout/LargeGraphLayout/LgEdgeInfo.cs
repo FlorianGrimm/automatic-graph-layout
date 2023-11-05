@@ -16,7 +16,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return String.Format("zoom lvl={0:F2}", ZoomLevel);
+            return String.Format("zoom lvl={0:F2}", this.ZoomLevel);
         }
 #endif
         
@@ -26,8 +26,8 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         /// </summary>
         /// <param name="edge"></param>
         public LgEdgeInfo(Edge edge) {
-            Edge = edge;
-            ZoomLevel = int.MaxValue;
+            this.Edge = edge;
+            this.ZoomLevel = int.MaxValue;
         }
         
         /// <summary>

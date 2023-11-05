@@ -9,21 +9,21 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner
         internal PolylinePoint StartVertex { get; private set; }
         internal ObstacleSide(PolylinePoint startVertex)
         {
-            StartVertex = startVertex;
+            this.StartVertex = startVertex;
         }
 
         internal abstract PolylinePoint EndVertex { get; }
 
-        internal Polyline Polyline { get { return StartVertex.Polyline; } }
+        internal Polyline Polyline { get { return this.StartVertex.Polyline; } }
 
         internal override Point Start
         {
-            get { return StartVertex.Point; }
+            get { return this.StartVertex.Point; }
         }
 
         internal override Point End
         {
-            get { return EndVertex.Point; }
+            get { return this.EndVertex.Point; }
         }
 
         /// <summary>

@@ -34,8 +34,8 @@ namespace Microsoft.Msagl.Prototype.Ranking {
         [DefaultValue(50)]
 #endif
         public int PivotNumber {
-            set { pivotNumber = value; }
-            get { return pivotNumber; }
+            set { this.pivotNumber = value; }
+            get { return this.pivotNumber; }
         }
 
         /// <summary>
@@ -46,8 +46,8 @@ namespace Microsoft.Msagl.Prototype.Ranking {
         [DefaultValue(0.15)]
 #endif
         public double OmegaX {
-            set { omegaX = value; }
-            get { return omegaX; }
+            set { this.omegaX = value; }
+            get { return this.omegaX; }
         }
 
         /// <summary>
@@ -58,8 +58,8 @@ namespace Microsoft.Msagl.Prototype.Ranking {
         [DefaultValue(0.15)]
 #endif
         public double OmegaY {
-            set { omegaY = value; }
-            get { return omegaY; }
+            set { this.omegaY = value; }
+            get { return this.omegaY; }
         }
 
 
@@ -72,8 +72,8 @@ namespace Microsoft.Msagl.Prototype.Ranking {
         [DefaultValue(200.0)]
 #endif
         public double ScaleX {
-            set { scaleX = value; }
-            get { return scaleX; }
+            set { this.scaleX = value; }
+            get { return this.scaleX; }
         }
 
         /// <summary>
@@ -86,8 +86,8 @@ namespace Microsoft.Msagl.Prototype.Ranking {
 
 #endif
         public double ScaleY {
-            set { scaleY = value; }
-            get { return scaleY; }
+            set { this.scaleY = value; }
+            get { return this.scaleY; }
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Microsoft.Msagl.Prototype.Ranking {
 /// </summary>
 /// <returns></returns>
         public override LayoutAlgorithmSettings Clone() {
-            return MemberwiseClone() as LayoutAlgorithmSettings;
+            return this.MemberwiseClone() as LayoutAlgorithmSettings;
         }
     }
 }

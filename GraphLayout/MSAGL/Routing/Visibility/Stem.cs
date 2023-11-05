@@ -8,19 +8,20 @@ namespace Microsoft.Msagl.Routing.Visibility {
     /// represents a chunk of a hole boundary
     /// </summary>
     internal class Stem {
-        PolylinePoint start;
+        private PolylinePoint start;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal PolylinePoint Start {
-            get { return start; }
-            set { start = value; }
+            get { return this.start; }
+            set { this.start = value; }
         }
-        PolylinePoint end;
+
+        private PolylinePoint end;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal PolylinePoint End {
-            get { return end; }
-            set { end = value; }
+            get { return this.end; }
+            set { this.end = value; }
         }
      
         
@@ -32,9 +33,9 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
         internal IEnumerable<PolylinePoint> Sides {
             get {
-                PolylinePoint v=start;
+                PolylinePoint v= this.start;
                 
-                while(v!= end ) {
+                while(v!= this.end ) {
                     PolylinePoint side = v;
                     yield return side;
                     v = side.NextOnPolyline;
@@ -43,15 +44,15 @@ namespace Microsoft.Msagl.Routing.Visibility {
         }
 
         internal bool MoveStartClockwise() {
-            if (Start != End) {
-                Start = Start.NextOnPolyline;
+            if (this.Start != this.End) {
+                this.Start = this.Start.NextOnPolyline;
                 return true;
             }
             return false;
         }
 
         public override string ToString() {
-            return String.Format(System.Globalization.CultureInfo.InvariantCulture, "Stem({0},{1})", Start, End);
+            return String.Format(System.Globalization.CultureInfo.InvariantCulture, "Stem({0},{1})", this.Start, this.End);
         }
 
     }

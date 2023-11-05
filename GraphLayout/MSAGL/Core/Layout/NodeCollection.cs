@@ -14,8 +14,7 @@ namespace Microsoft.Msagl.Core.Layout
     internal class NodeCollection : IList<Node>
     {
         internal readonly List<Node> nodes = new List<Node>();
-
-         GeometryGraph graph;
+        private GeometryGraph graph;
 
         /// <summary>
         /// Creates a collection for nodes.
@@ -33,7 +32,7 @@ namespace Microsoft.Msagl.Core.Layout
         {
             ValidateArg.IsNotNull(item, "node");
             this.nodes.Add(item);
-            item.GeometryParent = graph;
+            item.GeometryParent = this.graph;
         }
 
         /// <summary>
@@ -83,16 +82,19 @@ namespace Microsoft.Msagl.Core.Layout
         /// <returns>True if the node was removed. False if the node was not removed or the node was not found.</returns>
         public bool Remove(Node item)
         {
-            if (item == null)
+            if (item == null) {
                 return false;
-            DetouchNode(item);
+            }
+
+            this.DetouchNode(item);
             return this.nodes.Remove(item);
         }
 
-        void DetouchNode(Node item) {
+        private void DetouchNode(Node item) {
             var nodeEdges = item.Edges.ToArray(); //cannot use lazy evaluation here
-            foreach (var edge in nodeEdges)
-                graph.Edges.Remove(edge);
+            foreach (var edge in nodeEdges) {
+                this.graph.Edges.Remove(edge);
+            }
 
             item.GeometryParent = null;
         }
@@ -103,7 +105,7 @@ namespace Microsoft.Msagl.Core.Layout
         /// <returns>The enumerator for the colleciton.</returns>
         public IEnumerator<Node> GetEnumerator()
         {
-            return nodes.GetEnumerator();
+            return this.nodes.GetEnumerator();
         }
 
         /// <summary>
@@ -112,7 +114,7 @@ namespace Microsoft.Msagl.Core.Layout
         /// <returns>The enumerator for the collection.</returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return nodes.GetEnumerator();
+            return this.nodes.GetEnumerator();
         }
 
         /// <summary>
@@ -124,7 +126,7 @@ namespace Microsoft.Msagl.Core.Layout
         /// <param name="item">The object to locate in the <see cref="T:System.Collections.Generic.IList`1"/>.</param>
         public int IndexOf(Node item) {
             ValidateArg.IsNotNull(item, "item");
-            return nodes.IndexOf(item);
+            return this.nodes.IndexOf(item);
         }
 
         /// <summary>
@@ -133,7 +135,7 @@ namespace Microsoft.Msagl.Core.Layout
         /// <param name="index">The zero-based index at which <paramref name="item"/> should be inserted.</param><param name="item">The object to insert into the <see cref="T:System.Collections.Generic.IList`1"/>.</param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1"/>.</exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IList`1"/> is read-only.</exception>
         public void Insert(int index, Node item) {
             ValidateArg.IsNotNull(item,"item");
-            nodes.Insert(index, item);
+            this.nodes.Insert(index, item);
         }
 
         /// <summary>
@@ -141,9 +143,9 @@ namespace Microsoft.Msagl.Core.Layout
         /// </summary>
         /// <param name="index">The zero-based index of the item to remove.</param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1"/>.</exception><exception cref="T:System.NotSupportedException">The <see cref="T:System.Collections.Generic.IList`1"/> is read-only.</exception>
         public void RemoveAt(int index) {
-            var node = nodes[index];
-            DetouchNode(node);
-            nodes.RemoveAt(index);
+            var node = this.nodes[index];
+            this.DetouchNode(node);
+            this.nodes.RemoveAt(index);
         }
 
         /// <summary>
@@ -155,14 +157,14 @@ namespace Microsoft.Msagl.Core.Layout
         /// <param name="index">The zero-based index of the element to get or set.</param><exception cref="T:System.ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index in the <see cref="T:System.Collections.Generic.IList`1"/>.</exception><exception cref="T:System.NotSupportedException">The property is set and the <see cref="T:System.Collections.Generic.IList`1"/> is read-only.</exception>
         public Node this[int index]
         {
-            get { return nodes[index]; }
+            get { return this.nodes[index]; }
             set {
                 ValidateArg.IsNotNull(value, "value");
-                var node = nodes[index];
+                var node = this.nodes[index];
                 if (node != value) {
-                    DetouchNode(node);
-                    value.GeometryParent = graph;
-                    nodes[index] = value;
+                    this.DetouchNode(node);
+                    value.GeometryParent = this.graph;
+                    this.nodes[index] = value;
                 }
             }
         }

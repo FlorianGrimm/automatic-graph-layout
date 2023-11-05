@@ -17,7 +17,7 @@ namespace Microsoft.Msagl.Routing {
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "BoundaryCurve"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "RelativeShape")]
         public override ICurve BoundaryCurve { 
-            get { return curveDelegate(); }
+            get { return this.curveDelegate(); }
             set {
                 throw new InvalidOperationException(
 #if TEST_MSAGL
@@ -27,7 +27,7 @@ namespace Microsoft.Msagl.Routing {
             }
         }
 
-        readonly Func<ICurve> curveDelegate;
+        private readonly Func<ICurve> curveDelegate;
 
         /// <summary>
         /// Constructor taking the ID and the curve delegate for the shape.

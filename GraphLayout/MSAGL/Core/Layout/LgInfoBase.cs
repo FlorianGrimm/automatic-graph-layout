@@ -5,36 +5,36 @@ namespace Microsoft.Msagl.Core.Layout {
     /// the base class for LgNodeInfo and LgEdgeInfo
     /// </summary>
     public class LgInfoBase {
-        double _slidingZoomLevel = double.PositiveInfinity;
-        double _zoomLevel = double.PositiveInfinity;
-        double _rank;
+        private double _slidingZoomLevel = double.PositiveInfinity;
+        private double _zoomLevel = double.PositiveInfinity;
+        private double _rank;
 
         /// <summary>
         /// 
         /// </summary>
         public double SlidingZoomLevel {
-            get { return _slidingZoomLevel; }
-            set { _slidingZoomLevel = value; }
+            get { return this._slidingZoomLevel; }
+            set { this._slidingZoomLevel = value; }
         }
 
         /// <summary>
         /// if the zoom is at least ZoomLevel the node should be rendered
         /// </summary>
         public double ZoomLevel {
-            get { return Math.Min(_zoomLevel, SlidingZoomLevel); }
-            set { _zoomLevel = value; }
+            get { return Math.Min(this._zoomLevel, this.SlidingZoomLevel); }
+            set { this._zoomLevel = value; }
         }
 
         /// <summary>
         /// the rank of the element
         /// </summary>
         public double Rank {
-            get { return _rank; }
-            set { _rank = value; }
+            get { return this._rank; }
+            set { this._rank = value; }
         }
 
         internal bool ZoomLevelIsNotSet {
-            get { return ZoomLevel == double.PositiveInfinity; }
+            get { return this.ZoomLevel == double.PositiveInfinity; }
 
         }
     }

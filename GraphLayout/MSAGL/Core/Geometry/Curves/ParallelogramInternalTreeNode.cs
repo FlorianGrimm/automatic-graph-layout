@@ -17,7 +17,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves
 #endif
   internal class ParallelogramInternalTreeNode : ParallelogramNodeOverICurve
   {
-    List<ParallelogramNodeOverICurve> children = new List<ParallelogramNodeOverICurve>();
+        private List<ParallelogramNodeOverICurve> children = new List<ParallelogramNodeOverICurve>();
 
     internal ParallelogramInternalTreeNode(ICurve seg, double leafBoxesOffset):base(seg,leafBoxesOffset)
     {
@@ -29,12 +29,12 @@ namespace Microsoft.Msagl.Core.Geometry.Curves
     /// <value></value>
     internal List<ParallelogramNodeOverICurve> Children
     {
-      get { return children; }
+      get { return this.children; }
     }
 
     internal void AddChild(ParallelogramNodeOverICurve node)
     {
-      children.Add(node);
+            this.children.Add(node);
     }
   }
 

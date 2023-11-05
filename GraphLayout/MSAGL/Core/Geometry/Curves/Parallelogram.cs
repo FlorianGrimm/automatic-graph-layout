@@ -43,15 +43,13 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     ] 
     //parallelograms are not stored in dictionaries
     public struct Parallelogram {
-
-        bool isSeg;
-
-        Point corner;
-        Point a;//a side exiting from the corner
-        Point b;//another side exiting from the corner
-        Point otherCorner;
-        Point aPlusCorner;
-        Point bPlusCorner;
+        private bool isSeg;
+        private Point corner;
+        private Point a;//a side exiting from the corner
+        private Point b;//another side exiting from the corner
+        private Point otherCorner;
+        private Point aPlusCorner;
+        private Point bPlusCorner;
 
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=371
         // SharpKit/Colin: this to support the lack of int casting to enums
@@ -78,25 +76,25 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 #endif
 
         internal Point Corner {
-            get { return corner; }
+            get { return this.corner; }
         }
 
         internal Point OtherCorner {
-            get { return otherCorner; }
+            get { return this.otherCorner; }
         }
 
-        Point aRot;//a rotated on 90 degrees towards b
-        Point bRot; //b rotated on 90 degrees towards a
+        private Point aRot;//a rotated on 90 degrees towards b
+        private Point bRot; //b rotated on 90 degrees towards a
 
-        double abRot; //the scalar product a*bRot 
-        double baRot; //the scalar product b*aRot;
+        private double abRot; //the scalar product a*bRot 
+        private double baRot; //the scalar product b*aRot;
 /// <summary>
 /// to string 
 /// </summary>
 /// <returns></returns>
         override public string ToString() {
-            return String.Format(CultureInfo.InvariantCulture, "({0},{1},{2},{3})", Vertex(0), Vertex(VertexId.VertexA),
-                                 Vertex(VertexId.OtherCorner), Vertex(VertexId.VertexB));
+            return String.Format(CultureInfo.InvariantCulture, "({0},{1},{2},{3})", this.Vertex(0), this.Vertex(VertexId.VertexA),
+                                 this.Vertex(VertexId.OtherCorner), this.Vertex(VertexId.VertexB));
         }
 
         /// <summary>
@@ -112,34 +110,36 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             this.b = sideB;
 
             this.aRot = new Point(-sideA.Y, sideA.X);
-            if (aRot.Length > 0.5)
-                aRot = aRot.Normalize();
+            if (this.aRot.Length > 0.5) {
+                this.aRot = this.aRot.Normalize();
+            }
 
             this.bRot = new Point(-sideB.Y, sideB.X);
-            if (bRot.Length > 0.5)
-                bRot = bRot.Normalize();
-
-            abRot = sideA * bRot;
-
-            baRot = sideB * aRot;
-
-
-            if (abRot < 0) {
-                abRot = -abRot;
-                bRot = -bRot;
+            if (this.bRot.Length > 0.5) {
+                this.bRot = this.bRot.Normalize();
             }
 
-            if (baRot < 0) {
-                baRot = -baRot;
-                aRot = -aRot;
+            this.abRot = sideA * this.bRot;
+
+            this.baRot = sideB * this.aRot;
+
+
+            if (this.abRot < 0) {
+                this.abRot = -this.abRot;
+                this.bRot = -this.bRot;
+            }
+
+            if (this.baRot < 0) {
+                this.baRot = -this.baRot;
+                this.aRot = -this.aRot;
             }
 
 
-            isSeg = (sideA - sideB).Length < ApproximateComparer.DistanceEpsilon;
+            this.isSeg = (sideA - sideB).Length < ApproximateComparer.DistanceEpsilon;
 
-            aPlusCorner = sideA + corner;
-            otherCorner =  sideB +aPlusCorner;
-            bPlusCorner = sideB + corner;
+            this.aPlusCorner = sideA + corner;
+            this.otherCorner =  sideB + this.aPlusCorner;
+            this.bPlusCorner = sideB + corner;
         }
         /// <summary>
         /// Return true if the parallelogram contains the point
@@ -147,22 +147,23 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="point"></param>
         /// <returns></returns>
         public bool Contains(Point point) {
-            Point g = point - corner;
+            Point g = point - this.corner;
             double e = ApproximateComparer.DistanceEpsilon;
 
-            double gbRot = g * bRot;
-            if (gbRot > abRot + e || gbRot < -e)
+            double gbRot = g * this.bRot;
+            if (gbRot > this.abRot + e || gbRot < -e) {
                 return false;
+            }
 
-            double gaRot = g * aRot;
-            return gaRot <= baRot + e && gaRot >= -e;
+            double gaRot = g * this.aRot;
+            return gaRot <= this.baRot + e && gaRot >= -e;
         }
 
 
 /// <summary>
 /// return the area of the parallelogram
 /// </summary>
-        public double Area { get { return Math.Abs(a.X * b.Y - a.Y * b.X); } }
+        public double Area { get { return Math.Abs(this.a.X * this.b.Y - this.a.Y * this.b.X); } }
      
         /// <summary>
         /// Return the correspoingin vertex of the parallelogram
@@ -171,10 +172,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns>vertex value</returns>
         public Point Vertex(VertexId vertexPar) {
             switch (vertexPar) {
-                case VertexId.Corner: return corner;
-                case VertexId.VertexA: return aPlusCorner;
-                case VertexId.OtherCorner: return OtherCorner;
-                case VertexId.VertexB: return bPlusCorner;
+                case VertexId.Corner: return this.corner;
+                case VertexId.VertexA: return this.aPlusCorner;
+                case VertexId.OtherCorner: return this.OtherCorner;
+                case VertexId.VertexB: return this.bPlusCorner;
                 default:
                     throw new InvalidOperationException();
             }
@@ -194,24 +195,25 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             bool ret = !(separByA(ref parallelogram0, ref parallelogram1) || separByA(ref parallelogram1, ref parallelogram0) ||
                        separByB(ref parallelogram0, ref parallelogram1) || separByB(ref parallelogram1, ref parallelogram0));
 
-            if (ret == false)
+            if (ret == false) {
                 return false;
+            }
 
-            if (!(parallelogram0.isSeg && parallelogram1.isSeg))
+            if (!(parallelogram0.isSeg && parallelogram1.isSeg)) {
                 return true;
-
+            }
 
             if (!Point.ParallelWithinEpsilon(parallelogram0.OtherCorner - parallelogram0.Corner,
-                                             parallelogram1.OtherCorner - parallelogram1.Corner, 1.0E-5))
+                                             parallelogram1.OtherCorner - parallelogram1.Corner, 1.0E-5)) {
                 return true;
+            }
 
             //here we know that the segs are parallel
             return ParallelSegsIntersect(ref parallelogram1, ref parallelogram0);
 
         }
 
-
-        static bool ParallelSegsIntersect(ref Parallelogram p0, ref Parallelogram p1) {
+        private static bool ParallelSegsIntersect(ref Parallelogram p0, ref Parallelogram p1) {
 
             Point v0 = p0.Corner;
             Point v1 = p0.OtherCorner;
@@ -247,11 +249,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
         }
 
-        static double mult(ref Point a, ref Point b) {
+        private static double mult(ref Point a, ref Point b) {
             return a.X * b.X + a.Y * b.Y;
         }
 
-         static bool separByA(ref Parallelogram p0, ref Parallelogram p1) {
+        private static bool separByA(ref Parallelogram p0, ref Parallelogram p1) {
 
             double eps = ApproximateComparer.DistanceEpsilon;
             Point t = new Point(p1.corner.X - p0.corner.X, p1.corner.Y - p0.corner.Y);
@@ -260,35 +262,41 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             if (p1a > p0.baRot + eps) {
                 t.X = p1.aPlusCorner.X - p0.corner.X;
                 t.Y = p1.aPlusCorner.Y - p0.corner.Y;
-                if (mult(ref t, ref p0.aRot) <= p0.baRot + eps)
+                if (mult(ref t, ref p0.aRot) <= p0.baRot + eps) {
                     return false;
+                }
 
                 t.X = p1.bPlusCorner.X - p0.corner.X;
                 t.Y = p1.bPlusCorner.Y - p0.corner.Y;
-                if (mult(ref t, ref p0.aRot) <= p0.baRot + eps)
+                if (mult(ref t, ref p0.aRot) <= p0.baRot + eps) {
                     return false;
+                }
 
                 t.X = p1.otherCorner.X - p0.corner.X;
                 t.Y = p1.otherCorner.Y - p0.corner.Y;
-                if (mult(ref t, ref p0.aRot) <= p0.baRot + eps)
+                if (mult(ref t, ref p0.aRot) <= p0.baRot + eps) {
                     return false;
+                }
 
                 return true;
             } else if (p1a < -eps) {
                 t.X = p1.aPlusCorner.X - p0.corner.X;
                 t.Y = p1.aPlusCorner.Y - p0.corner.Y;
-                if (mult(ref t, ref p0.aRot) >= - eps)
+                if (mult(ref t, ref p0.aRot) >= - eps) {
                     return false;
+                }
 
                 t.X = p1.bPlusCorner.X - p0.corner.X;
                 t.Y = p1.bPlusCorner.Y - p0.corner.Y;
-                if (mult(ref t, ref p0.aRot) >= -eps)
+                if (mult(ref t, ref p0.aRot) >= -eps) {
                     return false;
+                }
 
                 t.X = p1.otherCorner.X - p0.corner.X;
                 t.Y = p1.otherCorner.Y - p0.corner.Y;
-                if (mult(ref t, ref p0.aRot) >= -eps)
+                if (mult(ref t, ref p0.aRot) >= -eps) {
                     return false;
+                }
 
                 return true;
             }
@@ -319,8 +327,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             return false;*/
         }
 
-
-         static bool separByB(ref Parallelogram p0, ref Parallelogram p1) {
+        private static bool separByB(ref Parallelogram p0, ref Parallelogram p1) {
             double eps = ApproximateComparer.DistanceEpsilon;
             double p1a = (p1.Vertex(0) - p0.corner) * p0.bRot;
 
@@ -332,8 +339,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                         return false;
 #else
                 for (int i = 1; i < 4; i++) {
-                    if ((p1.Vertex((VertexId)i) - p0.corner) * p0.bRot <= p0.abRot + eps)
+                    if ((p1.Vertex((VertexId)i) - p0.corner) * p0.bRot <= p0.abRot + eps) {
                         return false;
+                    }
                 }
 #endif
 
@@ -346,8 +354,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                         return false;
 #else
                 for (int i = 1; i < 4; i++) {
-                    if ((p1.Vertex((VertexId)i) - p0.corner) * p0.bRot >= -eps)
+                    if ((p1.Vertex((VertexId)i) - p0.corner) * p0.bRot >= -eps) {
                         return false;
+                    }
                 }
 #endif
                 return true;
@@ -415,36 +424,38 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             this.a = new Point(0, maxY - minY);
             this.b = new Point(maxX - minX, 0);
 
-            aPlusCorner = a + corner;
-            otherCorner = b + aPlusCorner;
-            bPlusCorner = b + corner;
+            this.aPlusCorner = this.a + this.corner;
+            this.otherCorner = this.b + this.aPlusCorner;
+            this.bPlusCorner = this.b + this.corner;
 
             this.aRot = new Point(-this.a.Y, this.a.X);
-            if (aRot.Length > 0.5)
-                aRot = aRot.Normalize();
+            if (this.aRot.Length > 0.5) {
+                this.aRot = this.aRot.Normalize();
+            }
 
             this.bRot = new Point(-this.b.Y, this.b.X);
-            if (bRot.Length > 0.5)
-                bRot = bRot.Normalize();
-
-            abRot = this.a * bRot;
-            baRot = this.b * aRot;
-
-
-            if (abRot < 0) {
-                abRot = -abRot;
-                bRot = -bRot;
+            if (this.bRot.Length > 0.5) {
+                this.bRot = this.bRot.Normalize();
             }
 
-            if (baRot < 0) {
-                baRot = -baRot;
-                aRot = -aRot;
+            this.abRot = this.a * this.bRot;
+            this.baRot = this.b * this.aRot;
+
+
+            if (this.abRot < 0) {
+                this.abRot = -this.abRot;
+                this.bRot = -this.bRot;
             }
 
-            isSeg = (this.a - this.b).Length < ApproximateComparer.DistanceEpsilon;
+            if (this.baRot < 0) {
+                this.baRot = -this.baRot;
+                this.aRot = -this.aRot;
+            }
+
+            this.isSeg = (this.a - this.b).Length < ApproximateComparer.DistanceEpsilon;
         }
 
-         static void PumpMinMax(ref double minX, ref double maxX, ref double minY, ref double maxY, 
+        private static void PumpMinMax(ref double minX, ref double maxX, ref double minY, ref double maxY, 
             ref Point p) {
             if (p.X < minX) {
                 minX = p.X;

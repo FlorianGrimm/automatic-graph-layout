@@ -27,8 +27,8 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
         /// <param name="b">vector to be substracted</param>
         /// <returns></returns>
         public void Sub(Vector b) {
-            for (int i = 0; i < array.Length; i++) {
-                array[i] -= b.array[i];
+            for (int i = 0; i < this.array.Length; i++) {
+                this.array[i] -= b.array[i];
             }
         }
 
@@ -53,8 +53,8 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
         /// <param name="b">vector</param>
         /// <returns></returns>
         public void Add(Vector b) {
-            for (int i = 0; i < array.Length; i++) {
-                array[i] += b.array[i];
+            for (int i = 0; i < this.array.Length; i++) {
+                this.array[i] += b.array[i];
             }   
         }
 
@@ -77,7 +77,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
         /// </summary>
         /// <returns></returns>
         public Vector Clone() {
-           return new Vector((double[]) array.Clone());
+           return new Vector((double[])this.array.Clone());
         }
 
       /// <summary>
@@ -100,9 +100,9 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
        /// <param name="v"></param>
        /// <returns></returns>
         public Vector CompProduct(Vector v) {
-            double[] res = new double[array.Length];
-            for (int i = 0; i < array.Length; i++) {
-                res[i] = array[i] * v.array[i];
+            double[] res = new double[this.array.Length];
+            for (int i = 0; i < this.array.Length; i++) {
+                res[i] = this.array[i] * v.array[i];
             }
             return new Vector(res);
         }

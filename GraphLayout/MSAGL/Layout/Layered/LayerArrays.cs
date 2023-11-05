@@ -7,13 +7,11 @@ namespace Microsoft.Msagl.Layout.Layered {
     internal class LayerArrays {
 
         internal int[] Y;
-
-        int[] verticesToX;
-
-        int[][] layers;
+        private int[] verticesToX;
+        private int[][] layers;
 
         internal LayerArrays(int[] verticesToLayers) {
-            Initialize(verticesToLayers);
+            this.Initialize(verticesToLayers);
         }
 
         internal void Initialize(int[] verticesToLayers) {
@@ -31,24 +29,28 @@ namespace Microsoft.Msagl.Layout.Layered {
             int dropVal = 0;
             for (int i = 0; i < this.Layers.Length; i++) {
                 drop[i] = dropVal;
-                if (this.Layers[i].Length == 0)
+                if (this.Layers[i].Length == 0) {
                     dropVal++;
+                }
             }
 
-            if (dropVal == 0)
+            if (dropVal == 0) {
                 return this;
+            }
 
             //we do have empty layers
-            int[] ny = new int[Y.Length];
-            for (int i = 0; i < ny.Length; i++)
-                ny[i] = Y[i] - drop[Y[i]];
+            int[] ny = new int[this.Y.Length];
+            for (int i = 0; i < ny.Length; i++) {
+                ny[i] = this.Y[i] - drop[this.Y[i]];
+            }
 
 
             //copy the layers itself
             int[][] nls = new int[this.layers.Length - dropVal][];
-            for (int i = 0; i < layers.Length; i++) {
-                if (layers[i].Length > 0)
-                    nls[i - drop[i]] = (int[])layers[i].Clone();
+            for (int i = 0; i < this.layers.Length; i++) {
+                if (this.layers[i].Length > 0) {
+                    nls[i - drop[i]] = (int[])this.layers[i].Clone();
+                }
             }
 
             LayerArrays la = new LayerArrays(ny);
@@ -60,28 +62,33 @@ namespace Microsoft.Msagl.Layout.Layered {
 
         internal void UpdateLayers(int[][] ulayers) {
 
-            if (layers == null)
-                InitLayers();
+            if (this.layers == null) {
+                this.InitLayers();
+            }
 
-            for (int i = 0; i < layers.Length; i++)
-                ulayers[i].CopyTo(layers[i], 0);
+            for (int i = 0; i < this.layers.Length; i++) {
+                ulayers[i].CopyTo(this.layers[i], 0);
+            }
 
-            UpdateXFromLayers();
+            this.UpdateXFromLayers();
 
         }
 
         internal void UpdateXFromLayers() {
 
-            if (layers == null)
-                InitLayers();
+            if (this.layers == null) {
+                this.InitLayers();
+            }
 
-            if (verticesToX == null)
-                verticesToX = new int[Y.Length];
+            if (this.verticesToX == null) {
+                this.verticesToX = new int[this.Y.Length];
+            }
 
-            foreach (int[] layer in layers) {
+            foreach (int[] layer in this.layers) {
                 int i = 0;
-                foreach (int v in layer)
-                    verticesToX[v] = i++;
+                foreach (int v in layer) {
+                    this.verticesToX[v] = i++;
+                }
             }
         }
 
@@ -92,14 +99,15 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <value></value>
         internal int[] X {
             get {
-                if (verticesToX != null)
-                    return verticesToX;
+                if (this.verticesToX != null) {
+                    return this.verticesToX;
+                }
 
-                verticesToX = new int[Y.Length];
+                this.verticesToX = new int[this.Y.Length];
 
-                UpdateXFromLayers();
+                this.UpdateXFromLayers();
 
-                return verticesToX;
+                return this.verticesToX;
             }
 
         }
@@ -111,10 +119,12 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         /// <returns></returns>
         internal LayerArrays ReversedClone() {
-            int[] rv = new int[Y.Length];
-            int lastLayer = Layers.Length - 1; //call Layers to ensure that the layers are calculated
-            for (int i = 0; i < Y.Length; i++)
-                rv[i] = lastLayer - Y[i];
+            int[] rv = new int[this.Y.Length];
+            int lastLayer = this.Layers.Length - 1; //call Layers to ensure that the layers are calculated
+            for (int i = 0; i < this.Y.Length; i++) {
+                rv[i] = lastLayer - this.Y[i];
+            }
+
             return new LayerArrays(rv);
         }
 
@@ -125,17 +135,18 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         internal int[][] Layers {
             get {
-                if (layers != null)
-                    return layers;
+                if (this.layers != null) {
+                    return this.layers;
+                }
 
-                InitLayers();
+                this.InitLayers();
 
                 return this.layers;
 
             }
 
             set {
-                layers = value;
+                this.layers = value;
             }
 
 
@@ -145,28 +156,30 @@ namespace Microsoft.Msagl.Layout.Layered {
             //find the number of layers
             int nOfLayers = 0;
 
-            foreach (int l in this.Y)
-                if (l + 1 > nOfLayers)
+            foreach (int l in this.Y) {
+                if (l + 1 > nOfLayers) {
                     nOfLayers = l + 1;
+                }
+            }
 
             int[] counts = new int[nOfLayers];
 
 
             //find the number of vertices in the layer
-            foreach (int l in Y)
+            foreach (int l in this.Y) {
                 counts[l]++;
+            }
 
-
-            layers = new int[nOfLayers][];
+            this.layers = new int[nOfLayers][];
 
             for (int i = 0; i < nOfLayers; i++) {
-                layers[i] = new int[counts[i]];
+                this.layers[i] = new int[counts[i]];
                 counts[i] = 0;//we reuse these counts later in the depth search
             }
 
-            for (int i = 0; i < Y.Length; i++) {
-                int l = Y[i];
-                layers[l][counts[l]++] = i;
+            for (int i = 0; i < this.Y.Length; i++) {
+                int l = this.Y[i];
+                this.layers[l][counts[l]++] = i;
             }
         }
 

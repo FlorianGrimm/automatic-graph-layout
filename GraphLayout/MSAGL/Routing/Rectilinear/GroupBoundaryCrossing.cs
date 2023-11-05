@@ -28,14 +28,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         static internal double BoundaryWidth { get { return ApproximateComparer.DistanceEpsilon; } }
 
         internal Point GetInteriorVertexPoint(Point outerVertex) {
-            return ApproximateComparer.Round(outerVertex + (CompassVector.ToPoint(DirectionToInside) * BoundaryWidth));
+            return ApproximateComparer.Round(outerVertex + (CompassVector.ToPoint(this.DirectionToInside) * BoundaryWidth));
         }
 
         /// <summary>
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0} {1}", DirectionToInside, Group);
+            return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0} {1}", this.DirectionToInside, this.Group);
         }
     }
 }

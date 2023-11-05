@@ -83,7 +83,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         {
             get
             {
-                return TimeLimitExceeded || OuterProjectIterationsLimitExceeded || InnerProjectIterationsLimitExceeded;
+                return this.TimeLimitExceeded || this.OuterProjectIterationsLimitExceeded || this.InnerProjectIterationsLimitExceeded;
             }
         }
 

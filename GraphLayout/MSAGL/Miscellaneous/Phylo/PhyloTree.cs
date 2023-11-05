@@ -6,11 +6,11 @@ namespace Microsoft.Msagl.Prototype.Phylo {
     /// Implements a phylogenetic tree
     /// </summary>
     public class PhyloTree : GeometryGraph {
-        Node root;
+        private Node root;
         //used in the other solution
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Node Root {
-            get { return root != null ? root : root = GetRoot(); }
+            get { return this.root != null ? this.root : this.root = this.GetRoot(); }
         }
 
         private Node GetRoot() {
@@ -22,8 +22,9 @@ namespace Microsoft.Msagl.Prototype.Phylo {
             Node oldVal;
             do {
                 oldVal = ret;
-                foreach (Edge e in ret.InEdges)
+                foreach (Edge e in ret.InEdges) {
                     ret = e.Source;
+                }
             } while (oldVal != ret);
      
             return ret;
@@ -33,9 +34,11 @@ namespace Microsoft.Msagl.Prototype.Phylo {
         /// </summary>
         public IEnumerable<Node> Leaves {
             get {
-                foreach (Node node in this.Nodes)
-                    if (NodeIsALeaf(node))
+                foreach (Node node in this.Nodes) {
+                    if (NodeIsALeaf(node)) {
                         yield return node;
+                    }
+                }
             }
         }
 

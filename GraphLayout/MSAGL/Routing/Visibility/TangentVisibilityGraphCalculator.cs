@@ -10,15 +10,14 @@ namespace Microsoft.Msagl.Routing.Visibility {
         /// <summary>
         /// the list of obstacles
         /// </summary>
-        List<Polygon> polygons;
-
-        VisibilityGraph visibilityGraph;
-        List<Diagonal> diagonals;
-        List<Tangent> tangents;
-        RbTree<Diagonal> activeDiagonalTree;
-        Polygon currentPolygon;
-        ActiveDiagonalComparerWithRay activeDiagonalComparer = new ActiveDiagonalComparerWithRay();
-        bool useLeftPTangents;
+        private List<Polygon> polygons;
+        private VisibilityGraph visibilityGraph;
+        private List<Diagonal> diagonals;
+        private List<Tangent> tangents;
+        private RbTree<Diagonal> activeDiagonalTree;
+        private Polygon currentPolygon;
+        private ActiveDiagonalComparerWithRay activeDiagonalComparer = new ActiveDiagonalComparerWithRay();
+        private bool useLeftPTangents;
 
         internal static void AddTangentVisibilityEdgesToGraph(List<Polygon> holes, VisibilityGraph visibilityGraph) {
 
@@ -34,39 +33,46 @@ namespace Microsoft.Msagl.Routing.Visibility {
         }
 
         private void CalculateAndAddEdges() {
-            for (int i = 0; i < polygons.Count; i++)
-                CalculateVisibleTangentsFromPolygon(i);
+            for (int i = 0; i < this.polygons.Count; i++) {
+                this.CalculateVisibleTangentsFromPolygon(i);
+            }
         }
 
         private void CalculateVisibleTangentsFromPolygon(int i) {
-            AllocateDataStructures(i);
-            OrganizeTangents();
-            InitActiveDiagonals();
-            Sweep();
+            this.AllocateDataStructures(i);
+            this.OrganizeTangents();
+            this.InitActiveDiagonals();
+            this.Sweep();
         }
 
         private void AllocateDataStructures(int i) {
-            tangents = new List<Tangent>();
-            diagonals = new List<Diagonal>();
-            activeDiagonalTree = new RbTree<Diagonal>(this.activeDiagonalComparer);
-            this.currentPolygon = polygons[i];
+            this.tangents = new List<Tangent>();
+            this.diagonals = new List<Diagonal>();
+            this.activeDiagonalTree = new RbTree<Diagonal>(this.activeDiagonalComparer);
+            this.currentPolygon = this.polygons[i];
         }
         private void Sweep() {
-            if (tangents.Count < 2)
+            if (this.tangents.Count < 2) {
                 return;
-            for (int i = 1; i < tangents.Count; i++) { //we processed the first element already
-                Tangent t = tangents[i];
+            }
+
+            for (int i = 1; i < this.tangents.Count; i++) { //we processed the first element already
+                Tangent t = this.tangents[i];
                 if (t.Diagonal != null) {
-                    if (t.Diagonal.RbNode == activeDiagonalTree.TreeMinimum())
-                        AddVisibleEdge(t);
-                    if (t.IsHigh)
-                        RemoveDiagonalFromActiveNodes(t.Diagonal);
+                    if (t.Diagonal.RbNode == this.activeDiagonalTree.TreeMinimum()) {
+                        this.AddVisibleEdge(t);
+                    }
+
+                    if (t.IsHigh) {
+                        this.RemoveDiagonalFromActiveNodes(t.Diagonal);
+                    }
                 } else {
                     if (t.IsLow) {
                         this.activeDiagonalComparer.PointOnTangentAndInsertedDiagonal = t.End.Point;
                         this.InsertActiveDiagonal(new Diagonal(t, t.Comp));
-                        if (t.Diagonal.RbNode == activeDiagonalTree.TreeMinimum())
-                            AddVisibleEdge(t);
+                        if (t.Diagonal.RbNode == this.activeDiagonalTree.TreeMinimum()) {
+                            this.AddVisibleEdge(t);
+                        }
                     }
                 }
 
@@ -89,7 +95,7 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
 
         private void AddVisibleEdge(Tangent t) {
-            VisibilityGraph.AddEdge(visibilityGraph.GetVertex(t.Start), visibilityGraph.GetVertex(t.End));
+            VisibilityGraph.AddEdge(this.visibilityGraph.GetVertex(t.Start), this.visibilityGraph.GetVertex(t.End));
         }
 
         /// <summary>
@@ -101,41 +107,46 @@ namespace Microsoft.Msagl.Routing.Visibility {
             Point firstTangentStart = firstTangent.Start.Point;
             Point firstTangentEnd = firstTangent.End.Point;
 
-            foreach (Diagonal diagonal in diagonals) {
+            foreach (Diagonal diagonal in this.diagonals) {
                 if (RayIntersectDiagonal(firstTangentStart, firstTangentEnd, diagonal)) {
                     this.activeDiagonalComparer.PointOnTangentAndInsertedDiagonal =
                         ActiveDiagonalComparerWithRay.IntersectDiagonalWithRay(firstTangentStart, firstTangentEnd, diagonal);
 
-                    InsertActiveDiagonal(diagonal);
+                    this.InsertActiveDiagonal(diagonal);
                 }
             }
 
-            if (firstTangent.Diagonal.RbNode == this.activeDiagonalTree.TreeMinimum())
-                AddVisibleEdge(firstTangent);
+            if (firstTangent.Diagonal.RbNode == this.activeDiagonalTree.TreeMinimum()) {
+                this.AddVisibleEdge(firstTangent);
+            }
 
             if (firstTangent.IsLow == false) { //remove the diagonal of the top tangent from active edges 
                 Diagonal diag = firstTangent.Diagonal;
-                RemoveDiagonalFromActiveNodes(diag);
+                this.RemoveDiagonalFromActiveNodes(diag);
             }
         }
 #if TEST_MSAGL
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         private void AddPolylinesForShow(List<ICurve> curves) {
-            foreach (Polygon p in this.polygons)
+            foreach (Polygon p in this.polygons) {
                 curves.Add(p.Polyline);
+            }
         }
 #endif
         private void RemoveDiagonalFromActiveNodes(Diagonal diag) {
-            RBNode<Diagonal> changedNode = activeDiagonalTree.DeleteSubtree(diag.RbNode);
-            if (changedNode != null)
-                if (changedNode.Item != null)
+            RBNode<Diagonal> changedNode = this.activeDiagonalTree.DeleteSubtree(diag.RbNode);
+            if (changedNode != null) {
+                if (changedNode.Item != null) {
                     changedNode.Item.RbNode = changedNode;
+                }
+            }
+
             diag.LeftTangent.Diagonal = null;
             diag.RightTangent.Diagonal = null;
         }
 
         private void InsertActiveDiagonal(Diagonal diagonal) {
-            diagonal.RbNode = activeDiagonalTree.Insert(diagonal);
+            diagonal.RbNode = this.activeDiagonalTree.Insert(diagonal);
             MarkDiagonalAsActiveInTangents(diagonal);
         }
 
@@ -145,7 +156,7 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
         }
 
-        static bool RayIntersectDiagonal(Point pivot, Point pointOnRay, Diagonal diagonal) {
+        private static bool RayIntersectDiagonal(Point pivot, Point pointOnRay, Diagonal diagonal) {
             Point a = diagonal.Start;
             Point b = diagonal.End;
             return Point.GetTriangleOrientation(pivot, a, b) == TriangleOrientation.Counterclockwise
@@ -161,17 +172,19 @@ namespace Microsoft.Msagl.Routing.Visibility {
         /// <param name="e0"></param>
         /// <param name="e1"></param>
         /// <returns></returns>
-        int TangentComparison(Tangent e0, Tangent e1) {
+        private int TangentComparison(Tangent e0, Tangent e1) {
             return StemStartPointComparer.CompareVectorsByAngleToXAxis(e0.End.Point - e0.Start.Point, e1.End.Point - e1.Start.Point);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1804:RemoveUnusedLocals", MessageId = "cc")]
         private void OrganizeTangents() {
-            foreach (Polygon q in polygons)
-                if (q != this.currentPolygon)
-                    ProcessPolygonQ(q);
+            foreach (Polygon q in this.polygons) {
+                if (q != this.currentPolygon) {
+                    this.ProcessPolygonQ(q);
+                }
+            }
 
-            this.tangents.Sort(new Comparison<Tangent>(TangentComparison));
+            this.tangents.Sort(new Comparison<Tangent>(this.TangentComparison));
             /////debug
             //List<ICurve> cc = new List<ICurve>();
             //foreach (Tangent t in this.tangents)
@@ -185,18 +198,20 @@ namespace Microsoft.Msagl.Routing.Visibility {
         }
 
         private void ProcessPolygonQ(Polygon q) {
-            TangentPair tangentPair = new TangentPair(currentPolygon, q);
-            if (this.useLeftPTangents)
+            TangentPair tangentPair = new TangentPair(this.currentPolygon, q);
+            if (this.useLeftPTangents) {
                 tangentPair.CalculateLeftTangents();
-            else
+            } else {
                 tangentPair.CalculateRightTangents();
-            Tuple<int, int> couple = useLeftPTangents ? tangentPair.leftPLeftQ : tangentPair.rightPLeftQ;
+            }
 
-            Tangent t0 = new Tangent(currentPolygon[couple.Item1], q[couple.Item2]);
+            Tuple<int, int> couple = this.useLeftPTangents ? tangentPair.leftPLeftQ : tangentPair.rightPLeftQ;
+
+            Tangent t0 = new Tangent(this.currentPolygon[couple.Item1], q[couple.Item2]);
             t0.IsLow = true;
             t0.SeparatingPolygons = !this.useLeftPTangents;
-            couple = useLeftPTangents ? tangentPair.leftPRightQ : tangentPair.rightPRightQ;
-            Tangent t1 = new Tangent(currentPolygon[couple.Item1], q[couple.Item2]);
+            couple = this.useLeftPTangents ? tangentPair.leftPRightQ : tangentPair.rightPRightQ;
+            Tangent t1 = new Tangent(this.currentPolygon[couple.Item1], q[couple.Item2]);
             t1.IsLow = false;
             t1.SeparatingPolygons = this.useLeftPTangents;
             t0.Comp = t1;
@@ -207,7 +222,7 @@ namespace Microsoft.Msagl.Routing.Visibility {
             this.diagonals.Add(new Diagonal(t0, t1));
         }
 
-        TangentVisibilityGraphCalculator(List<Polygon> holes, VisibilityGraph visibilityGraph, bool useLeftPTangents) {
+        private TangentVisibilityGraphCalculator(List<Polygon> holes, VisibilityGraph visibilityGraph, bool useLeftPTangents) {
             this.polygons = holes;
             this.visibilityGraph = visibilityGraph;
             this.useLeftPTangents = useLeftPTangents;

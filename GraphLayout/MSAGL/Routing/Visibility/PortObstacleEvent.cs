@@ -3,14 +3,14 @@ using Microsoft.Msagl.Routing.Spline.ConeSpanner;
 
 namespace Microsoft.Msagl.Routing.Visibility {
     internal class PortObstacleEvent : SweepEvent {
-        readonly Point site;
+        private readonly Point site;
 
         public PortObstacleEvent(Point site) {
             this.site = site;
         }
 
         internal override Point Site {
-            get { return site; }
+            get { return this.site; }
         }
     }
 }

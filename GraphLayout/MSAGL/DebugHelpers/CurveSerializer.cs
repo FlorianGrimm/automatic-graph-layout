@@ -10,7 +10,7 @@ namespace Microsoft.Msagl.Splines {
     /// For debugging purposees only
     /// </summary>
     internal class CurveSerializer {
-        CurveSerializer() { }
+        private CurveSerializer() { }
         internal static void Serialize(string fileName, ICurve i) {
 
             Stream file = File.Open(fileName, FileMode.Create);
@@ -27,8 +27,9 @@ namespace Microsoft.Msagl.Splines {
 
         internal static ICurve Deserialize(string fileName) {
             // Verify that the input file exists
-            if (!File.Exists(fileName))
+            if (!File.Exists(fileName)) {
                 return null;
+            }
 
             // Open the requested file to a stream object
             System.Diagnostics.Debug.WriteLine("\nDeserializing LinkedList from file: {0} ..\n", fileName);

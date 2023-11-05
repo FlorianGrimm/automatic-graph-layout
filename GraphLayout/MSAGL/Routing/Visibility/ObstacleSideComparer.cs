@@ -6,8 +6,7 @@ using Microsoft.Msagl.Core;
 
 namespace Microsoft.Msagl.Routing.Visibility {
     internal class ObstacleSideComparer : IComparer<SegmentBase> {
-
-        readonly LineSweeperBase lineSweeper;
+        private readonly LineSweeperBase lineSweeper;
 
 
         internal ObstacleSideComparer(LineSweeperBase lineSweeper) {
@@ -17,12 +16,12 @@ namespace Microsoft.Msagl.Routing.Visibility {
         /// <summary>
         /// the intersection of the sweepline and the active segment
         /// </summary>
-        Point x;
+        private Point x;
 
 
         public int Compare(SegmentBase a, SegmentBase b) {
             ValidateArg.IsNotNull(b, "b");
-            var orient = Point.GetTriangleOrientation(b.Start, b.End, x);
+            var orient = Point.GetTriangleOrientation(b.Start, b.End, this.x);
             switch (orient) {
                 case TriangleOrientation.Collinear:
                     return 0;
@@ -35,13 +34,13 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
 
         internal void SetOperand(SegmentBase side) {
-            x = IntersectionOfSideAndSweepLine(side);
+            this.x = this.IntersectionOfSideAndSweepLine(side);
         }
 
         internal Point IntersectionOfSideAndSweepLine(SegmentBase obstacleSide) {
-            var den = obstacleSide.Direction * lineSweeper.SweepDirection;
+            var den = obstacleSide.Direction * this.lineSweeper.SweepDirection;
             Debug.Assert(Math.Abs(den) > ApproximateComparer.DistanceEpsilon);
-            var t = (lineSweeper.Z - obstacleSide.Start * lineSweeper.SweepDirection) / den;
+            var t = (this.lineSweeper.Z - obstacleSide.Start * this.lineSweeper.SweepDirection) / den;
             return obstacleSide.Start + t * obstacleSide.Direction;
         }
 

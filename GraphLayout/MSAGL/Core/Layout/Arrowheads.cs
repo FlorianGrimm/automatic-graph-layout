@@ -18,45 +18,61 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <returns></returns>
         internal static bool CalculateArrowheads(EdgeGeometry edgeGeometry) {
             ValidateArg.IsNotNull(edgeGeometry, "edgeGeometry");
-            if (edgeGeometry.SourceArrowhead == null && edgeGeometry.TargetArrowhead == null)
+            if (edgeGeometry.SourceArrowhead == null && edgeGeometry.TargetArrowhead == null) {
                 return true;
+            }
+
             double parStart, parEnd;
-            if (!FindTrimStartForArrowheadAtSource(edgeGeometry, out parStart))
+            if (!FindTrimStartForArrowheadAtSource(edgeGeometry, out parStart)) {
                 return false;
-            if (!FindTrimEndForArrowheadAtTarget(edgeGeometry, out parEnd))
+            }
+
+            if (!FindTrimEndForArrowheadAtTarget(edgeGeometry, out parEnd)) {
                 return false;
-            if (parStart > parEnd - ApproximateComparer.IntersectionEpsilon || ApproximateComparer.CloseIntersections(edgeGeometry.Curve[parStart], edgeGeometry.Curve[parEnd]))
+            }
+
+            if (parStart > parEnd - ApproximateComparer.IntersectionEpsilon || ApproximateComparer.CloseIntersections(edgeGeometry.Curve[parStart], edgeGeometry.Curve[parEnd])) {
                 return false; //after the trim nothing would be left of the curve
+            }
+
             var c = edgeGeometry.Curve.Trim(parStart, parEnd);
-            if (c == null)
+            if (c == null) {
                 return false;
-            if (edgeGeometry.SourceArrowhead != null)
+            }
+
+            if (edgeGeometry.SourceArrowhead != null) {
                 edgeGeometry.SourceArrowhead.TipPosition = edgeGeometry.Curve.Start;
-            if (edgeGeometry.TargetArrowhead != null)
+            }
+
+            if (edgeGeometry.TargetArrowhead != null) {
                 edgeGeometry.TargetArrowhead.TipPosition = edgeGeometry.Curve.End;
+            }
+
             edgeGeometry.Curve = c;
             return true;
         }
 
-        
-        static IList<IntersectionInfo> GetIntersectionsWithArrowheadCircle(ICurve curve, double arrowheadLength, Point circleCenter) {
+        private static IList<IntersectionInfo> GetIntersectionsWithArrowheadCircle(ICurve curve, double arrowheadLength, Point circleCenter) {
             Debug.Assert(arrowheadLength > 0);
             var e = new Ellipse(arrowheadLength, arrowheadLength, circleCenter);
             return Curve.GetAllIntersections(e, curve, true);
         }
+
         /// <summary>
         /// we need to pass arrowhead length here since the original length mibh
         /// </summary>
         /// <param name="edgeGeometry"></param>
         /// <param name="p"></param>
         /// <returns></returns>
-        static bool FindTrimEndForArrowheadAtTarget(EdgeGeometry edgeGeometry, out double p) {
+        private static bool FindTrimEndForArrowheadAtTarget(EdgeGeometry edgeGeometry, out double p) {
             var eps = ApproximateComparer.DistanceEpsilon*ApproximateComparer.DistanceEpsilon;
             //Debug.Assert((edgeGeometry.Curve.End - edgeGeometry.Curve.Start).LengthSquared > eps);
             p = edgeGeometry.Curve.ParEnd;
             if (edgeGeometry.TargetArrowhead == null ||
-                edgeGeometry.TargetArrowhead.Length <= ApproximateComparer.DistanceEpsilon)
+                edgeGeometry.TargetArrowhead.Length <= ApproximateComparer.DistanceEpsilon) {
                 return true;
+            }
+
             var curve = edgeGeometry.Curve;
             var arrowheadLength = edgeGeometry.TargetArrowhead.Length;
             Point newCurveEnd;
@@ -64,8 +80,10 @@ namespace Microsoft.Msagl.Core.Layout {
             int reps = 10;
             do {
                 reps--;
-                if (reps == 0)
+                if (reps == 0) {
                     return false;
+                }
+
                 intersections = GetIntersectionsWithArrowheadCircle(curve, arrowheadLength, curve.End);
                 p = intersections.Count != 0 ? intersections.Max(x => x.Par1) : curve.ParEnd;
                 newCurveEnd = edgeGeometry.Curve[p];
@@ -75,10 +93,12 @@ namespace Microsoft.Msagl.Core.Layout {
             return true;
         }
 
-        static bool FindTrimStartForArrowheadAtSource(EdgeGeometry edgeGeometry, out double p) {
+        private static bool FindTrimStartForArrowheadAtSource(EdgeGeometry edgeGeometry, out double p) {
             p = 0; //does not matter
-            if (edgeGeometry.SourceArrowhead == null || edgeGeometry.SourceArrowhead.Length <= ApproximateComparer.DistanceEpsilon)
+            if (edgeGeometry.SourceArrowhead == null || edgeGeometry.SourceArrowhead.Length <= ApproximateComparer.DistanceEpsilon) {
                 return true;
+            }
+
             var eps = ApproximateComparer.DistanceEpsilon * ApproximateComparer.DistanceEpsilon;
             Debug.Assert((edgeGeometry.Curve.End - edgeGeometry.Curve.Start).LengthSquared > eps);
             var arrowheadLength = edgeGeometry.SourceArrowhead.Length;
@@ -89,8 +109,10 @@ namespace Microsoft.Msagl.Core.Layout {
             do
             {
                 reps--;
-                if (reps == 0)
-                    return false; 
+                if (reps == 0) {
+                    return false;
+                }
+
                 intersections = GetIntersectionsWithArrowheadCircle(curve, arrowheadLength, curve.Start);
                 p = intersections.Count != 0 ? intersections.Min(x => x.Par1) : curve.ParStart;
                 newStart = curve[p];
@@ -140,14 +162,17 @@ namespace Microsoft.Msagl.Core.Layout {
             
             edgeGeometry.Curve = Curve.TrimEdgeSplineWithNodeBoundaries(sourceBoundary, targetBoundary, spline,
                                                                         narrowestInterval);
-            if (edgeGeometry.Curve == null)
+            if (edgeGeometry.Curve == null) {
                 return false;
-            
+            }
+
             if ((edgeGeometry.SourceArrowhead == null ||
                  edgeGeometry.SourceArrowhead.Length < ApproximateComparer.DistanceEpsilon) &&
                 (edgeGeometry.TargetArrowhead == null ||
-                 edgeGeometry.TargetArrowhead.Length < ApproximateComparer.DistanceEpsilon))
+                 edgeGeometry.TargetArrowhead.Length < ApproximateComparer.DistanceEpsilon)) {
                 return true; //there are no arrowheads
+            }
+
             bool success = false;
             double sourceArrowheadSavedLength = edgeGeometry.SourceArrowhead != null
                                                     ? edgeGeometry.SourceArrowhead.Length
@@ -156,10 +181,14 @@ namespace Microsoft.Msagl.Core.Layout {
                                                     ? edgeGeometry.TargetArrowhead.Length
                                                     : 0;
             var len = (edgeGeometry.Curve.End - edgeGeometry.Curve.Start).Length;
-            if (edgeGeometry.SourceArrowhead!=null)
-            edgeGeometry.SourceArrowhead.Length = Math.Min(len, sourceArrowheadSavedLength);
-            if (edgeGeometry.TargetArrowhead != null)
+            if (edgeGeometry.SourceArrowhead!=null) {
+                edgeGeometry.SourceArrowhead.Length = Math.Min(len, sourceArrowheadSavedLength);
+            }
+
+            if (edgeGeometry.TargetArrowhead != null) {
                 edgeGeometry.TargetArrowhead.Length = Math.Min(len, targetArrowheadSavedLength);
+            }
+
             int count = 10;
             while (
                 (
@@ -170,22 +199,38 @@ namespace Microsoft.Msagl.Core.Layout {
                     edgeGeometry.TargetArrowhead.Length > ApproximateComparer.IntersectionEpsilon) && !success) {
                 success = Arrowheads.CalculateArrowheads(edgeGeometry);
                 if (!success) {
-                    if (edgeGeometry.SourceArrowhead != null) edgeGeometry.SourceArrowhead.Length *= 0.5;
-                    if (edgeGeometry.TargetArrowhead != null) edgeGeometry.TargetArrowhead.Length *= 0.5;
+                    if (edgeGeometry.SourceArrowhead != null) {
+                        edgeGeometry.SourceArrowhead.Length *= 0.5;
+                    }
+
+                    if (edgeGeometry.TargetArrowhead != null) {
+                        edgeGeometry.TargetArrowhead.Length *= 0.5;
+                    }
                 }
                 count--;
-                if (count == 0)
+                if (count == 0) {
                     break;
+                }
             }
 
             if (!success) {
                 //to avoid drawing the arrowhead to (0,0)
-                if (edgeGeometry.SourceArrowhead != null) edgeGeometry.SourceArrowhead.TipPosition = spline.Start;
-                if (edgeGeometry.TargetArrowhead != null) edgeGeometry.TargetArrowhead.TipPosition = spline.End;
+                if (edgeGeometry.SourceArrowhead != null) {
+                    edgeGeometry.SourceArrowhead.TipPosition = spline.Start;
+                }
+
+                if (edgeGeometry.TargetArrowhead != null) {
+                    edgeGeometry.TargetArrowhead.TipPosition = spline.End;
+                }
             }
 
-            if (edgeGeometry.SourceArrowhead != null) edgeGeometry.SourceArrowhead.Length = sourceArrowheadSavedLength;
-            if (edgeGeometry.TargetArrowhead != null) edgeGeometry.TargetArrowhead.Length = targetArrowheadSavedLength;
+            if (edgeGeometry.SourceArrowhead != null) {
+                edgeGeometry.SourceArrowhead.Length = sourceArrowheadSavedLength;
+            }
+
+            if (edgeGeometry.TargetArrowhead != null) {
+                edgeGeometry.TargetArrowhead.Length = targetArrowheadSavedLength;
+            }
 
             return success;
         }
@@ -251,7 +296,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <param name="edge"></param>
         /// <param name="a"></param>
         /// <param name="b"></param>
-        static void CreateEdgeCurveWithNoTrimming(Edge edge, Point a, Point b)
+        private static void CreateEdgeCurveWithNoTrimming(Edge edge, Point a, Point b)
         {
             Point ab = b - a;
 

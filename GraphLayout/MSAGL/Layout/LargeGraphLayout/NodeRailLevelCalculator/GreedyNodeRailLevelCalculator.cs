@@ -30,36 +30,31 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
 
         public int MaxAmountRailsPerTile = 20*8*2/4; //debug
 
-        readonly List<LgNodeInfo> _insertedNodes = new List<LgNodeInfo>();
-        
-        readonly RTree<LgNodeInfo, Point> _insertedNodesTree = new RTree<LgNodeInfo, Point>();
-        readonly RTree<Rectangle, Point> _insertedNodeRectsTree = new RTree<Rectangle, Point>();
-
-        readonly RTree<SymmetricSegment, Point> _insertedSegmentsTree = new RTree<SymmetricSegment, Point>();
-
-        Dictionary<Tuple<int, int>, int> _nodeTileTable = new Dictionary<Tuple<int, int>, int>();
-        Dictionary<Tuple<int, int>, int> _segmentTileTable = new Dictionary<Tuple<int, int>, int>();
-
-        readonly Dictionary<int, List<LgNodeInfo>> _nodeLevels = new Dictionary<int, List<LgNodeInfo>>();
+        private readonly List<LgNodeInfo> _insertedNodes = new List<LgNodeInfo>();
+        private readonly RTree<LgNodeInfo, Point> _insertedNodesTree = new RTree<LgNodeInfo, Point>();
+        private readonly RTree<Rectangle, Point> _insertedNodeRectsTree = new RTree<Rectangle, Point>();
+        private readonly RTree<SymmetricSegment, Point> _insertedSegmentsTree = new RTree<SymmetricSegment, Point>();
+        private Dictionary<Tuple<int, int>, int> _nodeTileTable = new Dictionary<Tuple<int, int>, int>();
+        private Dictionary<Tuple<int, int>, int> _segmentTileTable = new Dictionary<Tuple<int, int>, int>();
+        private readonly Dictionary<int, List<LgNodeInfo>> _nodeLevels = new Dictionary<int, List<LgNodeInfo>>();
         
         public double ScaleBbox = 1.10;
 
         public bool UpdateBitmapForEveryInsertion = true;
-
-        readonly LgPathRouter _pathRouter = new LgPathRouter();
+        private readonly LgPathRouter _pathRouter = new LgPathRouter();
 
         public GreedyNodeRailLevelCalculator(List<LgNodeInfo> sortedLgNodeInfos) {
-            SortedLgNodeInfos = sortedLgNodeInfos;
+            this.SortedLgNodeInfos = sortedLgNodeInfos;
 
-            foreach (var node in SortedLgNodeInfos) {
+            foreach (var node in this.SortedLgNodeInfos) {
                 node.Processed = false;
             }
 
-            InitBoundingBox();
+            this.InitBoundingBox();
         }
 
         public void InitBoundingBox() {
-            BoundingBox = new Rectangle(SortedLgNodeInfos.Select(ni => ni.Center));
+            this.BoundingBox = new Rectangle(this.SortedLgNodeInfos.Select(ni => ni.Center));
             //Point center = BoundingBox.Center;
             //MaxGridSize = Math.Max(BoundingBox.Width, BoundingBox.Height)*ScaleBbox;
             //BoundingBox = new Rectangle(new Size(MaxGridSize, MaxGridSize), center);
@@ -68,21 +63,21 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
 
         public void PlaceNodesOnly(Rectangle bbox)
         {
-            BoundingBox = bbox;
+            this.BoundingBox = bbox;
             int numInserted = 0;
             int level = 1;
             int iLevel = 0;
 
-            while (numInserted < SortedLgNodeInfos.Count && level <= MaxLevel) {
-                numInserted = DrawNodesOnlyOnLevel(level, numInserted);
-                AddAllToNodeLevel(iLevel);
+            while (numInserted < this.SortedLgNodeInfos.Count && level <= this.MaxLevel) {
+                numInserted = this.DrawNodesOnlyOnLevel(level, numInserted);
+                this.AddAllToNodeLevel(iLevel);
                 level *= 2;
                 iLevel++;
             }
         }
 
-        void MarkAllNodesNotProcessed() {
-            foreach (var node in SortedLgNodeInfos) {
+        private void MarkAllNodesNotProcessed() {
+            foreach (var node in this.SortedLgNodeInfos) {
                 node.Processed = false;
             }
         }
@@ -93,50 +88,51 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
             int zoomLevel, int numNodesOnPreviousLevel,
             GridTraversal grid, LgPathRouter pathRouter)
         {
-            MarkAllNodesNotProcessed();
-            _segmentTileTable = new Dictionary<Tuple<int, int>, int>();
-            _nodeTileTable = new Dictionary<Tuple<int, int>, int>();
+            this.MarkAllNodesNotProcessed();
+            this._segmentTileTable = new Dictionary<Tuple<int, int>, int>();
+            this._nodeTileTable = new Dictionary<Tuple<int, int>, int>();
 
-            var canAddOldSegments = TryAddingOldSegments(oldSegments, grid);
+            var canAddOldSegments = this.TryAddingOldSegments(oldSegments, grid);
             if (!canAddOldSegments)
             {
                 return 0;
             }
 
-            AddOldNodes(numNodesOnPreviousLevel, grid);
+            this.AddOldNodes(numNodesOnPreviousLevel, grid);
 
             int i;
             for (i = numNodesOnPreviousLevel; i < numNodesToInsert; i++)
             {
-                var ni = SortedLgNodeInfos[i];
+                var ni = this.SortedLgNodeInfos[i];
                 var nodeTile = grid.PointToTuple(ni.Center);
-                if (!_nodeTileTable.ContainsKey(nodeTile))
-                    _nodeTileTable[nodeTile] = 0;
+                if (!this._nodeTileTable.ContainsKey(nodeTile)) {
+                    this._nodeTileTable[nodeTile] = 0;
+                }
 
-                if (_nodeTileTable[nodeTile] >= MaxNodesPerTile(zoomLevel)) //test MaxAmountNodesPerTile
+                if (this._nodeTileTable[nodeTile] >= this.MaxNodesPerTile(zoomLevel)) //test MaxAmountNodesPerTile
                 {
-                    ShowDebugInsertedSegments(grid, zoomLevel, ni, null, null);
+                    this.ShowDebugInsertedSegments(grid, zoomLevel, ni, null, null);
 
                     break;
                 }
 
-                Set<VisibilityEdge> edges = GetSegmentsOnPathsToInsertedNeighborsNotOnOldTrajectories(ni, trajectories,
+                Set<VisibilityEdge> edges = this.GetSegmentsOnPathsToInsertedNeighborsNotOnOldTrajectories(ni, trajectories,
                     pathRouter);
 
                 Set<SymmetricSegment> segments = new Set<SymmetricSegment>(
                     edges.Select(e => new SymmetricSegment(e.SourcePoint, e.TargetPoint)));
 
-                var newToAdd = segments.Where(seg => !IsSegmentAlreadyAdded(seg)).ToList();
+                var newToAdd = segments.Where(seg => !this.IsSegmentAlreadyAdded(seg)).ToList();
 
                 Set<SymmetricSegment> insertedSegments;
-                bool canInsertPaths = TryAddingSegmentsUpdateTiles(newToAdd, grid, out insertedSegments);
+                bool canInsertPaths = this.TryAddingSegmentsUpdateTiles(newToAdd, grid, out insertedSegments);
 
                 if (canInsertPaths) {
 
-                    AddSegmentsToRtree(newToAdd);
+                    this.AddSegmentsToRtree(newToAdd);
                     ni.Processed = true;
-                    _nodeTileTable[nodeTile]++;
-                    _insertedNodes.Add(ni);
+                    this._nodeTileTable[nodeTile]++;
+                    this._insertedNodes.Add(ni);
                     continue;
                 }
                 //debug output
@@ -145,7 +141,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
                 break;
             }
 
-            var nextNode = numNodesToInsert < SortedLgNodeInfos.Count ? SortedLgNodeInfos[numNodesToInsert] :
+            var nextNode = numNodesToInsert < this.SortedLgNodeInfos.Count ? this.SortedLgNodeInfos[numNodesToInsert] :
             null;
            // ShowDebugInsertedSegments(grid, zoomLevel, nextNode, null, null);
 
@@ -155,12 +151,16 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
         private Set<VisibilityEdge> GetSegmentsOnPathsToInsertedNeighborsNotOnOldTrajectories(LgNodeInfo ni, Dictionary<SymmetricTuple<LgNodeInfo>, List<Point>> trajectories, LgPathRouter pathRouter)
         {
             var edges = new Set<VisibilityEdge>();
-            var neighbors = GetAdjacentProcessed(ni);
+            var neighbors = this.GetAdjacentProcessed(ni);
             foreach (var neighb in neighbors) {
                 var t1 = new SymmetricTuple<LgNodeInfo>(ni, neighb);
                 List<Point> trajectory;
-                if (trajectories.ContainsKey(t1)) trajectory = trajectories[t1];
-                else continue;
+                if (trajectories.ContainsKey(t1)) {
+                    trajectory = trajectories[t1];
+                } else {
+                    continue;
+                }
+
                 for (int i = 0; i < trajectory.Count - 1; i++)
                 {
                     var p0 = trajectory[i];
@@ -181,10 +181,10 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
 
         private bool TryAddingOldSegments(List<SymmetricSegment> oldSegments, GridTraversal grid) {
             Set<SymmetricSegment> insertedSegments;
-            bool canInsertOldPaths = TryAddingSegmentsUpdateTiles(oldSegments, grid, out insertedSegments);
+            bool canInsertOldPaths = this.TryAddingSegmentsUpdateTiles(oldSegments, grid, out insertedSegments);
 
             if (canInsertOldPaths) {
-                AddSegmentsToRtree(oldSegments);
+                this.AddSegmentsToRtree(oldSegments);
                 return true;
             }
 
@@ -194,14 +194,15 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
 
         private void AddOldNodes(int numNodesOnPreviousLevel, GridTraversal grid) {
             for (int i = 0; i < numNodesOnPreviousLevel; i++) {
-                var ni = SortedLgNodeInfos[i];
+                var ni = this.SortedLgNodeInfos[i];
                 var nodeTile = grid.PointToTuple(ni.Center);
-                if (!_nodeTileTable.ContainsKey(nodeTile))
-                    _nodeTileTable[nodeTile] = 0;
+                if (!this._nodeTileTable.ContainsKey(nodeTile)) {
+                    this._nodeTileTable[nodeTile] = 0;
+                }
 
                 ni.Processed = true;
-                _nodeTileTable[nodeTile]++;
-                _insertedNodes.Add(ni);
+                this._nodeTileTable[nodeTile]++;
+                this._insertedNodes.Add(ni);
             }
         }
 
@@ -277,7 +278,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
 
         public string PrintInsertedNodesLabels()
         {
-            var bbox = BoundingBox;
+            var bbox = this.BoundingBox;
             var str = "<group>\n<path stroke=\"black\">";
             str += bbox.LeftTop.X + " " + bbox.LeftTop.Y + " m\n";
             str += bbox.LeftBottom.X + " " + bbox.LeftBottom.Y + " l\n";
@@ -286,7 +287,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
             str += "h\n</path>\n";
 
             int i = 0;
-            foreach (var ni in _insertedNodes)
+            foreach (var ni in this._insertedNodes)
             {
                 str += "<text transformations=\"translations\" pos=\"";
                 str += ni.Center.X + " " + ni.Center.Y;
@@ -297,80 +298,80 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
             return str;
         }
 
-        bool TryAddingSegmentsUpdateTiles(IEnumerable<SymmetricSegment> segments, GridTraversal grid,
+        private bool TryAddingSegmentsUpdateTiles(IEnumerable<SymmetricSegment> segments, GridTraversal grid,
             out Set<SymmetricSegment> insertedSegments) {
-            if (!IfCanInsertLooseSegmentsUpdateTiles(segments.ToList(), out insertedSegments, grid)) {
+            if (!this.IfCanInsertLooseSegmentsUpdateTiles(segments.ToList(), out insertedSegments, grid)) {
                 // quota broken when inserting node boundary segments
-                RemoveLooseSegmentsDecrementTiles(insertedSegments, grid);
+                this.RemoveLooseSegmentsDecrementTiles(insertedSegments, grid);
                 return false;
             }
             return true;
         }
 
-
-        void AddNodeToInserted(LgNodeInfo ni) {
-            _insertedNodes.Add(ni);
+        private void AddNodeToInserted(LgNodeInfo ni) {
+            this._insertedNodes.Add(ni);
 
             var rect = new Rectangle(ni.Center, ni.Center);
 
-            _insertedNodesTree.Add(rect, ni);
-            _insertedNodeRectsTree.Add(rect, rect);
+            this._insertedNodesTree.Add(rect, ni);
+            this._insertedNodeRectsTree.Add(rect, rect);
         }
 
-        void AddAllToNodeLevel(int iLevel) {
-            if (!_nodeLevels.ContainsKey(iLevel))
-                _nodeLevels[iLevel] = new List<LgNodeInfo>();
+        private void AddAllToNodeLevel(int iLevel) {
+            if (!this._nodeLevels.ContainsKey(iLevel)) {
+                this._nodeLevels[iLevel] = new List<LgNodeInfo>();
+            }
 
-            foreach (var ni in _insertedNodes)
+            foreach (var ni in this._insertedNodes)
             {
-                _nodeLevels[iLevel].Add(ni);
+                this._nodeLevels[iLevel].Add(ni);
             }
         }
 
         public List<int> GetLevelNodeCounts()
         {
-            var nl = new List<int>(_nodeLevels.Values.Select(l => l.Count));
+            var nl = new List<int>(this._nodeLevels.Values.Select(l => l.Count));
             nl.Sort();
             return nl;
         }
 
-        int DrawNodesOnlyOnLevel(int level, int startInd)
+        private int DrawNodesOnlyOnLevel(int level, int startInd)
         {
             int iLevel = (int) Math.Log(level, 2);
-            GridTraversal grid= new GridTraversal(BoundingBox, iLevel);
-            UpdateTilesCountInsertedNodesOnly(level, grid);
-            for (int i = startInd; i < SortedLgNodeInfos.Count; i++) {
-                var ni = SortedLgNodeInfos[i];
+            GridTraversal grid= new GridTraversal(this.BoundingBox, iLevel);
+            this.UpdateTilesCountInsertedNodesOnly(level, grid);
+            for (int i = startInd; i < this.SortedLgNodeInfos.Count; i++) {
+                var ni = this.SortedLgNodeInfos[i];
                 var tuple = grid.PointToTuple(ni.Center);
-                if (!_nodeTileTable.ContainsKey(tuple))
-                    _nodeTileTable[tuple] = 0;
+                if (!this._nodeTileTable.ContainsKey(tuple)) {
+                    this._nodeTileTable[tuple] = 0;
+                }
 
-                if (_nodeTileTable[tuple] >= MaxNodesPerTile(level)) {
+                if (this._nodeTileTable[tuple] >= this.MaxNodesPerTile(level)) {
                     return i;
                 }
 
-                PerformNodeInsertion(ni, tuple);
+                this.PerformNodeInsertion(ni, tuple);
                 ni.ZoomLevel = level;
             }
 
-            return SortedLgNodeInfos.Count;
+            return this.SortedLgNodeInfos.Count;
         }
 
-        int MaxNodesPerTile(int zoomLevel) {
+        private int MaxNodesPerTile(int zoomLevel) {
             //if (iLevel > 2) return MaxAmountNodesPerTile;
             //return 3*MaxAmountNodesPerTile/2;
             var iLevel = Math.Log(zoomLevel, 2);
-            int maxNodes = MaxAmountNodesPerTile;
+            int maxNodes = this.MaxAmountNodesPerTile;
             //maxNodes += (int)(IncreaseNodeQuota * Math.Sqrt(iLevel) * MaxAmountNodesPerTile);
-            maxNodes += (int) (IncreaseNodeQuota*Math.Pow(iLevel, 0.4)*MaxAmountNodesPerTile);
+            maxNodes += (int) (this.IncreaseNodeQuota *Math.Pow(iLevel, 0.4)* this.MaxAmountNodesPerTile);
             return maxNodes;
         }
 
-        
-        Set<LgNodeInfo> GetAdjacentProcessed(LgNodeInfo ni) {
+        private Set<LgNodeInfo> GetAdjacentProcessed(LgNodeInfo ni) {
             var nodes = new Set<LgNodeInfo>(from edge in ni.GeometryNode.Edges
-                let s = GeometryNodesToLgNodeInfos[edge.Source]
-                let t = GeometryNodesToLgNodeInfos[edge.Target]
+                let s = this.GeometryNodesToLgNodeInfos[edge.Source]
+                let t = this.GeometryNodesToLgNodeInfos[edge.Target]
                 select ni == s ? t : s
                 into v
                 where v.Processed
@@ -378,28 +379,34 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
             return nodes;
         }
 
-        void PerformNodeInsertion(LgNodeInfo node, Tuple<int, int> tile) {
-            _nodeTileTable[tile]++;
-            AddNodeToInserted(node);
+        private void PerformNodeInsertion(LgNodeInfo node, Tuple<int, int> tile) {
+            this._nodeTileTable[tile]++;
+            this.AddNodeToInserted(node);
             //orb.DrawDilated(node.BoundingBox);
         }
 
 
         internal bool IfCanInsertLooseSegmentUpdateTiles(SymmetricSegment seg,  GridTraversal grid) {
             //test if already inserted
-            if (IsSegmentAlreadyAdded(seg))
+            if (this.IsSegmentAlreadyAdded(seg)) {
                 return true;
+            }
 
-            var intersectedTiles = GetIntersectedTiles(seg.A, seg.B, grid);
+            var intersectedTiles = this.GetIntersectedTiles(seg.A, seg.B, grid);
 
             int maxNumRailPerTile = 0;
 
             bool canInsertSegment = true;
             foreach (var tile in intersectedTiles) {
-                if (!_segmentTileTable.ContainsKey(tile))
-                    _segmentTileTable[tile] = 0;
-                if(maxNumRailPerTile<_segmentTileTable[tile])maxNumRailPerTile = _segmentTileTable[tile];
-                canInsertSegment &= _segmentTileTable[tile] < MaxAmountRailsPerTile;
+                if (!this._segmentTileTable.ContainsKey(tile)) {
+                    this._segmentTileTable[tile] = 0;
+                }
+
+                if (maxNumRailPerTile< this._segmentTileTable[tile]) {
+                    maxNumRailPerTile = this._segmentTileTable[tile];
+                }
+
+                canInsertSegment &= this._segmentTileTable[tile] < this.MaxAmountRailsPerTile;
             }
 
             if (!canInsertSegment)
@@ -408,79 +415,81 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout.NodeRailLevelCalculator {
             }
 
             foreach (var tile in intersectedTiles) {
-                _segmentTileTable[tile]++;
+                this._segmentTileTable[tile]++;
             }
             return true;
         }
 
-        bool IfCanInsertLooseSegmentsUpdateTiles(IEnumerable<SymmetricSegment> segs, out Set<SymmetricSegment> insertedSegs, GridTraversal grid) {
+        private bool IfCanInsertLooseSegmentsUpdateTiles(IEnumerable<SymmetricSegment> segs, out Set<SymmetricSegment> insertedSegs, GridTraversal grid) {
             insertedSegs = new Set<SymmetricSegment>();
             foreach (var seg in segs) {
-                if (IfCanInsertLooseSegmentUpdateTiles(seg, grid))
+                if (this.IfCanInsertLooseSegmentUpdateTiles(seg, grid)) {
                     insertedSegs.Insert(seg);
-                else
+                } else {
                     return false;
+                }
             }
             return true;
         }
 
-        void RemoveLooseSegmentsDecrementTiles(IEnumerable<SymmetricSegment> segs, GridTraversal grid) {
+        private void RemoveLooseSegmentsDecrementTiles(IEnumerable<SymmetricSegment> segs, GridTraversal grid) {
             foreach (var seg in segs) {
-                RemoveLooseSegmentDecrementTiles(seg, grid);
+                this.RemoveLooseSegmentDecrementTiles(seg, grid);
             }
         }
 
-        void RemoveLooseSegmentDecrementTiles(SymmetricSegment seg, GridTraversal grid) {
-            var intersectedTiles = GetIntersectedTiles(seg.A, seg.B,  grid);
+        private void RemoveLooseSegmentDecrementTiles(SymmetricSegment seg, GridTraversal grid) {
+            var intersectedTiles = this.GetIntersectedTiles(seg.A, seg.B,  grid);
 
             foreach (var tile in intersectedTiles) {
-                if (_segmentTileTable.ContainsKey(tile))
-                    _segmentTileTable[tile]--;
+                if (this._segmentTileTable.ContainsKey(tile)) {
+                    this._segmentTileTable[tile]--;
+                }
             }
         }
 
-        void AddSegmentToRtree(SymmetricSegment seg) {
-            if (IsSegmentAlreadyAdded(seg))
+        private void AddSegmentToRtree(SymmetricSegment seg) {
+            if (this.IsSegmentAlreadyAdded(seg)) {
                 return;
+            }
 
             var rect = new Rectangle(seg.A, seg.B);
             //rect = new Rectangle(rect.LeftBottom - segRtreeBuffer*new Point(1, 1),
             //    rect.RightTop + segRtreeBuffer*new Point(1, 1));
 
-            _insertedSegmentsTree.Add(rect, seg);
+            this._insertedSegmentsTree.Add(rect, seg);
 
             // add to visgraph
-            _pathRouter.AddVisGraphEdge(seg.A, seg.B);
+            this._pathRouter.AddVisGraphEdge(seg.A, seg.B);
         }
 
-
-        bool IsSegmentAlreadyAdded(SymmetricSegment seg) {
-            return _pathRouter.ExistsEdge(seg.A, seg.B);
+        private bool IsSegmentAlreadyAdded(SymmetricSegment seg) {
+            return this._pathRouter.ExistsEdge(seg.A, seg.B);
         }
 
-        void AddSegmentsToRtree(IEnumerable<SymmetricSegment> segs) {
+        private void AddSegmentsToRtree(IEnumerable<SymmetricSegment> segs) {
             foreach (var seg in segs) {
-                AddSegmentToRtree(seg);
+                this.AddSegmentToRtree(seg);
             }
         }
 
-
-        void UpdateTilesCountInsertedNodes(int level, GridTraversal grid) {
-            foreach (var node in _insertedNodes) {
+        private void UpdateTilesCountInsertedNodes(int level, GridTraversal grid) {
+            foreach (var node in this._insertedNodes) {
                 var tuple = grid.PointToTuple(node.Center);
-                if (!_nodeTileTable.ContainsKey(tuple))
-                    _nodeTileTable[tuple] = 0;
+                if (!this._nodeTileTable.ContainsKey(tuple)) {
+                    this._nodeTileTable[tuple] = 0;
+                }
 
-                _nodeTileTable[tuple]++;
+                this._nodeTileTable[tuple]++;
             }
         }
 
-        void UpdateTilesCountInsertedNodesOnly(int level, GridTraversal grid) {
-            _nodeTileTable = new Dictionary<Tuple<int, int>, int>();
-            UpdateTilesCountInsertedNodes(level, grid);
+        private void UpdateTilesCountInsertedNodesOnly(int level, GridTraversal grid) {
+            this._nodeTileTable = new Dictionary<Tuple<int, int>, int>();
+            this.UpdateTilesCountInsertedNodes(level, grid);
         }
 
-        List<Tuple<int, int>> GetIntersectedTiles(Point p1, Point p2,  GridTraversal grid) {
+        private List<Tuple<int, int>> GetIntersectedTiles(Point p1, Point p2,  GridTraversal grid) {
             return grid.GetTilesIntersectedByLineSeg(p1, p2);
         }
 

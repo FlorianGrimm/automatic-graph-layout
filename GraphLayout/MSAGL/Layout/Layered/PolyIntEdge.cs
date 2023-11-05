@@ -17,41 +17,41 @@ namespace Microsoft.Msagl.Layout.Layered {
     internal
 #endif
         class PolyIntEdge : IEnumerable<int>, IEdge {
-        int source;
+        private int source;
 
         /// <summary>
         /// the source
         /// </summary>
         public int Source {
-            get { return source; }
+            get { return this.source; }
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289 Support Dictionary directly based on object's GetHashCode
             set { source = value; UpdateHashKey(); }
 #else
-            set { source = value; }
+            set { this.source = value; }
 #endif
         }
 
-        int target;
+        private int target;
 
         /// <summary>
         /// the edge target
         /// </summary>
         public int Target {
-            get { return target; }
+            get { return this.target; }
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289 Support Dictionary directly based on object's GetHashCode
             set { target = value; UpdateHashKey(); }
 #else
-            set { target = value; }
+            set { this.target = value; }
 #endif
         }
 
-        bool reversed;
+        private bool reversed;
 
         /// <summary>
         /// An edge can be reversed to keep the graph acyclic
         /// </summary>
         public bool Reversed {
-            get { return reversed; }
+            get { return this.reversed; }
 //            set { reversed = value; }
         }
 
@@ -77,21 +77,21 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// Returns true if the edge has label
         /// </summary>
         internal bool HasLabel {
-            get { return Edge.Label != null; }
+            get { return this.Edge.Label != null; }
         }
 
         /// <summary>
         /// Label width
         /// </summary>
         internal double LabelWidth {
-            get { return Edge.Label.Width; }
+            get { return this.Edge.Label.Width; }
         }
 
         /// <summary>
         /// Label height
         /// </summary>
         internal double LabelHeight {
-            get { return Edge.Label.Height; }
+            get { return this.Edge.Label.Height; }
         }
 
         /// <summary>
@@ -99,10 +99,10 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// source and target. However Revert(Revert) does not change it.
         /// </summary>
         internal void Revert() {
-            int t = source;
-            source = target;
-            target = t;
-            reversed = !reversed;
+            int t = this.source;
+            this.source = this.target;
+            this.target = t;
+            this.reversed = !this.reversed;
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289 Support Dictionary directly based on object's GetHashCode
             UpdateHashKey();
 #endif
@@ -122,10 +122,10 @@ namespace Microsoft.Msagl.Layout.Layered {
         internal PolyIntEdge(int source, int target, Edge edge) {
             this.source = source;
             this.target = target;
-            Edge = edge;
+            this.Edge = edge;
             if (edge != null) {
-                Separation = edge.Separation;
-                Weight = edge.Weight;
+                this.Separation = edge.Separation;
+                this.Weight = edge.Weight;
             }
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289 Support Dictionary directly based on object's GetHashCode
             UpdateHashKey();
@@ -139,10 +139,12 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <returns></returns>
         public override bool Equals(object obj) {
             var ie = obj as PolyIntEdge;
-            if (ie == null)
+            if (ie == null) {
                 return false;
-            return ie.source == source &&
-                   ie.target == target;
+            }
+
+            return ie.source == this.source &&
+                   ie.target == this.target;
         }
 
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289 Support Dictionary directly based on object's GetHashCode
@@ -158,8 +160,8 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         /// <returns></returns>
         public override int GetHashCode() {
-            var hc = (uint) source.GetHashCode();
-            return (int) ((hc << 5 | hc >> 27) + (uint) target);
+            var hc = (uint)this.source.GetHashCode();
+            return (int) ((hc << 5 | hc >> 27) + (uint)this.target);
         }
 
         /// <summary>
@@ -167,27 +169,26 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return "Edge(" + source + "->" + target + ")";
+            return "Edge(" + this.source + "->" + this.target + ")";
         }
 
         internal ICurve Curve {
-            get { return Edge.Curve; }
-            set { Edge.Curve = value; }
+            get { return this.Edge.Curve; }
+            set { this.Edge.Curve = value; }
         }
 
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal SmoothedPolyline UnderlyingPolyline {
-            get { return Edge.UnderlyingPolyline; }
-            set { Edge.UnderlyingPolyline = value; }
+            get { return this.Edge.UnderlyingPolyline; }
+            set { this.Edge.UnderlyingPolyline = value; }
         }
 
-
-        int weight = 1;
+        private int weight = 1;
 
         internal int Weight {
-            get { return weight; }
-            set { weight = value; }
+            get { return this.weight; }
+            set { this.weight = value; }
         }
 
         
@@ -195,14 +196,14 @@ namespace Microsoft.Msagl.Layout.Layered {
             get { return 1; }
         }
 
-        int separation;
+        private int separation;
 
         /// <summary>
         /// the distance between the source and the target in the number of layers
         /// </summary>
         public int Separation {
-            get { return separation; }
-            set { separation = value; }
+            get { return this.separation; }
+            set { this.separation = value; }
         }
 
         /// <summary>
@@ -210,13 +211,12 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public int LayerSpan {
             get {
-                return layerEdges != null ? layerEdges.Length : 0;
+                return this.layerEdges != null ? this.layerEdges.Length : 0;
                 // return virtualStart == -1 ? 1 : VirtualEnd - VirtualStart + 2;
             }
         }
 
-
-        LayerEdge[] layerEdges;
+        private LayerEdge[] layerEdges;
         /// <summary>
         /// 
         /// </summary>
@@ -227,26 +227,26 @@ namespace Microsoft.Msagl.Layout.Layered {
         internal
 #endif
             IList<LayerEdge> LayerEdges {
-            get { return layerEdges; }
-            set { layerEdges = (LayerEdge[]) value; }
+            get { return this.layerEdges; }
+            set { this.layerEdges = (LayerEdge[]) value; }
         }
 
 
         internal bool SelfEdge() {
-            return source == target;
+            return this.source == this.target;
         }
 
         internal PolyIntEdge ReversedClone() {
-            var ret = new PolyIntEdge(target, source, Edge);
-            if (layerEdges != null) {
-                int len = layerEdges.Length;
+            var ret = new PolyIntEdge(this.target, this.source, this.Edge);
+            if (this.layerEdges != null) {
+                int len = this.layerEdges.Length;
                 ret.layerEdges = new LayerEdge[len];
                 for (int i = 0; i < len; i++) {
-                    LayerEdge le = layerEdges[len - 1 - i];
+                    LayerEdge le = this.layerEdges[len - 1 - i];
                     ret.layerEdges[i] = new LayerEdge(le.Target, le.Source, le.CrossingWeight);
                 }
-                ret.layerEdges[0].Source = target;
-                ret.layerEdges[layerEdges.Length - 1].Target = source;
+                ret.layerEdges[0].Source = this.target;
+                ret.layerEdges[this.layerEdges.Length - 1].Target = this.source;
             }
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289 Support Dictionary directly based on object's GetHashCode
             ret.UpdateHashKey();
@@ -255,19 +255,19 @@ namespace Microsoft.Msagl.Layout.Layered {
         }
 
         internal LayerEdge this[int i] {
-            get { return layerEdges[i]; }
+            get { return this.layerEdges[i]; }
         }
 
         internal int Count {
-            get { return layerEdges.Length; }
+            get { return this.layerEdges.Length; }
         }
 
 
         internal void UpdateEdgeLabelPosition(Anchor[] anchors) {
-            if (Edge.Label != null) {
-                int m = layerEdges.Length/2;
-                LayerEdge layerEdge = layerEdges[m];
-                Routing.UpdateLabel(Edge, anchors[layerEdge.Source]);
+            if (this.Edge.Label != null) {
+                int m = this.layerEdges.Length/2;
+                LayerEdge layerEdge = this.layerEdges[m];
+                Routing.UpdateLabel(this.Edge, anchors[layerEdge.Source]);
             }
         }
 
@@ -278,9 +278,10 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         /// <returns></returns>
         public IEnumerator<int> GetEnumerator() {
-            yield return layerEdges[0].Source;
-            foreach (LayerEdge le in layerEdges)
+            yield return this.layerEdges[0].Source;
+            foreach (LayerEdge le in this.layerEdges) {
                 yield return le.Target;
+            }
         }
 
         #endregion
@@ -288,9 +289,10 @@ namespace Microsoft.Msagl.Layout.Layered {
         #region IEnumerable Members
 
         IEnumerator IEnumerable.GetEnumerator() {
-            yield return layerEdges[0].Source;
-            foreach (LayerEdge le in layerEdges)
+            yield return this.layerEdges[0].Source;
+            foreach (LayerEdge le in this.layerEdges) {
                 yield return le.Target;
+            }
         }
 
         #endregion
@@ -314,8 +316,9 @@ namespace Microsoft.Msagl.Layout.Layered {
 
             IEnumerator<int> en;
             for (int u = 0; u < graph.NodeCount; u++){
-                if (visited[u])
+                if (visited[u]) {
                     continue;
+                }
 
                 int cu = u;
                 visited[cu] = true;
@@ -339,8 +342,9 @@ namespace Microsoft.Msagl.Layout.Layered {
                         en = se.Pop();
                         cu = sv.Pop();
                     }
-                    else
+                    else {
                         break;
+                    }
                 } while (true);
             }
 

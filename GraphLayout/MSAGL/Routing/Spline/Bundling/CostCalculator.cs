@@ -17,9 +17,8 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
     /// </summary>
     internal class CostCalculator {
         internal const double Inf = 1000000000.0;
-
-        readonly MetroGraphData metroGraphData;
-        readonly BundlingSettings bundlingSettings;
+        private readonly MetroGraphData metroGraphData;
+        private readonly BundlingSettings bundlingSettings;
 
         internal CostCalculator(MetroGraphData metroGraphData, BundlingSettings bundlingSettings) {
             this.metroGraphData = metroGraphData;
@@ -44,7 +43,9 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// Error of hubs
         /// </summary>
         static internal double RError(double idealR, double nowR, BundlingSettings bundlingSettings) {
-            if (idealR <= nowR) return 0;
+            if (idealR <= nowR) {
+                return 0;
+            }
 
             double res = bundlingSettings.HubRepulsionImportance * (1.0 - nowR / idealR) * (idealR - nowR);
             return res;
@@ -54,7 +55,9 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// Error of bundles
         /// </summary>
         static internal double BundleError(double idealWidth, double nowWidth, BundlingSettings bundlingSettings) {
-            if (idealWidth <= nowWidth) return 0;
+            if (idealWidth <= nowWidth) {
+                return 0;
+            }
 
             double res = bundlingSettings.BundleRepulsionImportance * (1.0 - nowWidth / idealWidth) * (idealWidth - nowWidth);
             return res;
@@ -105,14 +108,14 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// </summary>
         internal double InkGain(Station node, Point newPosition) {
             //ink
-            double oldInk = metroGraphData.Ink;
-            double newInk = metroGraphData.Ink;
+            double oldInk = this.metroGraphData.Ink;
+            double newInk = this.metroGraphData.Ink;
             foreach (var adj in node.Neighbors) {
                 Point adjPosition = adj.Position;
                 newInk -= (adjPosition - node.Position).Length;
                 newInk += (adjPosition - newPosition).Length;
             }
-            return InkError(oldInk, newInk, bundlingSettings);
+            return InkError(oldInk, newInk, this.bundlingSettings);
         }
 
         /// <summary>
@@ -121,7 +124,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         internal double PathLengthsGain(Station node, Point newPosition) {
             double gain = 0;
             //edge lengths
-            foreach (var e in metroGraphData.MetroNodeInfosOfNode(node)) {
+            foreach (var e in this.metroGraphData.MetroNodeInfosOfNode(node)) {
                 var oldLength = e.Metroline.Length;
          
                 var prev = e.PolyPoint.Prev.Point;
@@ -129,7 +132,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
                 var newLength = e.Metroline.Length + (next - newPosition).Length + (prev - newPosition).Length - (next - node.Position).Length - (prev - node.Position).Length;
 
-                gain += PathLengthsError(oldLength, newLength, e.Metroline.IdealLength, bundlingSettings);
+                gain += PathLengthsError(oldLength, newLength, e.Metroline.IdealLength, this.bundlingSettings);
             }
 
             return gain;
@@ -142,28 +145,28 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             double gain = 0;
 
             gain += node.cachedRadiusCost;
-            gain -= RadiusCost(node, newPosition);
+            gain -= this.RadiusCost(node, newPosition);
 
             return gain;
         }
 
         internal double RadiusCost(Station node, Point newPosition) {
             double idealR;
-            if (ApproximateComparer.Close(node.Position, newPosition))
+            if (ApproximateComparer.Close(node.Position, newPosition)) {
                 idealR = node.cachedIdealRadius;
-            else
-                idealR = HubRadiiCalculator.CalculateIdealHubRadiusWithNeighbors(metroGraphData, bundlingSettings, node, newPosition);
-
+            } else {
+                idealR = HubRadiiCalculator.CalculateIdealHubRadiusWithNeighbors(this.metroGraphData, this.bundlingSettings, node, newPosition);
+            }
 
             List<Tuple<Polyline, Point>> touchedObstacles;
-            if (!metroGraphData.looseIntersections.HubAvoidsObstacles(node, newPosition, idealR, out touchedObstacles)) {
+            if (!this.metroGraphData.looseIntersections.HubAvoidsObstacles(node, newPosition, idealR, out touchedObstacles)) {
                 return Inf;
             }
 
             double cost = 0;
             foreach (var d in touchedObstacles) {
                 double dist = (d.Item2 - newPosition).Length;
-                cost += RError(idealR, dist, bundlingSettings);
+                cost += RError(idealR, dist, this.bundlingSettings);
             }
 
             return cost;
@@ -176,8 +179,11 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         internal double BundleGain(Station node, Point newPosition) {
             double gain = node.cachedBundleCost;
             foreach (var adj in node.Neighbors) {
-                double lgain = BundleCost(node, adj, newPosition);
-                if (ApproximateComparer.GreaterOrEqual(lgain, Inf)) return -Inf;
+                double lgain = this.BundleCost(node, adj, newPosition);
+                if (ApproximateComparer.GreaterOrEqual(lgain, Inf)) {
+                    return -Inf;
+                }
+
                 gain -= lgain;
             }
 
@@ -185,18 +191,18 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         }
 
         internal double BundleCost(Station node, Station adj, Point newPosition) {
-            double idealWidth = metroGraphData.GetWidth(node, adj, bundlingSettings.EdgeSeparation);
+            double idealWidth = this.metroGraphData.GetWidth(node, adj, this.bundlingSettings.EdgeSeparation);
             List<Tuple<Point, Point>> closestDist;
 
             double cost = 0;
             //find conflicting obstacles
-            if (!metroGraphData.cdtIntersections.BundleAvoidsObstacles(node, adj, newPosition, adj.Position, idealWidth, out closestDist)) {
+            if (!this.metroGraphData.cdtIntersections.BundleAvoidsObstacles(node, adj, newPosition, adj.Position, idealWidth, out closestDist)) {
                 return Inf;
             }
 
             foreach (var pair in closestDist) {
                 double dist = (pair.Item1 - pair.Item2).Length;
-                cost += BundleError(idealWidth / 2, dist, bundlingSettings);
+                cost += BundleError(idealWidth / 2, dist, this.bundlingSettings);
             }
 
             return cost;

@@ -18,46 +18,46 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         // span all create intersections with it.  All events are ordered on Y coordinate then X.
 
         internal SegmentIntersector() {
-            verticalSegmentsScanLine = new RbTree<ScanSegment>(this);
-            findFirstPred = new Func<ScanSegment, bool>(IsVSegInHSegRange);
+            this.verticalSegmentsScanLine = new RbTree<ScanSegment>(this);
+            this.findFirstPred = new Func<ScanSegment, bool>(this.IsVSegInHSegRange);
         }
 
-        bool IsVSegInHSegRange(ScanSegment v) {
-            return PointComparer.Compare(v.Start.X, findFirstHSeg.Start.X) >= 0;
+        private bool IsVSegInHSegRange(ScanSegment v) {
+            return PointComparer.Compare(v.Start.X, this.findFirstHSeg.Start.X) >= 0;
         }
 
         // This creates the VisibilityVertex objects along the segments.
         internal VisibilityGraph Generate(IEnumerable<ScanSegment> hSegments, IEnumerable<ScanSegment> vSegments) {
             foreach (ScanSegment seg in vSegments) {
-                eventList.Add(new SegEvent(SegEventType.VOpen, seg));
-                eventList.Add(new SegEvent(SegEventType.VClose, seg));
+                this.eventList.Add(new SegEvent(SegEventType.VOpen, seg));
+                this.eventList.Add(new SegEvent(SegEventType.VClose, seg));
             }
             foreach (ScanSegment seg in hSegments) {
-                eventList.Add(new SegEvent(SegEventType.HOpen, seg));
+                this.eventList.Add(new SegEvent(SegEventType.HOpen, seg));
             }
-            if (0 == eventList.Count) {
+            if (0 == this.eventList.Count) {
                 return null; // empty
             }
-            eventList.Sort(this);
+            this.eventList.Sort(this);
 
             // Note: We don't need any sentinels in the scanline here, because the lowest VOpen
             // events are loaded before the first HOpen is.
 
             // Process all events.
-            visGraph = VisibilityGraphGenerator.NewVisibilityGraph();
-            foreach (SegEvent evt in eventList) {
+            this.visGraph = VisibilityGraphGenerator.NewVisibilityGraph();
+            foreach (SegEvent evt in this.eventList) {
                 switch (evt.EventType) {
                     case SegEventType.VOpen:
-                        OnSegmentOpen(evt.Segment);
-                        ScanInsert(evt.Segment);
+                        this.OnSegmentOpen(evt.Segment);
+                        this.ScanInsert(evt.Segment);
                         break;
                     case SegEventType.VClose:
-                        OnSegmentClose(evt.Segment);
-                        ScanRemove(evt.Segment);
+                        this.OnSegmentClose(evt.Segment);
+                        this.ScanRemove(evt.Segment);
                         break;
                     case SegEventType.HOpen:
-                        OnSegmentOpen(evt.Segment);
-                        ScanIntersect(evt.Segment);
+                        this.OnSegmentOpen(evt.Segment);
+                        this.ScanIntersect(evt.Segment);
                         break;
                     default:
                         Debug.Assert(false, "Unknown SegEventType");
@@ -66,17 +66,17 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 // ReSharper restore HeuristicUnreachableCode
                 }
             } // endforeach
-            return visGraph;
+            return this.visGraph;
         }
 
-        void OnSegmentOpen(ScanSegment seg) {
-            seg.OnSegmentIntersectorBegin(visGraph);
+        private void OnSegmentOpen(ScanSegment seg) {
+            seg.OnSegmentIntersectorBegin(this.visGraph);
         }
 
-        void OnSegmentClose(ScanSegment seg) {
-            seg.OnSegmentIntersectorEnd(visGraph);
+        private void OnSegmentClose(ScanSegment seg) {
+            seg.OnSegmentIntersectorEnd(this.visGraph);
             if (null == seg.LowestVisibilityVertex) {
-                segmentsWithoutVisibility.Add(seg);
+                this.segmentsWithoutVisibility.Add(seg);
             }
         }
 
@@ -86,51 +86,51 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         // would require extra handling later.
         internal void RemoveSegmentsWithNoVisibility(ScanSegmentTree horizontalScanSegments,
                                                      ScanSegmentTree verticalScanSegments) {
-            foreach (ScanSegment seg in segmentsWithoutVisibility) {
+            foreach (ScanSegment seg in this.segmentsWithoutVisibility) {
                 (seg.IsVertical ? verticalScanSegments : horizontalScanSegments).Remove(seg);
             }
         }
 
         #region Scanline utilities
 
-        void ScanInsert(ScanSegment seg) {
+        private void ScanInsert(ScanSegment seg) {
             Debug.Assert(null == this.verticalSegmentsScanLine.Find(seg), "seg already exists in the rbtree");
 
             // RBTree's internal operations on insert/remove etc. mean the node can't cache the
             // RBNode returned by insert(); instead we must do find() on each call.  But we can
             // use the returned node to get predecessor/successor.
-            verticalSegmentsScanLine.Insert(seg);
+            this.verticalSegmentsScanLine.Insert(seg);
         }
 
-        void ScanRemove(ScanSegment seg) {
-            verticalSegmentsScanLine.Remove(seg);
+        private void ScanRemove(ScanSegment seg) {
+            this.verticalSegmentsScanLine.Remove(seg);
         }
 
-        void ScanIntersect(ScanSegment hSeg) {
+        private void ScanIntersect(ScanSegment hSeg) {
             // Find the VSeg in the scanline with the lowest X-intersection with HSeg, then iterate
             // all VSegs in the scan line after that until we leave the HSeg range.
             // We only use FindFirstHSeg in this routine, to find the first satisfying node,
             // so we don't care that we leave leftovers in it.
-            findFirstHSeg = hSeg;
-            RBNode<ScanSegment> segNode = verticalSegmentsScanLine.FindFirst(findFirstPred);
+            this.findFirstHSeg = hSeg;
+            RBNode<ScanSegment> segNode = this.verticalSegmentsScanLine.FindFirst(this.findFirstPred);
 
-            for (; null != segNode; segNode = verticalSegmentsScanLine.Next(segNode)) {
+            for (; null != segNode; segNode = this.verticalSegmentsScanLine.Next(segNode)) {
                 ScanSegment vSeg = segNode.Item;
                 if (1 == PointComparer.Compare(vSeg.Start.X, hSeg.End.X)) {
                     break; // Out of HSeg range
                 }
-                VisibilityVertex newVertex = visGraph.AddVertex(new Point(vSeg.Start.X, hSeg.Start.Y));
+                VisibilityVertex newVertex = this.visGraph.AddVertex(new Point(vSeg.Start.X, hSeg.Start.Y));
 
                 // HSeg has just opened so if we are overlapped and newVertex already existed,
                 // it was because we just closed a previous HSeg or VSeg and are now opening one
                 // whose Start is the same as previous.  So we may be appending a vertex that
                 // is already the *Seg.HighestVisibilityVertex, which will be a no-op.  Otherwise
                 // this will add a (possibly Overlapped)VisibilityEdge in the *Seg direction.
-                hSeg.AppendVisibilityVertex(visGraph, newVertex);
-                vSeg.AppendVisibilityVertex(visGraph, newVertex);
+                hSeg.AppendVisibilityVertex(this.visGraph, newVertex);
+                vSeg.AppendVisibilityVertex(this.visGraph, newVertex);
             } // endforeach scanline VSeg in range
 
-            OnSegmentClose(hSeg);
+            this.OnSegmentClose(hSeg);
         }
 
         // end ScanIntersect()
@@ -247,19 +247,19 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         internal class SegEvent {
             internal SegEvent(SegEventType eventType, ScanSegment seg) {
-                EventType = eventType;
-                Segment = seg;
+                this.EventType = eventType;
+                this.Segment = seg;
             }
 
             internal SegEventType EventType { get; private set; }
             internal ScanSegment Segment { get; private set; }
 
             internal bool IsVertical {
-                get { return (SegEventType.HOpen != EventType); }
+                get { return (SegEventType.HOpen != this.EventType); }
             }
 
             internal Point Site {
-                get { return (SegEventType.VClose == EventType) ? Segment.End : Segment.Start; }
+                get { return (SegEventType.VClose == this.EventType) ? this.Segment.End : this.Segment.Start; }
             }
 
 
@@ -268,7 +268,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             /// <returns></returns>
             [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider", MessageId = "System.String.Format(System.String,System.Object[])")]
             public override string ToString() {
-                return string.Format("{0} {1} {2} {3}", EventType, IsVertical, Site, Segment);
+                return string.Format("{0} {1} {2} {3}", this.EventType, this.IsVertical, this.Site, this.Segment);
             }
         }
 
@@ -279,17 +279,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         // To be returned to caller; created in Generate() and used in ScanGenerate().
 
         // Accumulates the set of events and then sorts them by Y coord.
-        readonly List<SegEvent> eventList = new List<SegEvent>();
+        private readonly List<SegEvent> eventList = new List<SegEvent>();
 
         // Tracks the currently open V segments.
-        readonly Func<ScanSegment, bool> findFirstPred;
-
-        readonly List<ScanSegment> segmentsWithoutVisibility = new List<ScanSegment>();
-        readonly RbTree<ScanSegment> verticalSegmentsScanLine;
+        private readonly Func<ScanSegment, bool> findFirstPred;
+        private readonly List<ScanSegment> segmentsWithoutVisibility = new List<ScanSegment>();
+        private readonly RbTree<ScanSegment> verticalSegmentsScanLine;
 
         // For searching the tree to find the first VSeg for an HSeg.
-        ScanSegment findFirstHSeg;
-        VisibilityGraph visGraph;
+        private ScanSegment findFirstHSeg;
+        private VisibilityGraph visGraph;
 
         #endregion // Internal data members
 

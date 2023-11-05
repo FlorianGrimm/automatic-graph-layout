@@ -22,11 +22,9 @@ namespace Microsoft.Msagl.Layout.Initial {
     /// Methods for obtaining an initial layout of a graph by arranging clusters bottom up using various means.
     /// </summary>
     public class InitialLayoutByCluster : AlgorithmBase {
-        readonly GeometryGraph graph;
-
-        readonly ICollection<Cluster> clusters;
-
-        readonly Func<Cluster, LayoutAlgorithmSettings> clusterSettings;
+        private readonly GeometryGraph graph;
+        private readonly ICollection<Cluster> clusters;
+        private readonly Func<Cluster, LayoutAlgorithmSettings> clusterSettings;
 
         /// <summary>
         /// Recursively lay out the clusters of the given graph using the given settings.
@@ -70,28 +68,28 @@ namespace Microsoft.Msagl.Layout.Initial {
             this.clusterSettings = clusterSettings;
         }
 
-        ParallelOptions parallelOptions;
+        private ParallelOptions parallelOptions;
 
 #if SHARPKIT // no multithreading in JS
         bool runInParallel = false;
 #else
-        bool runInParallel = true;
+        private bool runInParallel = true;
 #endif
 
         /// <summary>
         /// if set to true than parallel execution will b
         /// </summary>
         public bool RunInParallel {
-            get { return runInParallel; }
-            set { runInParallel = value; }
+            get { return this.runInParallel; }
+            set { this.runInParallel = value; }
         }
 
         /// <summary>
         /// The actual layout process
         /// </summary>
         protected override void RunInternal() {
-            if (runInParallel) {
-                parallelOptions = new ParallelOptions();
+            if (this.runInParallel) {
+                this.parallelOptions = new ParallelOptions();
 #if PPC
                 if (CancelToken != null)
                     parallelOptions.CancellationToken = CancelToken.CancellationToken;
@@ -101,43 +99,47 @@ namespace Microsoft.Msagl.Layout.Initial {
 
             // This call isn't super cheap, so we shouldn't do this too often.
 
-            if (runInParallel && clusters.Count > 1)
-                Parallel.ForEach(clusters, parallelOptions, ProcessCluster);
-            else
-                foreach (Cluster cluster in clusters)
-                    ProcessCluster(cluster);
+            if (this.runInParallel && this.clusters.Count > 1) {
+                Parallel.ForEach(this.clusters, this.parallelOptions, this.ProcessCluster);
+            } else {
+                foreach (Cluster cluster in this.clusters) {
+                    this.ProcessCluster(cluster);
+                }
+            }
 
-            bool isRootCluster = clusters.Any(c => c == graph.RootCluster);
+            bool isRootCluster = this.clusters.Any(c => c == this.graph.RootCluster);
 
             if (isRootCluster) {
                 // only want to do this when we are working solely with the root cluster.
                 // expanding individual clusters will mean that the containment hierarchy is not valid
                 // (until it's fixed up by the next incremental layout)
-                RouteParentEdges(graph, clusterSettings(graph.RootCluster).EdgeRoutingSettings);
+                RouteParentEdges(this.graph, this.clusterSettings(this.graph.RootCluster).EdgeRoutingSettings);
             }
 
-            graph.UpdateBoundingBox();
+            this.graph.UpdateBoundingBox();
 
             if (isRootCluster) {
-                Debug.Assert(clusters.Count() == 1,
+                Debug.Assert(this.clusters.Count() == 1,
                     "Layout by cluster with a root cluster should not contain any other cluster.");
                 // Zero the graph
-                graph.Translate(-graph.BoundingBox.LeftBottom);
+                this.graph.Translate(-this.graph.BoundingBox.LeftBottom);
                 //LayoutAlgorithmSettings.ShowGraph(graph);
             }
 
-            ProgressComplete();
+            this.ProgressComplete();
 
         }
 
-        void ProcessCluster(Cluster cluster) {
-            if (cluster.IsCollapsed)
+        private void ProcessCluster(Cluster cluster) {
+            if (cluster.IsCollapsed) {
                 return;
+            }
+
             Rectangle oldBounds = cluster.BoundingBox;
             cluster.UnsetInitialLayoutStateIncludingAncestors();
-            LayoutCluster(cluster);
+            this.LayoutCluster(cluster);
 
-            if (cluster != graph.RootCluster) {
+            if (cluster != this.graph.RootCluster) {
                 Rectangle newBounds = cluster.BoundingBox;
                 cluster.DeepTranslation(oldBounds.Center - newBounds.Center, true);
             }
@@ -151,11 +153,12 @@ namespace Microsoft.Msagl.Layout.Initial {
             var outParentEdges = new List<Edge>();
             RouteSimplHooksAndFillTheLists(graph.RootCluster, inParentEdges, outParentEdges, edgeRoutingSettings);
 
-            if (inParentEdges.Count > 0 || outParentEdges.Count > 0)
+            if (inParentEdges.Count > 0 || outParentEdges.Count > 0) {
                 LabelParentEdgesAndMaybeRerouteThemNicely(graph, inParentEdges, outParentEdges, edgeRoutingSettings);
+            }
         }
 
-        static void LabelParentEdgesAndMaybeRerouteThemNicely(GeometryGraph graph, List<Edge> inParentEdges,
+        private static void LabelParentEdgesAndMaybeRerouteThemNicely(GeometryGraph graph, List<Edge> inParentEdges,
             List<Edge> outParentEdges, EdgeRoutingSettings edgeRoutingSettings) {
             if (AllowedToRoute(inParentEdges, outParentEdges, edgeRoutingSettings)) {
                 var shapeGroupRouter = new SplineRouter(graph, edgeRoutingSettings.Padding,
@@ -172,14 +175,14 @@ namespace Microsoft.Msagl.Layout.Initial {
             }
         }
 
-        static bool AllowedToRoute(List<Edge> inParentEdges, List<Edge> outParentEdges,
+        private static bool AllowedToRoute(List<Edge> inParentEdges, List<Edge> outParentEdges,
             EdgeRoutingSettings edgeRoutingSettings) {
             return ShapeCreatorForRoutingToParents.NumberOfActiveNodesIsUnderThreshold(inParentEdges, outParentEdges,
                 edgeRoutingSettings.
                     SimpleSelfLoopsForParentEdgesThreshold);
         }
 
-        static void RouteSimplHooksAndFillTheLists(Cluster rootCluster, List<Edge> inParentEdges,
+        private static void RouteSimplHooksAndFillTheLists(Cluster rootCluster, List<Edge> inParentEdges,
             List<Edge> outParentEdges, EdgeRoutingSettings edgeRoutingSettings) {
             var padding = edgeRoutingSettings.Padding + edgeRoutingSettings.PolylinePadding;
             foreach (var cluster in rootCluster.AllClustersWidthFirstExcludingSelfAvoidingChildrenOfCollapsed().Where(c => !c.IsCollapsed)) {
@@ -188,12 +191,14 @@ namespace Microsoft.Msagl.Layout.Initial {
             }
         }
 
-        static void RouteClusterParentOutEdges(List<Edge> outParentEdges, EdgeRoutingSettings edgeRoutingSettings, Cluster cluster, double padding) {
+        private static void RouteClusterParentOutEdges(List<Edge> outParentEdges, EdgeRoutingSettings edgeRoutingSettings, Cluster cluster, double padding) {
             foreach (var e in cluster.OutEdges.Where(e => IsDescendant(e.Target, cluster))) {
                 var ePadding = Math.Max(padding, 1.5 * ArrowlengthAtSource(e));
                 var hookPort = e.SourcePort as HookUpAnywhereFromInsidePort;
-                if (hookPort == null)
+                if (hookPort == null) {
                     e.SourcePort = hookPort = new HookUpAnywhereFromInsidePort(() => cluster.BoundaryCurve);
+                }
+
                 hookPort.HookSize = ePadding;
 
                 e.Curve = StraightLineEdges.CreateLoop(e.Target.BoundingBox, cluster.BoundingBox, ePadding, false);
@@ -203,13 +208,15 @@ namespace Microsoft.Msagl.Layout.Initial {
             }
         }
 
-        static void RouteClusterParentInEdges(List<Edge> inParentEdges, EdgeRoutingSettings edgeRoutingSettings, Cluster cluster,
+        private static void RouteClusterParentInEdges(List<Edge> inParentEdges, EdgeRoutingSettings edgeRoutingSettings, Cluster cluster,
             double padding) {
             foreach (var e in cluster.InEdges.Where(e => IsDescendant(e.Source, cluster))) {
                 double ePadding = Math.Max(padding, 1.5 * ArrowlengthAtTarget(e));
                 var hookPort = e.TargetPort as HookUpAnywhereFromInsidePort;
-                if (hookPort == null)
+                if (hookPort == null) {
                     e.TargetPort = hookPort = new HookUpAnywhereFromInsidePort(() => cluster.BoundaryCurve);
+                }
+
                 hookPort.HookSize = ePadding;
                 e.Curve = StraightLineEdges.CreateLoop(e.Source.BoundingBox, cluster.BoundingBox, ePadding, false);
                 Arrowheads.TrimSplineAndCalculateArrowheads(e, e.Curve, false,
@@ -218,11 +225,11 @@ namespace Microsoft.Msagl.Layout.Initial {
             }
         }
 
-        static double ArrowlengthAtSource(Edge edge) {
+        private static double ArrowlengthAtSource(Edge edge) {
             return edge.EdgeGeometry.SourceArrowhead == null ? 0 : edge.EdgeGeometry.SourceArrowhead.Length;
         }
 
-        static double ArrowlengthAtTarget(Edge edge) {
+        private static double ArrowlengthAtTarget(Edge edge) {
             return edge.EdgeGeometry.TargetArrowhead == null ? 0 : edge.EdgeGeometry.TargetArrowhead.Length;
         }
 
@@ -252,10 +259,12 @@ namespace Microsoft.Msagl.Layout.Initial {
         /// Ensures that containment is preserved
         /// </summary>
         /// <param name="cluster">check is applied to specified cluster and below</param>
-        static void ValidateLayout(Cluster cluster) {
-            foreach (var c in cluster.AllClustersDepthFirst())
-                foreach (var v in c.nodes.Concat(c.Clusters.Cast<Node>()))
+        private static void ValidateLayout(Cluster cluster) {
+            foreach (var c in cluster.AllClustersDepthFirst()) {
+                foreach (var v in c.nodes.Concat(c.Clusters.Cast<Node>())) {
                     Debug.Assert(c.BoundingBox.Contains(v.BoundingBox));
+                }
+            }
         }
 #endif
 
@@ -264,31 +273,36 @@ namespace Microsoft.Msagl.Layout.Initial {
         /// </summary>
         /// <param name="cluster">the root of the cluster hierarchy to lay out</param>
         /// <returns>list of edges external to the cluster</returns>
-        void LayoutCluster(Cluster cluster) {
-            if (cluster.IsCollapsed)
+        private void LayoutCluster(Cluster cluster) {
+            if (cluster.IsCollapsed) {
                 return;
+            }
 
-            LayoutAlgorithmSettings settings = clusterSettings(cluster);
+            LayoutAlgorithmSettings settings = this.clusterSettings(cluster);
             cluster.UnsetInitialLayoutState();
-            if (runInParallel && cluster.Clusters.Count() > 1)
-                Parallel.ForEach(cluster.Clusters, parallelOptions, LayoutCluster);
-            else
-                foreach (var cl in cluster.Clusters)
-                    LayoutCluster(cl);
+            if (this.runInParallel && cluster.Clusters.Count() > 1) {
+                Parallel.ForEach(cluster.Clusters, this.parallelOptions, this.LayoutCluster);
+            } else {
+                foreach (var cl in cluster.Clusters) {
+                    this.LayoutCluster(cl);
+                }
+            }
 
             List<GeometryGraph> components = (List<GeometryGraph>)GetComponents(cluster, settings.LiftCrossEdges, settings.NodeSeparation);
 
             //currentComponentFraction = (1.0 / clusterCount) / components.Count;
 
-            if (runInParallel)
-                            Parallel.ForEach(components, parallelOptions, comp => LayoutComponent(settings, comp));
-             else 
-             components.ForEach(c => LayoutComponent(settings, c));
+            if (this.runInParallel) {
+                Parallel.ForEach(components, this.parallelOptions, comp => this.LayoutComponent(settings, comp));
+            } else {
+                components.ForEach(c => this.LayoutComponent(settings, c));
+            }
 
             var bounds = MdsGraphLayout.PackGraphs(components, settings);
 
-            foreach (var g in components)
+            foreach (var g in components) {
                 FixOriginalGraph(g, true);
+            }
 
             cluster.UpdateBoundary(bounds);
 
@@ -314,23 +328,27 @@ namespace Microsoft.Msagl.Layout.Initial {
                 if (cluster != null) {
                     cluster.DeepTranslation(delta, translateEdges);
                 }
-                else
+                else {
                     originalNode.Center += delta;
+                }
             }
             if (translateEdges) {
                 foreach (var e in graph.Edges) {
                     if (e.UserData is Edge) {
                         var originalEdge = e.UserData as Edge;
-                        if (e.Curve != null)
+                        if (e.Curve != null) {
                             originalEdge.Curve = e.Curve.Clone();
+                        }
+
                         originalEdge.Length = e.Length;
 
                         originalEdge.EdgeGeometry.SourcePort = e.SourcePort = null;
                         // EdgeGeometry ports get clobbered by edge routing          
                         originalEdge.EdgeGeometry.TargetPort = e.TargetPort = null;
 
-                        foreach (var l in originalEdge.Labels)
+                        foreach (var l in originalEdge.Labels) {
                             l.GeometryParent = originalEdge;
+                        }
                     }
                 }
             }
@@ -342,7 +360,7 @@ namespace Microsoft.Msagl.Layout.Initial {
         /// <param name="node"></param>
         /// <param name="root"></param>
         /// <returns>true if the node is a descendant of root</returns>
-        static bool IsDescendant(Node node, Cluster root) {
+        private static bool IsDescendant(Node node, Cluster root) {
             return Ancestor(node, root) != null;
         }
 
@@ -353,7 +371,7 @@ namespace Microsoft.Msagl.Layout.Initial {
         /// <param name="cluster">cluster to break into components</param>
         /// <param name="liftCrossEdges">set this to consider lower-level edges while arranging subclusters</param>
         /// <returns>GeometryGraphs that are each a connected component</returns>
-        static IEnumerable<GeometryGraph> GetComponents(Cluster cluster, bool liftCrossEdges, double nodeSeparation) {
+        private static IEnumerable<GeometryGraph> GetComponents(Cluster cluster, bool liftCrossEdges, double nodeSeparation) {
             // Create a copy of the cluster's nodes. Some or all of these may also be clusters. We call these "top nodes".
             Dictionary<Node, Node> originalToCopyNodeMap = ShallowNodeCopyDictionary(cluster);
             var copiedEdges = new List<Edge>();
@@ -362,9 +380,10 @@ namespace Microsoft.Msagl.Layout.Initial {
                 foreach (var e in target.InEdges) {
                     // Filippo Polo: I'm not sure what's going on here. This seems to be testing whether the source node of the edge is a child of the cluster. But the edge comes from enumerating the in-edges of the target, so the source node is always the target. And the target comes from enumerating the result of a shallow node copy of the cluster. So how could it ever NOT be a child of the cluster? I.e. it looks to me like the following test is always true. Maybe this is a remnant of an earlier attempt to implement edge lifting (see below)?
                     var sourceAncestorUnderRoot = Ancestor(e.Source, cluster);
-                    if (sourceAncestorUnderRoot == e.Source)
+                    if (sourceAncestorUnderRoot == e.Source) {
                         //it is a flat edge and we are only interested in flat edges
                         copiedEdges.Add(CopyEdge(originalToCopyNodeMap, e, sourceAncestorUnderRoot, target));
+                    }
                 }
                 copiedEdges.AddRange(target.SelfEdges.Select(e => CopyEdge(originalToCopyNodeMap, e)));
 
@@ -372,7 +391,7 @@ namespace Microsoft.Msagl.Layout.Initial {
                 if (liftCrossEdges && target is Cluster) {
                     var targetCluster = target as Cluster;
                     // Iterate on all sub nodes.
-                    foreach (var sub in targetCluster.AllSuccessorsWidthFirst())
+                    foreach (var sub in targetCluster.AllSuccessorsWidthFirst()) {
                         // Iterate on all the in-edges of the sub node.
                         foreach (var e in sub.InEdges) {
                             // I already know that the target of this edge is contained within the top node. Where is the source of the edge?
@@ -384,6 +403,7 @@ namespace Microsoft.Msagl.Layout.Initial {
                                 copiedEdges.Add(virtualEdge);
                             }
                         }
+                    }
                 }
             }
 
@@ -435,15 +455,17 @@ namespace Microsoft.Msagl.Layout.Initial {
         internal static Dictionary<Node, Node> ShallowNodeCopyDictionary(Cluster cluster) {
             var originalNodeToCopy = new Dictionary<Node, Node>();
 
-            foreach (var v in cluster.Nodes)
+            foreach (var v in cluster.Nodes) {
                 originalNodeToCopy[v] = new Node(v.BoundaryCurve.Clone()) { UserData = v };
+            }
 
             foreach (var cl in cluster.Clusters) {
-                if (cl.IsCollapsed)
+                if (cl.IsCollapsed) {
                     originalNodeToCopy[cl] = new Node(cl.CollapsedBoundary.Clone()) { UserData = cl };
-                else {
-                    if (cl.BoundaryCurve == null)
+                } else {
+                    if (cl.BoundaryCurve == null) {
                         cl.BoundaryCurve = cl.RectangularBoundary.RectangularHull();
+                    }
 
                     originalNodeToCopy[cl] = new Node(cl.BoundaryCurve.Clone()) { UserData = cl };
                 }
@@ -461,11 +483,16 @@ namespace Microsoft.Msagl.Layout.Initial {
         /// <returns>returns highest ancestor of node (or node itself) that is a direct child of root, null if not 
         /// a descendent of root</returns>
         internal static Node Ancestor(Node node, Cluster root) {
-            if (node.ClusterParent == root)
+            if (node.ClusterParent == root) {
                 return node;
-            foreach (var c in node.AllClusterAncestors)
-                if (c.ClusterParent == root)
+            }
+
+            foreach (var c in node.AllClusterAncestors) {
+                if (c.ClusterParent == root) {
                     return c;
+                }
+            }
+
             return null;
         }
 
@@ -476,13 +503,13 @@ namespace Microsoft.Msagl.Layout.Initial {
             var mdsSettings = settings as MdsLayoutSettings;
             var layeredSettings = settings as SugiyamaLayoutSettings;
             if (fdSettings != null) {
-                ForceDirectedLayout(fdSettings, component);
+                this.ForceDirectedLayout(fdSettings, component);
             }
             else if (mdsSettings != null) {
-                MDSLayout(mdsSettings, component);
+                this.MDSLayout(mdsSettings, component);
             }
             else if (layeredSettings != null) {
-                LayeredLayout(layeredSettings, component);
+                this.LayeredLayout(layeredSettings, component);
             }
             else {
                 throw new NotImplementedException("Unknown type of layout settings!");
@@ -490,7 +517,7 @@ namespace Microsoft.Msagl.Layout.Initial {
             //LayoutAlgorithmSettings.ShowGraph(component);
         }
 
-        void ForceDirectedLayout(FastIncrementalLayoutSettings settings, GeometryGraph component) {
+        private void ForceDirectedLayout(FastIncrementalLayoutSettings settings, GeometryGraph component) {
             LayoutAlgorithmHelpers.ComputeDesiredEdgeLengths(component);
             var layout = new InitialLayout(component, settings) { SingleComponent = true };
             layout.Run(this.CancelToken);
@@ -499,7 +526,7 @@ namespace Microsoft.Msagl.Layout.Initial {
             InitialLayoutHelpers.FixBoundingBox(component, settings);
         }
 
-        void MDSLayout(MdsLayoutSettings settings, GeometryGraph component) {
+        private void MDSLayout(MdsLayoutSettings settings, GeometryGraph component) {
             LayoutAlgorithmHelpers.ComputeDesiredEdgeLengths(component);
             var layout = new MdsGraphLayout(settings, component);
             layout.Run(this.CancelToken);
@@ -508,7 +535,7 @@ namespace Microsoft.Msagl.Layout.Initial {
             InitialLayoutHelpers.FixBoundingBox(component, settings);
         }
 
-        void LayeredLayout(SugiyamaLayoutSettings layeredSettings, GeometryGraph component) {
+        private void LayeredLayout(SugiyamaLayoutSettings layeredSettings, GeometryGraph component) {
             var layeredLayout = new LayeredLayout(component, layeredSettings);
             layeredLayout.SetCancelToken(this.CancelToken);
             double aspectRatio = layeredLayout.EstimateAspectRatio();
@@ -528,10 +555,11 @@ namespace Microsoft.Msagl.Layout.Initial {
                 // for large graphs there's really no point trying to produce nice edge routes
                 // the sugiyama edge routing can be quite circuitous on large graphs anyway
                 var prevEdgeRouting = fallbackLayoutSettings.EdgeRoutingSettings.EdgeRoutingMode;
-                if (component.Nodes.Count > 100 && edgeDensity > 2.0)
+                if (component.Nodes.Count > 100 && edgeDensity > 2.0) {
                     fallbackLayoutSettings.EdgeRoutingSettings.EdgeRoutingMode = EdgeRoutingMode.StraightLine;
+                }
 
-                LayoutComponent(fallbackLayoutSettings, component);
+                this.LayoutComponent(fallbackLayoutSettings, component);
                 fallbackLayoutSettings.EdgeRoutingSettings.EdgeRoutingMode = prevEdgeRouting;
             }
             else {

@@ -11,8 +11,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 #endif
     [DebuggerDisplay("[({a.X} {a.Y}),({b.X} {b.Y})]")]
     public class LineSegment : ICurve {
-
-        Point a;//the line goes from a to side1
+        private Point a;//the line goes from a to side1
 
         /// <summary>
         /// Offsets the curve in the direction of dir
@@ -25,16 +24,17 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// the line start point
         /// </summary>
         public Point Start {
-            get { return a; }
-            set { a = value; }
+            get { return this.a; }
+            set { this.a = value; }
         }
-        Point b;
+
+        private Point b;
         /// <summary>
         /// the line end point
         /// </summary>
         public Point End {
-            get { return b; }
-            set { b = value; }
+            get { return this.b; }
+            set { this.b = value; }
         }
 
 
@@ -60,11 +60,12 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         public ICurve Trim(double start, double end) {
 
-            if (start > end)
+            if (start > end) {
                 throw new InvalidOperationException();//"wrong params in trimming");
+            }
 
-            Point p1 = start <= ParStart ? Start : (1 - start) * a + start * b;
-            Point p2 = end >= ParEnd ? End : (1 - end) * a + end * b;
+            Point p1 = start <= this.ParStart ? this.Start : (1 - start) * this.a + start * this.b;
+            Point p2 = end >= this.ParEnd ? this.End : (1 - end) * this.a + end * this.b;
             if (ApproximateComparer.Close(start, end)) {
                 return null;
             }
@@ -88,15 +89,15 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <value></value>
         public ParallelogramNodeOverICurve ParallelogramNodeOverICurve {
             get {
-                Point side = 0.5 * (b - a);
+                Point side = 0.5 * (this.b - this.a);
 
-                return new ParallelogramLeaf(0, 1, new Parallelogram(a, side, side), this, 0);
+                return new ParallelogramLeaf(0, 1, new Parallelogram(this.a, side, side), this, 0);
             }
         }
 
         internal Point Normal {
             get {
-                Point t = a - b;
+                Point t = this.a - this.b;
                 t /= t.Length;
                 return new Point(-t.Y, t.X);
             }
@@ -111,8 +112,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             a = start.Clone();
             b = end.Clone();
 #else
-            a = start;
-            b = end;
+            this.a = start;
+            this.b = end;
 #endif
         }
 
@@ -141,7 +142,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         public Point this[double t] {
-            get { return a + (b - a) * t; }
+            get { return this.a + (this.b - this.a) * t; }
         }
 
         /// <summary>
@@ -150,7 +151,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
         public Point Derivative(double t) {
-            return b - a;
+            return this.b - this.a;
         }
 
         /// <summary>
@@ -176,7 +177,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return "{" + a + "," + b + "}";
+            return "{" + this.a + "," + this.b + "}";
         }
 
         /// <summary>
@@ -185,7 +186,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
 
         public ICurve Reverse() {
-            return new LineSegment(b, a);
+            return new LineSegment(this.b, this.a);
         }
 
         /*      
@@ -258,8 +259,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         public void Translate(Point delta)
         {
-            a += delta;
-            b += delta;
+            this.a += delta;
+            this.b += delta;
         }
 
         /// <summary>
@@ -270,7 +271,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns>scaled copy</returns>
         public ICurve ScaleFromOrigin(double xScale, double yScale)
         {
-            return new LineSegment(Point.Scale(xScale, yScale, a), Point.Scale(xScale, yScale, b));
+            return new LineSegment(Point.Scale(xScale, yScale, this.a), Point.Scale(xScale, yScale, this.b));
         }
 
         /// <summary>
@@ -279,9 +280,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="length"></param>
         /// <returns></returns>
         public double GetParameterAtLength(double length) {
-            var len = (b - a).Length;
-            if (len < ApproximateComparer.Tolerance)
+            var len = (this.b - this.a).Length;
+            if (len < ApproximateComparer.Tolerance) {
                 return 0;
+            }
+
             var t = length/len;
             return t > 1 ? 1 : (t < 0 ? 0 : t);
         }
@@ -292,7 +295,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="transformation"></param>
         /// <returns>the transformed curve</returns>
         public ICurve Transform(PlaneTransformation transformation) {
-            return new LineSegment(transformation * a, transformation * b);
+            return new LineSegment(transformation * this.a, transformation * this.b);
         }
 
         /// <summary>
@@ -304,11 +307,15 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="low">the low bound of the parameter</param>
         /// <returns></returns>
         public double ClosestParameterWithinBounds(Point targetPoint, double low, double high) {
-            var t = ClosestParameter(targetPoint);
-            if (t < low)
+            var t = this.ClosestParameter(targetPoint);
+            if (t < low) {
                 t = low;
-            if(t>high)
-                t=high;
+            }
+
+            if (t>high) {
+                t =high;
+            }
+
             return t;
         }
 
@@ -327,7 +334,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         public double Length {
             get {
-                return (a - b).Length;
+                return (this.a - this.b).Length;
             }
         }
         /// <summary>
@@ -335,7 +342,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         public Rectangle BoundingBox {
             get {
-                return new Rectangle(Start, End);
+                return new Rectangle(this.Start, this.End);
             }
         }
 
@@ -356,7 +363,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="targetPoint"></param>
         /// <returns></returns>
         public double ClosestParameter(Point targetPoint) {
-            return Point.ClosestParameterOnLineSegment(targetPoint, Start, End);
+            return Point.ClosestParameterOnLineSegment(targetPoint, this.Start, this.End);
         }
         /// <summary>
         /// left derivative at t
@@ -364,7 +371,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
         public Point LeftDerivative(double t) {
-            return Derivative(t);
+            return this.Derivative(t);
         }
 
         /// <summary>
@@ -373,7 +380,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
         public Point RightDerivative(double t) {
-            return Derivative(t);
+            return this.Derivative(t);
         }
         /// <summary>
         /// returns true if segments are not parallel and are intesecting
@@ -386,12 +393,14 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "x"), SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "d"), SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "c"), SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "b"), SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "a"), SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "4#")]
         public static bool Intersect(Point a, Point b, Point c, Point d, out Point x) {
-            if (!Point.LineLineIntersection(a, b, c, d, out x))
+            if (!Point.LineLineIntersection(a, b, c, d, out x)) {
                 return false;
+            }
+
             return XIsBetweenPoints(ref a, ref b, ref x) && XIsBetweenPoints(ref c, ref d, ref x);
         }
 
-        static bool XIsBetweenPoints(ref Point a, ref Point b, ref Point x) {
+        private static bool XIsBetweenPoints(ref Point a, ref Point b, ref Point x) {
             return (a - x) * (b - x) <= ApproximateComparer.DistanceEpsilon;
         }
 
@@ -482,11 +491,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             if (tN < 0.0) {           // tc < 0 => the t=0 edge is visible
                 tN = 0.0;
                 // recompute parab for this edge
-                if (-uw < 0.0)
+                if (-uw < 0.0) {
                     sN = 0.0;
-                else if (-uw > uu)
+                } else if (-uw > uu) {
                     sN = sD;
-                else {
+                } else {
                     sN = -uw;
                     sD = uu;
                 }
@@ -494,11 +503,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             else if (tN > tD) {      // tc > 1 => the t=1 edge is visible
                 tN = tD = 1;
                 // recompute parab for this edge
-                if ((-uw + uv) < 0.0)
+                if ((-uw + uv) < 0.0) {
                     sN = 0;
-                else if ((-uw + uv) > uu)
+                } else if ((-uw + uv) > uu) {
                     sN = sD;
-                else {
+                } else {
                     sN = (-uw + uv);
                     sD = uu;
                 }

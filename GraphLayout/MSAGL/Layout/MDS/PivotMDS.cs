@@ -14,7 +14,7 @@ namespace Microsoft.Msagl.Layout.MDS
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "MDS")]
     public class PivotMDS : AlgorithmBase
     {
-        class PivotMDSNodeWrap
+        private class PivotMDSNodeWrap
         {
             internal Node node;
             internal PivotMDSNodeWrap(Node node)
@@ -50,7 +50,7 @@ namespace Microsoft.Msagl.Layout.MDS
         protected override void RunInternal()
         {
             var g = new GeometryGraph();
-            foreach (var v in graph.Nodes)
+            foreach (var v in this.graph.Nodes)
             {
                 Debug.Assert(!(v is Cluster));
                 var u = new Node(v.BoundaryCurve.Clone())
@@ -61,10 +61,13 @@ namespace Microsoft.Msagl.Layout.MDS
                 g.Nodes.Add(u);
             }
             double avgLength = 0;
-            foreach (var e in graph.Edges)
+            foreach (var e in this.graph.Edges)
             {
                 avgLength += e.Length;
-                if (e.Source is Cluster || e.Target is Cluster) continue;
+                if (e.Source is Cluster || e.Target is Cluster) {
+                    continue;
+                }
+
                 var u = e.Source.AlgorithmData as PivotMDSNodeWrap;
                 var v = e.Target.AlgorithmData as PivotMDSNodeWrap;
                 var ee = new Edge(u.node, v.node)
@@ -73,9 +76,9 @@ namespace Microsoft.Msagl.Layout.MDS
                 };
                 g.Edges.Add(ee);
             }
-            if (graph.Edges.Count != 0)
+            if (this.graph.Edges.Count != 0)
             {
-                avgLength /= graph.Edges.Count;
+                avgLength /= this.graph.Edges.Count;
             }
             else
             {
@@ -83,9 +86,11 @@ namespace Microsoft.Msagl.Layout.MDS
             }
 
             // create edges from the children of each parent cluster to the parent cluster node
-            foreach (var c in graph.RootCluster.AllClustersDepthFirst())
+            foreach (var c in this.graph.RootCluster.AllClustersDepthFirst())
             {
-                if (c == graph.RootCluster) continue;
+                if (c == this.graph.RootCluster) {
+                    continue;
+                }
 
                 var u = new Node(CurveFactory.CreateRectangle(10, 10, new Point()));
                 u.UserData = c;
@@ -103,7 +108,7 @@ namespace Microsoft.Msagl.Layout.MDS
             }
 
             // create edges between clusters
-            foreach (var e in graph.Edges)
+            foreach (var e in this.graph.Edges)
             {
                 if (e.Source is Cluster || e.Target is Cluster)
                 {
@@ -131,7 +136,7 @@ namespace Microsoft.Msagl.Layout.MDS
             this.RunChildAlgorithm(mdsLayout, 1.0);
 
             g.UpdateBoundingBox();
-            foreach (var v in graph.Nodes)
+            foreach (var v in this.graph.Nodes)
             {
                 var m = v.AlgorithmData as PivotMDSNodeWrap;
                 v.Center = m.node.Center;

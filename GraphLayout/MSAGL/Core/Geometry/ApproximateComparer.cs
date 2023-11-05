@@ -54,10 +54,14 @@ namespace Microsoft.Msagl.Core.Geometry {
         public static int Compare(double numberA, double numberB) {
             double c = numberA - numberB;
             // The <= and >= here complement the < and > in Close(double, double).
-            if (c <= -DistanceEpsilon)
+            if (c <= -DistanceEpsilon) {
                 return -1;
-            if (c >= DistanceEpsilon)
+            }
+
+            if (c >= DistanceEpsilon) {
                 return 1;
+            }
+
             return 0;
         }
 
@@ -119,12 +123,18 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// -1 iff value is strictly lower than zero;
         /// </summary>
         public static int Sign(double value) {
-            if (value > DistanceEpsilon) return 1;
-            if (value < -DistanceEpsilon) return -1;
+            if (value > DistanceEpsilon) {
+                return 1;
+            }
+
+            if (value < -DistanceEpsilon) {
+                return -1;
+            }
+
             return 0;
         }
 
-         static readonly double squareOfDistanceEpsilon = Math.Pow(10.0, -DistanceEpsilonPrecision * 2);
+        private static readonly double squareOfDistanceEpsilon = Math.Pow(10.0, -DistanceEpsilonPrecision * 2);
 
         /// <summary>
         /// The distance for two points considered to be the same
@@ -145,7 +155,7 @@ namespace Microsoft.Msagl.Core.Geometry {
             get { return 6; }
         }
 
-         static double distXEps = 0.0001;
+        private static double distXEps = 0.0001;
 
         /// <summary>
         /// The distance for two intersection points considered to be the same
@@ -155,7 +165,7 @@ namespace Microsoft.Msagl.Core.Geometry {
             set { distXEps = value; }
         }
 
-         static double tolerance = 1.0E-8;
+        private static double tolerance = 1.0E-8;
 
         /// <summary>
         /// The distance where to real numbers are considered the same
@@ -165,7 +175,7 @@ namespace Microsoft.Msagl.Core.Geometry {
             set { tolerance = value; }
         }
 
-         static double userDefinedTolerance = tolerance;
+        private static double userDefinedTolerance = tolerance;
 
         /// <summary>
         /// A tolerance that is settable by users of MSAGL to adjust performance.

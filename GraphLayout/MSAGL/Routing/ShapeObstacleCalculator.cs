@@ -14,47 +14,51 @@ namespace Microsoft.Msagl.Routing {
     /// We assume that the boundaries are not set for the shape children yet
     /// </summary>
     internal class ShapeObstacleCalculator {
-        RectangleNode<Polyline,Point> tightHierarchy;
-        RectangleNode<TightLooseCouple,Point> coupleHierarchy;
+        private RectangleNode<Polyline,Point> tightHierarchy;
+        private RectangleNode<TightLooseCouple,Point> coupleHierarchy;
 
         public RectangleNode<Shape,Point> RootOfLooseHierarchy { get; set; }
 
         internal ShapeObstacleCalculator(Shape shape, double tightPadding, double loosePadding, 
             Dictionary<Shape, TightLooseCouple> shapeToTightLooseCouples) {
-            MainShape = shape;
-            TightPadding = tightPadding;
-            LoosePadding = loosePadding;
-            ShapesToTightLooseCouples = shapeToTightLooseCouples;
+            this.MainShape = shape;
+            this.TightPadding = tightPadding;
+            this.LoosePadding = loosePadding;
+            this.ShapesToTightLooseCouples = shapeToTightLooseCouples;
         }
 
-        Dictionary<Shape, TightLooseCouple> ShapesToTightLooseCouples { get; set; }
+        private Dictionary<Shape, TightLooseCouple> ShapesToTightLooseCouples { get; set; }
 
-        double TightPadding { get; set; }
-        double LoosePadding { get; set; }
+        private double TightPadding { get; set; }
+        private double LoosePadding { get; set; }
 
-        Shape MainShape { get; set; }
+        private Shape MainShape { get; set; }
 
         internal bool OverlapsDetected { get; set; }
 
 
         internal void Calculate() {
-            if (MainShape.Children.Count() == 0) return;
-            CreateTightObstacles();
-            CreateTigthLooseCouples();
-            FillTheMapOfShapeToTightLooseCouples();
+            if (this.MainShape.Children.Count() == 0) {
+                return;
+            }
+
+            this.CreateTightObstacles();
+            this.CreateTigthLooseCouples();
+            this.FillTheMapOfShapeToTightLooseCouples();
         }
 
-        void FillTheMapOfShapeToTightLooseCouples() {
+        private void FillTheMapOfShapeToTightLooseCouples() {
             var childrenShapeHierarchy =
                 RectangleNode<Shape,Point>.CreateRectangleNodeOnEnumeration(
-                    MainShape.Children.Select(s => new RectangleNode<Shape,Point>(s, s.BoundingBox)));
-            RectangleNodeUtils.CrossRectangleNodes(childrenShapeHierarchy, coupleHierarchy,
-                                                   TryMapShapeToTightLooseCouple);
+                    this.MainShape.Children.Select(s => new RectangleNode<Shape,Point>(s, s.BoundingBox)));
+            RectangleNodeUtils.CrossRectangleNodes(childrenShapeHierarchy, this.coupleHierarchy,
+                                                   this.TryMapShapeToTightLooseCouple);
         }
 
-        void TryMapShapeToTightLooseCouple(Shape shape, TightLooseCouple tightLooseCouple) {
-            if (ShapeIsInsideOfPoly(shape, tightLooseCouple.TightPolyline))
-                ShapesToTightLooseCouples[shape] = tightLooseCouple;
+        private void TryMapShapeToTightLooseCouple(Shape shape, TightLooseCouple tightLooseCouple) {
+            if (ShapeIsInsideOfPoly(shape, tightLooseCouple.TightPolyline)) {
+                this.ShapesToTightLooseCouples[shape] = tightLooseCouple;
+            }
 #if TEST_MSAGL
             tightLooseCouple.LooseShape.UserData = (string) shape.UserData + "x";
 #endif
@@ -67,42 +71,45 @@ namespace Microsoft.Msagl.Routing {
         /// <param name="shape"></param>
         /// <param name="tightPolyline"></param>
         /// <returns></returns>
-        static bool ShapeIsInsideOfPoly(Shape shape, Polyline tightPolyline) {
+        private static bool ShapeIsInsideOfPoly(Shape shape, Polyline tightPolyline) {
             return Curve.PointRelativeToCurveLocation(shape.BoundaryCurve.Start, tightPolyline) == PointLocation.Inside;
         }
 
-        void CreateTigthLooseCouples() {
+        private void CreateTigthLooseCouples() {
             var couples = new List<TightLooseCouple>();
 
-            foreach (var tightPolyline in tightHierarchy.GetAllLeaves()) {
-                var distance = InteractiveObstacleCalculator.FindMaxPaddingForTightPolyline(tightHierarchy, tightPolyline, LoosePadding);
+            foreach (var tightPolyline in this.tightHierarchy.GetAllLeaves()) {
+                var distance = InteractiveObstacleCalculator.FindMaxPaddingForTightPolyline(this.tightHierarchy, tightPolyline, this.LoosePadding);
                 var loosePoly = InteractiveObstacleCalculator.LoosePolylineWithFewCorners(tightPolyline, distance);
                 couples.Add(new TightLooseCouple(tightPolyline, new Shape(loosePoly), distance));
             }
-            coupleHierarchy = RectangleNode<TightLooseCouple,Point>.
+            this.coupleHierarchy = RectangleNode<TightLooseCouple,Point>.
                 CreateRectangleNodeOnEnumeration(couples.Select(c => new RectangleNode<TightLooseCouple,Point>(c, c.TightPolyline.BoundingBox)));
         }
 
-        void CreateTightObstacles() {
-            var tightObstacles = new Set<Polyline>(MainShape.Children.Select(InitialTightPolyline));
+        private void CreateTightObstacles() {
+            var tightObstacles = new Set<Polyline>(this.MainShape.Children.Select(this.InitialTightPolyline));
             int initialNumberOfTightObstacles = tightObstacles.Count;
-            tightHierarchy = InteractiveObstacleCalculator.RemovePossibleOverlapsInTightPolylinesAndCalculateHierarchy(tightObstacles);
-            OverlapsDetected = initialNumberOfTightObstacles > tightObstacles.Count;
+            this.tightHierarchy = InteractiveObstacleCalculator.RemovePossibleOverlapsInTightPolylinesAndCalculateHierarchy(tightObstacles);
+            this.OverlapsDetected = initialNumberOfTightObstacles > tightObstacles.Count;
         }
 
-        Polyline InitialTightPolyline(Shape shape) {
-            var poly = InteractiveObstacleCalculator.PaddedPolylineBoundaryOfNode(shape.BoundaryCurve, TightPadding);
-            var stickingPointsArray = LoosePolylinesUnderShape(shape).SelectMany(l => l).Where(
+        private Polyline InitialTightPolyline(Shape shape) {
+            var poly = InteractiveObstacleCalculator.PaddedPolylineBoundaryOfNode(shape.BoundaryCurve, this.TightPadding);
+            var stickingPointsArray = this.LoosePolylinesUnderShape(shape).SelectMany(l => l).Where(
                 p => Curve.PointRelativeToCurveLocation(p, poly) == PointLocation.Outside).ToArray();
-            if (stickingPointsArray.Length <= 0) return poly;
+            if (stickingPointsArray.Length <= 0) {
+                return poly;
+            }
+
             return new Polyline(
                 ConvexHull.CalculateConvexHull(poly.Concat(stickingPointsArray))) {
                     Closed = true
                 };
         }
 
-        IEnumerable<Polyline> LoosePolylinesUnderShape(Shape shape) {
-            return shape.Children.Select(child => (Polyline)(ShapesToTightLooseCouples[child].LooseShape.BoundaryCurve));
+        private IEnumerable<Polyline> LoosePolylinesUnderShape(Shape shape) {
+            return shape.Children.Select(child => (Polyline)(this.ShapesToTightLooseCouples[child].LooseShape.BoundaryCurve));
         }
     }
 }

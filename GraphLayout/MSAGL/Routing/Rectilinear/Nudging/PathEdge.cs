@@ -18,18 +18,17 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         
 #if TEST_MSAGL
         public override string ToString() {
-            return Source + " " + Target;
+            return this.Source + " " + this.Target;
         }
 #endif
 
 
         internal PathEdge(AxisEdge edgeForNudging, double width) {
-            AxisEdge = edgeForNudging;
-            Width = width;
+            this.AxisEdge = edgeForNudging;
+            this.Width = width;
         }
 
-   
-        LongestNudgedSegment longestNudgedSegment;
+        private LongestNudgedSegment longestNudgedSegment;
 
         /// <summary>
         /// It is the offset of the edge from the underlying line segment 
@@ -37,12 +36,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         /// Offset holder is the same for the maximal parallel sequence of connected PathEdges
         /// </summary>
         internal LongestNudgedSegment LongestNudgedSegment {
-            get { return longestNudgedSegment; }
-            set { 
-                longestNudgedSegment = value;
-                if (longestNudgedSegment != null){
-                    longestNudgedSegment.AddEdge(this);
-                    AxisEdge.AddLongestNudgedSegment(longestNudgedSegment);
+            get { return this.longestNudgedSegment; }
+            set {
+                this.longestNudgedSegment = value;
+                if (this.longestNudgedSegment != null){
+                    this.longestNudgedSegment.AddEdge(this);
+                    this.AxisEdge.AddLongestNudgedSegment(this.longestNudgedSegment);
                 }
             }
         }
@@ -55,12 +54,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
 
         
         internal Point Source {
-            get { return !Reversed? AxisEdge.SourcePoint: AxisEdge.TargetPoint; }
+            get { return !this.Reversed ? this.AxisEdge.SourcePoint: this.AxisEdge.TargetPoint; }
         }
 
         
         internal Point Target {
-            get { return Reversed ? AxisEdge.SourcePoint : AxisEdge.TargetPoint; }
+            get { return this.Reversed ? this.AxisEdge.SourcePoint : this.AxisEdge.TargetPoint; }
         }
 
        
@@ -73,20 +72,20 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
                                       pathEdge.AxisEdge.TargetPoint-pathEdge.AxisEdge.SourcePoint);
         }
 
-        internal Direction Direction { get { return Reversed ? CompassVector.OppositeDir(AxisEdge.Direction) : AxisEdge.Direction;} }
+        internal Direction Direction { get { return this.Reversed ? CompassVector.OppositeDir(this.AxisEdge.Direction) : this.AxisEdge.Direction;} }
         /// <summary>
         /// if set to true then in the path the edge is reversed
         /// </summary>
         internal bool Reversed {get; set;}
 
-        int index=-1;//not set yet
+        private int index=-1;//not set yet
 
         /// <summary>
         /// the index of the edge in the order
         /// </summary>
         internal int Index {
-            get { return index; }
-            set { index = value; }
+            get { return this.index; }
+            set { this.index = value; }
         }
     }
 }

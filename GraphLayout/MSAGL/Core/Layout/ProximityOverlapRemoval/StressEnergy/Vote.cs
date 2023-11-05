@@ -26,9 +26,9 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy
         /// <param name="weight"></param>
         public Vote(int voterIndex,double distance, double weight)
         {
-            VoterIndex = voterIndex;
-            Distance = distance;
-            Weight = weight;
+            this.VoterIndex = voterIndex;
+            this.Distance = distance;
+            this.Weight = weight;
         }
 
         /// <summary>
@@ -37,9 +37,9 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy
         /// <param name="voterIndex"></param>
         /// <param name="distance"></param>
         public Vote(int voterIndex, double distance) {
-            VoterIndex = voterIndex;
-            Distance = distance;
-            Weight = 1/distance/distance;
+            this.VoterIndex = voterIndex;
+            this.Distance = distance;
+            this.Weight = 1/distance/distance;
         }
     }
 }

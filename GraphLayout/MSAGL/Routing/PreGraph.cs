@@ -15,24 +15,25 @@ namespace Microsoft.Msagl.Routing {
         internal Rectangle boundingBox;
        
         internal PreGraph(EdgeGeometry[] egs, Set<ICurve> nodeBoundaries) {
-            edgeGeometries = new List<EdgeGeometry>(egs);
+            this.edgeGeometries = new List<EdgeGeometry>(egs);
             this.nodeBoundaries = new Set<ICurve>(nodeBoundaries);
-            boundingBox = Rectangle.CreateAnEmptyBox();
-            foreach (var curve in nodeBoundaries)
-                boundingBox.Add(curve.BoundingBox);
+            this.boundingBox = Rectangle.CreateAnEmptyBox();
+            foreach (var curve in nodeBoundaries) {
+                this.boundingBox.Add(curve.BoundingBox);
+            }
         }
 
         internal PreGraph() {}
 
         internal void AddGraph(PreGraph a) {
-            edgeGeometries.AddRange(a.edgeGeometries);
-            nodeBoundaries += a.nodeBoundaries;
-            boundingBox.Add(a.boundingBox);
+            this.edgeGeometries.AddRange(a.edgeGeometries);
+            this.nodeBoundaries += a.nodeBoundaries;
+            this.boundingBox.Add(a.boundingBox);
         }
 
         internal void AddNodeBoundary(ICurve curve) {
-            nodeBoundaries.Insert(curve);
-            boundingBox.Add(curve.BoundingBox);
+            this.nodeBoundaries.Insert(curve);
+            this.boundingBox.Add(curve.BoundingBox);
         }
     }
 }

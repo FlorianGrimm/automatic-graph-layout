@@ -12,7 +12,7 @@ namespace Microsoft.Msagl.Core
         /// Inherits any preexisting cancel tokens.
         /// </summary>
         public void Run() {
-            PreRun();
+            this.PreRun();
 
             this.RunInternal();
 
@@ -127,7 +127,7 @@ namespace Microsoft.Msagl.Core
         /// <summary>
         /// the current cancel token
         /// </summary>
-        protected CancelToken CancelToken { get { return cancelToken; } }
+        protected CancelToken CancelToken { get { return this.cancelToken; } }
 
         #endregion Cancel
 
@@ -181,11 +181,11 @@ namespace Microsoft.Msagl.Core
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed")]
         protected void StartListenToLocalProgress(int expectedSteps, double stageRatio = 1)
         {
-            localProgressStepSize = stageRatio / Math.Max(1, expectedSteps); // at least 1, to prevent divide by 0
-            localProgressSpecified = true;
-            localStepCount = 0;
-            stageStartRatio = 0;
-            stageEndRatio = 1;
+            this.localProgressStepSize = stageRatio / Math.Max(1, expectedSteps); // at least 1, to prevent divide by 0
+            this.localProgressSpecified = true;
+            this.localStepCount = 0;
+            this.stageStartRatio = 0;
+            this.stageEndRatio = 1;
         }
 
         /// <summary>
@@ -197,9 +197,9 @@ namespace Microsoft.Msagl.Core
         protected void StartListenToProgress(AlgorithmBase childAlgorithm, double stageRatio)
         {
             ValidateArg.IsNotNull(childAlgorithm, "childAlgorithm");
-            childAlgorithm.ProgressChanged += NotifyProgressChanged;
-            stageStartRatio = progressRatio;
-            stageEndRatio = progressRatio + stageRatio;
+            childAlgorithm.ProgressChanged += this.NotifyProgressChanged;
+            this.stageStartRatio = this.progressRatio;
+            this.stageEndRatio = this.progressRatio + stageRatio;
         }
 
         /// <summary>
@@ -209,10 +209,10 @@ namespace Microsoft.Msagl.Core
         protected void StopListenToProgress(AlgorithmBase childAlgorithm)
         {
             ValidateArg.IsNotNull(childAlgorithm, "childAlgorithm");
-            childAlgorithm.ProgressChanged -= NotifyProgressChanged;
-            progressRatio = stageEndRatio;
-            stageStartRatio = 0;
-            stageEndRatio = 1;
+            childAlgorithm.ProgressChanged -= this.NotifyProgressChanged;
+            this.progressRatio = this.stageEndRatio;
+            this.stageStartRatio = 0;
+            this.stageEndRatio = 1;
         }
 
         /// <summary>
@@ -223,12 +223,12 @@ namespace Microsoft.Msagl.Core
             ValidateArg.IsNotNull(childAlgorithm, "childAlgorithm");
             try
             {
-                StartListenToProgress(childAlgorithm, stageRatio);
+                this.StartListenToProgress(childAlgorithm, stageRatio);
                 childAlgorithm.Run();
             }
             finally
             {
-                StopListenToProgress(childAlgorithm);
+                this.StopListenToProgress(childAlgorithm);
             }
         }
 
@@ -237,11 +237,11 @@ namespace Microsoft.Msagl.Core
         /// </summary>
         protected void ProgressComplete()
         {
-            ThrowIfCanceled();
-            if (progressRatio != 1.0)
+            this.ThrowIfCanceled();
+            if (this.progressRatio != 1.0)
             {
                 this.progressRatio = 1.0;
-                this.NotifyProgressChanged(this, new ProgressChangedEventArgs(progressRatio));
+                this.NotifyProgressChanged(this, new ProgressChangedEventArgs(this.progressRatio));
             }
         }
 
@@ -260,12 +260,12 @@ namespace Microsoft.Msagl.Core
         /// </summary>
         protected void ProgressSteps(int stepsTaken)
         {
-            ThrowIfCanceled();
-            localStepCount += stepsTaken;
+            this.ThrowIfCanceled();
+            this.localStepCount += stepsTaken;
 
-            if (localProgressSpecified)
+            if (this.localProgressSpecified)
             {
-                progressRatio = progressRatio + (localProgressStepSize * stepsTaken);
+                this.progressRatio = this.progressRatio + (this.localProgressStepSize * stepsTaken);
             }
             else
             {
@@ -275,16 +275,16 @@ namespace Microsoft.Msagl.Core
                 const double Limit = 0.85;
                 const double HalfLife = 50.0; // 50 was chosen as the default since it represents one ProgressStep per percentage at the start (i.e. 50 steps reach 50%)
                 const double Numerator = Limit * HalfLife;
-                progressRatio = Limit - (Numerator / (HalfLife + localStepCount));
+                this.progressRatio = Limit - (Numerator / (HalfLife + this.localStepCount));
             }
 
             // Round up to 100% if the sum of steps doesn't quite reach it.
-            if (Math.Round(progressRatio, 6) == 1.0)
+            if (Math.Round(this.progressRatio, 6) == 1.0)
             {
-                progressRatio = 1.0;
+                this.progressRatio = 1.0;
             }
 
-            this.NotifyProgressChanged(this, new ProgressChangedEventArgs(progressRatio));
+            this.NotifyProgressChanged(this, new ProgressChangedEventArgs(this.progressRatio));
         }
 
         /// <summary>
@@ -296,9 +296,9 @@ namespace Microsoft.Msagl.Core
         {
             if (ProgressChanged != null)
             {
-                double stageRatio = stageEndRatio - stageStartRatio;
+                double stageRatio = this.stageEndRatio - this.stageStartRatio;
                 double stageProgress = stageRatio * args.RatioComplete;
-                ProgressChanged(this, new ProgressChangedEventArgs(stageStartRatio + stageProgress));
+                ProgressChanged(this, new ProgressChangedEventArgs(this.stageStartRatio + stageProgress));
             }
         }
 

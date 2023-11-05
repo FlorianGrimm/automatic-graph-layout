@@ -10,14 +10,13 @@ namespace Microsoft.Msagl.Core.Layout {
     [Serializable]
 #endif
     abstract public class GeometryObject {
-       
-        GeometryObject geometryParent;
+        private GeometryObject geometryParent;
         /// <summary>
         /// the parent of the object
         /// </summary>
         public GeometryObject GeometryParent {
-            get { return geometryParent; }
-            set { geometryParent = value; }
+            get { return this.geometryParent; }
+            set { this.geometryParent = value; }
         }
 
         /// <summary>
@@ -35,7 +34,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         public object UserData { get; set; }
 
-        event EventHandler<LayoutChangeEventArgs> beforeLayoutChangeEvent;
+        private event EventHandler<LayoutChangeEventArgs> beforeLayoutChangeEvent;
         
         /// <summary>
         /// event signalling that the layout is about to change
@@ -55,8 +54,9 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <param name="newValue"></param>
         public virtual void RaiseLayoutChangeEvent(object newValue) {
-            if (beforeLayoutChangeEvent != null)
+            if (beforeLayoutChangeEvent != null) {
                 beforeLayoutChangeEvent(this, new LayoutChangeEventArgs {DataAfterChange = newValue});
+            }
         }
         
         

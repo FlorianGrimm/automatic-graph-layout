@@ -7,7 +7,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     /// the helper class to create curves
     /// </summary>
     public sealed class CurveFactory {
-        CurveFactory() { }
+        private CurveFactory() { }
         /// <summary>
         /// Creates an ellipse by the length of axes and the center
         /// </summary>
@@ -59,11 +59,15 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                 return;
             }
             double w = width / 2;
-            if (radiusInXDirection > w / 2)
+            if (radiusInXDirection > w / 2) {
                 radiusInXDirection = w / 2;
+            }
+
             double h = height / 2;
-            if (radiusInYDirection > h / 2)
+            if (radiusInYDirection > h / 2) {
                 radiusInYDirection = h / 2;
+            }
+
             double x = center.X;
             double y = center.Y;
             double ox = w - radiusInXDirection;
@@ -78,17 +82,25 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
             c.IncreaseSegmentCapacity(8);
 
-            if (ox > 0)
+            if (ox > 0) {
                 c.AddSegment(new LineSegment(new Point(x - ox, bottom), new Point(x + ox, bottom)));
+            }
+
             c.AddSegment(new Ellipse(1.5 * Math.PI, 2 * Math.PI, a, b, x + ox, y - oy));
-            if (oy > 0)
+            if (oy > 0) {
                 c.AddSegment(new LineSegment(new Point(right, y - oy), new Point(right, y + oy)));
+            }
+
             c.AddSegment(new Ellipse(0, 0.5 * Math.PI, a, b, x + ox, y + oy));
-            if (ox > 0)
+            if (ox > 0) {
                 c.AddSegment(new LineSegment(new Point(x + ox, top), new Point(x - ox, top)));
+            }
+
             c.AddSegment(new Ellipse(0.5 * Math.PI, Math.PI, a, b, x - ox, y + oy));
-            if (oy > 0)
+            if (oy > 0) {
                 c.AddSegment(new LineSegment(new Point(left, y + oy), new Point(left, y - oy)));
+            }
+
             c.AddSegment(new Ellipse(Math.PI, 1.5 * Math.PI, a, b, x - ox, y - oy));
         }
 
@@ -223,7 +235,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         }
 
         // This adds the padding to the edges around the inscribed rectangle of an octagon.
-        static double octagonPad = 1.0 / 4;
+        private static double octagonPad = 1.0 / 4;
 
         /// <summary>
         /// Creates a curve of the form of an octagon large enough to inscribe a rectangle
@@ -376,7 +388,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
         }
 
-        static IEnumerable<Point> StarPoints(double r, double r2, Point center, double a) {
+        private static IEnumerable<Point> StarPoints(double r, double r2, Point center, double a) {
             var ang = Math.PI / 2;
             var anghalf = a / 2;
             for (int i = 0; i < 5; i++) {
@@ -389,8 +401,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         internal static Polyline CreateRegularPolygon(int n, Point center, double rad) {
             var pt = new Point[n];
             double a = 2 * Math.PI / n;
-            for (int i = 0; i < n; i++)
+            for (int i = 0; i < n; i++) {
                 pt[i] = rad * (new Point(Math.Cos(i * a), Math.Sin(i * a))) + center;
+            }
+
             return new Polyline(pt) { Closed = true };
         }
     }

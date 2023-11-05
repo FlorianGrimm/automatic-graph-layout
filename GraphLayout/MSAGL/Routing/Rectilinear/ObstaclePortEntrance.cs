@@ -17,8 +17,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
     /// An ObstaclePortEntrance is a single edge entering or leaving an obstacle in one of the NSEW Compass directions.
     /// </summary>
     internal class ObstaclePortEntrance {
-        ObstaclePort ObstaclePort { get; set; }
-        Obstacle Obstacle { get { return ObstaclePort.Obstacle; } }
+        private ObstaclePort ObstaclePort { get; set; }
+
+        private Obstacle Obstacle { get { return this.ObstaclePort.Obstacle; } }
 
         // The intersection point on the obstacle border (e.g. intersection with a port point, or
         // midpoint of PortEntry) and the direction from that point to find the outer vertex.
@@ -45,13 +46,13 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal bool CanExtend { get { return PointComparer.GetDirections(this.MaxVisibilitySegment.Start, this.MaxVisibilitySegment.End) != Direction. None; } }
 
         internal ObstaclePortEntrance(ObstaclePort oport, Point unpaddedBorderIntersect, Direction outDir, ObstacleTree obstacleTree) {
-            ObstaclePort = oport;
-            UnpaddedBorderIntersect = unpaddedBorderIntersect;
-            OutwardDirection = outDir;
+            this.ObstaclePort = oport;
+            this.UnpaddedBorderIntersect = unpaddedBorderIntersect;
+            this.OutwardDirection = outDir;
 
             // Get the padded intersection.
-            var lineSeg = new LineSegment(UnpaddedBorderIntersect, StaticGraphUtility.RectangleBorderIntersect(
-                                            oport.Obstacle.VisibilityBoundingBox, UnpaddedBorderIntersect, outDir));
+            var lineSeg = new LineSegment(this.UnpaddedBorderIntersect, StaticGraphUtility.RectangleBorderIntersect(
+                                            oport.Obstacle.VisibilityBoundingBox, this.UnpaddedBorderIntersect, outDir));
             IList<IntersectionInfo> xxs = Curve.GetAllIntersections(lineSeg, oport.Obstacle.VisibilityPolyline, true /*liftIntersections*/);
             Debug.Assert(1 == xxs.Count, "Expected one intersection");
             this.VisibilityBorderIntersect = ApproximateComparer.Round(xxs[0].IntersectionPoint);
@@ -62,13 +63,13 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // Groups are never in a clump (overlapped) but they may still have their port entrance overlapped.
             if (this.Obstacle.IsOverlapped || (this.Obstacle.IsGroup && !this.Obstacle.IsInConvexHull)) {
                 this.IsOverlapped = obstacleTree.IntersectionIsInsideAnotherObstacle(/*sideObstacle:*/ null, this.Obstacle
-                        , this.VisibilityBorderIntersect, ScanDirection.GetInstance(OutwardDirection));
+                        , this.VisibilityBorderIntersect, ScanDirection.GetInstance(this.OutwardDirection));
                 if (!this.Obstacle.IsGroup || this.IsOverlapped || this.InteriorEdgeCrossesObstacle(obstacleTree)) {
-                    unpaddedToPaddedBorderWeight = ScanSegment.OverlappedWeight;
+                    this.unpaddedToPaddedBorderWeight = ScanSegment.OverlappedWeight;
                 }
             }
-            if (this.Obstacle.IsInConvexHull && (unpaddedToPaddedBorderWeight == ScanSegment.NormalWeight)) {
-                SetUnpaddedToPaddedBorderWeightFromHullSiblingOverlaps(obstacleTree);
+            if (this.Obstacle.IsInConvexHull && (this.unpaddedToPaddedBorderWeight == ScanSegment.NormalWeight)) {
+                this.SetUnpaddedToPaddedBorderWeightFromHullSiblingOverlaps(obstacleTree);
             }
         }
 
@@ -82,7 +83,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // File Test: Nudger_Overlap4
             // Use the VisibilityBoundingBox for groups because those are what the tree consists of.
             var rect = new Rectangle(this.UnpaddedBorderIntersect, this.VisibilityBorderIntersect);
-            return InteriorEdgeCrossesObstacle(rect, obs => obs.VisibilityPolyline,
+            return this.InteriorEdgeCrossesObstacle(rect, obs => obs.VisibilityPolyline,
                     obstacleTree.Root.GetLeafRectangleNodesIntersectingRectangle(rect)
                         .Where(node => !node.UserData.IsGroup && (node.UserData != this.Obstacle)).Select(node => node.UserData));
         }
@@ -91,7 +92,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // There is no RectangleNode tree that includes convex hull non-primary siblings, so we just iterate;
             // this will only be significant to perf in extremely overlapped cases that we are not optimizing for.
             var rect = new Rectangle(this.UnpaddedBorderIntersect, this.VisibilityBorderIntersect);
-            return InteriorEdgeCrossesObstacle(rect, obs => obs.PaddedPolyline,
+            return this.InteriorEdgeCrossesObstacle(rect, obs => obs.PaddedPolyline,
                     this.Obstacle.ConvexHull.Obstacles.Where(obs => obs != this.Obstacle));
         }
 
@@ -128,7 +129,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                             , Rectangle limitRect, bool routeToCenter) {
             VisibilityVertex borderVertex = transUtil.VisGraph.FindVertex(this.VisibilityBorderIntersect);
             if (borderVertex != null) {
-                ExtendEdgeChain(transUtil, borderVertex, borderVertex, limitRect, routeToCenter);
+                this.ExtendEdgeChain(transUtil, borderVertex, borderVertex, limitRect, routeToCenter);
                 return;
             }
 
@@ -149,7 +150,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // be able to happen.
             // See RectilinearTests.PaddedBorderIntersectMeetsIncomingScanSegment for an example of what happens
             // when VisibilityBorderIntersect is on the incoming ScanSegment (it jumps out above with borderVertex found).
-            if (OutwardDirection == PointComparer.GetPureDirection(targetVertex.Point, this.VisibilityBorderIntersect)) {
+            if (this.OutwardDirection == PointComparer.GetPureDirection(targetVertex.Point, this.VisibilityBorderIntersect)) {
                 Debug.Assert(false, "Unexpected reversed direction between VisibilityBorderIntersect and targetVertex");
 // ReSharper disable HeuristicUnreachableCode
                 this.VisibilityBorderIntersect = targetVertex.Point;
@@ -158,9 +159,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             }
             else {
                 borderVertex = transUtil.FindOrAddVertex(this.VisibilityBorderIntersect);
-                transUtil.FindOrAddEdge(borderVertex, targetVertex,  InitialWeight);
+                transUtil.FindOrAddEdge(borderVertex, targetVertex, this.InitialWeight);
             }
-            ExtendEdgeChain(transUtil, borderVertex, targetVertex, limitRect, routeToCenter);
+            this.ExtendEdgeChain(transUtil, borderVertex, targetVertex, limitRect, routeToCenter);
         }
         
         internal void ExtendEdgeChain(TransientGraphUtility transUtil, VisibilityVertex paddedBorderVertex
@@ -170,11 +171,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
             // In order for Nudger to be able to map from the (near-) endpoint vertex to a PortEntry, we must 
             // always connect a vertex at UnpaddedBorderIntersect to the paddedBorderVertex, even if routeToCenter.
-            var unpaddedBorderVertex = transUtil.FindOrAddVertex(UnpaddedBorderIntersect);
+            var unpaddedBorderVertex = transUtil.FindOrAddVertex(this.UnpaddedBorderIntersect);
             transUtil.FindOrAddEdge(unpaddedBorderVertex, paddedBorderVertex, this.unpaddedToPaddedBorderWeight);
             if (routeToCenter) {
                 // Link the CenterVertex to the vertex at UnpaddedBorderIntersect.
-                transUtil.ConnectVertexToTargetVertex(ObstaclePort.CenterVertex, unpaddedBorderVertex, OutwardDirection, InitialWeight);
+                transUtil.ConnectVertexToTargetVertex(this.ObstaclePort.CenterVertex, unpaddedBorderVertex, this.OutwardDirection, this.InitialWeight);
             }
         }
 
@@ -184,7 +185,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// <returns></returns>
         public override string ToString() {
             return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0} {1}~{2} {3}",
-                                ObstaclePort.Location, UnpaddedBorderIntersect, this.VisibilityBorderIntersect, OutwardDirection);
+                                this.ObstaclePort.Location, this.UnpaddedBorderIntersect, this.VisibilityBorderIntersect, this.OutwardDirection);
         }
     }
 }

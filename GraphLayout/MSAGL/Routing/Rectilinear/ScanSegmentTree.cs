@@ -19,11 +19,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         // Temporary variables for lookup.
         private readonly ScanSegment lookupSegment = new ScanSegment(new Point(0, 0), new Point(0, 1));  // dummy values avoid AF; will be overwritten
-        readonly Func<ScanSegment, bool> findIntersectorPred;
-        readonly Func<ScanSegment, bool> findPointPred;
+        private readonly Func<ScanSegment, bool> findIntersectorPred;
+        private readonly Func<ScanSegment, bool> findPointPred;
 
         internal ScanSegmentTree(ScanDirection scanDir) {
-            ScanDirection = scanDir;
+            this.ScanDirection = scanDir;
             this.segmentTree = new RbTree<ScanSegment>(this);
             this.findIntersectorPred = new Func<ScanSegment, bool>(this.CompareIntersector);
             this.findPointPred = new Func<ScanSegment, bool>(this.CompareToPoint);
@@ -37,7 +37,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // RBTree's internal operations on insert/remove etc. mean the node can't cache the
             // RBNode returned by insert(); instead we must do find() on each call.  But we can
             // use the returned node to get predecessor/successor.
-            AssertValidSegmentForInsertion(seg);
+            this.AssertValidSegmentForInsertion(seg);
             var node = this.segmentTree.Find(seg);
             if (null != node) {
                 Debug.Assert(seg.IsOverlapped == node.Item.IsOverlapped, "Existing node found with different isOverlapped");
@@ -48,18 +48,18 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         [Conditional("TEST_MSAGL")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        void AssertValidSegmentForInsertion(ScanSegment seg) {
+        private void AssertValidSegmentForInsertion(ScanSegment seg) {
             Debug.Assert((seg.End.X >= seg.Start.X) && (seg.End.Y >= seg.Start.Y), "Reversed direction in ScanSegment");
-            Debug.Assert(ScanDirection.IsFlat(seg.Start, seg.End), "non-flat segment cannot be inserted");
+            Debug.Assert(this.ScanDirection.IsFlat(seg.Start, seg.End), "non-flat segment cannot be inserted");
         }
 
         internal void Remove(ScanSegment seg) {
-            Debug.Assert(seg.IsVertical == ScanDirection.IsVertical, "seg.IsVertical != ScanDirection.IsVertical");
+            Debug.Assert(seg.IsVertical == this.ScanDirection.IsVertical, "seg.IsVertical != ScanDirection.IsVertical");
             this.segmentTree.Remove(seg);
         }
 
         internal ScanSegment Find(Point start, Point end) {
-            Debug.Assert(PointComparer.Equal(start, end) || !ScanDirection.IsPerpendicular(start, end)
+            Debug.Assert(PointComparer.Equal(start, end) || !this.ScanDirection.IsPerpendicular(start, end)
                         , "perpendicular segment passed");
             this.lookupSegment.Update(start, end);
             RBNode<ScanSegment> node = this.segmentTree.Find(this.lookupSegment);
@@ -71,12 +71,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         // Find the lowest perpendicular scanseg that intersects the segment endpoints.
         internal ScanSegment FindLowestIntersector(Point start, Point end) {
-            var node = FindLowestIntersectorNode(start, end);
+            var node = this.FindLowestIntersectorNode(start, end);
             return (null != node) ? node.Item : null;
         }
 
         internal RBNode<ScanSegment> FindLowestIntersectorNode(Point start, Point end) {
-            Debug.Assert(ScanDirection.IsPerpendicular(start, end), "non-perpendicular segment passed");
+            Debug.Assert(this.ScanDirection.IsPerpendicular(start, end), "non-perpendicular segment passed");
 
             // Find the last segment that starts at or before 'start'.
             this.lookupSegment.Update(start, start);
@@ -86,7 +86,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // must iterate to find the lowest bisector.  TODOperf: see how much that iteration costs us
             // (here and Highest); consider a BSP tree or interval tree (maybe 2-d RBTree for updatability).
             if (PointComparer.Equal(start, end)) {
-                if ((null != node) && (ScanDirection.Compare(node.Item.End, start) < 0)) {
+                if ((null != node) && (this.ScanDirection.Compare(node.Item.End, start) < 0)) {
                     node = null;
                 }
             }
@@ -94,7 +94,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 this.lookupSegment.Update(start, end);
                 while ((null != node) && !node.Item.IntersectsSegment(this.lookupSegment)) {
                     // If the node segment starts after 'end', no intersection was found.
-                    if (ScanDirection.Compare(node.Item.Start, end) > 0) {
+                    if (this.ScanDirection.Compare(node.Item.Start, end) > 0) {
                         return null;
                     }
                     node = this.segmentTree.Next(node);
@@ -105,7 +105,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         // Find the highest perpendicular scanseg that intersects the segment endpoints.
         internal ScanSegment FindHighestIntersector(Point start, Point end) {
-            Debug.Assert(ScanDirection.IsPerpendicular(start, end), "non-perpendicular segment passed");
+            Debug.Assert(this.ScanDirection.IsPerpendicular(start, end), "non-perpendicular segment passed");
 
             // Find the last segment that starts at or before 'end'.
             this.lookupSegment.Update(end, end);
@@ -114,7 +114,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // Now we either have a segment that intersects start/end, or one that ends before 
             // 'end' and need to iterate to find the highest bisector.
             if (PointComparer.Equal(start, end)) {
-                if ((null != node) && (ScanDirection.Compare(node.Item.End, start) < 0)) {
+                if ((null != node) && (this.ScanDirection.Compare(node.Item.End, start) < 0)) {
                     node = null;
                 }
             }
@@ -122,7 +122,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 this.lookupSegment.Update(start, end);
                 while ((null != node) && !node.Item.IntersectsSegment(this.lookupSegment)) {
                     // If the node segment ends before 'start', no intersection was found.
-                    if (ScanDirection.Compare(node.Item.End, start) < 0) {
+                    if (this.ScanDirection.Compare(node.Item.End, start) < 0) {
                         return null;
                     }
                     node = this.segmentTree.Previous(node);
@@ -131,13 +131,13 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             return (null != node) ? node.Item : null;
         }
 
-        bool CompareIntersector(ScanSegment seg) {
+        private bool CompareIntersector(ScanSegment seg) {
             // We're looking for the last segment that starts before LookupSegment.Start.
-            return (ScanDirection.Compare(seg.Start, this.lookupSegment.Start) <= 0);
+            return (this.ScanDirection.Compare(seg.Start, this.lookupSegment.Start) <= 0);
         }
 
         internal ScanSegment FindSegmentContainingPoint(Point location, bool allowUnfound) {
-            return FindSegmentOverlappingPoints(location, location, allowUnfound);
+            return this.FindSegmentOverlappingPoints(location, location, allowUnfound);
         }
         internal ScanSegment FindSegmentOverlappingPoints(Point start, Point end, bool allowUnfound) {
             this.lookupSegment.Update(start, end);
@@ -149,7 +149,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // compare the endpoints directly.
             if (null != node) {
                 ScanSegment seg = node.Item;
-                if (ScanDirection.Compare(seg.Start, end) <= 0) {
+                if (this.ScanDirection.Compare(seg.Start, end) <= 0) {
                     return seg;
                 }
             }
@@ -161,16 +161,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             return null;
         }
 
-        bool CompareToPoint(ScanSegment treeSeg) {
+        private bool CompareToPoint(ScanSegment treeSeg) {
             // Test if treeSeg overlaps the LookupSegment.Start point.  We're using FindFirst,
             // so we'll just return false for everything that ends before the point and true for anything
             // that ends at or after it, then the caller will verify overlap.
-            return (ScanDirection.Compare(treeSeg.End, this.lookupSegment.Start) >= 0);
+            return (this.ScanDirection.Compare(treeSeg.End, this.lookupSegment.Start) >= 0);
         }
 
-        RBNode<ScanSegment> MergeAndRemoveNextNode(ScanSegment currentSegment, RBNode<ScanSegment> nextSegNode) {
+        private RBNode<ScanSegment> MergeAndRemoveNextNode(ScanSegment currentSegment, RBNode<ScanSegment> nextSegNode) {
             // Merge at the ends only - if we're here, start will be the same or greater.
-            if (-1 == ScanDirection.Compare(currentSegment.End, nextSegNode.Item.End)) {
+            if (-1 == this.ScanDirection.Compare(currentSegment.End, nextSegNode.Item.End)) {
                 currentSegment.Update(currentSegment.Start, nextSegNode.Item.End);
             }
 
@@ -182,16 +182,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         internal void MergeSegments() {
             // As described in the doc, hintScanSegment handles all the non-overlapped non-reflection cases.
-            DevTraceInfo(1, "{0} ScanSegmentTree MergeSegments, count = {1}"
-                            , ScanDirection.IsHorizontal ? "Horizontal" : "Vertical", this.segmentTree.Count);
+            this.DevTraceInfo(1, "{0} ScanSegmentTree MergeSegments, count = {1}"
+                            , this.ScanDirection.IsHorizontal ? "Horizontal" : "Vertical", this.segmentTree.Count);
             if (this.segmentTree.Count < 2) {
                 return;
             }
             RBNode<ScanSegment> currentSegNode = this.segmentTree.TreeMinimum();
             RBNode<ScanSegment> nextSegNode = this.segmentTree.Next(currentSegNode);
             for ( ; null != nextSegNode; nextSegNode = this.segmentTree.Next(currentSegNode)) {
-                DevTraceInfo(2, "Current {0}  Next {1}", currentSegNode.Item, nextSegNode.Item);
-                int cmp = ScanDirection.Compare(nextSegNode.Item.Start, currentSegNode.Item.End);
+                this.DevTraceInfo(2, "Current {0}  Next {1}", currentSegNode.Item, nextSegNode.Item);
+                int cmp = this.ScanDirection.Compare(nextSegNode.Item.Start, currentSegNode.Item.End);
                 switch (cmp) {
                     case 1:
                         // Next segment starts after the current one.
@@ -201,12 +201,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                         if (nextSegNode.Item.IsOverlapped == currentSegNode.Item.IsOverlapped) {
                             // Overlapping is the same, so merge.  Because the ordering in the tree is that
                             // same-Start nodes are ordered by longest-End first, this will retain the tree ordering.
-                            DevTraceInfo(2, "  (merged; start-at-end with same overlap)");
-                            currentSegNode = MergeAndRemoveNextNode(currentSegNode.Item, nextSegNode);
+                            this.DevTraceInfo(2, "  (merged; start-at-end with same overlap)");
+                            currentSegNode = this.MergeAndRemoveNextNode(currentSegNode.Item, nextSegNode);
                         }
                         else {
                             // Touching start/end with differing IsOverlapped so they need a connecting vertex.
-                            DevTraceInfo(2, "  (marked with NeedFinalOverlapVertex)");
+                            this.DevTraceInfo(2, "  (marked with NeedFinalOverlapVertex)");
                             currentSegNode.Item.NeedEndOverlapVertex = true;
                             nextSegNode.Item.NeedStartOverlapVertex = true;
                             currentSegNode = nextSegNode;
@@ -236,12 +236,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                                     // Notice reversed params.  TestNote: No longer have repro with the change to convex hulls;
                                     // this may no longer happen since overlapped edges will now always be inside rectangular
                                     // obstacles so there are no angled-side calculations.
-                                    currentSegNode = MergeAndRemoveNextNode(nextSegNode.Item, currentSegNode);
-                                    DevTraceInfo(2, "  (identical starts so discarding isOverlapped currentSegNode)");
+                                    currentSegNode = this.MergeAndRemoveNextNode(nextSegNode.Item, currentSegNode);
+                                    this.DevTraceInfo(2, "  (identical starts so discarding isOverlapped currentSegNode)");
                                 }
                                 else {
                                     currentSegNode.Item.Update(currentSegNode.Item.Start, nextSegNode.Item.Start);
-                                    DevTraceInfo(2, "  (trimming isOverlapped currentSegNode to {0})", currentSegNode.Item);
+                                    this.DevTraceInfo(2, "  (trimming isOverlapped currentSegNode to {0})", currentSegNode.Item);
                                     currentSegNode = nextSegNode;
                                 }
                             }
@@ -252,8 +252,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                                     // TestNote: No longer have repro with the change to convex hulls;
                                     // this may no longer happen since overlapped edges will now always be inside rectangular
                                     // obstacles so there are no angled-side calculations.
-                                    currentSegNode = MergeAndRemoveNextNode(currentSegNode.Item, nextSegNode);
-                                    DevTraceInfo(2, "  (identical ends so discarding isOverlapped currentSegNode)");
+                                    currentSegNode = this.MergeAndRemoveNextNode(currentSegNode.Item, nextSegNode);
+                                    this.DevTraceInfo(2, "  (identical ends so discarding isOverlapped currentSegNode)");
                                 }
                                 else {
                                     // Remove nextSegNode, increment its start to be after currentSegment, re-insert nextSegNode, and
@@ -264,7 +264,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                                     nextSegment.Update(currentSegment.End, nextSegment.End);
                                     this.segmentTree.Insert(nextSegment);
                                     nextSegment.TrimGroupBoundaryCrossingList();
-                                    DevTraceInfo(2, "  (trimming isOverlapped nextSegNode to {0})", nextSegment);
+                                    this.DevTraceInfo(2, "  (trimming isOverlapped nextSegNode to {0})", nextSegment);
                                     currentSegNode = this.segmentTree.Find(currentSegment);
                                 }
                             }
@@ -272,8 +272,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                         }
 
                         // Overlaps match so do a normal merge operation.
-                        DevTraceInfo(2, "  (merged; start-before-end)");
-                        currentSegNode = MergeAndRemoveNextNode(currentSegNode.Item, nextSegNode);
+                        this.DevTraceInfo(2, "  (merged; start-before-end)");
+                        currentSegNode = this.MergeAndRemoveNextNode(currentSegNode.Item, nextSegNode);
                         break;
                 } // endswitch
             } // endfor
@@ -316,18 +316,23 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// <param name="second"></param>
         /// <returns></returns>
         public int Compare(ScanSegment first, ScanSegment second) {
-            if (first == second)
+            if (first == second) {
                 return 0;
-            if (first == null)
+            }
+
+            if (first == null) {
                 return -1;
-            if (second == null)
+            }
+
+            if (second == null) {
                 return 1;
+            }
 
             // This orders on both axes.
-            int cmp = ScanDirection.Compare(first.Start, second.Start);
+            int cmp = this.ScanDirection.Compare(first.Start, second.Start);
             if (0 == cmp) {
                 // Longer segments come first, to make overlap removal easier.
-                cmp = -ScanDirection.Compare(first.End, second.End);
+                cmp = -this.ScanDirection.Compare(first.End, second.End);
             }
             return cmp;
         }
@@ -341,7 +346,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         [Conditional("DEVTRACE")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        void DevTraceInfo(int verboseLevel, string format, params object[] args) {
+        private void DevTraceInfo(int verboseLevel, string format, params object[] args) {
 #if DEVTRACE
             this.scanSegmentTrace.WriteLineIf(DevTrace.Level.Info, verboseLevel, format, args);
 #endif // DEVTRACE

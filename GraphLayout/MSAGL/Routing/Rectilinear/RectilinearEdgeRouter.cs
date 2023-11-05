@@ -37,8 +37,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// two ports being connected.
         /// </summary>
         public double BendPenaltyAsAPercentageOfDistance {
-            get => bendPenaltyAsAPercentageOfDistance; set {
-                bendPenaltyAsAPercentageOfDistance = value;
+            get => this.bendPenaltyAsAPercentageOfDistance; set {
+                this.bendPenaltyAsAPercentageOfDistance = value;
             }
         }
 
@@ -47,8 +47,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// MultiSourceMultiTarget approach.
         /// </summary>
         public bool RouteToCenterOfObstacles {
-            get { return PortManager.RouteToCenterOfObstacles; }
-            set { PortManager.RouteToCenterOfObstacles = value; }
+            get { return this.PortManager.RouteToCenterOfObstacles; }
+            set { this.PortManager.RouteToCenterOfObstacles = value; }
         }
 
         /// <summary>
@@ -71,10 +71,10 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // all values to be rounded.
             if (!PointComparer.Equal(ApproximateComparer.Round(edgeGeometry.SourcePort.Location)
                     , ApproximateComparer.Round(edgeGeometry.TargetPort.Location))) {
-                EdgeGeometries.Add(edgeGeometry);
+                this.EdgeGeometries.Add(edgeGeometry);
             }
             else {
-                selfEdges.Add(edgeGeometry);
+                this.selfEdges.Add(edgeGeometry);
             }
         }
 
@@ -83,7 +83,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// </summary>
         /// <param name="edgeGeometry"></param>
         public void RemoveEdgeGeometryToRoute(EdgeGeometry edgeGeometry) {
-            EdgeGeometries.Remove(edgeGeometry);
+            this.EdgeGeometries.Remove(edgeGeometry);
         }
 
 
@@ -92,7 +92,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// List itself so people don't add or remove items directly.
         /// </summary>
         public IEnumerable<EdgeGeometry> EdgeGeometriesToRoute {
-            get { return EdgeGeometries; }
+            get { return this.EdgeGeometries; }
         }
 
         
@@ -104,14 +104,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// as well as any intervening obstacles.
         /// </summary>
         public IEnumerable<Shape> Obstacles {
-            get { return ShapeToObstacleMap.Values.Select(obs => obs.InputShape); }
+            get { return this.ShapeToObstacleMap.Values.Select(obs => obs.InputShape); }
         }
 
         /// <summary>
         /// The collection of padded obstacle boundary polylines around the input shapes to route around.
         /// </summary>
         internal IEnumerable<Polyline> PaddedObstacles {
-            get { return ShapeToObstacleMap.Values.Select(obs => obs.PaddedPolyline); }
+            get { return this.ShapeToObstacleMap.Values.Select(obs => obs.PaddedPolyline); }
         }
 
         /// <summary>
@@ -120,8 +120,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// <param name="obstacles"></param>
         public void AddObstacles(IEnumerable<Shape> obstacles) {
             ValidateArg.IsNotNull(obstacles, "obstacles");
-            AddShapes(obstacles);
-            RebuildTreeAndGraph();
+            this.AddShapes(obstacles);
+            this.RebuildTreeAndGraph();
         }
 
         private void AddShapes(IEnumerable<Shape> obstacles) {
@@ -135,8 +135,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// </summary>
         /// <param name="shape"></param>
         public void AddObstacle(Shape shape) {
-            AddObstacleWithoutRebuild(shape);
-            RebuildTreeAndGraph();
+            this.AddObstacleWithoutRebuild(shape);
+            this.RebuildTreeAndGraph();
         }
 
         /// <summary>
@@ -146,9 +146,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         public void UpdateObstacles(IEnumerable<Shape> obstacles) {
             ValidateArg.IsNotNull(obstacles, "obstacles");
             foreach (var shape in obstacles) {
-                UpdateObstacleWithoutRebuild(shape);
+                this.UpdateObstacleWithoutRebuild(shape);
             }
-            RebuildTreeAndGraph();
+            this.RebuildTreeAndGraph();
         }
 
         /// <summary>
@@ -156,8 +156,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// </summary>
         /// <param name="obstacle"></param>
         public void UpdateObstacle(Shape obstacle) {
-            UpdateObstacleWithoutRebuild(obstacle);
-            RebuildTreeAndGraph();
+            this.UpdateObstacleWithoutRebuild(obstacle);
+            this.RebuildTreeAndGraph();
         }
 
         /// <summary>
@@ -167,9 +167,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         public void RemoveObstacles(IEnumerable<Shape> obstacles) {
             ValidateArg.IsNotNull(obstacles, "obstacles");
             foreach (var shape in obstacles) {
-                RemoveObstacleWithoutRebuild(shape);
+                this.RemoveObstacleWithoutRebuild(shape);
             }
-            RebuildTreeAndGraph();
+            this.RebuildTreeAndGraph();
         }
 
         /// <summary>
@@ -178,13 +178,13 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// <param name="obstacle"></param>
         /// <returns>All EdgeGeometries affected by the re-routing and re-nudging in order to avoid the new obstacle.</returns>
         public void RemoveObstacle(Shape obstacle) {
-            RemoveObstacleWithoutRebuild(obstacle);
-            RebuildTreeAndGraph();
+            this.RemoveObstacleWithoutRebuild(obstacle);
+            this.RebuildTreeAndGraph();
         }
 
         // utilities
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "BoundaryCurve")]
-        void AddObstacleWithoutRebuild(Shape shape) {
+        private void AddObstacleWithoutRebuild(Shape shape) {
             ValidateArg.IsNotNull(shape, "shape");
             if (shape.BoundaryCurve == null) {
                 throw new InvalidOperationException(
@@ -197,7 +197,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA2204:Literals should be spelled correctly", MessageId = "BoundaryCurve")]
-        void UpdateObstacleWithoutRebuild(Shape shape) {
+        private void UpdateObstacleWithoutRebuild(Shape shape) {
             ValidateArg.IsNotNull(shape, "shape");
             if (shape.BoundaryCurve == null) {
                 throw new InvalidOperationException(
@@ -208,8 +208,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             }
 
             // Always do all of this even if the Shape objects are the same, because the BoundaryCurve probably changed.
-            PortManager.RemoveObstaclePorts(ShapeToObstacleMap[shape]);
-            CreatePaddedObstacle(shape);
+            this.PortManager.RemoveObstaclePorts(this.ShapeToObstacleMap[shape]);
+            this.CreatePaddedObstacle(shape);
         }
 
         private void CreatePaddedObstacle(Shape shape) {
@@ -218,33 +218,33 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             this.PortManager.CreateObstaclePorts(obstacle);
         }
 
-        void RemoveObstacleWithoutRebuild(Shape shape) {
+        private void RemoveObstacleWithoutRebuild(Shape shape) {
             ValidateArg.IsNotNull(shape, "shape");
-            Obstacle obstacle = ShapeToObstacleMap[shape];
-            ShapeToObstacleMap.Remove(shape);
-            PortManager.RemoveObstaclePorts(obstacle);
+            Obstacle obstacle = this.ShapeToObstacleMap[shape];
+            this.ShapeToObstacleMap.Remove(shape);
+            this.PortManager.RemoveObstaclePorts(obstacle);
         }
 
         /// <summary>
         /// Remove all obstacles from the graph.
         /// </summary>
         public void RemoveAllObstacles() {
-            InternalClear(retainObstacles: false);
+            this.InternalClear(retainObstacles: false);
         }
 
         #endregion // Obstacle API
 
-        void RebuildTreeAndGraph() {
+        private void RebuildTreeAndGraph() {
             bool hadTree = this.ObsTree.Root != null;
-            bool hadVg = GraphGenerator.VisibilityGraph != null;
-            InternalClear(retainObstacles: true);
+            bool hadVg = this.GraphGenerator.VisibilityGraph != null;
+            this.InternalClear(retainObstacles: true);
 
             if (hadTree) {
-                GenerateObstacleTree();
+                this.GenerateObstacleTree();
             }
 
             if (hadVg) {
-                GenerateVisibilityGraph();
+                this.GenerateVisibilityGraph();
             }
         }
 
@@ -253,8 +253,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// </summary>
         internal VisibilityGraph VisibilityGraph {
             get {
-                GenerateVisibilityGraph();
-                return GraphGenerator.VisibilityGraph;
+                this.GenerateVisibilityGraph();
+                return this.GraphGenerator.VisibilityGraph;
             }
         }
 
@@ -262,7 +262,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// Clears all data set into the router.
         /// </summary>
         public void Clear() {
-            InternalClear(retainObstacles: false);
+            this.InternalClear(retainObstacles: false);
         }
 
         #region Private data
@@ -333,17 +333,17 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// <param name="useObstacleRectangles">Use obstacle bounding boxes in visibility graph</param>
         public RectilinearEdgeRouter(IEnumerable<Shape> obstacles, double padding, double cornerFitRadius,
                                     bool useSparseVisibilityGraph) {
-            Padding = padding;
-            CornerFitRadius = cornerFitRadius;
-            BendPenaltyAsAPercentageOfDistance = SsstRectilinearPath.DefaultBendPenaltyAsAPercentageOfDistance;
+            this.Padding = padding;
+            this.CornerFitRadius = cornerFitRadius;
+            this.BendPenaltyAsAPercentageOfDistance = SsstRectilinearPath.DefaultBendPenaltyAsAPercentageOfDistance;
             if (useSparseVisibilityGraph) {
                 this.GraphGenerator = new SparseVisibilityGraphGenerator();
             }
             else {
                 this.GraphGenerator = new FullVisibilityGraphGenerator();
             }
-            PortManager = new PortManager(GraphGenerator);
-            AddShapes(obstacles);
+            this.PortManager = new PortManager(this.GraphGenerator);
+            this.AddShapes(obstacles);
         }
 
         
@@ -370,8 +370,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// </summary>
         protected override void RunInternal() {
             // Create visibility graph if not already done.
-            GenerateVisibilityGraph();
-            GeneratePaths();
+            this.GenerateVisibilityGraph();
+            this.GeneratePaths();
         }
 
         internal virtual void GeneratePaths() {
@@ -382,9 +382,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             this.FinaliseEdgeGeometries();
         }
 
-        void RouteSelfEdges() {
-            foreach (var edge in selfEdges) {
-                edge.Curve = Edge.RouteSelfEdge(edge.SourcePort.Curve, Math.Max(Padding, 2 * edge.GetMaxArrowheadLength()), out SmoothedPolyline sp);
+        private void RouteSelfEdges() {
+            foreach (var edge in this.selfEdges) {
+                edge.Curve = Edge.RouteSelfEdge(edge.SourcePort.Curve, Math.Max(this.Padding, 2 * edge.GetMaxArrowheadLength()), out SmoothedPolyline sp);
             }
         }
 
@@ -393,8 +393,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 #if TEST_MSAGL
         private IEnumerable<DebugCurve> GetGraphDebugCurves() {
             List<DebugCurve> l =
-                VisibilityGraph.Edges.Select(e => new DebugCurve(50, 0.1, "blue", new LineSegment(e.SourcePoint, e.TargetPoint))).ToList();
-            l.AddRange(Obstacles.Select(o => new DebugCurve(1, "green", o.BoundaryCurve)));
+                this.VisibilityGraph.Edges.Select(e => new DebugCurve(50, 0.1, "blue", new LineSegment(e.SourcePoint, e.TargetPoint))).ToList();
+            l.AddRange(this.Obstacles.Select(o => new DebugCurve(1, "green", o.BoundaryCurve)));
             return l;
         }
 #endif
@@ -404,15 +404,15 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             var shortestPathRouter = new MsmtRectilinearPath(this.BendPenaltyAsAPercentageOfDistance);
             foreach (Path edgePath in edgePaths) {
                 this.ProgressStep();
-                AddControlPointsAndGeneratePath(shortestPathRouter, edgePath);
+                this.AddControlPointsAndGeneratePath(shortestPathRouter, edgePath);
             }
             this.PortManager.EndRouteEdges();
         }
 
         private void AddControlPointsAndGeneratePath(MsmtRectilinearPath shortestPathRouter, Path edgePath) {
-            Point[] intersectPoints = PortManager.GetPortVisibilityIntersection(edgePath.EdgeGeometry);
+            Point[] intersectPoints = this.PortManager.GetPortVisibilityIntersection(edgePath.EdgeGeometry);
             if (intersectPoints != null) {
-                GeneratePathThroughVisibilityIntersection(edgePath, intersectPoints);
+                this.GeneratePathThroughVisibilityIntersection(edgePath, intersectPoints);
                 return;
             }
 
@@ -438,16 +438,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         private void ShowEdgePath(Path path) {
             // ReSharper restore UnusedMember.Local
-            List<DebugCurve> dd = Nudger.GetObstacleBoundaries(PaddedObstacles, "black");
+            List<DebugCurve> dd = Nudger.GetObstacleBoundaries(this.PaddedObstacles, "black");
             dd.AddRange(Nudger.PathDebugCurvesFromPoint(path));
-            dd.AddRange(VisibilityGraph.Edges.Select(e => new DebugCurve(0.5, "blue", new LineSegment(e.SourcePoint, e.TargetPoint))));
+            dd.AddRange(this.VisibilityGraph.Edges.Select(e => new DebugCurve(0.5, "blue", new LineSegment(e.SourcePoint, e.TargetPoint))));
             LayoutAlgorithmSettings.ShowDebugCurvesEnumeration(dd);
         }
 #endif
 
         internal virtual bool GeneratePath(MsmtRectilinearPath shortestPathRouter, Path edgePath, bool lastChance = false) {
-            var sourceVertices = PortManager.FindVertices(edgePath.EdgeGeometry.SourcePort);
-            var targetVertices = PortManager.FindVertices(edgePath.EdgeGeometry.TargetPort);
+            var sourceVertices = this.PortManager.FindVertices(edgePath.EdgeGeometry.SourcePort);
+            var targetVertices = this.PortManager.FindVertices(edgePath.EdgeGeometry.TargetPort);
             return GetSingleStagePath(edgePath, shortestPathRouter, sourceVertices, targetVertices, lastChance);
         }
 
@@ -483,12 +483,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal virtual void RetryPathsWithAdditionalGroupsEnabled(MsmtRectilinearPath shortestPathRouter, Path edgePath) {
             // Insert any spatial parent groups that are not in our hierarchical parent tree and retry,
             // if we haven't already done this.
-            if (!PortManager.SetAllAncestorsActive(edgePath.EdgeGeometry, ShapeToObstacleMap)
-                    || !GeneratePath(shortestPathRouter, edgePath)) {
+            if (!this.PortManager.SetAllAncestorsActive(edgePath.EdgeGeometry, this.ShapeToObstacleMap)
+                    || !this.GeneratePath(shortestPathRouter, edgePath)) {
                 // Last chance: enable all groups (if we have any).  Only do this on a per-path basis so a single degenerate
                 // path won't make the entire graph look bad.
-                PortManager.SetAllGroupsActive();
-                GeneratePath(shortestPathRouter, edgePath, lastChance:true);
+                this.PortManager.SetAllGroupsActive();
+                this.GeneratePath(shortestPathRouter, edgePath, lastChance:true);
             }
         }
 
@@ -514,42 +514,42 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal virtual void NudgePaths(IEnumerable<Path> edgePaths) {
 
             // If we adjusted for spatial ancestors, this nudging can get very weird, so refetch in that case.
-            var ancestorSets = this.ObsTree.SpatialAncestorsAdjusted ? SplineRouter.GetAncestorSetsMap(Obstacles) : this.AncestorsSets;
+            var ancestorSets = this.ObsTree.SpatialAncestorsAdjusted ? SplineRouter.GetAncestorSetsMap(this.Obstacles) : this.AncestorsSets;
 
             // Using VisibilityPolyline retains any reflection/staircases on the convex hull borders; using
             // PaddedPolyline removes them.
-            Nudger.NudgePaths(edgePaths, CornerFitRadius, PaddedObstacles, ancestorSets, RemoveStaircases);
+            Nudger.NudgePaths(edgePaths, this.CornerFitRadius, this.PaddedObstacles, ancestorSets, this.RemoveStaircases);
             //Nudger.NudgePaths(edgePaths, CornerFitRadius, this.ObstacleTree.GetAllPrimaryObstacles().Select(obs => obs.VisibilityPolyline), ancestorSets, RemoveStaircases);
 
         }
         private bool removeStaircases = true;
         private double bendPenaltyAsAPercentageOfDistance;
-        readonly List<EdgeGeometry> selfEdges = new List<EdgeGeometry>();
+        private readonly List<EdgeGeometry> selfEdges = new List<EdgeGeometry>();
 
         ///<summary>
         ///</summary>
         public bool RemoveStaircases {
-            get { return removeStaircases; }
-            set { removeStaircases = value; }
+            get { return this.removeStaircases; }
+            set { this.removeStaircases = value; }
         }
 
         internal virtual void FinaliseEdgeGeometries() {
-            foreach (EdgeGeometry edgeGeom in EdgeGeometries.Concat(selfEdges)) {
+            foreach (EdgeGeometry edgeGeom in this.EdgeGeometries.Concat(this.selfEdges)) {
                 if (edgeGeom.Curve == null) {
                     continue;
                 }
                 var poly = (edgeGeom.Curve as Polyline);
                 if (poly != null) {
-                    edgeGeom.Curve = FitArcsIntoCorners(CornerFitRadius, poly.ToArray());
+                    edgeGeom.Curve = FitArcsIntoCorners(this.CornerFitRadius, poly.ToArray());
                 }
                 CalculateArrowheads(edgeGeom);
             }
         }
 
         internal virtual void CreateVisibilityGraph() {
-            GraphGenerator.Clear();
-            InitObstacleTree();
-            GraphGenerator.GenerateVisibilityGraph();
+            this.GraphGenerator.Clear();
+            this.InitObstacleTree();
+            this.GraphGenerator.GenerateVisibilityGraph();
         }
 
         private static void CalculateArrowheads(EdgeGeometry edgeGeom) {
@@ -563,7 +563,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         private void GenerateObstacleTree() {
-            if ((Obstacles == null) || !Obstacles.Any()) {
+            if ((this.Obstacles == null) || !this.Obstacles.Any()) {
                 throw new InvalidOperationException(
 #if TEST_MSAGL
                     "No obstacles have been added"
@@ -572,31 +572,31 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             }
 
             if (this.ObsTree.Root == null) {
-                InitObstacleTree();
+                this.InitObstacleTree();
             }
         }
 
         internal virtual void InitObstacleTree() {
-            AncestorsSets = SplineRouter.GetAncestorSetsMap(Obstacles);
-            this.ObsTree.Init(ShapeToObstacleMap.Values, AncestorsSets, ShapeToObstacleMap);
+            this.AncestorsSets = SplineRouter.GetAncestorSetsMap(this.Obstacles);
+            this.ObsTree.Init(this.ShapeToObstacleMap.Values, this.AncestorsSets, this.ShapeToObstacleMap);
         }
 
         private void InternalClear(bool retainObstacles) {
-            GraphGenerator.Clear();
-            ClearShortestPaths();
+            this.GraphGenerator.Clear();
+            this.ClearShortestPaths();
             if (retainObstacles) {
                 // Remove precalculated visibility, since we're likely revising obstacle positions.
-                PortManager.ClearVisibility();
+                this.PortManager.ClearVisibility();
             }
             else {
-                PortManager.Clear();
-                ShapeToObstacleMap.Clear();
-                EdgeGeometries.Clear();
+                this.PortManager.Clear();
+                this.ShapeToObstacleMap.Clear();
+                this.EdgeGeometries.Clear();
             }
         }
 
         private void ClearShortestPaths() {
-            foreach (EdgeGeometry edgeGeom in EdgeGeometries) {
+            foreach (EdgeGeometry edgeGeom in this.EdgeGeometries) {
                 edgeGeom.Curve = null;
             }
         }
@@ -608,7 +608,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// Generates the visibility graph if it hasn't already been done.
         /// </summary>
         internal void GenerateVisibilityGraph() {
-            if ((Obstacles == null) || !Obstacles.Any()) {
+            if ((this.Obstacles == null) || !this.Obstacles.Any()) {
                 throw new InvalidOperationException(
 #if TEST_MSAGL
                     "No obstacles have been set"
@@ -618,8 +618,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
             // Must test GraphGenerator.VisibilityGraph because this.VisibilityGraph calls back to
             // this function to ensure the graph is present.
-            if (GraphGenerator.VisibilityGraph == null) {
-                CreateVisibilityGraph();
+            if (this.GraphGenerator.VisibilityGraph == null) {
+                this.CreateVisibilityGraph();
             }
         }
 
@@ -627,8 +627,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal void ShowPathWithTakenEdgesAndGraph(IEnumerable<VisibilityVertex> path, Set<VisibilityEdge> takenEdges) {
             var list = new List<VisibilityVertex>(path);
             var lines = new List<LineSegment>();
-            for (int i = 0; i < list.Count - 1; i++)
+            for (int i = 0; i < list.Count - 1; i++) {
                 lines.Add(new LineSegment(list[i].Point, list[i + 1].Point));
+            }
 
             // ReSharper disable InconsistentNaming
             double w0 = 4;
@@ -641,7 +642,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 w0 += delta;
             }
             dc.AddRange(takenEdges.Select(edge => new DebugCurve(50, 2, "black", new LineSegment(edge.SourcePoint, edge.TargetPoint))));
-            IEnumerable<DebugCurve> k = GetGraphDebugCurves();
+            IEnumerable<DebugCurve> k = this.GetGraphDebugCurves();
             dc.AddRange(k);
             LayoutAlgorithmSettings.ShowDebugCurvesEnumeration(dc);
             // ReSharper restore InconsistentNaming
@@ -656,17 +657,17 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 bool ellipseIsAlmostCurve = EllipseIsAlmostLineSegment(ellipse);
 
                 if (prevEllipse != null) {
-                    if (ellipseIsAlmostCurve)
+                    if (ellipseIsAlmostCurve) {
                         Curve.ContinueWithLineSegment(curve, CornerPoint(ellipse));
-                    else {
+                    } else {
                         Curve.ContinueWithLineSegment(curve, ellipse.Start);
                         curve.AddSegment(ellipse);
                     }
                 }
                 else {
-                    if (ellipseIsAlmostCurve)
+                    if (ellipseIsAlmostCurve) {
                         Curve.AddLineSegment(curve, polyline[0], CornerPoint(ellipse));
-                    else {
+                    } else {
                         Curve.AddLineSegment(curve, polyline[0], ellipse.Start);
                         curve.AddSegment(ellipse);
                     }
@@ -675,15 +676,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 prevEllipse = ellipse;
             }
 
-            if (curve.Segments.Count > 0)
+            if (curve.Segments.Count > 0) {
                 Curve.ContinueWithLineSegment(curve, polyline[polyline.Length - 1]);
-            else
+            } else {
                 Curve.AddLineSegment(curve, polyline[0], polyline[polyline.Length - 1]);
+            }
 
             return curve;
         }
 
-        static Point CornerPoint(Ellipse ellipse) {
+        private static Point CornerPoint(Ellipse ellipse) {
             return ellipse.Center + ellipse.AxisA + ellipse.AxisB;
         }
 
@@ -701,13 +703,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 leg = polyline[i + 1] - polyline[i];
                 double legLength = leg.Length;
 
-                if (legLength < ApproximateComparer.IntersectionEpsilon)
+                if (legLength < ApproximateComparer.IntersectionEpsilon) {
                     ret = /*new Ellipse(0, 0, polyline[i]) = */
                         new Ellipse(0, 0, new Point(), new Point(), polyline[i]);
+                }
 
                 Point ndir = leg / legLength;
                 if (Math.Abs(ndir * dir) > 0.9) //the polyline does't make a 90 degrees turn
+{
                     ret = new Ellipse(0, 0, polyline[i]);
+                }
 
                 double nrad0 = Math.Min(radius, leg.Length / 2);
                 Point axis0 = -nrad0 * ndir;

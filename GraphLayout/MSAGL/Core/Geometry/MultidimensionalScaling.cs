@@ -8,7 +8,7 @@ namespace Microsoft.Msagl.Core.Geometry {
     /// distances.
     /// </summary>
     sealed public class MultidimensionalScaling {
-        MultidimensionalScaling() { }//suppressing the creation of the public constructor
+        private MultidimensionalScaling() { }//suppressing the creation of the public constructor
         /// <summary>
         /// Double-centers a matrix in such a way that the center of gravity is zero.
         /// After double-centering, each row and each column sums up to zero.
@@ -26,8 +26,14 @@ namespace Microsoft.Msagl.Core.Geometry {
                     mean += matrix[i][j];
                 }
             }
-            for (int i = 0; i < matrix.Length; i++) rowMean[i] /= matrix.Length;
-            for (int j = 0; j < matrix[0].Length; j++) colMean[j] /= matrix[0].Length;
+            for (int i = 0; i < matrix.Length; i++) {
+                rowMean[i] /= matrix.Length;
+            }
+
+            for (int j = 0; j < matrix[0].Length; j++) {
+                colMean[j] /= matrix[0].Length;
+            }
+
             mean /= matrix.Length;
             mean /= matrix[0].Length;
             for (int i = 0; i < matrix.Length; i++) {
@@ -77,7 +83,10 @@ namespace Microsoft.Msagl.Core.Geometry {
         public static double[] Multiply(double[][] A, double[] x) {
             ValidateArg.IsNotNull(A, "A");
             ValidateArg.IsNotNull(x, "x");
-            if(A[0].Length!=x.Length) return null;
+            if(A[0].Length!=x.Length) {
+                return null;
+            }
+
             double[] y=new double[x.Length];
             for (int i = 0; i < A.Length; i++) {
                 for (int j = 0; j < A[0].Length; j++) {
@@ -115,7 +124,10 @@ namespace Microsoft.Msagl.Core.Geometry {
         public static double Normalize(double[] x) {
             ValidateArg.IsNotNull(x, "x");
             double lambda = Norm(x);
-            if (lambda <= 0) return 0;
+            if (lambda <= 0) {
+                return 0;
+            }
+
             for (int i = 0; i < x.Length; i++) {
                 x[i] /= lambda;
             }
@@ -203,7 +215,10 @@ namespace Microsoft.Msagl.Core.Geometry {
         public static double DotProduct(double[] x, double[] y) {
             ValidateArg.IsNotNull(x, "x");
             ValidateArg.IsNotNull(y, "y");
-            if (x.Length != y.Length) return 0;
+            if (x.Length != y.Length) {
+                return 0;
+            }
+
             double result = 0;
             for (int i = 0; i < x.Length; i++) {
                 result += x[i]*y[i];
@@ -221,7 +236,10 @@ namespace Microsoft.Msagl.Core.Geometry {
         public static void MakeOrthogonal(double[] x, double[] y) {
             ValidateArg.IsNotNull(x, "x");
             ValidateArg.IsNotNull(y, "y");
-            if (x.Length != y.Length) return;
+            if (x.Length != y.Length) {
+                return;
+            }
+
             double prod = DotProduct(x, y) / DotProduct(y, y);            
             for (int i = 0; i < x.Length; i++) {
                 x[i] -= prod*y[i];
@@ -309,7 +327,10 @@ namespace Microsoft.Msagl.Core.Geometry {
                     for (int j = 0; j < n; j++) {
                         if (i != j) {
                             double inv = Math.Sqrt(Math.Pow(x[index[i]] - x[j], 2) + Math.Pow(y[index[i]] - y[j], 2));
-                            if (inv > 0) inv = 1 / inv;
+                            if (inv > 0) {
+                                inv = 1 / inv;
+                            }
+
                             xNew += w[i][j] * (x[j] + d[i][j] * (x[index[i]] - x[j]) * inv);
                             yNew += w[i][j] * (y[j] + d[i][j] * (y[index[i]] - y[j]) * inv);
                         }
@@ -341,8 +362,9 @@ namespace Microsoft.Msagl.Core.Geometry {
             double[] wSum = new double[n];
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
-                    if (i != j)
+                    if (i != j) {
                         wSum[i] += w[i][j];
+                    }
                 }
             }
             for (int c = 0; c < iter; c++) {
@@ -352,7 +374,10 @@ namespace Microsoft.Msagl.Core.Geometry {
                     for (int j = 0; j < n; j++) {
                         if(i!=j) {
                             double inv = Math.Sqrt(Math.Pow(x[i] - x[j], 2) + Math.Pow(y[i] - y[j], 2));
-                            if (inv > 0) inv=1/inv;
+                            if (inv > 0) {
+                                inv =1/inv;
+                            }
+
                             xNew += w[i][j] * (x[j] + d[i][j] * (x[i] - x[j]) * inv);
                             yNew += w[i][j] * (y[j] + d[i][j] * (y[i] - y[j]) * inv);
                         }
@@ -378,8 +403,9 @@ namespace Microsoft.Msagl.Core.Geometry {
             for (int i = 0; i < d.Length; i++) {
                 w[i] = new double[d[i].Length];
                 for (int j = 0; j < d[i].Length; j++) {
-                    if(d[i][j]>0)
+                    if(d[i][j]>0) {
                         w[i][j] = Math.Pow(d[i][j], exponent);
+                    }
                 }
             }
             return w;

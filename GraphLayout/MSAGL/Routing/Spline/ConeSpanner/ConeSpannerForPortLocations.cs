@@ -9,11 +9,11 @@ using System.Linq;
 namespace Microsoft.Msagl.Routing.Spline.ConeSpanner
 {
     internal class ConeSpannerForPortLocations : AlgorithmBase {
+        private readonly IEnumerable<Polyline> obstacles;
 
-        readonly IEnumerable<Polyline> obstacles;
         // double coneAngle = Math.PI / 18;// ten degrees
         //double coneAngle = Math.PI / 9;// twenty degrees
-        double coneAngle = 
+        private double coneAngle = 
             Math.PI / 6;// thirty degrees
 
         //double coneAngle = Math.PI / 4;// 45 degrees
@@ -21,9 +21,9 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner
 
         internal ConeSpannerForPortLocations(IEnumerable<Polyline> obstacles, VisibilityGraph visibilityGraph,
             IEnumerable<Point> portLocationsPointSet) {
-            PortLocations = portLocationsPointSet;
+            this.PortLocations = portLocationsPointSet;
             this.obstacles = VisibilityGraph.OrientHolesClockwise(obstacles);
-            VisibilityGraph = visibilityGraph;
+            this.VisibilityGraph = visibilityGraph;
         }
 
         protected IEnumerable<Point> PortLocations { get; set; }
@@ -38,22 +38,21 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner
         protected override void RunInternal() {
             //we need to run the full circle of directions since we do not emanate cones from
             //obstacle vertices here
-            for (int i = 0; i<GetTotalSteps(coneAngle); i++) {
-                var angle = coneAngle*i;
-                AddDirection(new Point(Math.Cos(angle), Math.Sin(angle)));
-                ProgressStep();
+            for (int i = 0; i<GetTotalSteps(this.coneAngle); i++) {
+                var angle = this.coneAngle *i;
+                this.AddDirection(new Point(Math.Cos(angle), Math.Sin(angle)));
+                this.ProgressStep();
             }
         }
 
-       
-
-        void AddDirection(Point direction) {
+        private void AddDirection(Point direction) {
             var visibilityGraph = new VisibilityGraph();
-            LineSweeperForPortLocations.Sweep(obstacles, direction, coneAngle, visibilityGraph,
-                                              PortLocations);
-            foreach (var edge in visibilityGraph.Edges)
-                VisibilityGraph.AddEdge(edge.SourcePoint, edge.TargetPoint,
+            LineSweeperForPortLocations.Sweep(this.obstacles, direction, this.coneAngle, visibilityGraph,
+                                              this.PortLocations);
+            foreach (var edge in visibilityGraph.Edges) {
+                this.VisibilityGraph.AddEdge(edge.SourcePoint, edge.TargetPoint,
                                         ((a, b) => new TollFreeVisibilityEdge(a, b)));
+            }
         }
 
     }

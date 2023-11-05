@@ -11,16 +11,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging
     
         internal SegWithIndex(Point[] pts, int i) {
             Debug.Assert(i<pts.Length&&i>=0);
-            Points = pts;
-            I = i;
+            this.Points = pts;
+            this.I = i;
         }
 
-        internal Point Start {get{return Points[I];}}
-        internal Point End{ get{return Points[I+1];}}
+        internal Point Start {get{return this.Points[this.I];}}
+        internal Point End{ get{return this.Points[this.I +1];}}
     
         override public bool Equals(object obj) {
             var other = (SegWithIndex) obj;
-            return other.Points== Points&& other.I == I;
+            return other.Points== this.Points && other.I == this.I;
         }
 
         

@@ -22,17 +22,17 @@ namespace Microsoft.Msagl.Core.Layout {
 #endif
     public abstract class LayoutAlgorithmSettings {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2235:MarkAllNonSerializableFields")]
-        EdgeRoutingSettings edgeRoutingSettings = new EdgeRoutingSettings();
+        private EdgeRoutingSettings edgeRoutingSettings = new EdgeRoutingSettings();
         ///<summary>
         /// defines edge routing behaviour
         ///</summary>
         public EdgeRoutingSettings EdgeRoutingSettings {
-            get { return edgeRoutingSettings; }
-            set { edgeRoutingSettings = value; }
+            get { return this.edgeRoutingSettings; }
+            set { this.edgeRoutingSettings = value; }
         }
         #region
 #if TEST_MSAGL
-        bool reporting;
+        private bool reporting;
 
         /// <summary>
         /// Controls the reporting facility.
@@ -40,15 +40,15 @@ namespace Microsoft.Msagl.Core.Layout {
         [Description("Controls the reporting facility.")]
         [DefaultValue(false)]
         public bool Reporting {
-            get { return reporting; }
-            set { reporting = value; }
+            get { return this.reporting; }
+            set { this.reporting = value; }
         }
 #endif
         #endregion
         #region test_msagl
 
 #if TEST_MSAGL
-        static Show show;
+        private static Show show;
 
         /// <summary>
         /// Used for debugging purposes to display all kind of intermediate curves.
@@ -69,8 +69,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         public static ShowDebugCurvesEnumeration ShowDebugCurvesEnumeration { get; set; }
 
-
-        static ShowDatabase showDataBase;
+        private static ShowDatabase showDataBase;
 
         /// <summary>
         /// used for debugging purposes to display anchors and paths that are kept in the DataBase
@@ -88,52 +87,52 @@ namespace Microsoft.Msagl.Core.Layout {
 
         #endregion
 
-        double packingAspectRatio = PackingConstants.GoldenRatio;
+        private double packingAspectRatio = PackingConstants.GoldenRatio;
 
         /// <summary>
         /// Controls the ideal aspect ratio for packing disconnected components
         /// </summary>
         public double PackingAspectRatio {
-            get { return packingAspectRatio; }
-            set { packingAspectRatio = value; }
+            get { return this.packingAspectRatio; }
+            set { this.packingAspectRatio = value; }
         }
 
-        PackingMethod packingMethod = PackingMethod.Compact;
+        private PackingMethod packingMethod = PackingMethod.Compact;
 
         /// <summary>
         /// the packing method
         /// </summary>
         public PackingMethod PackingMethod {
-            get { return packingMethod; }
-            set { packingMethod = value; }
+            get { return this.packingMethod; }
+            set { this.packingMethod = value; }
         }
 
-        double nodeSeparation = 10;
+        private double nodeSeparation = 10;
 
         /// <summary>
         /// When AvoidOverlaps is set, we optionally enforce a little extra space around nodes
         /// </summary>
         public double NodeSeparation {
-            get { return nodeSeparation; }
-            set { nodeSeparation = value; }
+            get { return this.nodeSeparation; }
+            set { this.nodeSeparation = value; }
         }
 
-        double clusterMargin = 10;
+        private double clusterMargin = 10;
         
         
         /// <summary>
         /// When AvoidOverlaps is set, we optionally enforce a little extra space between nodes and cluster boundaries
         /// </summary>
         public double ClusterMargin {
-            get { return clusterMargin; }
-            set { clusterMargin = value; }
+            get { return this.clusterMargin; }
+            set { this.clusterMargin = value; }
         }
 
         private bool liftCrossEdges = true;
         /// <summary>While laying out clusters, consider edges connecting subnodes as if they were connecting the clusters directly, for the purpose of arranging clusters. This usually results in a better layout.</summary>
         public bool LiftCrossEdges {
-            get { return liftCrossEdges; }
-            set { liftCrossEdges = value; }
+            get { return this.liftCrossEdges; }
+            set { this.liftCrossEdges = value; }
         }
 
         /// <summary>

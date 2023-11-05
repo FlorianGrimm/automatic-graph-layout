@@ -38,7 +38,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         private readonly Point site;
         internal override Point Site {
-            get { return site; }
+            get { return this.site; }
         }
     }
 }

@@ -13,9 +13,9 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
     /// the router between nodes
     /// </summary>
     public class RouterBetweenTwoNodes {
-        readonly Dictionary<Point, Polyline> pointsToObstacles = new Dictionary<Point, Polyline>();
-        VisibilityGraph _visGraph;
-        ObstacleCalculator obstacleCalculator;
+        private readonly Dictionary<Point, Polyline> pointsToObstacles = new Dictionary<Point, Polyline>();
+        private VisibilityGraph _visGraph;
+        private ObstacleCalculator obstacleCalculator;
 
         /// <summary>
         /// the port of the edge start
@@ -27,7 +27,7 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         /// </summary>
         public Port TargetPort { get; private set; }
 
-        const double enteringAngleBound = 10;
+        private const double enteringAngleBound = 10;
 
         /// <summary>
         /// the minimum angle between a node boundary curve and and an edge 
@@ -37,15 +37,14 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             get { return enteringAngleBound; }
         }
 
-
-        double minimalPadding = 1;
+        private double minimalPadding = 1;
 
         /// <summary>
         /// the curve should not come to the nodes closer than MinimalPaddin
         /// </summary>
         public double Padding {
-            get { return minimalPadding; }
-            private set { minimalPadding = value; }
+            get { return this.minimalPadding; }
+            private set { this.minimalPadding = value; }
         }
 
 
@@ -56,16 +55,15 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
 
 
         [SuppressMessage("Microsoft.Performance", "CA1823:AvoidUnusedPrivateFields")]
-        readonly GeometryGraph graph;
+        private readonly GeometryGraph graph;
 
         internal Node Target { get; private set; }
 
-        VisibilityVertex sourceVisibilityVertex;
+        private VisibilityVertex sourceVisibilityVertex;
+        private VisibilityVertex targetVisibilityVertex;
 
-        VisibilityVertex targetVisibilityVertex;
-
-        VisibilityVertex TargetVisibilityVertex {
-            get { return targetVisibilityVertex; }
+        private VisibilityVertex TargetVisibilityVertex {
+            get { return this.targetVisibilityVertex; }
             //            set { targetVisibilityVertex = value; }
         }
 
@@ -73,16 +71,18 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal GeometryGraph Graph {
-            get { return graph; }
+            get { return this.graph; }
         }
 
-        Polyline Polyline { get; set; }
+        private Polyline Polyline { get; set; }
 
         internal static double DistanceFromPointToPolyline(Point p, Polyline poly) {
             double d = double.PositiveInfinity;
             double u;
-            for (PolylinePoint pp = poly.StartPoint; pp.Next != null; pp = pp.Next)
+            for (PolylinePoint pp = poly.StartPoint; pp.Next != null; pp = pp.Next) {
                 d = Math.Min(d, Point.DistToLineSegment(p, pp.Point, pp.Next.Point, out u));
+            }
+
             return d;
         }
 
@@ -91,7 +91,7 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         /// </summary>
         [SuppressMessage("Microsoft.Naming",
             "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Polyline")]
-        double OffsetForPolylineRelaxing { get; set; }
+        private double OffsetForPolylineRelaxing { get; set; }
 
         /// <summary>
         /// constructor
@@ -103,9 +103,9 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         public RouterBetweenTwoNodes(GeometryGraph graph, double minimalPadding, double maximalPadding,
                                      double offsetForRelaxing) {
             this.graph = graph;
-            LoosePadding = maximalPadding;
-            Padding = minimalPadding;
-            OffsetForPolylineRelaxing = offsetForRelaxing;
+            this.LoosePadding = maximalPadding;
+            this.Padding = minimalPadding;
+            this.OffsetForPolylineRelaxing = offsetForRelaxing;
         }
 
 
@@ -116,28 +116,28 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         /// <param name="edge"></param>
         /// <param name="takeYourTime">if set to true then the method will try to improve the spline</param>
         public void RouteEdge(Edge edge, bool takeYourTime) {
-            Source = edge.Source;
-            Target = edge.Target;
-            SourcePort = edge.SourcePort;
-            TargetPort = edge.TargetPort;
-            CalculateObstacles();
-            LineSegment lineSeg = TryRouteStraightLine();
+            this.Source = edge.Source;
+            this.Target = edge.Target;
+            this.SourcePort = edge.SourcePort;
+            this.TargetPort = edge.TargetPort;
+            this.CalculateObstacles();
+            LineSegment lineSeg = this.TryRouteStraightLine();
             if (lineSeg != null) {
-                Polyline = new Polyline(lineSeg.Start, lineSeg.End);
-                edge.UnderlyingPolyline = SmoothedPolyline.FromPoints(Polyline);
+                this.Polyline = new Polyline(lineSeg.Start, lineSeg.End);
+                edge.UnderlyingPolyline = SmoothedPolyline.FromPoints(this.Polyline);
             } else {
-                CalculateTangentVisibilityGraph();
-                Polyline = GetShortestPolyline();
+                this.CalculateTangentVisibilityGraph();
+                this.Polyline = this.GetShortestPolyline();
                 // ShowPolylineAndObstacles();
-                RelaxPolyline();
+                this.RelaxPolyline();
                 //ShowPolylineAndObstacles();
                 //ReducePolyline();
                 //ShowPolylineAndObstacles();
-                edge.UnderlyingPolyline = SmoothedPolyline.FromPoints(Polyline);
+                edge.UnderlyingPolyline = SmoothedPolyline.FromPoints(this.Polyline);
 
                 if (takeYourTime) {
-                    TryToRemoveInflectionsAndCollinearSegs(edge.UnderlyingPolyline);
-                    SmoothCorners(edge.UnderlyingPolyline);
+                    this.TryToRemoveInflectionsAndCollinearSegs(edge.UnderlyingPolyline);
+                    this.SmoothCorners(edge.UnderlyingPolyline);
                 }
             }
 
@@ -200,16 +200,17 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         //}
 #endif
         //pull the polyline out from the corners
-        void RelaxPolyline() {
-            RelaxedPolylinePoint relaxedPolylinePoint = CreateRelaxedPolylinePoints(Polyline);
+        private void RelaxPolyline() {
+            RelaxedPolylinePoint relaxedPolylinePoint = CreateRelaxedPolylinePoints(this.Polyline);
             //ShowPolylineAndObstacles();
             for (relaxedPolylinePoint = relaxedPolylinePoint.Next;
                  relaxedPolylinePoint.Next != null;
-                 relaxedPolylinePoint = relaxedPolylinePoint.Next)
-                RelaxPolylinePoint(relaxedPolylinePoint);
+                 relaxedPolylinePoint = relaxedPolylinePoint.Next) {
+                this.RelaxPolylinePoint(relaxedPolylinePoint);
+            }
         }
 
-        static RelaxedPolylinePoint CreateRelaxedPolylinePoints(Polyline polyline) {
+        private static RelaxedPolylinePoint CreateRelaxedPolylinePoints(Polyline polyline) {
             PolylinePoint p = polyline.StartPoint;
             var ret = new RelaxedPolylinePoint(p, p.Point);
             RelaxedPolylinePoint currentRelaxed = ret;
@@ -222,36 +223,37 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             return ret;
         }
 
-
-        void RelaxPolylinePoint(RelaxedPolylinePoint relaxedPoint) {
-            for (double d = OffsetForPolylineRelaxing; !RelaxWithGivenOffset(d, relaxedPoint); d /= 2) {
+        private void RelaxPolylinePoint(RelaxedPolylinePoint relaxedPoint) {
+            for (double d = this.OffsetForPolylineRelaxing; !this.RelaxWithGivenOffset(d, relaxedPoint); d /= 2) {
             }
         }
 
-        bool RelaxWithGivenOffset(double offset, RelaxedPolylinePoint relaxedPoint) {
+        private bool RelaxWithGivenOffset(double offset, RelaxedPolylinePoint relaxedPoint) {
             SetRelaxedPointLocation(offset, relaxedPoint);
 #if TEST_MSAGL
             //ShowPolylineAndObstacles();
 #endif
-            if (StickingSegmentDoesNotIntersectTightObstacles(relaxedPoint))
+            if (this.StickingSegmentDoesNotIntersectTightObstacles(relaxedPoint)) {
                 return true;
+            }
+
             PullCloserRelaxedPoint(relaxedPoint.Prev);
             return false;
         }
 
-        static void PullCloserRelaxedPoint(RelaxedPolylinePoint relaxedPolylinePoint) {
+        private static void PullCloserRelaxedPoint(RelaxedPolylinePoint relaxedPolylinePoint) {
             relaxedPolylinePoint.PolylinePoint.Point = 0.2 * relaxedPolylinePoint.OriginalPosition +
                                                        0.8 * relaxedPolylinePoint.PolylinePoint.Point;
         }
 
-        bool StickingSegmentDoesNotIntersectTightObstacles(RelaxedPolylinePoint relaxedPoint) {
+        private bool StickingSegmentDoesNotIntersectTightObstacles(RelaxedPolylinePoint relaxedPoint) {
             return
-                !LineIntersectsTightObstacles(new LineSegment(relaxedPoint.PolylinePoint.Point,
+                !this.LineIntersectsTightObstacles(new LineSegment(relaxedPoint.PolylinePoint.Point,
                                                               relaxedPoint.Prev.PolylinePoint.Point)) && (
                                                                                                              (relaxedPoint
                                                                                                                   .Next ==
                                                                                                               null ||
-                                                                                                              !LineIntersectsTightObstacles
+                                                                                                              !this.LineIntersectsTightObstacles
                                                                                                                    (new LineSegment
                                                                                                                         (relaxedPoint
                                                                                                                              .
@@ -267,13 +269,15 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
                                                                                                                              Point))));
         }
 
-        bool LineIntersectsTightObstacles(LineSegment ls) {
-            return LineIntersectsRectangleNode(ls, obstacleCalculator.RootOfTightHierararchy);
+        private bool LineIntersectsTightObstacles(LineSegment ls) {
+            return LineIntersectsRectangleNode(ls, this.obstacleCalculator.RootOfTightHierararchy);
         }
 
-        static bool LineIntersectsRectangleNode(LineSegment ls, RectangleNode<Polyline, Point> rectNode) {
-            if (!ls.BoundingBox.Intersects((Rectangle)rectNode.Rectangle))
+        private static bool LineIntersectsRectangleNode(LineSegment ls, RectangleNode<Polyline, Point> rectNode) {
+            if (!ls.BoundingBox.Intersects((Rectangle)rectNode.Rectangle)) {
                 return false;
+            }
+
             if (rectNode.UserData != null) {
                 // SugiyamaLayoutSettings.Show(ls, rectNode.UserData);
                 return Curve.GetAllIntersections(rectNode.UserData, ls, false).Count > 0;
@@ -283,8 +287,7 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             return LineIntersectsRectangleNode(ls, rectNode.Left) || LineIntersectsRectangleNode(ls, rectNode.Right);
         }
 
-
-        static void SetRelaxedPointLocation(double offset, RelaxedPolylinePoint relaxedPoint) {
+        private static void SetRelaxedPointLocation(double offset, RelaxedPolylinePoint relaxedPoint) {
             bool leftTurn = Point.GetTriangleOrientation(relaxedPoint.Next.OriginalPosition,
                                                          relaxedPoint.OriginalPosition,
                                                          relaxedPoint.Prev.OriginalPosition) ==
@@ -293,33 +296,38 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
                 ((relaxedPoint.Next.OriginalPosition - relaxedPoint.Prev.OriginalPosition).Normalize() * offset).Rotate(
                     Math.PI / 2);
 
-            if (!leftTurn)
+            if (!leftTurn) {
                 v = -v;
+            }
+
             relaxedPoint.PolylinePoint.Point = relaxedPoint.OriginalPosition + v;
         }
 
 #if TEST_MSAGL
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void ShowPolylineAndObstacles(){
-            List<ICurve> ls = CreateListWithObstaclesAndPolyline();
+        private void ShowPolylineAndObstacles(){
+            List<ICurve> ls = this.CreateListWithObstaclesAndPolyline();
             SugiyamaLayoutSettings.Show(ls.ToArray());
         }
 
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        List<ICurve> CreateListWithObstaclesAndPolyline(){
+        private List<ICurve> CreateListWithObstaclesAndPolyline(){
             var ls = new List<ICurve>();
-            foreach (Polyline poly in obstacleCalculator.TightObstacles)
+            foreach (Polyline poly in this.obstacleCalculator.TightObstacles) {
                 ls.Add(poly);
-            foreach (Polyline poly in obstacleCalculator.LooseObstacles)
-                ls.Add(poly);
+            }
 
-            ls.Add(Polyline);
+            foreach (Polyline poly in this.obstacleCalculator.LooseObstacles) {
+                ls.Add(poly);
+            }
+
+            ls.Add(this.Polyline);
             return ls;
         }
 #endif
 
-        void SmoothCorners(SmoothedPolyline edgePolyline) {
+        private void SmoothCorners(SmoothedPolyline edgePolyline) {
             CornerSite a = edgePolyline.HeadSite; //the corner start
             CornerSite b; //the corner origin
             CornerSite c; //the corner other end
@@ -345,14 +353,14 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
                     b.PreviousBezierSegmentFitCoefficient = k * u;
                     b.NextBezierSegmentFitCoefficient = k * v;
                     k /= mult;
-                } while (obstacleCalculator.ObstaclesIntersectICurve(seg));
+                } while (this.obstacleCalculator.ObstaclesIntersectICurve(seg));
 
                 k *= mult; //that was the last k
                 if (k < 0.5) {
                     //one time try a smoother seg
                     k = 0.5 * (k + k * mult);
                     seg = Curve.CreateBezierSeg(k * u, k * v, a, b, c);
-                    if (!obstacleCalculator.ObstaclesIntersectICurve(seg)) {
+                    if (!this.obstacleCalculator.ObstaclesIntersectICurve(seg)) {
                         b.PreviousBezierSegmentFitCoefficient = k * u;
                         b.NextBezierSegmentFitCoefficient = k * v;
                     }
@@ -361,20 +369,20 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             }
         }
 
-
-        void TryToRemoveInflectionsAndCollinearSegs(SmoothedPolyline underlyingPolyline) {
+        private void TryToRemoveInflectionsAndCollinearSegs(SmoothedPolyline underlyingPolyline) {
             bool progress = true;
             while (progress) {
                 progress = false;
                 for (CornerSite s = underlyingPolyline.HeadSite; s != null && s.Next != null; s = s.Next) {
-                    if (s.Turn * s.Next.Turn < 0)
-                        progress = TryToRemoveInflectionEdge(ref s) || progress;
+                    if (s.Turn * s.Next.Turn < 0) {
+                        progress = this.TryToRemoveInflectionEdge(ref s) || progress;
+                    }
                 }
             }
         }
 
-        bool TryToRemoveInflectionEdge(ref CornerSite s) {
-            if (!obstacleCalculator.ObstaclesIntersectLine(s.Previous.Point, s.Next.Point)) {
+        private bool TryToRemoveInflectionEdge(ref CornerSite s) {
+            if (!this.obstacleCalculator.ObstaclesIntersectLine(s.Previous.Point, s.Next.Point)) {
                 CornerSite a = s.Previous; //forget s
                 CornerSite b = s.Next;
                 a.Next = b;
@@ -382,7 +390,7 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
                 s = a;
                 return true;
             }
-            if (!obstacleCalculator.ObstaclesIntersectLine(s.Previous.Point, s.Next.Next.Point)) {
+            if (!this.obstacleCalculator.ObstaclesIntersectLine(s.Previous.Point, s.Next.Next.Point)) {
                 //forget about s and s.Next
                 CornerSite a = s.Previous;
                 CornerSite b = s.Next.Next;
@@ -391,7 +399,7 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
                 s = a;
                 return true;
             }
-            if (!obstacleCalculator.ObstaclesIntersectLine(s.Point, s.Next.Next.Point)) {
+            if (!this.obstacleCalculator.ObstaclesIntersectLine(s.Point, s.Next.Next.Point)) {
                 //forget about s.Next
                 CornerSite b = s.Next.Next;
                 s.Next = b;
@@ -402,68 +410,77 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             return false;
         }
 
-
-        LineSegment TryRouteStraightLine() {
-            var ls = new LineSegment(SourcePoint, TargetPoint);
-            if (obstacleCalculator.ObstaclesIntersectICurve(ls))
+        private LineSegment TryRouteStraightLine() {
+            var ls = new LineSegment(this.SourcePoint, this.TargetPoint);
+            if (this.obstacleCalculator.ObstaclesIntersectICurve(ls)) {
                 return null;
+            }
+
             return ls;
         }
 
         internal Point TargetPoint {
             get {
-                var tp = TargetPort as CurvePort;
-                if (tp != null)
-                    return Target.BoundaryCurve[tp.Parameter];
-                return TargetPort.Location;
+                var tp = this.TargetPort as CurvePort;
+                if (tp != null) {
+                    return this.Target.BoundaryCurve[tp.Parameter];
+                }
+
+                return this.TargetPort.Location;
             }
         }
 
         internal Point SourcePoint {
             get {
-                var sp = SourcePort as CurvePort;
-                if (sp != null)
-                    return Source.BoundaryCurve[sp.Parameter];
-                return SourcePort.Location;
+                var sp = this.SourcePort as CurvePort;
+                if (sp != null) {
+                    return this.Source.BoundaryCurve[sp.Parameter];
+                }
+
+                return this.SourcePort.Location;
             }
         }
 
 
         [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        Polyline GetShortestPolyline() {
-            var pathCalc = new SingleSourceSingleTargetShortestPathOnVisibilityGraph(_visGraph, this.sourceVisibilityVertex,
-                                                                                     TargetVisibilityVertex);
+        private Polyline GetShortestPolyline() {
+            var pathCalc = new SingleSourceSingleTargetShortestPathOnVisibilityGraph(this._visGraph, this.sourceVisibilityVertex,
+                                                                                     this.TargetVisibilityVertex);
             var path = pathCalc.GetPath(false);
             var ret = new Polyline();
-            foreach (var v in path)
+            foreach (var v in path) {
                 ret.AddPoint(v.Point);
+            }
+
             return RemoveCollinearPoint(ret);
         }
 
-        static Polyline RemoveCollinearPoint(Polyline ret) {
-            for (PolylinePoint pp = ret.StartPoint.Next; pp.Next != null; pp = pp.Next)
+        private static Polyline RemoveCollinearPoint(Polyline ret) {
+            for (PolylinePoint pp = ret.StartPoint.Next; pp.Next != null; pp = pp.Next) {
                 if (Point.GetTriangleOrientation(pp.Prev.Point, pp.Point, pp.Next.Point) == TriangleOrientation.Collinear) {
                     pp.Prev.Next = pp.Next;
                     pp.Next.Prev = pp.Prev;
                 }
+            }
 
             return ret;
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        void CalculateTangentVisibilityGraph() {
-            _visGraph = VisibilityGraph.GetVisibilityGraphForShortestPath(
-                SourcePoint, TargetPoint, obstacleCalculator.LooseObstacles, out sourceVisibilityVertex,
-                out targetVisibilityVertex);
+        private void CalculateTangentVisibilityGraph() {
+            this._visGraph = VisibilityGraph.GetVisibilityGraphForShortestPath(
+                this.SourcePoint, this.TargetPoint, this.obstacleCalculator.LooseObstacles, out this.sourceVisibilityVertex,
+                out this.targetVisibilityVertex);
         }
 
-
-        void CalculateObstacles() {
-            obstacleCalculator = new ObstacleCalculator(this);
-            obstacleCalculator.Calculate();
-            foreach (Polyline poly in obstacleCalculator.TightObstacles)
-                foreach (Point p in poly)
-                    pointsToObstacles[p] = poly;
+        private void CalculateObstacles() {
+            this.obstacleCalculator = new ObstacleCalculator(this);
+            this.obstacleCalculator.Calculate();
+            foreach (Polyline poly in this.obstacleCalculator.TightObstacles) {
+                foreach (Point p in poly) {
+                    this.pointsToObstacles[p] = poly;
+                }
+            }
         }
     }
 }

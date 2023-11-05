@@ -9,16 +9,16 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
     /// </summary>
     internal class BasicGraphOnEdges<TEdge> where TEdge : IEdge {
         protected List<TEdge> edges;
-        TEdge[][] inEdges;
-        int numberOfVertices;
-        TEdge[][] outEdges;
-        TEdge[][] selfEdges;
+        private TEdge[][] inEdges;
+        private int numberOfVertices;
+        private TEdge[][] outEdges;
+        private TEdge[][] selfEdges;
 
         /// <summary>
         /// a default constructor
         /// </summary>
         internal BasicGraphOnEdges() {
-            SetEdges(new List<TEdge>(), 0);
+            this.SetEdges(new List<TEdge>(), 0);
         }
 
         internal BasicGraphOnEdges(IEnumerable<TEdge> edges) : this(edges, VertexCount(edges)) {}
@@ -29,7 +29,7 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// <param name="edges"></param>
         /// <param name="numberOfVerts"></param>
         internal BasicGraphOnEdges(IEnumerable<TEdge> edges, int numberOfVerts) {
-            SetEdges(edges, numberOfVerts);
+            this.SetEdges(edges, numberOfVerts);
         }
 
 
@@ -37,14 +37,14 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// returning number of vertices of the graph
         /// </summary>
         internal int NodeCount {
-            get { return numberOfVertices; }
+            get { return this.numberOfVertices; }
         }
 
         /// <summary>
         /// returning all edges of the graph
         /// </summary>
         public ICollection<TEdge> Edges {
-            get { return edges; }
+            get { return this.edges; }
         }
 
         /// <summary>
@@ -52,25 +52,27 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// </summary>
         /// <param name="edge"></param>
         internal void RemoveEdge(TEdge edge) {
-            edges.Remove(edge);
+            this.edges.Remove(edge);
             if (edge.Source != edge.Target) {
-                TEdge[] edgesToChange = outEdges[edge.Source];
+                TEdge[] edgesToChange = this.outEdges[edge.Source];
                 var newEdges = new TEdge[edgesToChange.Length - 1];
                 FillArraySkippingTheEdge(edge, edgesToChange, newEdges);
-                outEdges[edge.Source] = newEdges;
-                edgesToChange = inEdges[edge.Target];
+                this.outEdges[edge.Source] = newEdges;
+                edgesToChange = this.inEdges[edge.Target];
                 newEdges = new TEdge[edgesToChange.Length - 1];
                 FillArraySkippingTheEdge(edge, edgesToChange, newEdges);
-                inEdges[edge.Target] = newEdges;
+                this.inEdges[edge.Target] = newEdges;
             }
         }
 
-        static void FillArraySkippingTheEdge(TEdge edge, TEdge[] edgesToChange, TEdge[] newEdges) {
-            for (int i = 0, j = 0; i < edgesToChange.Length; i++)
-                if ((object) edgesToChange[i] != (object) edge)
+        private static void FillArraySkippingTheEdge(TEdge edge, TEdge[] edgesToChange, TEdge[] newEdges) {
+            for (int i = 0, j = 0; i < edgesToChange.Length; i++) {
+                if ((object) edgesToChange[i] != (object) edge) {
                     newEdges[i - j] = edgesToChange[i];
-                else
+                } else {
                     j = 1;
+                }
+            }
         }
 
         /// <summary>
@@ -81,10 +83,13 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         internal static int VertexCount(IEnumerable edges) {
             int nov = 0;
             foreach (TEdge ie in edges) {
-                if (ie.Source >= nov)
+                if (ie.Source >= nov) {
                     nov = ie.Source + 1;
-                if (ie.Target >= nov)
+                }
+
+                if (ie.Target >= nov) {
                     nov = ie.Target + 1;
+                }
             }
             return nov;
         }
@@ -95,11 +100,11 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// <param name="vertex"></param>
         /// <returns></returns>
         public IList<TEdge> OutEdges(int vertex) {
-            return outEdges[vertex];
+            return this.outEdges[vertex];
         }
 
         internal IList<TEdge> SelfEdges(int vertex) {
-            return selfEdges[vertex];
+            return this.selfEdges[vertex];
         }
 
         /// <summary>
@@ -108,7 +113,7 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// <param name="vertex"></param>
         /// <returns></returns>
         public IList<TEdge> InEdges(int vertex) {
-            return inEdges[vertex];
+            return this.inEdges[vertex];
         }
 
         /// <summary>
@@ -117,18 +122,18 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// <param name="valEdges"></param>
         /// <param name="nov">number of vertices</param>
         internal void SetEdges(IEnumerable<TEdge> valEdges, int nov) {
-            edges = valEdges as List<TEdge> ?? new List<TEdge>(valEdges);
+            this.edges = valEdges as List<TEdge> ?? new List<TEdge>(valEdges);
 
-            numberOfVertices = nov;
-            var outEdgesCounts = new int[numberOfVertices];
-            var inEdgesCounts = new int[numberOfVertices];
-            var selfEdgesCounts = new int[numberOfVertices];
+            this.numberOfVertices = nov;
+            var outEdgesCounts = new int[this.numberOfVertices];
+            var inEdgesCounts = new int[this.numberOfVertices];
+            var selfEdgesCounts = new int[this.numberOfVertices];
 
-            outEdges = new TEdge[numberOfVertices][];
-            inEdges = new TEdge[numberOfVertices][];
-            selfEdges = new TEdge[numberOfVertices][];
+            this.outEdges = new TEdge[this.numberOfVertices][];
+            this.inEdges = new TEdge[this.numberOfVertices][];
+            this.selfEdges = new TEdge[this.numberOfVertices][];
 
-            foreach (TEdge e in edges) {
+            foreach (TEdge e in this.edges) {
                 if (e.Source != e.Target) {
                     outEdgesCounts[e.Source]++;
                     inEdgesCounts[e.Target]++;
@@ -138,34 +143,35 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
             }
 
             //allocate now
-            for (int i = 0; i < numberOfVertices; i++) {
-                outEdges[i] = new TEdge[outEdgesCounts[i]];
+            for (int i = 0; i < this.numberOfVertices; i++) {
+                this.outEdges[i] = new TEdge[outEdgesCounts[i]];
                 outEdgesCounts[i] = 0; //used later for edge insertion
-                inEdges[i] = new TEdge[inEdgesCounts[i]];
+                this.inEdges[i] = new TEdge[inEdgesCounts[i]];
                 inEdgesCounts[i] = 0; //used later for edge insertion
 
-                selfEdges[i] = new TEdge[selfEdgesCounts[i]];
+                this.selfEdges[i] = new TEdge[selfEdgesCounts[i]];
                 selfEdgesCounts[i] = 0; //used later for edge insertion
             }
 
             //set up backward and forward edges now
-            foreach (TEdge e in edges) {
+            foreach (TEdge e in this.edges) {
                 int u = e.Source;
                 int v = e.Target;
                 if (u != v) {
-                    outEdges[u][outEdgesCounts[u]++] = e;
-                    inEdges[v][inEdgesCounts[v]++] = e;
-                } else
-                    selfEdges[u][selfEdgesCounts[u]++] = e;
+                    this.outEdges[u][outEdgesCounts[u]++] = e;
+                    this.inEdges[v][inEdgesCounts[v]++] = e;
+                } else {
+                    this.selfEdges[u][selfEdgesCounts[u]++] = e;
+                }
             }
         }
 
         public int InEdgesCount(int node) {
-            return InEdges(node).Count;
+            return this.InEdges(node).Count;
         }
 
         public int OutEdgesCount(int node) {
-            return OutEdges(node).Count;
+            return this.OutEdges(node).Count;
         }
 
         /// <summary>
@@ -173,9 +179,9 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// </summary>
         /// <param name="e"></param>
         internal void AddEdge(TEdge e) {
-            Edges.Add(e);
-            AddEdgeToInEdges(e, e.Target);
-            AddEdgeToOutEdges(e, e.Source);
+            this.Edges.Add(e);
+            this.AddEdgeToInEdges(e, e.Target);
+            this.AddEdgeToOutEdges(e, e.Source);
         }
 
         /// <summary>
@@ -183,12 +189,12 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// </summary>
         /// <param name="e"></param>
         /// <param name="source"></param>
-        void AddEdgeToOutEdges(TEdge e, int source) {
-            TEdge[] ies = outEdges[source];
+        private void AddEdgeToOutEdges(TEdge e, int source) {
+            TEdge[] ies = this.outEdges[source];
             var nies = new TEdge[ies.Length + 1];
             ies.CopyTo(nies, 1);
             nies[0] = e;
-            outEdges[source] = nies;
+            this.outEdges[source] = nies;
         }
 
         /// <summary>
@@ -196,12 +202,12 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// </summary>
         /// <param name="e"></param>
         /// <param name="target"></param>
-        void AddEdgeToInEdges(TEdge e, int target) {
-            TEdge[] ies = inEdges[target];
+        private void AddEdgeToInEdges(TEdge e, int target) {
+            TEdge[] ies = this.inEdges[target];
             var nies = new TEdge[ies.Length + 1];
             ies.CopyTo(nies, 1);
             nies[0] = e;
-            inEdges[target] = nies;
+            this.inEdges[target] = nies;
         }
 
         /// <summary>
@@ -209,22 +215,22 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// </summary>
         /// <returns></returns>
         internal IEnumerable<int> NodesOfConnectedGraph() {
-            if (edges.Count > 0) {
+            if (this.edges.Count > 0) {
                 var enqueed = new Set<int>();
                 var q = new Queue<int>();
-                int i = edges[0].Source;
+                int i = this.edges[0].Source;
                 Enqueue(enqueed, q, i);
                 yield return i;
                 while (q.Count > 0) {
                     i = q.Dequeue();
-                    foreach (TEdge e in outEdges[i]) {
+                    foreach (TEdge e in this.outEdges[i]) {
                         int s = e.Target;
                         if (!enqueed.Contains(s)) {
                             Enqueue(enqueed, q, s);
                             yield return s;
                         }
                     }
-                    foreach (TEdge e in inEdges[i]) {
+                    foreach (TEdge e in this.inEdges[i]) {
                         int s = e.Source;
                         if (!enqueed.Contains(s)) {
                             Enqueue(enqueed, q, s);
@@ -235,7 +241,7 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
             }
         }
 
-        static void Enqueue(Set<int> enqueed, Queue<int> q, int i) {
+        private static void Enqueue(Set<int> enqueed, Queue<int> q, int i) {
             q.Enqueue(i);
             enqueed.Insert(i);
         }

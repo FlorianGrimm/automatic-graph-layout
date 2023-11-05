@@ -19,17 +19,17 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
     /// Currently the router will fail if there are node overlaps.
     /// </summary>
     public class BundleRouter : AlgorithmBase {
-        readonly BundlingSettings bundlingSettings;
-        readonly GeometryGraph geometryGraph;
-        readonly Edge[] regularEdges;
+        private readonly BundlingSettings bundlingSettings;
+        private readonly GeometryGraph geometryGraph;
+        private readonly Edge[] regularEdges;
 
-        double LoosePadding { get; set; }
+        private double LoosePadding { get; set; }
         //for the shortest path calculation we will use not loosePadding, but loosePadding*SuperLoosePaddingCoefficient
         internal const double SuperLoosePaddingCoefficient = 1.1;
+        private readonly SdShortestPath shortestPathRouter;
 
-        readonly SdShortestPath shortestPathRouter;
-        RectangleNode<Polyline, Point> TightHierarchy { get; set; }
-        RectangleNode<Polyline, Point> LooseHierarchy { get; set; }
+        private RectangleNode<Polyline, Point> TightHierarchy { get; set; }
+        private RectangleNode<Polyline, Point> LooseHierarchy { get; set; }
 
         ///<summary>
         /// reports the status of the bundling
@@ -38,21 +38,24 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
         internal VisibilityGraph VisibilityGraph { get; set; }
 
-        Func<Port, Polyline> loosePolylineOfPort;
-    
+        private Func<Port, Polyline> loosePolylineOfPort;
+
 #if TEST_MSAGL
-        void CheckGraph() {
-            foreach (var e in geometryGraph.Edges) {
-                if (e.Source == e.Target)
+        private void CheckGraph() {
+            foreach (var e in this.geometryGraph.Edges) {
+                if (e.Source == e.Target) {
                     continue;
+                }
+
                 CheckPortOfNode(e.Source, e.SourcePort);
                 CheckPortOfNode(e.Target, e.TargetPort);
             }
         }
 
-        static void CheckPortOfNode(Node node, Port nodePort) {
-            if (node is Cluster)
+        private static void CheckPortOfNode(Node node, Port nodePort) {
+            if (node is Cluster) {
                 Debug.Assert(nodePort is ClusterBoundaryPort || nodePort is HookUpAnywhereFromInsidePort || nodePort is CurvePort);
+            }
         }
 #endif
 
@@ -65,18 +68,18 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
             this.geometryGraph = geometryGraph;
             this.bundlingSettings = bundlingSettings;
-            regularEdges = geometryGraph.Edges.Where(e => e.Source != e.Target).ToArray();
-            VisibilityGraph = visibilityGraph;
+            this.regularEdges = geometryGraph.Edges.Where(e => e.Source != e.Target).ToArray();
+            this.VisibilityGraph = visibilityGraph;
             this.shortestPathRouter = shortestPathRouter;
-            LoosePadding = loosePadding;
-            LooseHierarchy = looseHierarchy;
-            TightHierarchy = tightHierarchy;
-            EdgeLooseEnterable = edgeLooseEnterable;
-            EdgeTightEnterable = edgeTightEnterable;
+            this.LoosePadding = loosePadding;
+            this.LooseHierarchy = looseHierarchy;
+            this.TightHierarchy = tightHierarchy;
+            this.EdgeLooseEnterable = edgeLooseEnterable;
+            this.EdgeTightEnterable = edgeTightEnterable;
             this.loosePolylineOfPort = loosePolylineOfPort;
         }
 
-        bool ThereAreOverlaps(RectangleNode<Polyline, Point> hierarchy) {
+        private bool ThereAreOverlaps(RectangleNode<Polyline, Point> hierarchy) {
             return RectangleNodeUtils.FindIntersectionWithProperty(hierarchy, hierarchy, Curve.CurvesIntersect);
         }
 
@@ -88,45 +91,45 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// </summary>
         protected override void RunInternal() {
             //TimeMeasurer.DebugOutput("edge bundling started");
-            if (ThereAreOverlaps(TightHierarchy)) {
+            if (this.ThereAreOverlaps(this.TightHierarchy)) {
                 /*
                 LayoutAlgorithmSettings.ShowDebugCurves(
                     TightHierarchy.GetAllLeaves().Select(p => new DebugCurve(100, 1, "black", p)).ToArray());*/
-                Status = BundlingStatus.Overlaps;
+                this.Status = BundlingStatus.Overlaps;
                 TimeMeasurer.DebugOutput("overlaps in edge bundling");
                 return;
             }
 
-            FixLocationsForHookAnywherePorts(geometryGraph.Edges);
-            if (!RoutePathsWithSteinerDijkstra()) {
-                Status = BundlingStatus.EdgeSeparationIsTooLarge;
+            this.FixLocationsForHookAnywherePorts(this.geometryGraph.Edges);
+            if (!this.RoutePathsWithSteinerDijkstra()) {
+                this.Status = BundlingStatus.EdgeSeparationIsTooLarge;
                 return;
             }
-            FixChildParentEdges();
-            if (!bundlingSettings.StopAfterShortestPaths) {
+            this.FixChildParentEdges();
+            if (!this.bundlingSettings.StopAfterShortestPaths) {
 
-                var metroGraphData = new MetroGraphData(regularEdges.Select(e => e.EdgeGeometry).ToArray(),
-                                                        LooseHierarchy,
-                                                        TightHierarchy,
-                                                        bundlingSettings,
-                                                        shortestPathRouter.CdtProperty,
-                                                        EdgeLooseEnterable,
-                                                        EdgeTightEnterable,
-                                                        loosePolylineOfPort);
-                NodePositionsAdjuster.FixRouting(metroGraphData, bundlingSettings);
-                new EdgeNudger(metroGraphData, bundlingSettings).Run();
+                var metroGraphData = new MetroGraphData(this.regularEdges.Select(e => e.EdgeGeometry).ToArray(),
+                                                        this.LooseHierarchy,
+                                                        this.TightHierarchy,
+                                                        this.bundlingSettings,
+                                                        this.shortestPathRouter.CdtProperty,
+                                                        this.EdgeLooseEnterable,
+                                                        this.EdgeTightEnterable,
+                                                        this.loosePolylineOfPort);
+                NodePositionsAdjuster.FixRouting(metroGraphData, this.bundlingSettings);
+                new EdgeNudger(metroGraphData, this.bundlingSettings).Run();
                 //TimeMeasurer.DebugOutput("edge bundling ended");
             }
-            RouteSelfEdges();
-            FixArrowheads();
+            this.RouteSelfEdges();
+            this.FixArrowheads();
         }
 
         /// <summary>
         /// set endpoint of the edge from child to parent (cluster) to the boundary of the parent
         /// TODO: is there a better solution?
         /// </summary>
-        void FixChildParentEdges() {
-            foreach (var edge in regularEdges) {
+        private void FixChildParentEdges() {
+            foreach (var edge in this.regularEdges) {
                 var sPort = edge.SourcePort;
                 var ePort = edge.TargetPort;
                 if (sPort.Curve.BoundingBox.Contains(ePort.Curve.BoundingBox)) {
@@ -152,90 +155,99 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return GetConstrainedDelaunayTriangulation(obstacles.Concat(additionalObstacles));
         }
 
-        static Cdt GetConstrainedDelaunayTriangulation(IEnumerable<Polyline> obstacles) {
+        private static Cdt GetConstrainedDelaunayTriangulation(IEnumerable<Polyline> obstacles) {
             var constrainedDelaunayTriangulation = new Cdt(null, obstacles, null);
             constrainedDelaunayTriangulation.Run();
             return constrainedDelaunayTriangulation;
         }
 #if TEST_MSAGL
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
+        private
         // ReSharper disable UnusedMember.Local
         void ShowGraphLocal() {
             // ReSharper restore UnusedMember.Local
             var l = new List<ICurve>();
             l.Clear();
-            foreach (var e in geometryGraph.Edges) {
+            foreach (var e in this.geometryGraph.Edges) {
                 {
                     l.Add(new Ellipse(2, 2, e.Curve.Start));
                     l.Add(CurveFactory.CreateDiamond(5, 5, e.Curve.End));
                     l.Add(e.Curve);
                 }
             }
-            SplineRouter.ShowVisGraph(VisibilityGraph, LooseHierarchy.GetAllLeaves(), null, l);
+            SplineRouter.ShowVisGraph(this.VisibilityGraph, this.LooseHierarchy.GetAllLeaves(), null, l);
         }
 #endif
 
-        void FixLocationsForHookAnywherePorts(IEnumerable<Edge> edges) {
+        private void FixLocationsForHookAnywherePorts(IEnumerable<Edge> edges) {
             foreach (var edge in edges) {
                 var hookPort = edge.SourcePort as HookUpAnywhereFromInsidePort;
-                if (hookPort != null)
-                    hookPort.SetLocation(FigureOutHookLocation(hookPort.LoosePolyline, edge.TargetPort, edge.EdgeGeometry));
-                else {
+                if (hookPort != null) {
+                    hookPort.SetLocation(this.FigureOutHookLocation(hookPort.LoosePolyline, edge.TargetPort, edge.EdgeGeometry));
+                } else {
                     hookPort = edge.TargetPort as HookUpAnywhereFromInsidePort;
-                    if (hookPort != null)
-                        hookPort.SetLocation(FigureOutHookLocation(hookPort.LoosePolyline, edge.SourcePort, edge.EdgeGeometry));
+                    if (hookPort != null) {
+                        hookPort.SetLocation(this.FigureOutHookLocation(hookPort.LoosePolyline, edge.SourcePort, edge.EdgeGeometry));
+                    }
                 }
             }
         }
 
-        Point FigureOutHookLocation(Polyline poly, Port otherEdgeEndPort, EdgeGeometry edgeGeom) {
+        private Point FigureOutHookLocation(Polyline poly, Port otherEdgeEndPort, EdgeGeometry edgeGeom) {
             var clusterPort = otherEdgeEndPort as ClusterBoundaryPort;
             if (clusterPort == null) {
-                return FigureOutHookLocationForSimpleOtherPort(poly, otherEdgeEndPort, edgeGeom);
+                return this.FigureOutHookLocationForSimpleOtherPort(poly, otherEdgeEndPort, edgeGeom);
             }
-            return FigureOutHookLocationForClusterOtherPort(poly, clusterPort, edgeGeom);
+            return this.FigureOutHookLocationForClusterOtherPort(poly, clusterPort, edgeGeom);
         }
 
-        Point FigureOutHookLocationForClusterOtherPort(Polyline poly, ClusterBoundaryPort otherEdgeEndPort, EdgeGeometry edgeGeom) {
-            var shapes = shortestPathRouter.MakeTransparentShapesOfEdgeGeometry(edgeGeom);
+        private Point FigureOutHookLocationForClusterOtherPort(Polyline poly, ClusterBoundaryPort otherEdgeEndPort, EdgeGeometry edgeGeom) {
+            var shapes = this.shortestPathRouter.MakeTransparentShapesOfEdgeGeometry(edgeGeom);
             //SplineRouter.ShowVisGraph(this.VisibilityGraph, this.LooseHierarchy.GetAllLeaves(),
             //    shapes.Select(sh => sh.BoundaryCurve), new[] { new LineSegment(edgeGeom.SourcePort.Location, edgeGeom.TargetPort.Location) });
-            var s = new MultipleSourceMultipleTargetsShortestPathOnVisibilityGraph(otherEdgeEndPort.LoosePolyline.Select(p => VisibilityGraph.FindVertex(p)),             
-                poly.Select(p => VisibilityGraph.FindVertex(p)), VisibilityGraph);
+            var s = new MultipleSourceMultipleTargetsShortestPathOnVisibilityGraph(otherEdgeEndPort.LoosePolyline.Select(p => this.VisibilityGraph.FindVertex(p)),             
+                poly.Select(p => this.VisibilityGraph.FindVertex(p)), this.VisibilityGraph);
             var path = s.GetPath();
-            foreach (var sh in shapes)
+            foreach (var sh in shapes) {
                 sh.IsTransparent = false;
+            }
+
             return path.Last().Point;
         }
 
         private Point FigureOutHookLocationForSimpleOtherPort(Polyline poly, Port otherEdgeEndPort, EdgeGeometry edgeGeom) {
             Point otherEdgeEnd = otherEdgeEndPort.Location;
-            var shapes = shortestPathRouter.MakeTransparentShapesOfEdgeGeometry(edgeGeom);
+            var shapes = this.shortestPathRouter.MakeTransparentShapesOfEdgeGeometry(edgeGeom);
             //SplineRouter.ShowVisGraph(this.VisibilityGraph, this.LooseHierarchy.GetAllLeaves(),
             //    shapes.Select(sh => sh.BoundaryCurve), new[] { new LineSegment(edgeGeom.SourcePort.Location, edgeGeom.TargetPort.Location) });
             var s = new SingleSourceMultipleTargetsShortestPathOnVisibilityGraph(
-                VisibilityGraph.FindVertex(otherEdgeEnd),
-                poly.PolylinePoints.Select(p => VisibilityGraph.FindVertex(p.Point)), VisibilityGraph);
+                this.VisibilityGraph.FindVertex(otherEdgeEnd),
+                poly.PolylinePoints.Select(p => this.VisibilityGraph.FindVertex(p.Point)), this.VisibilityGraph);
             var path = s.GetPath();
-            foreach (var sh in shapes)
+            foreach (var sh in shapes) {
                 sh.IsTransparent = false;
+            }
+
             return path.Last().Point;
         }
 
-        Dictionary<EdgeGeometry, Set<Polyline>> EdgeLooseEnterable { get; set; }
-        Dictionary<EdgeGeometry, Set<Polyline>> EdgeTightEnterable { get; set; }
+        private Dictionary<EdgeGeometry, Set<Polyline>> EdgeLooseEnterable { get; set; }
+        private Dictionary<EdgeGeometry, Set<Polyline>> EdgeTightEnterable { get; set; }
 
-        bool RoutePathsWithSteinerDijkstra() {
-            shortestPathRouter.VisibilityGraph = VisibilityGraph;
-            shortestPathRouter.BundlingSettings = bundlingSettings;
-            shortestPathRouter.EdgeGeometries = regularEdges.Select(e => e.EdgeGeometry).ToArray();
-            shortestPathRouter.ObstacleHierarchy = LooseHierarchy;
-            shortestPathRouter.RouteEdges();
+        private bool RoutePathsWithSteinerDijkstra() {
+            this.shortestPathRouter.VisibilityGraph = this.VisibilityGraph;
+            this.shortestPathRouter.BundlingSettings = this.bundlingSettings;
+            this.shortestPathRouter.EdgeGeometries = this.regularEdges.Select(e => e.EdgeGeometry).ToArray();
+            this.shortestPathRouter.ObstacleHierarchy = this.LooseHierarchy;
+            this.shortestPathRouter.RouteEdges();
 
             //find appropriate edge separation
-            if (shortestPathRouter.CdtProperty != null)
-                if (!AnalyzeEdgeSeparation())
+            if (this.shortestPathRouter.CdtProperty != null) {
+                if (!this.AnalyzeEdgeSeparation()) {
                     return false;
+                }
+            }
+
             return true;
         }
 
@@ -247,91 +259,101 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         ///     reduce edge separation, or
         ///     move obstacles to get more free space
         /// </summary>
-        bool AnalyzeEdgeSeparation() {
+        private bool AnalyzeEdgeSeparation() {
             Dictionary<EdgeGeometry, Set<CdtEdge>> crossedCdtEdges = new Dictionary<EdgeGeometry, Set<CdtEdge>>();
-            shortestPathRouter.FillCrossedCdtEdges(crossedCdtEdges);
-            Dictionary<CdtEdge, Set<EdgeGeometry>> pathsOnCdtEdge = GetPathsOnCdtEdge(crossedCdtEdges);
-            double es = CalculateMaxAllowedEdgeSeparation(pathsOnCdtEdge);
+            this.shortestPathRouter.FillCrossedCdtEdges(crossedCdtEdges);
+            Dictionary<CdtEdge, Set<EdgeGeometry>> pathsOnCdtEdge = this.GetPathsOnCdtEdge(crossedCdtEdges);
+            double es = this.CalculateMaxAllowedEdgeSeparation(pathsOnCdtEdge);
            // TimeMeasurer.DebugOutput("opt es: " + es);
 
-            if (es >= bundlingSettings.EdgeSeparation)
+            if (es >= this.bundlingSettings.EdgeSeparation) {
                 return true; //we can even enlarge it here
+            }
 
             if (es <= 0.02) {
                 TimeMeasurer.DebugOutput("edge bundling can't be executed: not enough free space around obstacles");
-                foreach (var e in regularEdges)
+                foreach (var e in this.regularEdges) {
                     e.Curve = null;
+                }
 
                 return false;
             }
             // reducing edge separation
-           // TimeMeasurer.DebugOutput("reducing edge separation to " + es);
-            bundlingSettings.EdgeSeparation = es;
-            shortestPathRouter.RouteEdges();
+            // TimeMeasurer.DebugOutput("reducing edge separation to " + es);
+            this.bundlingSettings.EdgeSeparation = es;
+            this.shortestPathRouter.RouteEdges();
             return true;
         }
 
-        Dictionary<CdtEdge, Set<EdgeGeometry>> GetPathsOnCdtEdge(Dictionary<EdgeGeometry, Set<CdtEdge>> crossedEdges) {
+        private Dictionary<CdtEdge, Set<EdgeGeometry>> GetPathsOnCdtEdge(Dictionary<EdgeGeometry, Set<CdtEdge>> crossedEdges) {
             Dictionary<CdtEdge, Set<EdgeGeometry>> res = new Dictionary<CdtEdge, Set<EdgeGeometry>>();
             foreach (var edge in crossedEdges.Keys) {
-                foreach (var cdtEdge in crossedEdges[edge])
+                foreach (var cdtEdge in crossedEdges[edge]) {
                     CollectionUtilities.AddToMap(res, cdtEdge, edge);
+                }
             }
 
             return res;
         }
 
-        double CalculateMaxAllowedEdgeSeparation(Dictionary<CdtEdge, Set<EdgeGeometry>> pathsOnCdtEdge) {
+        private double CalculateMaxAllowedEdgeSeparation(Dictionary<CdtEdge, Set<EdgeGeometry>> pathsOnCdtEdge) {
             double l = 0.01;
             double r = 10;// ?TODO: change to bundlingSettings.EdgeSeparation;
-            if (EdgeSeparationIsOk(pathsOnCdtEdge, r))
+            if (this.EdgeSeparationIsOk(pathsOnCdtEdge, r)) {
                 return r;
+            }
+
             while (Math.Abs(r - l) > 0.01) {
                 double cen = (l + r) / 2;
-                if (EdgeSeparationIsOk(pathsOnCdtEdge, cen))
+                if (this.EdgeSeparationIsOk(pathsOnCdtEdge, cen)) {
                     l = cen;
-                else
+                } else {
                     r = cen;
+                }
             }
             return l;
         }
 
-        bool EdgeSeparationIsOk(Dictionary<CdtEdge, Set<EdgeGeometry>> pathsOnCdtEdge, double separation) {
+        private bool EdgeSeparationIsOk(Dictionary<CdtEdge, Set<EdgeGeometry>> pathsOnCdtEdge, double separation) {
             //total number of cdt edges
             double total = pathsOnCdtEdge.Count;
-            if (total == 0)
+            if (total == 0) {
                 return true;
+            }
 
             //number of edges with requiredWidth <= availableWidth
             double ok = 0;
-            foreach (var edge in pathsOnCdtEdge.Keys)
-                if (EdgeSeparationIsOk(edge, pathsOnCdtEdge[edge], separation))
+            foreach (var edge in pathsOnCdtEdge.Keys) {
+                if (this.EdgeSeparationIsOk(edge, pathsOnCdtEdge[edge], separation)) {
                     ok++;
+                }
+            }
 
             //at least 95% of edges should be okay
-            return (ok / total > bundlingSettings.MinimalRatioOfGoodCdtEdges);
+            return (ok / total > this.bundlingSettings.MinimalRatioOfGoodCdtEdges);
         }
 
-        bool EdgeSeparationIsOk(CdtEdge edge, Set<EdgeGeometry> paths, double separation) {
+        private bool EdgeSeparationIsOk(CdtEdge edge, Set<EdgeGeometry> paths, double separation) {
             double requiredWidth = paths.Select(v => v.LineWidth).Sum() + (paths.Count - 1) * separation;
             double availableWidth = edge.Capacity;
 
             return (requiredWidth <= availableWidth);
         }
 
-        void RouteSelfEdges() {
-            foreach (var edge in geometryGraph.Edges.Where(e => e.Source == e.Target)) {
+        private void RouteSelfEdges() {
+            foreach (var edge in this.geometryGraph.Edges.Where(e => e.Source == e.Target)) {
                 SmoothedPolyline sp;
-                edge.Curve = Edge.RouteSelfEdge(edge.Source.BoundaryCurve, LoosePadding * 2, out sp);
+                edge.Curve = Edge.RouteSelfEdge(edge.Source.BoundaryCurve, this.LoosePadding * 2, out sp);
             }
         }
 
-        void FixArrowheads() {
-            foreach (var edge in geometryGraph.Edges)
+        private void FixArrowheads() {
+            foreach (var edge in this.geometryGraph.Edges) {
                 Arrowheads.TrimSplineAndCalculateArrowheads(edge.EdgeGeometry,
                                                                  edge.Source.BoundaryCurve,
                                                                  edge.Target.BoundaryCurve,
                                                                  edge.Curve, false);
+            }
         }
     }
 }

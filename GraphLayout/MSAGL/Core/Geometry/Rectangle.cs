@@ -22,13 +22,13 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// </summary>
         /// <returns>string leftbottom, righttop</returns>
         public override string ToString() {
-            return "(" + LeftBottom + " " + RightTop + ")";
+            return "(" + this.LeftBottom + " " + this.RightTop + ")";
         }
 
-        double left;
-        double right;
-        double top;
-        double bottom;
+        private double left;
+        private double right;
+        private double top;
+        private double bottom;
 
         /// <summary>
         /// returns true if r intersect this rectangle
@@ -36,7 +36,7 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// <param name="rectangle"></param>
         /// <returns></returns>
         public bool Intersects(Rectangle rectangle) {
-            return IntersectsOnX(rectangle) && IntersectsOnY(rectangle);
+            return this.IntersectsOnX(rectangle) && this.IntersectsOnY(rectangle);
         }
 
         /// <summary>
@@ -46,14 +46,14 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// <returns></returns>
         public Rectangle Intersection(Rectangle rectangle) {
             Rectangle intersection = new Rectangle();
-            if (!Intersects(rectangle)) {
+            if (!this.Intersects(rectangle)) {
                 intersection.SetToEmpty();
                 return intersection;
             }
-            double l = Math.Max(Left, rectangle.Left);
-            double r = Math.Min(Right, rectangle.Right);
-            double b = Math.Max(Bottom, rectangle.Bottom);
-            double t = Math.Min(Top, rectangle.Top);
+            double l = Math.Max(this.Left, rectangle.Left);
+            double r = Math.Min(this.Right, rectangle.Right);
+            double b = Math.Max(this.Bottom, rectangle.Bottom);
+            double t = Math.Min(this.Top, rectangle.Top);
             return new Rectangle(l, b, r, t);
         }
 
@@ -61,30 +61,34 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// the center of the bounding box
         /// </summary>
         public Point Center {
-            get { return 0.5 * (LeftTop + RightBottom); }
+            get { return 0.5 * (this.LeftTop + this.RightBottom); }
             set {
-                Point shift = value - Center;
-                LeftTop += shift;
-                RightBottom += shift;
+                Point shift = value - this.Center;
+                this.LeftTop += shift;
+                this.RightBottom += shift;
             }
         }
 
         internal bool IntersectsOnY(Rectangle r) {
-            if (r.Bottom > top + ApproximateComparer.DistanceEpsilon)
+            if (r.Bottom > this.top + ApproximateComparer.DistanceEpsilon) {
                 return false;
+            }
 
-            if (r.Top < bottom - ApproximateComparer.DistanceEpsilon)
+            if (r.Top < this.bottom - ApproximateComparer.DistanceEpsilon) {
                 return false;
+            }
 
             return true;
         }
 
         internal bool IntersectsOnX(Rectangle r) {
-            if (r.Left > right + ApproximateComparer.DistanceEpsilon)
+            if (r.Left > this.right + ApproximateComparer.DistanceEpsilon) {
                 return false;
+            }
 
-            if (r.Right < left - ApproximateComparer.DistanceEpsilon)
+            if (r.Right < this.left - ApproximateComparer.DistanceEpsilon) {
                 return false;
+            }
 
             return true;
         }
@@ -102,56 +106,56 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// the left of the rectangle
         /// </summary>
         public double Left {
-            get { return left; }
-            set { left = value; }
+            get { return this.left; }
+            set { this.left = value; }
         }
 
         /// <summary>
         /// the right of the rectangle
         /// </summary>
         public double Right {
-            get { return right; }
-            set { right = value; }
+            get { return this.right; }
+            set { this.right = value; }
         }
 
         /// <summary>
         /// the top of the rectangle
         /// </summary>
         public double Top {
-            get { return top; }
-            set { top = value; }
+            get { return this.top; }
+            set { this.top = value; }
         }
 
         /// <summary>
         /// the bottom of the rectangle
         /// </summary>
         public double Bottom {
-            get { return bottom; }
-            set { bottom = value; }
+            get { return this.bottom; }
+            set { this.bottom = value; }
         }
 
         /// <summary>
         /// the left bottom corner
         /// </summary>
         public Point LeftBottom {
-            get { return new Point(Left, Bottom); }
+            get { return new Point(this.Left, this.Bottom); }
         }
 
         /// <summary>
         /// the right top corner
         /// </summary>
         public Point RightTop {
-            get { return new Point(Right, Top); }
+            get { return new Point(this.Right, this.Top); }
         }
 
         /// <summary>
         /// the left top corner
         /// </summary>
         public Point LeftTop {
-            get { return new Point(left, top); }
+            get { return new Point(this.left, this.top); }
             set {
-                left = value.X;
-                top = value.Y;
+                this.left = value.X;
+                this.top = value.Y;
             }
         }
 
@@ -159,10 +163,10 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// the right bottom corner
         /// </summary>
         public Point RightBottom {
-            get { return new Point(right, bottom); }
+            get { return new Point(this.right, this.bottom); }
             set {
-                right = value.X;
-                Bottom = value.Y;
+                this.right = value.X;
+                this.Bottom = value.Y;
             }
         }
 
@@ -172,9 +176,9 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// <param name="point0"></param>
         /// <param name="point1"></param>
         public Rectangle(Point point0, Point point1) {
-            left = right = point0.X;
-            top = bottom = point0.Y;
-            Add(point1);
+            this.left = this.right = point0.X;
+            this.top = this.bottom = point0.Y;
+            this.Add(point1);
         }
 
         /// <summary>
@@ -182,8 +186,8 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// </summary>
         /// <param name="point"></param>
         public Rectangle(Point point) {
-            left = right = point.X;
-            top = bottom = point.Y;
+            this.left = this.right = point.X;
+            this.top = this.bottom = point.Y;
         }
 
 
@@ -196,8 +200,8 @@ namespace Microsoft.Msagl.Core.Geometry{
         public Rectangle(double left, double bottom, Point sizeF) {
             this.left = left;
             this.bottom = bottom;
-            right = left + sizeF.X;
-            top = bottom + sizeF.Y;
+            this.right = left + sizeF.X;
+            this.top = bottom + sizeF.Y;
         }
 
         /// <summary>
@@ -210,9 +214,9 @@ namespace Microsoft.Msagl.Core.Geometry{
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "y"),
          SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "x")]
         public Rectangle(double x0, double y0, double x1, double y1) {
-            left = right = x0;
-            top = bottom = y0;
-            Add(new Point(x1, y1));
+            this.left = this.right = x0;
+            this.top = this.bottom = y0;
+            this.Add(new Point(x1, y1));
         }
 
         /// <summary>
@@ -222,7 +226,7 @@ namespace Microsoft.Msagl.Core.Geometry{
             : this(0, 0, new Point(-1, -1)) {
             ValidateArg.IsNotNull(points, "points");
             foreach (var p in points) {
-                Add(p);
+                this.Add(p);
             }
         }
 
@@ -233,7 +237,7 @@ namespace Microsoft.Msagl.Core.Geometry{
             : this(0, 0, new Point(-1, -1)) {
             ValidateArg.IsNotNull(rectangles, "rectangles");
             foreach (var r in rectangles) {
-                Add(r);
+                this.Add(r);
             }
         }
 
@@ -241,12 +245,12 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// the width of the rectangle
         /// </summary>
         public double Width {
-            get { return right - left; }
+            get { return this.right - this.left; }
             set {
                 double hw = value / 2.0f;
-                double cx = (left + right) / 2.0f;
-                left = cx - hw;
-                right = cx + hw;
+                double cx = (this.left + this.right) / 2.0f;
+                this.left = cx - hw;
+                this.right = cx + hw;
             }
         }
 
@@ -254,27 +258,27 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// returns true if the rectangle has negative width
         /// </summary>
         public bool IsEmpty {
-            get { return Width < 0; }
+            get { return this.Width < 0; }
         }
 
         /// <summary>
         /// makes the rectangle empty
         /// </summary>
         public void SetToEmpty() {
-            Left = 0;
-            Right = -1;
+            this.Left = 0;
+            this.Right = -1;
         }
 
         /// <summary>
         /// Height of the rectangle
         /// </summary>
         public double Height {
-            get { return top - bottom; }
+            get { return this.top - this.bottom; }
             set {
                 double hw = value / 2.0f;
-                double cx = (top + bottom) / 2.0f;
-                top = cx + hw;
-                bottom = cx - hw;
+                double cx = (this.top + this.bottom) / 2.0f;
+                this.top = cx + hw;
+                this.bottom = cx - hw;
             }
         }
 
@@ -284,12 +288,12 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// <param name="rectangle0"></param>
         /// <param name="rectangle1"></param>
         public Rectangle(Rectangle rectangle0, Rectangle rectangle1) {
-            left = rectangle0.left;
-            right = rectangle0.right;
-            top = rectangle0.top;
-            bottom = rectangle0.bottom;
+            this.left = rectangle0.left;
+            this.right = rectangle0.right;
+            this.top = rectangle0.top;
+            this.bottom = rectangle0.bottom;
 
-            Add(rectangle1);
+            this.Add(rectangle1);
         }
 
         /// <summary>
@@ -299,15 +303,15 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// <param name="padding"></param>
         /// <returns></returns>
         public bool Contains(Point point, double padding) {
-            return left - padding - ApproximateComparer.DistanceEpsilon <= point.X && point.X <= right + padding + ApproximateComparer.DistanceEpsilon &&
-                bottom - padding - ApproximateComparer.DistanceEpsilon <= point.Y && point.Y <= top + padding + ApproximateComparer.DistanceEpsilon;
+            return this.left - padding - ApproximateComparer.DistanceEpsilon <= point.X && point.X <= this.right + padding + ApproximateComparer.DistanceEpsilon &&
+                this.bottom - padding - ApproximateComparer.DistanceEpsilon <= point.Y && point.Y <= this.top + padding + ApproximateComparer.DistanceEpsilon;
         }
 
         /// <summary>
         /// Rectangle area
         /// </summary>
         public double Area {
-            get { return (right - left) * (top - bottom); }
+            get { return (this.right - this.left) * (this.top - this.bottom); }
         }
 
         /// <summary>
@@ -315,22 +319,26 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// </summary>
         /// <param name="point"></param>
         public void Add(Point point) {
-            if (!IsEmpty) {
-                if (left > point.X)
-                    left = point.X;
+            if (!this.IsEmpty) {
+                if (this.left > point.X) {
+                    this.left = point.X;
+                }
 
-                if (top < point.Y)
-                    top = point.Y;
+                if (this.top < point.Y) {
+                    this.top = point.Y;
+                }
 
-                if (right < point.X)
-                    right = point.X;
+                if (this.right < point.X) {
+                    this.right = point.X;
+                }
 
-                if (bottom > point.Y)
-                    bottom = point.Y;
+                if (this.bottom > point.Y) {
+                    this.bottom = point.Y;
+                }
             }
             else {
-                left = right = point.X;
-                top = bottom = point.Y;
+                this.left = this.right = point.X;
+                this.top = this.bottom = point.Y;
             }
         }
 
@@ -342,17 +350,19 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// <returns>true if the box has been extended</returns>
         public bool AddWithCheck(Point point) {
             bool wider;
-            if (wider = (point.X < left))
-                left = point.X;
-            else if (wider = (right < point.X))
-                right = point.X;
+            if (wider = (point.X < this.left)) {
+                this.left = point.X;
+            } else if (wider = (this.right < point.X)) {
+                this.right = point.X;
+            }
 
             bool higher;
 
-            if (higher = (point.Y > top))
-                top = point.Y;
-            else if (higher = (bottom > point.Y))
-                bottom = point.Y;
+            if (higher = (point.Y > this.top)) {
+                this.top = point.Y;
+            } else if (higher = (this.bottom > point.Y)) {
+                this.bottom = point.Y;
+            }
 
             return wider || higher;
         }
@@ -362,13 +372,13 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// </summary>
         /// <param name="rectangle"></param>
         public void Add(Rectangle rectangle) {
-            Add(rectangle.LeftTop);
-            Add(rectangle.RightBottom);
+            this.Add(rectangle.LeftTop);
+            this.Add(rectangle.RightBottom);
         }
         public void Add(IRectangle<Point> r) {
             var rectangle = (Rectangle)r;
-            Add(rectangle.LeftTop);
-            Add(rectangle.RightBottom);
+            this.Add(rectangle.LeftTop);
+            this.Add(rectangle.RightBottom);
         }
         /// <summary>
         /// override ==
@@ -411,8 +421,8 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// <param name="point"></param>
         /// <returns></returns>
         public bool Contains(Point point) {
-            return (ApproximateComparer.Compare(left, point.X) <= 0) && (ApproximateComparer.Compare(right, point.X) >= 0)
-                   && (ApproximateComparer.Compare(top, point.Y) >= 0) && (ApproximateComparer.Compare(bottom, point.Y) <= 0);
+            return (ApproximateComparer.Compare(this.left, point.X) <= 0) && (ApproximateComparer.Compare(this.right, point.X) >= 0)
+                   && (ApproximateComparer.Compare(this.top, point.Y) >= 0) && (ApproximateComparer.Compare(this.bottom, point.Y) <= 0);
         }
 
         /// <summary>
@@ -421,7 +431,7 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// <param name="rect"></param>
         /// <returns></returns>
         public bool Contains(Rectangle rect) {
-            return Contains(rect.LeftTop) && Contains(rect.RightBottom);
+            return this.Contains(rect.LeftTop) && this.Contains(rect.RightBottom);
         }
 
 
@@ -430,7 +440,7 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// </summary>
         /// <returns></returns>
         public double Diagonal {
-            get { return Math.Sqrt(Width * Width + Height * Height); }
+            get { return Math.Sqrt(this.Width * this.Width + this.Height * this.Height); }
         }
 
         /// <summary>
@@ -438,8 +448,8 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// </summary>
         /// <param name="padding"></param>
         public void PadWidth(double padding) {
-            Left -= padding;
-            Right += padding;
+            this.Left -= padding;
+            this.Right += padding;
         }
 
         /// <summary>
@@ -447,8 +457,8 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// </summary>
         /// <param name="padding"></param>
         public void PadHeight(double padding) {
-            Top += padding;
-            Bottom -= padding;
+            this.Top += padding;
+            this.Bottom -= padding;
         }
 
         /// <summary>
@@ -456,14 +466,16 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// </summary>
         /// <param name="padding"></param>
         public Rectangle Pad(double padding) {
-            if (padding < -Width / 2)
-                padding = -Width / 2;
-            if (padding < -Height / 2)
-                padding = -Height / 2;
+            if (padding < -this.Width / 2) {
+                padding = -this.Width / 2;
+            }
 
+            if (padding < -this.Height / 2) {
+                padding = -this.Height / 2;
+            }
 
-            PadWidth(padding);
-            PadHeight(padding);
+            this.PadWidth(padding);
+            this.PadHeight(padding);
             return this;
         }
 
@@ -475,10 +487,10 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// <param name="right"></param>
         /// <param name="top"></param>
         public void Pad(double left, double bottom, double right, double top) {
-            Left -= left;
-            Right += right;
-            Bottom -= bottom;
-            Top += top;
+            this.Left -= left;
+            this.Right += right;
+            this.Bottom -= bottom;
+            this.Top += top;
         }
 
         /// <summary>
@@ -488,9 +500,11 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// <param name="rect2"></param>
         /// <returns></returns>
         public static Rectangle Intersect(Rectangle rect1, Rectangle rect2) {
-            if (rect1.Intersects(rect2))
+            if (rect1.Intersects(rect2)) {
                 return new Rectangle(new Point(Math.Max(rect1.Left, rect2.Left), Math.Max(rect1.Bottom, rect2.Bottom)),
                     new Point(Math.Min(rect1.Right, rect2.Right), Math.Min(rect1.Top, rect2.Top)));
+            }
+
             return Rectangle.CreateAnEmptyBox();
         }
 
@@ -499,10 +513,10 @@ namespace Microsoft.Msagl.Core.Geometry{
         ///<returns></returns>
         public Polyline Perimeter() {
             var poly = new Polyline();
-            poly.AddPoint(LeftTop);
-            poly.AddPoint(RightTop);
-            poly.AddPoint(RightBottom);
-            poly.AddPoint(LeftBottom);
+            poly.AddPoint(this.LeftTop);
+            poly.AddPoint(this.RightTop);
+            poly.AddPoint(this.RightBottom);
+            poly.AddPoint(this.LeftBottom);
             poly.Closed = true;
             return poly;
         }
@@ -511,12 +525,12 @@ namespace Microsoft.Msagl.Core.Geometry{
         ///</summary>
         ///<param name="scale"></param>
         public void ScaleAroundCenter(double scale) {
-            Width = Width * scale;
-            Height = Height * scale;
+            this.Width = this.Width * scale;
+            this.Height = this.Height * scale;
         }
 
         internal Rectangle Clone() {
-            return new Rectangle(LeftTop, RightBottom);
+            return new Rectangle(this.LeftTop, this.RightBottom);
         }
 
 
@@ -525,10 +539,10 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// gets or sets the Size
         /// </summary>
         public Size Size {
-            get { return new Size(Width, Height); }
+            get { return new Size(this.Width, this.Height); }
             set {
-                Width = value.Width;
-                Height = value.Height;
+                this.Width = value.Width;
+                this.Height = value.Height;
             }
         }
         /// <summary>
@@ -538,11 +552,11 @@ namespace Microsoft.Msagl.Core.Geometry{
         /// <param name="center"></param>
         public Rectangle(Size size, Point center) {
             var w = size.Width / 2;
-            left = center.X - w;
-            right = center.X + w;
+            this.left = center.X - w;
+            this.right = center.X + w;
             var h = size.Height / 2;
-            bottom = center.Y - h;
-            top = center.Y + h;
+            this.bottom = center.Y - h;
+            this.top = center.Y + h;
         }
 
         /// <summary>
@@ -554,10 +568,10 @@ namespace Microsoft.Msagl.Core.Geometry{
             var w = size.Width / 2;
             var h = size.Height / 2;
 
-            Add(new Point(point.X - w, point.Y - h));
-            Add(new Point(point.X + w, point.Y - h));
-            Add(new Point(point.X - w, point.Y + h));
-            Add(new Point(point.X + w, point.Y + h));
+            this.Add(new Point(point.X - w, point.Y - h));
+            this.Add(new Point(point.X + w, point.Y - h));
+            this.Add(new Point(point.X - w, point.Y + h));
+            this.Add(new Point(point.X + w, point.Y + h));
         }
 
 

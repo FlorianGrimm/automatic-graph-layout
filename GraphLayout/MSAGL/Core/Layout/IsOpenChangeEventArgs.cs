@@ -15,7 +15,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <param name="previousValue"></param>
         public IsOpenChangeEventArgs(bool previousValue) {
-            PreviousValue = previousValue;
+            this.PreviousValue = previousValue;
         }
     }
 }

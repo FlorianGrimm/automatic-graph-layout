@@ -15,9 +15,9 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
         internal VisibilityEdge(VisibilityVertex source, VisibilityVertex target, double weight) {
             Debug.Assert(source.Point != target.Point, "Self-edges are not allowed");
-            Source = source;
-            Target = target;
-            Weight = weight;
+            this.Source = source;
+            this.Target = target;
+            this.Weight = weight;
         }
 
         internal VisibilityEdge(VisibilityVertex source, VisibilityVertex target) : this (source, target, 1.0) {}
@@ -36,13 +36,13 @@ namespace Microsoft.Msagl.Routing.Visibility {
         /// edge source point
         /// </summary>
         public Point SourcePoint {
-            get { return Source.Point; }
+            get { return this.Source.Point; }
         }
         /// <summary>
         /// edge target point
         /// </summary>
         public Point TargetPoint {
-            get { return Target.Point; }
+            get { return this.Target.Point; }
         }
 
 
@@ -51,7 +51,7 @@ namespace Microsoft.Msagl.Routing.Visibility {
         internal VisibilityVertex Target { get; set; }
 
         internal double Length {
-            get { return (SourcePoint-TargetPoint).Length*LengthMultiplier; }
+            get { return (this.SourcePoint - this.TargetPoint).Length* this.LengthMultiplier; }
         }
 
       
@@ -62,15 +62,15 @@ namespace Microsoft.Msagl.Routing.Visibility {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return String.Format(CultureInfo.InvariantCulture, "{0}->{1} ({2})", Source, Target, Weight.ToString("0.0###", CultureInfo.InvariantCulture));
+            return String.Format(CultureInfo.InvariantCulture, "{0}->{1} ({2})", this.Source, this.Target, this.Weight.ToString("0.0###", CultureInfo.InvariantCulture));
         }
 
         internal VisibilityEdge ReversedClone() {
-            return new VisibilityEdge(Target, Source);
+            return new VisibilityEdge(this.Target, this.Source);
         }
 
         internal VisibilityEdge Clone() {
-            return new VisibilityEdge(Source, Target);
+            return new VisibilityEdge(this.Source, this.Target);
         }
     }
 }

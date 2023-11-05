@@ -62,14 +62,15 @@ namespace Microsoft.Msagl.Core.Geometry
                 this.borderWeight = value;
             }
         }
-         double borderWeight;
+
+        private double borderWeight;
 
         /// <summary>
         /// Returns whether FixedPosition has been set.
         /// </summary>
         public bool IsFixedPosition
         {
-            get { return !Double.IsNaN(FixedPosition) && (Weight > 0.0); }
+            get { return !Double.IsNaN(this.FixedPosition) && (this.Weight > 0.0); }
         }
 
         /// <summary>
@@ -179,7 +180,7 @@ namespace Microsoft.Msagl.Core.Geometry
         /// <returns></returns>
         public override int GetHashCode()
         {
-            return InnerMargin.GetHashCode() ^ FixedPosition.GetHashCode() ^ Weight.GetHashCode();
+            return this.InnerMargin.GetHashCode() ^ this.FixedPosition.GetHashCode() ^ this.Weight.GetHashCode();
         }
 
         // Omitting any of the following violates rule: OverrideEqualsAndOperatorEqualsOnValueTypes
@@ -190,8 +191,10 @@ namespace Microsoft.Msagl.Core.Geometry
         /// <returns></returns>
         public override bool Equals(Object obj)
         {
-            if (!(obj is BorderInfo))
+            if (!(obj is BorderInfo)) {
                 return false;
+            }
+
             var bi = (BorderInfo)obj;
             return (bi.FixedPosition == this.FixedPosition)
                    && (bi.Weight == this.Weight)

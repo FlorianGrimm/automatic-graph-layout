@@ -19,48 +19,52 @@ namespace Microsoft.Msagl.Routing.Visibility {
     [Serializable]
 #endif
     internal class Polygon {
-        Polyline polyline;
+        private Polyline polyline;
 
         internal Polyline Polyline {
-            get { return polyline; }
+            get { return this.polyline; }
 #if TEST_MSAGL
-            set { polyline = value; }
+            set { this.polyline = value; }
 #endif
         }
 
-        readonly PolylinePoint[] points;
+        private readonly PolylinePoint[] points;
 
         internal Polygon(Polyline polyline) {
             this.polyline = polyline;
-            points = new PolylinePoint[polyline.Count];
+            this.points = new PolylinePoint[polyline.Count];
             int i = 0;
             PolylinePoint pp = polyline.StartPoint;
-            for (; i < polyline.Count; i++, pp = pp.Next)
-                points[i] = pp;
-
+            for (; i < polyline.Count; i++, pp = pp.Next) {
+                this.points[i] = pp;
+            }
         }
 
         internal int Next(int i) {
-            return Module(i + 1);
+            return this.Module(i + 1);
         }
 
         internal int Prev(int i) {
-            return Module(i - 1);
+            return this.Module(i - 1);
         }
 
-        internal int Count { get { return Polyline.Count; } }
+        internal int Count { get { return this.Polyline.Count; } }
 
         internal int Module(int i) {
-            if (i < 0)
-                return i + Count;
-            if (i < Count)
+            if (i < 0) {
+                return i + this.Count;
+            }
+
+            if (i < this.Count) {
                 return i;
-            return i - Count;
+            }
+
+            return i - this.Count;
         }
 
         internal PolylinePoint this[int i] {
             get {
-                return points[Module(i)];
+                return this.points[this.Module(i)];
             }
         }
 
@@ -75,7 +79,7 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
 
         public override string ToString() {
-            return polyline.ToString();
+            return this.polyline.ToString();
         }
 
         /// <summary>
@@ -86,10 +90,11 @@ namespace Microsoft.Msagl.Routing.Visibility {
         /// <returns></returns>
         internal int Median(int p1, int p2) {
             System.Diagnostics.Debug.Assert(p1 != p2);//otherwise we do not know what arc is mean: the whole one or just the point
-            if (p2 > p1)
+            if (p2 > p1) {
                 return (p2 + p1) / 2;
+            }
 
-            return Module((p2 + Count + p1) / 2);
+            return this.Module((p2 + this.Count + p1) / 2);
         }
 
         /// <summary>
@@ -103,21 +108,25 @@ namespace Microsoft.Msagl.Routing.Visibility {
         /// <returns></returns>
         internal int FindTheFurthestVertexFromBisector(int p1, int p2, Point bisectorPivot, Point bisectorRay) {
             Point directionToTheHill = bisectorRay.Rotate(Math.PI / 2);
-            if ((polyline.StartPoint.Point - bisectorPivot) * directionToTheHill < 0)
+            if ((this.polyline.StartPoint.Point - bisectorPivot) * directionToTheHill < 0) {
                 directionToTheHill = -directionToTheHill;
-            if (p1 == p2)
-                p2 = Next(p1);
+            }
+
+            if (p1 == p2) {
+                p2 = this.Next(p1);
+            }
             //binary search
             do {
-                int m = Median(p2, p1); //now the chunk goes clockwise from p2 to p1
-                Point mp = Pnt(m);
+                int m = this.Median(p2, p1); //now the chunk goes clockwise from p2 to p1
+                Point mp = this.Pnt(m);
 
-                if ((Pnt(Next(m)) - mp) * directionToTheHill >= 0)
-                    p2 = Next(m);
-                else if ((Pnt(Prev(m)) - mp) * directionToTheHill >= 0)
-                    p1 = Prev(m);
-                else
+                if ((this.Pnt(this.Next(m)) - mp) * directionToTheHill >= 0) {
+                    p2 = this.Next(m);
+                } else if ((this.Pnt(this.Prev(m)) - mp) * directionToTheHill >= 0) {
+                    p1 = this.Prev(m);
+                } else {
                     p1 = p2 = m;
+                }
             }
             while (p1 != p2);
 
@@ -126,13 +135,15 @@ namespace Microsoft.Msagl.Routing.Visibility {
 #if TEST_MSAGL
         // ReSharper disable UnusedMember.Local
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        static double TestPolygonDist(Polygon a, Polygon b) {
+        private static double TestPolygonDist(Polygon a, Polygon b) {
             // ReSharper restore UnusedMember.Local
             double ret = double.PositiveInfinity, u, v;
-            for (int i = 0; i < a.Count; i++)
-                for (int j = 0; j < b.Count; j++)
+            for (int i = 0; i < a.Count; i++) {
+                for (int j = 0; j < b.Count; j++) {
                     ret = Math.Min(ret, LineSegment.MinDistBetweenLineSegments(a.Pnt(i), a.Pnt(i + 1), b.Pnt(j),
                                                                                 b.Pnt(j + 1), out u, out v));
+                }
+            }
 
             return ret;
         }
@@ -178,10 +189,13 @@ namespace Microsoft.Msagl.Routing.Visibility {
         private static bool PolygonIsLegalDebug(Polygon a)
         {
             var poly = a.Polyline;
-            for (var p = poly.StartPoint; p.Next != null && p.Next.Next != null; p = p.Next)
+            for (var p = poly.StartPoint; p.Next != null && p.Next.Next != null; p = p.Next) {
                 if (Point.GetTriangleOrientation(p.Point, p.Next.Point, p.Next.Next.Point) ==
-                    TriangleOrientation.Collinear)
+                    TriangleOrientation.Collinear) {
                     return false;
+                }
+            }
+
             return true;
         }
 
@@ -200,15 +214,15 @@ namespace Microsoft.Msagl.Routing.Visibility {
         }
 
         internal void GetTangentPoints(out int leftTangentPoint, out int rightTangentPoint, Point point) {
-            var bimodalSequence = new BimodalSequence(GetSequenceDelegate(point), Count);
+            var bimodalSequence = new BimodalSequence(this.GetSequenceDelegate(point), this.Count);
             leftTangentPoint = bimodalSequence.FindMaximum();
             rightTangentPoint = bimodalSequence.FindMinimum();
         }
 
         private Func<int, double> GetSequenceDelegate(Point point) {
-            Point pointOfP = Pnt(0);
+            Point pointOfP = this.Pnt(0);
             return delegate(int i) {
-                double d = Point.Angle(pointOfP, point, Pnt(i));
+                double d = Point.Angle(pointOfP, point, this.Pnt(i));
                 return d < Math.PI ? d : d - 2 * Math.PI;
             };
         }

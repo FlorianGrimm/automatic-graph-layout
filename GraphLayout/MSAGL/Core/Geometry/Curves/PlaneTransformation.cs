@@ -9,15 +9,14 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     [Serializable]
 #endif
     public class PlaneTransformation {
-        
-        readonly double[][] elements = new double[2][];
+        private readonly double[][] elements = new double[2][];
         
 
         /// <summary>
         /// the matrix elements
         /// </summary>
         internal double[][] Elements {
-            get { return elements; }
+            get { return this.elements; }
         }
         /// <summary>
         /// i,j th element
@@ -27,16 +26,16 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         [SuppressMessage("Microsoft.Design", "CA1023:IndexersShouldNotBeMultidimensional")]
         public double this[int rowIndex, int columnIndex] {
-            get { return Elements[rowIndex][columnIndex]; }
-            set { Elements[rowIndex][columnIndex] = value; }
+            get { return this.Elements[rowIndex][columnIndex]; }
+            set { this.Elements[rowIndex][columnIndex] = value; }
         }
 
         /// <summary>
         /// constructs the an identity transformation
         /// </summary>
         public PlaneTransformation() {
-            elements[0] = new double[3];
-            elements[1] = new double[3];
+            this.elements[0] = new double[3];
+            this.elements[1] = new double[3];
             this[0, 0] = this[1, 1] = 1; //create a unit transform
         }
 
@@ -52,10 +51,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         [SuppressMessage("Microsoft.Design", "CA1025:ReplaceRepetitiveArgumentsWithParamsArray")]
         public PlaneTransformation(double matrixElement00, double matrixElement01, double matrixElement02,
             double matrixElement10, double matrixElement11, double matrixElement12) {
-            elements[0] = new double[3];
-            elements[1] = new double[3];
-            elements[0][0] = matrixElement00; elements[0][1] = matrixElement01; elements[0][2] = matrixElement02;
-            elements[1][0] = matrixElement10; elements[1][1] = matrixElement11; elements[1][2] = matrixElement12;
+            this.elements[0] = new double[3];
+            this.elements[1] = new double[3];
+            this.elements[0][0] = matrixElement00; this.elements[0][1] = matrixElement01; this.elements[0][2] = matrixElement02;
+            this.elements[1][0] = matrixElement10; this.elements[1][1] = matrixElement11; this.elements[1][2] = matrixElement12;
         }
         
         /// <summary>
@@ -74,8 +73,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="point"></param>
         /// <returns></returns>
         static public Point Multiply(PlaneTransformation transformation, Point point) {
-            if (transformation != null)
+            if (transformation != null) {
                 return new Point(transformation[0, 0] * point.X + transformation[0, 1] * point.Y + transformation[0, 2], transformation[1, 0] * point.X + transformation[1, 1] * point.Y + transformation[1, 2]);
+            }
+
             return new Point();
         }
         /// <summary>
@@ -95,10 +96,12 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="b"></param>
         /// <returns></returns>
         static public PlaneTransformation Multiply(PlaneTransformation a, PlaneTransformation b) {
-            if (a != null && b != null)
+            if (a != null && b != null) {
                 return new PlaneTransformation(
                    a[0, 0] * b[0, 0] + a[0, 1] * b[1, 0], a[0, 0] * b[0, 1] + a[0, 1] * b[1, 1], a[0, 0] * b[0, 2] + a[0, 1] * b[1, 2] + a[0, 2],
                    a[1, 0] * b[0, 0] + a[1, 1] * b[1, 0], a[1, 0] * b[0, 1] + a[1, 1] * b[1, 1], a[1, 0] * b[0, 2] + a[1, 1] * b[1, 2] + a[1, 2]);
+            }
+
             return null;
         }
 
@@ -109,8 +112,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="transform1"></param>
         /// <returns></returns>
         static public PlaneTransformation operator /(PlaneTransformation transform0, PlaneTransformation transform1) {
-            if (transform0 != null && transform1 != null)
+            if (transform0 != null && transform1 != null) {
                 return transform0 * transform1.Inverse;
+            }
+
             return null;
 
         }
@@ -130,16 +135,16 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 /// </summary>
         public PlaneTransformation Inverse {
             get {
-                double det = Elements[0][0] * Elements[1][1] - Elements[1][0] * Elements[0][1];
+                double det = this.Elements[0][0] * this.Elements[1][1] - this.Elements[1][0] * this.Elements[0][1];
 //                if (ApproximateComparer.Close(det, 0))
 //                    throw new InvalidOperationException();//"trying to reverse a singular matrix");
 
-                double a00 = Elements[1][1] / det;
-                double a01 = -Elements[0][1] / det;
-                double a10 = -Elements[1][0] / det;
-                double a11 = Elements[0][0] / det;
-                double a02 = -a00 * Elements[0][2] - a01 * Elements[1][2];
-                double a12 = -a10 * Elements[0][2] - a11 * Elements[1][2];
+                double a00 = this.Elements[1][1] / det;
+                double a01 = -this.Elements[0][1] / det;
+                double a10 = -this.Elements[1][0] / det;
+                double a11 = this.Elements[0][0] / det;
+                double a02 = -a00 * this.Elements[0][2] - a01 * this.Elements[1][2];
+                double a12 = -a10 * this.Elements[0][2] - a11 * this.Elements[1][2];
 
 
                 return new PlaneTransformation(a00, a01, a02, a10, a11, a12);
@@ -170,12 +175,12 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         public bool IsIdentity {
             get {
                 return
-             ApproximateComparer.Close(Elements[0][0], 1) &&
-             ApproximateComparer.Close(Elements[0][1], 0) &&
-             ApproximateComparer.Close(Elements[0][2], 0) &&
-             ApproximateComparer.Close(Elements[1][0], 0) &&
-             ApproximateComparer.Close(Elements[1][1], 1) &&
-             ApproximateComparer.Close(Elements[1][2], 0);
+             ApproximateComparer.Close(this.Elements[0][0], 1) &&
+             ApproximateComparer.Close(this.Elements[0][1], 0) &&
+             ApproximateComparer.Close(this.Elements[0][2], 0) &&
+             ApproximateComparer.Close(this.Elements[1][0], 0) &&
+             ApproximateComparer.Close(this.Elements[1][1], 1) &&
+             ApproximateComparer.Close(this.Elements[1][2], 0);
             }
         }
 
@@ -184,7 +189,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         public Point Offset {
             get {
-                return new Point(Elements[0][2], Elements[1][2]);
+                return new Point(this.Elements[0][2], this.Elements[1][2]);
             }
         }
 

@@ -13,25 +13,25 @@ namespace Microsoft.Msagl.Layout.Incremental {
 
         public FiEdge(Edge mEdge) {
             this.mEdge = mEdge;
-            source = (FiNode) mEdge.Source.AlgorithmData;
-            target = (FiNode) mEdge.Target.AlgorithmData;
+            this.source = (FiNode) mEdge.Source.AlgorithmData;
+            this.target = (FiNode) mEdge.Target.AlgorithmData;
         }
         #region IEdge Members
 
         public int Source {
-            get { return source.index; }
+            get { return this.source.index; }
             set { }
         }
 
         public int Target {
-            get { return target.index; }
+            get { return this.target.index; }
             set { }
         }
 
         #endregion
 
         internal Point vector() {
-            return source.mNode.Center - target.mNode.Center;
+            return this.source.mNode.Center - this.target.mNode.Center;
         }
     }
 }

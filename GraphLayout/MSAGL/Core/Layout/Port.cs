@@ -24,7 +24,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return Location.ToString();
+            return this.Location.ToString();
         }
     }
 }

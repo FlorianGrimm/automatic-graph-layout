@@ -24,16 +24,17 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         public Point Left;
         public Point Right;
         public int Weight = 1;
-       // public List<int> unnecessaryTransfer = new List<int>();
+
+        // public List<int> unnecessaryTransfer = new List<int>();
 #if TEST_MSAGL
-        static int railCount;
-        int id;
+        private static int railCount;
+        private int id;
 #endif
 
         /// <summary>
         /// the number of higlighted edges passing through the rail
         /// </summary>
-        bool _isHighlighted;
+        private bool _isHighlighted;
 
         /// <summary>
         /// can be ICurve or Arrowhead
@@ -49,30 +50,29 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         /// the corresponding LgEdgeInfo
         /// </summary>
         public LgEdgeInfo TopRankedEdgeInfoOfTheRail;
-
-        bool _isUsedOnPreviousLevel;
+        private bool _isUsedOnPreviousLevel;
 
         public double MinPassingEdgeZoomLevel = Double.MaxValue;
 
         public bool IsUsedOnPreviousLevel
         {
-            get { return _isUsedOnPreviousLevel; }
-            set { _isUsedOnPreviousLevel = value; }
+            get { return this._isUsedOnPreviousLevel; }
+            set { this._isUsedOnPreviousLevel = value; }
         }
 
         public int ZoomLevel;
         public List<object> Color;
 #if TEST_MSAGL
-        Rail() {
+        private Rail() {
             railCount++;
-            id = railCount;
+            this.id = railCount;
         }
         /// <summary>
         /// returning id for debugging
         /// </summary>
         /// <returns></returns>
         public int GetId() {
-            return id;
+            return this.id;
         }
         /// <summary>
         /// Returns a string that represents the current object.
@@ -82,12 +82,12 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         /// </returns>
         /// <filterpriority>2</filterpriority>
         public override string ToString() {
-            return id + StartEndString();
+            return this.id + this.StartEndString();
         }
 
-        string StartEndString() {
+        private string StartEndString() {
             Point s, t;
-            return GetStartEnd(out s, out t) ? " " + new LineSegment(s, t) : "";
+            return this.GetStartEnd(out s, out t) ? " " + new LineSegment(s, t) : "";
         }
 #endif
 
@@ -96,9 +96,9 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
             : this()
 #endif
         {
-            TopRankedEdgeInfoOfTheRail = topRankedEdgeInfoOfTheRail;
+            this.TopRankedEdgeInfoOfTheRail = topRankedEdgeInfoOfTheRail;
             this.ZoomLevel = zoomLevel;
-            Geometry = curveSegment;
+            this.Geometry = curveSegment;
         }
 
         internal Rail(Arrowhead arrowhead, Point curveAttachmentPoint, LgEdgeInfo topRankedEdgeInfoOfTheRail,
@@ -107,19 +107,21 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
             : this()
 #endif
         {
-            TopRankedEdgeInfoOfTheRail = topRankedEdgeInfoOfTheRail;
-            Geometry = arrowhead.Clone();
-            CurveAttachmentPoint = curveAttachmentPoint;
-            ZoomLevel = zoomLevel;
+            this.TopRankedEdgeInfoOfTheRail = topRankedEdgeInfoOfTheRail;
+            this.Geometry = arrowhead.Clone();
+            this.CurveAttachmentPoint = curveAttachmentPoint;
+            this.ZoomLevel = zoomLevel;
         }
 
         public Rectangle BoundingBox {
             get {
-                var icurve = Geometry as ICurve;
-                if (icurve != null)
+                var icurve = this.Geometry as ICurve;
+                if (icurve != null) {
                     return icurve.BoundingBox;
-                var arrowhead = (Arrowhead) Geometry;
-                var rec = new Rectangle(arrowhead.TipPosition, CurveAttachmentPoint);
+                }
+
+                var arrowhead = (Arrowhead)this.Geometry;
+                var rec = new Rectangle(arrowhead.TipPosition, this.CurveAttachmentPoint);
                 rec.Pad(arrowhead.Width); // sometimes this box will not cover the arrowhead, but rarely
                 return rec;
             }
@@ -129,41 +131,43 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         /// the number of higlighted edges passing through the rail
         /// </summary>
         public bool IsHighlighted {
-            get { return _isHighlighted; }
-            set { _isHighlighted = value; }
+            get { return this._isHighlighted; }
+            set { this._isHighlighted = value; }
         }
 
 
 
         internal Tuple<Point, Point> PointTuple() {
-            var icurve = Geometry as ICurve;
-            if (icurve != null)
+            var icurve = this.Geometry as ICurve;
+            if (icurve != null) {
                 return new Tuple<Point, Point>(icurve.Start, icurve.End);
-            var arrowhead = (Arrowhead) Geometry;
-            return new Tuple<Point, Point>(arrowhead.TipPosition, CurveAttachmentPoint);
+            }
+
+            var arrowhead = (Arrowhead)this.Geometry;
+            return new Tuple<Point, Point>(arrowhead.TipPosition, this.CurveAttachmentPoint);
         }
 
         
         public Rail(ICurve curveSegment, int zoomLevel)
         {
-            ZoomLevel = zoomLevel;
+            this.ZoomLevel = zoomLevel;
 #if TEST_MSAGL
             railCount++;
-            id = railCount;
+            this.id = railCount;
 #endif
-            Geometry = curveSegment;
+            this.Geometry = curveSegment;
         }
 
         public bool GetStartEnd(out Point p0, out Point p1) {
-            var curve = Geometry as ICurve;
+            var curve = this.Geometry as ICurve;
             if (curve != null) {
                 p0 = curve.Start;
                 p1 = curve.End;
                 return true;
             }
-            var arrow = Geometry as Arrowhead;
+            var arrow = this.Geometry as Arrowhead;
             if (arrow != null) {
-                p0 = CurveAttachmentPoint;
+                p0 = this.CurveAttachmentPoint;
                 p1 = arrow.TipPosition;
                 return true;
             }
@@ -174,15 +178,16 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
 
         public void UpdateTopEdgeInfo(LgEdgeInfo ei)
         {
-            if (TopRankedEdgeInfoOfTheRail == null || TopRankedEdgeInfoOfTheRail.Rank < ei.Rank)
-                TopRankedEdgeInfoOfTheRail = ei;
+            if (this.TopRankedEdgeInfoOfTheRail == null || this.TopRankedEdgeInfoOfTheRail.Rank < ei.Rank) {
+                this.TopRankedEdgeInfoOfTheRail = ei;
+            }
 
-            MinPassingEdgeZoomLevel = 1+Math.Min(MinPassingEdgeZoomLevel, ei.ZoomLevel);
+            this.MinPassingEdgeZoomLevel = 1+Math.Min(this.MinPassingEdgeZoomLevel, ei.ZoomLevel);
         }
 
         public LgEdgeInfo GetTopEdgeInfo()
         {
-            return TopRankedEdgeInfoOfTheRail;
+            return this.TopRankedEdgeInfoOfTheRail;
         }
     }
 }

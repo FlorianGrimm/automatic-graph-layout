@@ -6,7 +6,7 @@ namespace Microsoft.Msagl.Core.Layout {
     /// 
     /// </summary>
     public class CurvePort:Port  {
-        double parameter;
+        private double parameter;
         /// <summary>
         /// constructor
         /// </summary>
@@ -26,16 +26,17 @@ namespace Microsoft.Msagl.Core.Layout {
         /// 
         /// </summary>
         public double Parameter {
-            get { return parameter; }
-            set { parameter = value; }
+            get { return this.parameter; }
+            set { this.parameter = value; }
         }
-        ICurve curve;
+
+        private ICurve curve;
         /// <summary>
         /// 
         /// </summary>
         override public ICurve Curve {
-            get { return curve; }
-            set { curve = value; }
+            get { return this.curve; }
+            set { this.curve = value; }
         }
 
         /// <summary>
@@ -45,7 +46,7 @@ namespace Microsoft.Msagl.Core.Layout {
 #if SHARPKIT
             get { return Curve[parameter].Clone(); }
 #else
-            get { return Curve[parameter]; }
+            get { return this.Curve[this.parameter]; }
 #endif
         }
     }

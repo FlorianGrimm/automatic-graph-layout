@@ -15,72 +15,77 @@ using Microsoft.Msagl.Layout.MDS;
 namespace Microsoft.Msagl.Layout.Layered {
 
     internal class SmoothedPolylineCalculator {
-        CornerSite headSite;// corresponds to the bottom point
-        PolyIntEdge edgePath;
-        Anchor[] anchors;
-        GeometryGraph originalGraph;
-        ParallelogramNode eastHierarchy;
-        ParallelogramNode westHierarchy;
-        ParallelogramNode thinEastHierarchy;
-        ParallelogramNode thinWestHierarchy;
-        List<ParallelogramNode> thinRightNodes = new List<ParallelogramNode>();
-        List<ParallelogramNode> thinLefttNodes = new List<ParallelogramNode>();
-        Database database;
-        ProperLayeredGraph layeredGraph;
-        LayerArrays layerArrays;
-        SugiyamaLayoutSettings settings;
+        private CornerSite headSite;// corresponds to the bottom point
+        private PolyIntEdge edgePath;
+        private Anchor[] anchors;
+        private GeometryGraph originalGraph;
+        private ParallelogramNode eastHierarchy;
+        private ParallelogramNode westHierarchy;
+        private ParallelogramNode thinEastHierarchy;
+        private ParallelogramNode thinWestHierarchy;
+        private List<ParallelogramNode> thinRightNodes = new List<ParallelogramNode>();
+        private List<ParallelogramNode> thinLefttNodes = new List<ParallelogramNode>();
+        private Database database;
+        private ProperLayeredGraph layeredGraph;
+        private LayerArrays layerArrays;
+        private SugiyamaLayoutSettings settings;
 
         /// <summary>
         /// Creates a smoothed polyline
         /// </summary>
         internal SmoothedPolylineCalculator(PolyIntEdge edgePathPar, Anchor[] anchorsP, GeometryGraph origGraph, SugiyamaLayoutSettings settings, LayerArrays la, ProperLayeredGraph layerGraph, Database databaseP) {
             this.database = databaseP;
-            edgePath = edgePathPar;
-            anchors = anchorsP;
+            this.edgePath = edgePathPar;
+            this.anchors = anchorsP;
             this.layerArrays = la;
             this.originalGraph = origGraph;
             this.settings = settings;
             this.layeredGraph = layerGraph;
-            eastHierarchy = BuildEastHierarchy();
-            westHierarchy = BuildWestHierarchy();
+            this.eastHierarchy = this.BuildEastHierarchy();
+            this.westHierarchy = this.BuildWestHierarchy();
         }
 
         private ParallelogramNode BuildEastHierarchy() {
-            List<Polyline> boundaryAnchorsCurves = FindEastBoundaryAnchorCurves();
+            List<Polyline> boundaryAnchorsCurves = this.FindEastBoundaryAnchorCurves();
             List<ParallelogramNode> l = new List<ParallelogramNode>();
-            foreach (Polyline c in boundaryAnchorsCurves)
+            foreach (Polyline c in boundaryAnchorsCurves) {
                 l.Add(c.ParallelogramNodeOverICurve);
+            }
 
-            this.thinEastHierarchy = HierarchyCalculator.Calculate(thinRightNodes, this.settings.GroupSplit);
+            this.thinEastHierarchy = HierarchyCalculator.Calculate(this.thinRightNodes, this.settings.GroupSplit);
 
             return HierarchyCalculator.Calculate(l, this.settings.GroupSplit);
         }
 
         private ParallelogramNode BuildWestHierarchy() {
-            List<Polyline> boundaryAnchorCurves = FindWestBoundaryAnchorCurves();
+            List<Polyline> boundaryAnchorCurves = this.FindWestBoundaryAnchorCurves();
             List<ParallelogramNode> l = new List<ParallelogramNode>();
-            foreach (Polyline a in boundaryAnchorCurves)
+            foreach (Polyline a in boundaryAnchorCurves) {
                 l.Add(a.ParallelogramNodeOverICurve);
+            }
 
-            this.thinWestHierarchy = HierarchyCalculator.Calculate(thinLefttNodes, this.settings.GroupSplit);
+            this.thinWestHierarchy = HierarchyCalculator.Calculate(this.thinLefttNodes, this.settings.GroupSplit);
 
             return HierarchyCalculator.Calculate(l, this.settings.GroupSplit);
         }
 
-        List<Polyline> FindEastBoundaryAnchorCurves() {
+        private List<Polyline> FindEastBoundaryAnchorCurves() {
             List<Polyline> ret = new List<Polyline>();
             int uOffset = 0;
 
             foreach (int u in this.edgePath) {
                 Anchor rightMostAnchor = null;
-                foreach (int v in LeftBoundaryNodesOfANode(u, Routing.GetNodeKind(uOffset, edgePath))) {
-                    Anchor a = anchors[v];
-                    if (rightMostAnchor == null || rightMostAnchor.Origin.X < a.Origin.X)
+                foreach (int v in this.LeftBoundaryNodesOfANode(u, Routing.GetNodeKind(uOffset, this.edgePath))) {
+                    Anchor a = this.anchors[v];
+                    if (rightMostAnchor == null || rightMostAnchor.Origin.X < a.Origin.X) {
                         rightMostAnchor = a;
+                    }
+
                     ret.Add(a.PolygonalBoundary);
                 }
-                if (rightMostAnchor != null)
-                    thinRightNodes.Add(new LineSegment(rightMostAnchor.Origin, originalGraph.Left, rightMostAnchor.Y).ParallelogramNodeOverICurve);
+                if (rightMostAnchor != null) {
+                    this.thinRightNodes.Add(new LineSegment(rightMostAnchor.Origin, this.originalGraph.Left, rightMostAnchor.Y).ParallelogramNodeOverICurve);
+                }
 
                 uOffset++;
             }
@@ -107,21 +112,23 @@ namespace Microsoft.Msagl.Layout.Layered {
 
             foreach (int u in this.edgePath) {
                 int leftMost = -1;
-                foreach (int v in RightBoundaryNodesOfANode(u, Routing.GetNodeKind(uOffset, this.edgePath))) {
-                    if (leftMost == -1 || layerArrays.X[v] < layerArrays.X[leftMost])
+                foreach (int v in this.RightBoundaryNodesOfANode(u, Routing.GetNodeKind(uOffset, this.edgePath))) {
+                    if (leftMost == -1 || this.layerArrays.X[v] < this.layerArrays.X[leftMost]) {
                         leftMost = v;
+                    }
+
                     ret.Add(this.anchors[v].PolygonalBoundary);
                 }
                 if (leftMost != -1) {
                     Anchor a = this.anchors[leftMost];
-                    thinLefttNodes.Add(new LineSegment(a.Origin, originalGraph.Right, a.Origin.Y).ParallelogramNodeOverICurve);
+                    this.thinLefttNodes.Add(new LineSegment(a.Origin, this.originalGraph.Right, a.Origin.Y).ParallelogramNodeOverICurve);
                 }
                 uOffset++;
             }
             return ret;
         }
 
-        IEnumerable<int> FillRightTopAndBottomVerts(int[] layer, int vPosition, NodeKind nodeKind) {
+        private IEnumerable<int> FillRightTopAndBottomVerts(int[] layer, int vPosition, NodeKind nodeKind) {
             double t = 0, b = 0;
             if (nodeKind == NodeKind.Bottom) {
                 b = Single.MaxValue;//we don't have bottom boundaries here since they will be cut off
@@ -136,18 +143,22 @@ namespace Microsoft.Msagl.Layout.Layered {
                 int u = layer[i];
                 Anchor anchor = this.anchors[u];
                 if (anchor.TopAnchor > t) {
-                    if (!NodeUCanBeCrossedByNodeV(u, v)) {
+                    if (!this.NodeUCanBeCrossedByNodeV(u, v)) {
                         t = anchor.TopAnchor;
-                        if (anchor.BottomAnchor > b)
+                        if (anchor.BottomAnchor > b) {
                             b = anchor.BottomAnchor;
+                        }
+
                         yield return u;
                     }
                 }
                 else if (anchor.BottomAnchor > b) {
-                    if (!NodeUCanBeCrossedByNodeV(u, v)) {
+                    if (!this.NodeUCanBeCrossedByNodeV(u, v)) {
                         b = anchor.BottomAnchor;
-                        if (anchor.TopAnchor > t)
+                        if (anchor.TopAnchor > t) {
                             t = anchor.TopAnchor;
+                        }
+
                         yield return u;
                     }
                 }
@@ -155,12 +166,13 @@ namespace Microsoft.Msagl.Layout.Layered {
 
         }
 
-        IEnumerable<int> FillLeftTopAndBottomVerts(int[] layer, int vPosition, NodeKind nodeKind) {
+        private IEnumerable<int> FillLeftTopAndBottomVerts(int[] layer, int vPosition, NodeKind nodeKind) {
             double t = 0, b = 0;
-            if (nodeKind == NodeKind.Top)
+            if (nodeKind == NodeKind.Top) {
                 t = Single.MaxValue; //there are no top vertices - they are cut down by the top boundaryCurve curve       
-            else if (nodeKind == NodeKind.Bottom)
+            } else if (nodeKind == NodeKind.Bottom) {
                 b = Single.MaxValue; //there are no bottom vertices - they are cut down by the top boundaryCurve curve
+            }
 
             int v = layer[vPosition];
 
@@ -168,14 +180,14 @@ namespace Microsoft.Msagl.Layout.Layered {
                 int u = layer[i];
                 Anchor anchor = this.anchors[u];
                 if (anchor.TopAnchor > t + ApproximateComparer.DistanceEpsilon) {
-                    if (!NodeUCanBeCrossedByNodeV(u, v)) {
+                    if (!this.NodeUCanBeCrossedByNodeV(u, v)) {
                         t = anchor.TopAnchor;
                         b = Math.Max(b, anchor.BottomAnchor);
                         yield return u;
                     }
                 }
                 else if (anchor.BottomAnchor > b + ApproximateComparer.DistanceEpsilon) {
-                    if (!NodeUCanBeCrossedByNodeV(u, v)) {
+                    if (!this.NodeUCanBeCrossedByNodeV(u, v)) {
                         t = Math.Max(t, anchor.TopAnchor);
                         b = anchor.BottomAnchor;
                         yield return u;
@@ -184,59 +196,72 @@ namespace Microsoft.Msagl.Layout.Layered {
             }
         }
 
-#region Nodes and edges anylisis
-        bool IsVirtualVertex(int v) {
+        #region Nodes and edges anylisis
+        private bool IsVirtualVertex(int v) {
             return v >= this.originalGraph.Nodes.Count;
         }
 
-        bool IsLabel(int u) {
+        private bool IsLabel(int u) {
             return this.anchors[u].RepresentsLabel;
         }
 
         private bool NodeUCanBeCrossedByNodeV(int u, int v) {
-            if (this.IsLabel(u))
+            if (this.IsLabel(u)) {
                 return false;
+            }
 
-            if (this.IsLabel(v))
+            if (this.IsLabel(v)) {
                 return false;
+            }
 
-            if (this.IsVirtualVertex(u) && this.IsVirtualVertex(v) && EdgesIntersectSomewhere(u, v))
+            if (this.IsVirtualVertex(u) && this.IsVirtualVertex(v) && this.EdgesIntersectSomewhere(u, v)) {
                 return true;
+            }
 
             return false;
 
         }
 
         private bool EdgesIntersectSomewhere(int u, int v) {
-            if (UVAreMiddlesOfTheSameMultiEdge(u, v))
+            if (this.UVAreMiddlesOfTheSameMultiEdge(u, v)) {
                 return false;
-            return IntersectAbove(u, v) || IntersectBelow(u, v);
+            }
+
+            return this.IntersectAbove(u, v) || this.IntersectBelow(u, v);
         }
 
         private bool UVAreMiddlesOfTheSameMultiEdge(int u, int v) {
             if (this.database.MultipleMiddles.Contains(u) && this.database.MultipleMiddles.Contains(v)
-                && SourceOfTheOriginalEdgeContainingAVirtualNode(u) == SourceOfTheOriginalEdgeContainingAVirtualNode(v))
+                && this.SourceOfTheOriginalEdgeContainingAVirtualNode(u) == this.SourceOfTheOriginalEdgeContainingAVirtualNode(v)) {
                 return true;
+            }
+
             return false;
         }
 
-        int SourceOfTheOriginalEdgeContainingAVirtualNode(int u) {
-            while (IsVirtualVertex(u))
-                u = IncomingEdge(u).Source;
+        private int SourceOfTheOriginalEdgeContainingAVirtualNode(int u) {
+            while (this.IsVirtualVertex(u)) {
+                u = this.IncomingEdge(u).Source;
+            }
+
             return u;
         }
 
         private bool IntersectBelow(int u, int v) {
             while (true) {
-                LayerEdge eu = OutcomingEdge(u);
-                LayerEdge ev = OutcomingEdge(v);
-                if (Intersect(eu, ev))
+                LayerEdge eu = this.OutcomingEdge(u);
+                LayerEdge ev = this.OutcomingEdge(v);
+                if (this.Intersect(eu, ev)) {
                     return true;
+                }
+
                 u = eu.Target;
                 v = ev.Target;
-                if (!(IsVirtualVertex(u) && IsVirtualVertex(v))) {
-                    if (v == u)
+                if (!(this.IsVirtualVertex(u) && this.IsVirtualVertex(v))) {
+                    if (v == u) {
                         return true;
+                    }
+
                     return false;
                 }
             }
@@ -244,15 +269,19 @@ namespace Microsoft.Msagl.Layout.Layered {
 
         private bool IntersectAbove(int u, int v) {
             while (true) {
-                LayerEdge eu = IncomingEdge(u);
-                LayerEdge ev = IncomingEdge(v);
-                if (Intersect(eu, ev))
+                LayerEdge eu = this.IncomingEdge(u);
+                LayerEdge ev = this.IncomingEdge(v);
+                if (this.Intersect(eu, ev)) {
                     return true;
+                }
+
                 u = eu.Source;
                 v = ev.Source;
-                if (!(IsVirtualVertex(u) && IsVirtualVertex(v))) {
-                    if (u == v)
+                if (!(this.IsVirtualVertex(u) && this.IsVirtualVertex(v))) {
+                    if (u == v) {
                         return true;
+                    }
+
                     return false;
                 }
 
@@ -261,8 +290,8 @@ namespace Microsoft.Msagl.Layout.Layered {
         }
 
         private bool Intersect(LayerEdge e, LayerEdge m) {
-            int a = layerArrays.X[e.Source] - layerArrays.X[m.Source];
-            int b = layerArrays.X[e.Target] - layerArrays.X[m.Target];
+            int a = this.layerArrays.X[e.Source] - this.layerArrays.X[m.Source];
+            int b = this.layerArrays.X[e.Target] - this.layerArrays.X[m.Target];
             return a > 0 && b < 0 || a < 0 && b > 0;
             //return (layerArrays.X[e.Source] - layerArrays.X[m.Source]) * (layerArrays.X[e.Target] - layerArrays.X[m.Target]) < 0;
         }
@@ -271,40 +300,42 @@ namespace Microsoft.Msagl.Layout.Layered {
 #region Node queries
         //here u is a virtual vertex
         private LayerEdge IncomingEdge(int u) {
-            return layeredGraph.InEdgeOfVirtualNode(u);
+            return this.layeredGraph.InEdgeOfVirtualNode(u);
         }
         //here u is a virtual vertex
         private LayerEdge OutcomingEdge(int u) {
-            return layeredGraph.OutEdgeOfVirtualNode(u);
+            return this.layeredGraph.OutEdgeOfVirtualNode(u);
         }
 
         private IEnumerable<int> RightBoundaryNodesOfANode(int i, NodeKind nodeKind) {
-            return FillRightTopAndBottomVerts(NodeLayer(i), layerArrays.X[i], nodeKind);
+            return this.FillRightTopAndBottomVerts(this.NodeLayer(i), this.layerArrays.X[i], nodeKind);
         }
 
         private int[] NodeLayer(int i) {
-            return layerArrays.Layers[layerArrays.Y[i]];
+            return this.layerArrays.Layers[this.layerArrays.Y[i]];
         }
 
         private IEnumerable<int> LeftBoundaryNodesOfANode(int i, NodeKind nodeKind) {
-            return FillLeftTopAndBottomVerts(NodeLayer(i), layerArrays.X[i], nodeKind);
+            return this.FillLeftTopAndBottomVerts(this.NodeLayer(i), this.layerArrays.X[i], nodeKind);
         }
 #endregion
 
         internal ICurve GetSpline(bool optimizeShortEdges) {
-            CreateRefinedPolyline(optimizeShortEdges);
-            return CreateSmoothedPolyline();
+            this.CreateRefinedPolyline(optimizeShortEdges);
+            return this.CreateSmoothedPolyline();
         }
 
-#region debug stuff
+        #region debug stuff
 #if TEST_MSAGL
         //   static int calls;
         // bool debug { get { return calls == 5;} }
 
-        Curve Poly() {
+        private Curve Poly() {
             Curve c = new Curve();
-            for (CornerSite s = this.headSite; s.Next != null; s = s.Next)
+            for (CornerSite s = this.headSite; s.Next != null; s = s.Next) {
                 c.AddSegment(new CubicBezierSegment(s.Point, 2 * s.Point / 3 + s.Next.Point / 3, s.Point / 3 + 2 * s.Next.Point / 3, s.Next.Point));
+            }
+
             return c;
         }
 #endif
@@ -314,22 +345,22 @@ namespace Microsoft.Msagl.Layout.Layered {
         internal SmoothedPolyline GetPolyline {
             get {
                 System.Diagnostics.Debug.Assert(this.headSite != null);
-                return new SmoothedPolyline(headSite);
+                return new SmoothedPolyline(this.headSite);
             }
         }
 
-        bool LineSegIntersectBound(Point a, Point b) {
+        private bool LineSegIntersectBound(Point a, Point b) {
             var l = new LineSegment(a, b);
-            return CurveIntersectsHierarchy(l, westHierarchy) || CurveIntersectsHierarchy(l, thinWestHierarchy) ||
-                CurveIntersectsHierarchy(l, eastHierarchy) || CurveIntersectsHierarchy(l, thinEastHierarchy);
+            return CurveIntersectsHierarchy(l, this.westHierarchy) || CurveIntersectsHierarchy(l, this.thinWestHierarchy) ||
+                CurveIntersectsHierarchy(l, this.eastHierarchy) || CurveIntersectsHierarchy(l, this.thinEastHierarchy);
         }
 
-        bool SegIntersectEastBound(CornerSite a, CornerSite b) {
-            return SegIntersectsBound(a, b, westHierarchy) || SegIntersectsBound(a, b, this.thinWestHierarchy);
+        private bool SegIntersectEastBound(CornerSite a, CornerSite b) {
+            return SegIntersectsBound(a, b, this.westHierarchy) || SegIntersectsBound(a, b, this.thinWestHierarchy);
         }
 
-        bool SegIntersectWestBound(CornerSite a, CornerSite b) {
-            return SegIntersectsBound(a, b, eastHierarchy) || SegIntersectsBound(a, b, this.thinEastHierarchy);
+        private bool SegIntersectWestBound(CornerSite a, CornerSite b) {
+            return SegIntersectsBound(a, b, this.eastHierarchy) || SegIntersectsBound(a, b, this.thinEastHierarchy);
         }
 
         private CornerSite TryToRemoveInflectionEdge(CornerSite s, out bool cut) {
@@ -339,7 +370,7 @@ namespace Microsoft.Msagl.Layout.Layered {
                 return s.Next;
             }
 
-            if ((s.Turn > 0 && SegIntersectEastBound(s.Previous, s.Next)) || (s.Turn < 0 && SegIntersectWestBound(s.Previous, s.Next))) {
+            if ((s.Turn > 0 && this.SegIntersectEastBound(s.Previous, s.Next)) || (s.Turn < 0 && this.SegIntersectWestBound(s.Previous, s.Next))) {
                 cut = false;
                 return s.Next;
             }
@@ -351,27 +382,30 @@ namespace Microsoft.Msagl.Layout.Layered {
 
         }
 
-
-        static bool SegIntersectsBound(CornerSite a, CornerSite b, ParallelogramNode hierarchy) {
+        private static bool SegIntersectsBound(CornerSite a, CornerSite b, ParallelogramNode hierarchy) {
             return CurveIntersectsHierarchy(new LineSegment(a.Point, b.Point), hierarchy);
         }
 
         private static bool CurveIntersectsHierarchy(LineSegment lineSeg, ParallelogramNode hierarchy) {
-            if (hierarchy == null)
+            if (hierarchy == null) {
                 return false;
-            if (!Parallelogram.Intersect(lineSeg.ParallelogramNodeOverICurve.Parallelogram, hierarchy.Parallelogram))
+            }
+
+            if (!Parallelogram.Intersect(lineSeg.ParallelogramNodeOverICurve.Parallelogram, hierarchy.Parallelogram)) {
                 return false;
+            }
 
             ParallelogramBinaryTreeNode n = hierarchy as ParallelogramBinaryTreeNode;
-            if (n != null)
+            if (n != null) {
                 return CurveIntersectsHierarchy(lineSeg, n.LeftSon) || CurveIntersectsHierarchy(lineSeg, n.RightSon);
+            }
 
             return Curve.CurveCurveIntersectionOne(lineSeg, ((ParallelogramNodeOverICurve)hierarchy).Seg, false) != null;
 
 
         }
 
-        static bool Flat(CornerSite i) {
+        private static bool Flat(CornerSite i) {
             return Point.GetTriangleOrientation(i.Previous.Point, i.Point, i.Next.Point) == TriangleOrientation.Collinear;
         }
 
@@ -382,8 +416,10 @@ namespace Microsoft.Msagl.Layout.Layered {
             while (site != null) {
                 ret.headSite = site.Clone();
                 ret.headSite.Next = v;
-                if (v != null)
+                if (v != null) {
                     v.Previous = ret.headSite;
+                }
+
                 v = ret.headSite;
                 site = site.Next;
             }
@@ -391,18 +427,19 @@ namespace Microsoft.Msagl.Layout.Layered {
         }
 
         private void CreateRefinedPolyline(bool optimizeShortEdges) {
-            CreateInitialListOfSites();
+            this.CreateInitialListOfSites();
 
             CornerSite topSite = this.headSite;
             CornerSite bottomSite;
             for (int i = 0; i < this.edgePath.Count; i++) {
                 bottomSite = topSite.Next;
-                RefineBeetweenNeighborLayers(topSite, this.EdgePathNode(i), this.EdgePathNode(i + 1));
+                this.RefineBeetweenNeighborLayers(topSite, this.EdgePathNode(i), this.EdgePathNode(i + 1));
                 topSite = bottomSite;
             }
-            TryToRemoveInflections();
-            if (optimizeShortEdges)
-                OptimizeShortPath();
+            this.TryToRemoveInflections();
+            if (optimizeShortEdges) {
+                this.OptimizeShortPath();
+            }
         }
 
         private void RefineBeetweenNeighborLayers(CornerSite topSite, int topNode, int bottomNode) {
@@ -412,70 +449,81 @@ namespace Microsoft.Msagl.Layout.Layered {
         }
 
         private void CreateInitialListOfSites() {
-            CornerSite currentSite = headSite = new CornerSite(EdgePathPoint(0));
-            for (int i = 1; i <= edgePath.Count; i++)
-                currentSite = new CornerSite(currentSite, EdgePathPoint(i));
+            CornerSite currentSite = this.headSite = new CornerSite(this.EdgePathPoint(0));
+            for (int i = 1; i <= this.edgePath.Count; i++) {
+                currentSite = new CornerSite(currentSite, this.EdgePathPoint(i));
+            }
         }
 
-        CornerSite TailSite { get { CornerSite s = headSite; while (s.Next != null) s = s.Next; return s; } }
+        private CornerSite TailSite { get { CornerSite s = this.headSite; while (s.Next != null) { s = s.Next; } return s; } }
 
-        void OptimizeForThreeSites() {
-            Debug.Assert(edgePath.LayerEdges.Count == 2);
-            int top = EdgePathNode(0);
-            int bottom = EdgePathNode(2);
-            Anchor a = anchors[top];
-            Anchor b = anchors[bottom];
+        private void OptimizeForThreeSites() {
+            Debug.Assert(this.edgePath.LayerEdges.Count == 2);
+            int top = this.EdgePathNode(0);
+            int bottom = this.EdgePathNode(2);
+            Anchor a = this.anchors[top];
+            Anchor b = this.anchors[bottom];
             double ax = a.X;
             double bx = b.X;
-            if (ApproximateComparer.Close(ax, bx))
+            if (ApproximateComparer.Close(ax, bx)) {
                 return;
+            }
+
             int sign;
-            if (!FindLegalPositions(a, b, ref ax, ref bx, out sign))
+            if (!this.FindLegalPositions(a, b, ref ax, ref bx, out sign)) {
                 return;
+            }
+
             double ratio = (a.Y - b.Y) / (a.Bottom - b.Top);
             double xc = 0.5 * (ax + bx);
             double half = sign * (ax - bx) * 0.5;
             ax = xc + ratio * half * sign;
             bx = xc - ratio * half * sign;
 
-            headSite.Point = new Point(ax, a.Y);
-            var ms = headSite.Next;
+            this.headSite.Point = new Point(ax, a.Y);
+            var ms = this.headSite.Next;
             double mY = ms.Point.Y;
-            ms.Point = new Point(MiddlePos(ax, bx, a, b, mY), mY);
+            ms.Point = new Point(this.MiddlePos(ax, bx, a, b, mY), mY);
             ms.Next.Point = new Point(bx, b.Y);
-            Anchor ma = anchors[EdgePathNode(1)];
+            Anchor ma = this.anchors[this.EdgePathNode(1)];
             ma.X = ms.Point.X;
             //show(new DebugCurve(200, 3, "yellow", new LineSegment(ax, a.Y, ms.Point.X, ms.Point.Y)),
             //    new DebugCurve(200, 3, "green", new LineSegment(bx, b.Y, ms.Point.X, ms.Point.Y)));
         }
 
-        void OptimizeForTwoSites() {
-            Debug.Assert(edgePath.LayerEdges.Count == 1);
-            int top = EdgePathNode(0);
-            int bottom = EdgePathNode(1);
-            Anchor a = anchors[top];
-            Anchor b = anchors[bottom];
+        private void OptimizeForTwoSites() {
+            Debug.Assert(this.edgePath.LayerEdges.Count == 1);
+            int top = this.EdgePathNode(0);
+            int bottom = this.EdgePathNode(1);
+            Anchor a = this.anchors[top];
+            Anchor b = this.anchors[bottom];
             double ax = a.X;
             double bx = b.X;
-            if (ApproximateComparer.Close(ax, bx))
+            if (ApproximateComparer.Close(ax, bx)) {
                 return;
+            }
+
             int sign;
-            if (!FindPositions(a, b, ref ax, ref bx, out sign))
+            if (!this.FindPositions(a, b, ref ax, ref bx, out sign)) {
                 return;
+            }
+
             double ratio = (a.Y - b.Y) / (a.Bottom - b.Top);
             double xc = 0.5 * (ax + bx);
             double half = sign * (ax - bx) * 0.5;
             ax = xc + ratio * half * sign;
             bx = xc - ratio * half * sign;
 
-            headSite.Point = new Point(ax, a.Y);
-            headSite.Next.Point = new Point(bx, b.Y);
+            this.headSite.Point = new Point(ax, a.Y);
+            this.headSite.Next.Point = new Point(bx, b.Y);
         }
 
         private bool FindLegalPositions(Anchor a, Anchor b, ref double ax, ref double bx, out int sign) {
-            if (!FindPositions(a, b, ref ax, ref bx, out sign))
+            if (!this.FindPositions(a, b, ref ax, ref bx, out sign)) {
                 return false;
-            return PositionsAreLegal(ax, bx, sign, a, b, EdgePathNode(1));                 
+            }
+
+            return this.PositionsAreLegal(ax, bx, sign, a, b, this.EdgePathNode(1));                 
         }
 
         private bool FindPositions(Anchor a, Anchor b, ref double ax, ref double bx, out int sign) {
@@ -495,8 +543,10 @@ namespace Microsoft.Msagl.Layout.Layered {
                 ax = bx = 0.5 * (overlapMin + overlapMax);
             }
             else {
-                if (OriginToOriginSegCrossesAnchorSide(a, b))
+                if (this.OriginToOriginSegCrossesAnchorSide(a, b)) {
                     return false;
+                }
+
                 if (sign == 1) {
                     ax = a.Right - 0.1 * a.RightAnchor;
                     bx = b.Left;
@@ -527,14 +577,17 @@ namespace Microsoft.Msagl.Layout.Layered {
 
 
         private void OptimizeShortPath() {
-            if (edgePath.Count > 2)
+            if (this.edgePath.Count > 2) {
                 return;
-            if (edgePath.Count == 2 && headSite.Next.Next != null && headSite.Next.Next.Next == null && anchors[EdgePathNode(1)].Node == null) {
-                OptimizeForThreeSites();
+            }
+
+            if (this.edgePath.Count == 2 && this.headSite.Next.Next != null && this.headSite.Next.Next.Next == null && this.anchors[this.EdgePathNode(1)].Node == null) {
+                this.OptimizeForThreeSites();
             }
             else {
-                if (edgePath.Count == 1)
-                    OptimizeForTwoSites();
+                if (this.edgePath.Count == 1) {
+                    this.OptimizeForTwoSites();
+                }
             }
         }
 
@@ -555,29 +608,34 @@ namespace Microsoft.Msagl.Layout.Layered {
 
         private bool PositionsAreLegal(double sax, double sbx, int sign, Anchor a, Anchor b, int middleNodeIndex) {
 
-            if (!ApproximateComparer.Close(sax, sbx) && (sax - sbx) * sign > 0)
+            if (!ApproximateComparer.Close(sax, sbx) && (sax - sbx) * sign > 0) {
                 return false;
-            Anchor mAnchor = anchors[middleNodeIndex];
-            double mx = MiddlePos(sax, sbx, a, b, mAnchor.Y);
-            if (!MiddleAnchorLegal(mx, middleNodeIndex, mAnchor))
-                return false;
+            }
 
-            return !LineSegIntersectBound(new Point(sax, a.Bottom), new Point(sbx, b.Top));
+            Anchor mAnchor = this.anchors[middleNodeIndex];
+            double mx = this.MiddlePos(sax, sbx, a, b, mAnchor.Y);
+            if (!this.MiddleAnchorLegal(mx, middleNodeIndex, mAnchor)) {
+                return false;
+            }
+
+            return !this.LineSegIntersectBound(new Point(sax, a.Bottom), new Point(sbx, b.Top));
         }
 
         private bool MiddleAnchorLegal(double mx, int middleNodeIndex, Anchor mAnchor) {
-            var mLayer = NodeLayer(middleNodeIndex);
+            var mLayer = this.NodeLayer(middleNodeIndex);
             int pos = this.layerArrays.X[middleNodeIndex];
             double shift = mx - mAnchor.X;
             if (pos > 0) {
-                Anchor l = anchors[mLayer[pos - 1]];
-                if (l.Right > shift + mAnchor.Left)
+                Anchor l = this.anchors[mLayer[pos - 1]];
+                if (l.Right > shift + mAnchor.Left) {
                     return false;
+                }
             }
             if (pos < mLayer.Length - 1) {
-                Anchor r = anchors[mLayer[pos + 1]];
-                if (r.Left < shift + mAnchor.Right)
+                Anchor r = this.anchors[mLayer[pos + 1]];
+                if (r.Left < shift + mAnchor.Right) {
                     return false;
+                }
             }
             return true;
         }
@@ -591,15 +649,16 @@ namespace Microsoft.Msagl.Layout.Layered {
 
         private void TryToRemoveInflections() {
 
-            if (TurningAlwaySameDirection())
+            if (this.TurningAlwaySameDirection()) {
                 return;
+            }
 
             bool progress = true;
             while (progress) {
                 progress = false;
                 for (CornerSite s = this.headSite; s != null; ) {
                     bool cut;
-                    s = TryToRemoveInflectionEdge(s, out cut);
+                    s = this.TryToRemoveInflectionEdge(s, out cut);
                     progress |= cut;
                 }
             }
@@ -610,14 +669,16 @@ namespace Microsoft.Msagl.Layout.Layered {
             for (CornerSite s = this.headSite.Next; s != null && s.Next != null; s = s.Next) {
                 double nsign = s.Turn;
                 if (sign == 0) {//try to set the sign
-                    if (nsign > 0)
+                    if (nsign > 0) {
                         sign = 1;
-                    else if (nsign < 0)
+                    } else if (nsign < 0) {
                         sign = -1;
+                    }
                 }
                 else {
-                    if (sign * nsign < 0)
+                    if (sign * nsign < 0) {
                         return false;
+                    }
                 }
             }
             return true;
@@ -625,78 +686,86 @@ namespace Microsoft.Msagl.Layout.Layered {
 
 
 
-#region Edge path node access
-        Point EdgePathPoint(int i) {
-            return anchors[EdgePathNode(i)].Origin;
+        #region Edge path node access
+        private Point EdgePathPoint(int i) {
+            return this.anchors[this.EdgePathNode(i)].Origin;
         }
 
-        int EdgePathNode(int i) {
+        private int EdgePathNode(int i) {
             int v;
-            if (i == edgePath.Count)
-                v = edgePath[edgePath.Count - 1].Target;
-            else
-                v = edgePath[i].Source;
+            if (i == this.edgePath.Count) {
+                v = this.edgePath[this.edgePath.Count - 1].Target;
+            } else {
+                v = this.edgePath[i].Source;
+            }
+
             return v;
         }
-#endregion
+        #endregion
 
-#region Fitting Bezier segs
-        Curve CreateSmoothedPolyline() {
-            RemoveVerticesWithNoTurns();
+        #region Fitting Bezier segs
+        private Curve CreateSmoothedPolyline() {
+            this.RemoveVerticesWithNoTurns();
             Curve curve = new Curve();
-            CornerSite a = headSite;//the corner start
+            CornerSite a = this.headSite;//the corner start
             CornerSite b; //the corner origin
             CornerSite c;//the corner other end
             if (Curve.FindCorner(a, out b, out c)) {
-                CreateFilletCurve(curve, ref a, ref b, ref c);
-                curve = ExtendCurveToEndpoints(curve);
+                this.CreateFilletCurve(curve, ref a, ref b, ref c);
+                curve = this.ExtendCurveToEndpoints(curve);
             }
             else {
-                curve.AddSegment(new LineSegment(headSite.Point, TailSite.Point));
+                curve.AddSegment(new LineSegment(this.headSite.Point, this.TailSite.Point));
             }
             return curve;
         }
 
         private void RemoveVerticesWithNoTurns() {
 
-            while (RemoveVerticesWithNoTurnsOnePass()) ;
-
+            while (this.RemoveVerticesWithNoTurnsOnePass()) {
+                ;
+            }
         }
 
         private bool RemoveVerticesWithNoTurnsOnePass() {
 
             bool ret = false;
-            for (CornerSite s = headSite; s.Next != null && s.Next.Next != null; s = s.Next)
+            for (CornerSite s = this.headSite; s.Next != null && s.Next.Next != null; s = s.Next) {
                 if (Flat(s.Next)) {
                     ret = true;
                     s.Next = s.Next.Next;//crossing out s.next
                     s.Next.Previous = s;
                 }
+            }
+
             return ret;
         }
 
         private Curve ExtendCurveToEndpoints(Curve curve) {
-            Point p = headSite.Point;
+            Point p = this.headSite.Point;
             if (!ApproximateComparer.Close(p, curve.Start)) {
                 Curve nc = new Curve();
                 nc.AddSegs(new LineSegment(p, curve.Start), curve);
                 curve = nc;
             }
-            p = TailSite.Point;
-            if (!ApproximateComparer.Close(p, curve.End))
+            p = this.TailSite.Point;
+            if (!ApproximateComparer.Close(p, curve.End)) {
                 curve.AddSegment(new LineSegment(curve.End, p));
+            }
+
             return curve;
         }
 
         private void CreateFilletCurve(Curve curve, ref CornerSite a, ref CornerSite b, ref CornerSite c) {
             do {
-                AddSmoothedCorner(a, b, c, curve);
+                this.AddSmoothedCorner(a, b, c, curve);
                 a = b;
                 b = c;
-                if (b.Next != null)
+                if (b.Next != null) {
                     c = b.Next;
-                else
+                } else {
                     break;
+                }
             } while (true);
         }
 
@@ -709,52 +778,60 @@ namespace Microsoft.Msagl.Layout.Layered {
                 //    LayoutAlgorithmSettings .Show(seg, CreatePolyTest());
                 b.PreviousBezierSegmentFitCoefficient = k;
                 k /= 2;
-            } while (BezierSegIntersectsBoundary(seg));
+            } while (this.BezierSegIntersectsBoundary(seg));
 
             k *= 2; //that was the last k
             if (k < 0.5) {//one time try a smoother seg
                 k = 0.5 * (k + k * 2);
                 CubicBezierSegment nseg = Curve.CreateBezierSeg(k, k, a, b, c);
-                if (!BezierSegIntersectsBoundary(nseg)) {
+                if (!this.BezierSegIntersectsBoundary(nseg)) {
                     b.PreviousBezierSegmentFitCoefficient = b.NextBezierSegmentFitCoefficient = k;
                     seg = nseg;
                 }
             }
 
-            if (curve.Segments.Count > 0 && !ApproximateComparer.Close(curve.End, seg.Start))
+            if (curve.Segments.Count > 0 && !ApproximateComparer.Close(curve.End, seg.Start)) {
                 curve.AddSegment(new LineSegment(curve.End, seg.Start));
+            }
+
             curve.AddSegment(seg);
         }
 
         private bool BezierSegIntersectsBoundary(CubicBezierSegment seg) {
             double side = Point.SignedDoubledTriangleArea(seg.B(0), seg.B(1), seg.B(2));
-            if (side > 0)
-                return BezierSegIntersectsTree(seg, thinWestHierarchy) || BezierSegIntersectsTree(seg, westHierarchy);
-            else
-                return BezierSegIntersectsTree(seg, thinEastHierarchy) || BezierSegIntersectsTree(seg, eastHierarchy);
+            if (side > 0) {
+                return this.BezierSegIntersectsTree(seg, this.thinWestHierarchy) || this.BezierSegIntersectsTree(seg, this.westHierarchy);
+            } else {
+                return this.BezierSegIntersectsTree(seg, this.thinEastHierarchy) || this.BezierSegIntersectsTree(seg, this.eastHierarchy);
+            }
         }
 
         private bool BezierSegIntersectsTree(CubicBezierSegment seg, ParallelogramNode tree) {
-            if (tree == null)
+            if (tree == null) {
                 return false;
+            }
+
             if (Parallelogram.Intersect(seg.ParallelogramNodeOverICurve.Parallelogram, tree.Parallelogram)) {
                 ParallelogramBinaryTreeNode n = tree as ParallelogramBinaryTreeNode;
                 if (n != null) {
-                    return BezierSegIntersectsTree(seg, n.LeftSon) || BezierSegIntersectsTree(seg, n.RightSon);
+                    return this.BezierSegIntersectsTree(seg, n.LeftSon) || this.BezierSegIntersectsTree(seg, n.RightSon);
                 }
-                else
+                else {
                     return BezierSegIntersectsBoundary(seg, ((ParallelogramNodeOverICurve)tree).Seg);
-
+                }
             }
-            else return false;
+            else {
+                return false;
+            }
         }
 
-        static bool BezierSegIntersectsBoundary(CubicBezierSegment seg, ICurve curve) {
+        private static bool BezierSegIntersectsBoundary(CubicBezierSegment seg, ICurve curve) {
             foreach (IntersectionInfo x in Curve.GetAllIntersections(seg, curve, false)) {
                 Curve c = curve as Curve;
                 if (c != null) {
-                    if (Curve.RealCutWithClosedCurve(x, c, false))
+                    if (Curve.RealCutWithClosedCurve(x, c, false)) {
                         return true;
+                    }
                 }
                 else {
                     //curve is a line from a thin hierarchy that's forbidden to touch

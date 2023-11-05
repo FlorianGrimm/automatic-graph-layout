@@ -2,9 +2,9 @@
 
 namespace Microsoft.Msagl.Layout.LargeGraphLayout {
     internal class EdgePicker {
-        readonly LgData lgData;
-        readonly IZoomLevelCalculator nodeZoomLevelCalculator;
-        readonly int _nodeCountOnLevel;
+        private readonly LgData lgData;
+        private readonly IZoomLevelCalculator nodeZoomLevelCalculator;
+        private readonly int _nodeCountOnLevel;
         internal static void SetEdgeInfosZoomLevelsAndIcreaseRanks(LgData lgData,
                                                     IZoomLevelCalculator nodeZoomLevelCalculator,
                                                     int nodeCountOnLevel) {
@@ -12,65 +12,70 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
             edgePicker.Run();
         }
 
-        void Run() {
-            if (_nodeCountOnLevel == lgData.GeometryNodesToLgNodeInfos.Count) {
-                foreach (var e in lgData.GeometryEdgesToLgEdgeInfos.Keys)
-                    UpdateEdgeInfoZoomLevel(e);
+        private void Run() {
+            if (this._nodeCountOnLevel == this.lgData.GeometryNodesToLgNodeInfos.Count) {
+                foreach (var e in this.lgData.GeometryEdgesToLgEdgeInfos.Keys) {
+                    this.UpdateEdgeInfoZoomLevel(e);
+                }
+
                 return;
             }
 
-            FillShortRoutes();
+            this.FillShortRoutes();
         }
 
+        private readonly int zoomLevel;
 
-        readonly int zoomLevel;
-     
-        EdgePicker(LgData lgData, IZoomLevelCalculator nodeZoomLevelCalculator,
+        private EdgePicker(LgData lgData, IZoomLevelCalculator nodeZoomLevelCalculator,
                    int nodeCountOnLevel) {
             this.lgData = lgData;
             this.nodeZoomLevelCalculator = nodeZoomLevelCalculator;
             this._nodeCountOnLevel = nodeCountOnLevel;
-            zoomLevel = (int) nodeZoomLevelCalculator.SortedLgNodeInfos[nodeCountOnLevel - 1].ZoomLevel;
+            this.zoomLevel = (int) nodeZoomLevelCalculator.SortedLgNodeInfos[nodeCountOnLevel - 1].ZoomLevel;
         }
 
-        void FillShortRoutes() {
+        private void FillShortRoutes() {
             //creating one edge long routes between the nodes of the level
-             for (int i = 0; i < _nodeCountOnLevel; i++)
-                FillShortRoutesOfNode(nodeZoomLevelCalculator.SortedLgNodeInfos[i].GeometryNode);
-
+             for (int i = 0; i < this._nodeCountOnLevel; i++) {
+                this.FillShortRoutesOfNode(this.nodeZoomLevelCalculator.SortedLgNodeInfos[i].GeometryNode);
+            }
         }
 
-        void FillShortRoutesOfNode(Node node) {
-            foreach (var e in node.OutEdges)
-                TryPickingEdge(e);
+        private void FillShortRoutesOfNode(Node node) {
+            foreach (var e in node.OutEdges) {
+                this.TryPickingEdge(e);
+            }
         }
 
-        void TryPickingEdge(Edge edge) {
-            if (lgData.GeometryNodesToLgNodeInfos[edge.Target].ZoomLevel <= zoomLevel)
+        private void TryPickingEdge(Edge edge) {
+            if (this.lgData.GeometryNodesToLgNodeInfos[edge.Target].ZoomLevel <= this.zoomLevel) {
                 //connected to a node from the same level
-                UpdateEdgeInfoZoomLevel(edge);
+                this.UpdateEdgeInfoZoomLevel(edge);
+            }
         }
 
-        void UpdateEdgeInfoZoomLevel(Edge edge) {
-            var sourceNodeInfo = lgData.GeometryNodesToLgNodeInfos[edge.Source];
-            var targetNodeInfo = lgData.GeometryNodesToLgNodeInfos[edge.Target];
-            UpdateEdgeInfoZoomLevel(edge, sourceNodeInfo.Rank + targetNodeInfo.Rank);
+        private void UpdateEdgeInfoZoomLevel(Edge edge) {
+            var sourceNodeInfo = this.lgData.GeometryNodesToLgNodeInfos[edge.Source];
+            var targetNodeInfo = this.lgData.GeometryNodesToLgNodeInfos[edge.Target];
+            this.UpdateEdgeInfoZoomLevel(edge, sourceNodeInfo.Rank + targetNodeInfo.Rank);
         }
 
-        void UpdateEdgeInfoZoomLevel(Edge edge, double edgeRank) {
-            var edgeInfo = lgData.GeometryEdgesToLgEdgeInfos[edge];
-            TryToDecreaseZoomLevel(edgeInfo);
+        private void UpdateEdgeInfoZoomLevel(Edge edge, double edgeRank) {
+            var edgeInfo = this.lgData.GeometryEdgesToLgEdgeInfos[edge];
+            this.TryToDecreaseZoomLevel(edgeInfo);
             TryToIncreaseRank(edgeInfo, edgeRank);
         }
 
-        static void TryToIncreaseRank(LgEdgeInfo edgeInfo, double edgeRank) {
-            if (edgeInfo.Rank < edgeRank)
+        private static void TryToIncreaseRank(LgEdgeInfo edgeInfo, double edgeRank) {
+            if (edgeInfo.Rank < edgeRank) {
                 edgeInfo.Rank = edgeRank;
+            }
         }
 
-        void TryToDecreaseZoomLevel(LgEdgeInfo edgeInfo) {
-            if (edgeInfo.ZoomLevel > zoomLevel)
-                edgeInfo.ZoomLevel = zoomLevel;
+        private void TryToDecreaseZoomLevel(LgEdgeInfo edgeInfo) {
+            if (edgeInfo.ZoomLevel > this.zoomLevel) {
+                edgeInfo.ZoomLevel = this.zoomLevel;
+            }
         }
     }
 }

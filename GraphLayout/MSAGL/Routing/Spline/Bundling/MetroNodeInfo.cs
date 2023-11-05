@@ -2,9 +2,9 @@
 
 namespace Microsoft.Msagl.Routing.Spline.Bundling {
     internal class MetroNodeInfo {
-        Metroline metroline;
-        Station station;
-        PolylinePoint polyPoint;
+        private Metroline metroline;
+        private Station station;
+        private PolylinePoint polyPoint;
 
         internal MetroNodeInfo(Metroline metroline, Station station, PolylinePoint polyPoint) {
             this.metroline = metroline;
@@ -13,11 +13,11 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         }
 
         internal Metroline Metroline {
-            get { return metroline; }
+            get { return this.metroline; }
         }
 
         internal PolylinePoint PolyPoint {
-            get { return polyPoint; }
+            get { return this.polyPoint; }
         }
     }
 }

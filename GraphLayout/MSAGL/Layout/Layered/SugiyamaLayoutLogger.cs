@@ -9,7 +9,7 @@ namespace Microsoft.Msagl.Layout.Layered {
     /// Log class
     /// </summary>
     public sealed class SugiyamaLayoutLogger : IDisposable {
-        static StreamWriter sw;
+        private static StreamWriter sw;
         internal SugiyamaLayoutLogger() {}
 
         #region IDisposable Members
@@ -32,7 +32,10 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="message"></param>
         [SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         public void Write(string message) {
-            if (sw == null) sw = new StreamWriter("msaglLogFile");
+            if (sw == null) {
+                sw = new StreamWriter("msaglLogFile");
+            }
+
             sw.Write(message);
             sw.Flush();
 

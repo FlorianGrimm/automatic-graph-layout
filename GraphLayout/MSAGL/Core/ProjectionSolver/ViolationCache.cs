@@ -58,7 +58,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
 
         internal void Clear()
         {
-            LowViolation = 0.0;
+            this.LowViolation = 0.0;
             this.numConstraints = 0;
             if (null == this.constraints)
             {
@@ -86,7 +86,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
 
             // Iterate in reverse to remove constraints belonging to LastModifiedBlock.
             // Note:  Enumerators and .Where are not used because they are much slower.
-            LowViolation = double.MaxValue;
+            this.LowViolation = double.MaxValue;
             bool fRet = this.numConstraints > 0;
             for (int ii = this.numConstraints - 1; ii >= 0; --ii)
             {
@@ -114,15 +114,15 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                                         - (constraint.Right.ActualPos * constraint.Right.Scale);
                     Debug.Assert(constraint.Violation == violation, "LeftConstraints: constraint.Violation must == violation");
 #endif // Inline_Violation
-                    if (violation < LowViolation)
+                    if (violation < this.LowViolation)
                     {
-                        LowViolation = violation;
+                        this.LowViolation = violation;
                     }
                 }
             }
             if (0 == this.numConstraints)
             {
-                LowViolation = 0.0;
+                this.LowViolation = 0.0;
             }
             return fRet;
         }
@@ -156,7 +156,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         internal void Insert(Constraint constraintToInsert, double insertViolation)
         {
             // This should be checked by the caller (instead of here, for perf reasons).
-            Debug.Assert(constraintToInsert.Violation > LowViolation, "constraintToInsert.Violation must be > LowViolation");
+            Debug.Assert(constraintToInsert.Violation > this.LowViolation, "constraintToInsert.Violation must be > LowViolation");
             Debug.Assert(constraintToInsert.Violation == insertViolation, "constraintToInsert.Violation must == insertViolation");
 
             int indexOfLowestViolation = 0;
@@ -191,11 +191,11 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             } // endfor each constraint
 
             // If the cache isn't full yet, add the new one, else replace the lowest violation in the list.
-            if (!IsFull)
+            if (!this.IsFull)
             {
                 // Add to the cache.
                 this.constraints[this.numConstraints++] = constraintToInsert;
-                if (IsFull)
+                if (this.IsFull)
                 {
                     this.LowViolation = lowViolation;
                 }

@@ -6,18 +6,18 @@ using Microsoft.Msagl.Core.Layout;
 
 namespace Microsoft.Msagl.Layout.LargeGraphLayout {
     internal class LgNodeCollection : IList<Node> {
-        readonly Func<IEnumerable<Node>> funcOfNodes;
+        private readonly Func<IEnumerable<Node>> funcOfNodes;
 
         public LgNodeCollection(Func<IEnumerable<LgNodeInfo>> funcOfLgNodes) {
             this.funcOfNodes = ()=>funcOfLgNodes().Select(n=>n.GeometryNode);
         }
 
         public IEnumerator<Node> GetEnumerator() {
-            return funcOfNodes().GetEnumerator();
+            return this.funcOfNodes().GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
 
         public void Add(Node item) {
@@ -42,7 +42,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
 
         public int Count {
             get {
-                return funcOfNodes().Count();                
+                return this.funcOfNodes().Count();                
             }
             
         }

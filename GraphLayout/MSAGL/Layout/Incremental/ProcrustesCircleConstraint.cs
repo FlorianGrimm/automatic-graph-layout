@@ -11,24 +11,24 @@ namespace Microsoft.Msagl.Layout.Incremental {
     /// 
     /// </summary>
     public class ProcrustesCircleConstraint : IConstraint {
-        Node[] V;
-        int n;
-        Point[] X;
-        Point[] Y;
+        private Node[] V;
+        private int n;
+        private Point[] X;
+        private Point[] Y;
         /// <summary>
         /// Create a circle constraint with variable radius
         /// </summary>
         /// <param name="nodes"></param>
         public ProcrustesCircleConstraint(IEnumerable<Node> nodes) {
-            V = nodes.ToArray();
-            n = V.Length;
-            X = new Point[n];
-            Y = new Point[n];
-            double angle = 2.0 * Math.PI / (double)n;
-            double r = 10*(double)n; // we make our circle a reasonable size to aid numerical precision
-            for (int i = 0; i < n; ++i) {
+            this.V = nodes.ToArray();
+            this.n = this.V.Length;
+            this.X = new Point[this.n];
+            this.Y = new Point[this.n];
+            double angle = 2.0 * Math.PI / (double)this.n;
+            double r = 10*(double)this.n; // we make our circle a reasonable size to aid numerical precision
+            for (int i = 0; i < this.n; ++i) {
                 double theta = angle * (double)i;
-                Y[i] = new Point(r * Math.Cos(theta), r * Math.Sin(theta));
+                this.Y[i] = new Point(r * Math.Cos(theta), r * Math.Sin(theta));
             }
         }
         /// <summary>
@@ -40,19 +40,19 @@ namespace Microsoft.Msagl.Layout.Incremental {
         {
             ValidateArg.IsNotNull(nodes, "nodes");
             ValidateArg.IsNotNull(targetConfiguration, "targetConfiguration");
-            V = nodes.ToArray();
-            n = V.Length;
-            X = new Point[n];
-            Y = new Point[n];
+            this.V = nodes.ToArray();
+            this.n = this.V.Length;
+            this.X = new Point[this.n];
+            this.Y = new Point[this.n];
             int i = 0;
             Point yc = new Point();
             foreach (var p in targetConfiguration) {
-                Y[i++] = p;
+                this.Y[i++] = p;
                 yc += p;
             }
-            yc /= n;
-            for (i = 0; i < n; ++i) {
-                Y[i] -= yc;
+            yc /= this.n;
+            for (i = 0; i < this.n; ++i) {
+                this.Y[i] -= yc;
             }
         }
         #region IConstraint Members
@@ -164,22 +164,22 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         /// <returns></returns>
         public double Project() {
-            for (int i = 0; i < n; ++i)
+            for (int i = 0; i < this.n; ++i)
             {
-                X[i] = V[i].Center;
+                this.X[i] = this.V[i].Center;
             }
 
             Point[] T;
             double s;
             Point t;
-            FindTransform(X, Y, out T, out s, out t);
+            FindTransform(this.X, this.Y, out T, out s, out t);
             Point[] TT = Transpose(T);
             double displacement = 0;
-            for (int i = 0; i < n; ++i)
+            for (int i = 0; i < this.n; ++i)
             {
-                var v = V[i];
-                v.Center = double.IsNaN(s) ? Y[i] : s * MatrixTimesVector(TT, Y[i]) + t;
-                displacement += (v.Center - X[i]).Length;
+                var v = this.V[i];
+                v.Center = double.IsNaN(s) ? this.Y[i] : s * MatrixTimesVector(TT, this.Y[i]) + t;
+                displacement += (v.Center - this.X[i]).Length;
             }
             return displacement;
         }
@@ -262,7 +262,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// <summary>
         /// Get the list of nodes involved in the constraint
         /// </summary>
-        public IEnumerable<Node> Nodes { get { return V.AsEnumerable(); } }
+        public IEnumerable<Node> Nodes { get { return this.V.AsEnumerable(); } }
         #endregion
     }
 }

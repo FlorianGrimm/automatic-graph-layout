@@ -17,33 +17,34 @@ namespace Microsoft.Msagl.Layout.Layered {
             this.Source = source;
             this.Target = target;
             this.crossingWeight = crossingWeight;
-            Weight = weight;
+            this.Weight = weight;
         }
         internal LayerEdge(int source, int target, int crossingWeight):this(source,target,crossingWeight,1) {            
         }
-        int source;
+
+        private int source;
         /// <summary>
         /// the source
         /// </summary>
         public int Source {
             get {
-                return source;
+                return this.source;
             }
             set {
-                source = value;
+                this.source = value;
             }
         }
 
-        int target;
+        private int target;
         /// <summary>
         /// the target
         /// </summary>
         public int Target {
             get {
-                return target;
+                return this.target;
             }
             set {
-                target = value;
+                this.target = value;
             }
         }
 /// <summary>
@@ -61,16 +62,16 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         /// <returns></returns>
         public override int GetHashCode() {
-            uint hc = (uint)source.GetHashCode();
-            return (int)((hc << 5 | hc >> 27) + (uint)target);
+            uint hc = (uint)this.source.GetHashCode();
+            return (int)((hc << 5 | hc >> 27) + (uint)this.target);
         }
 
-        int crossingWeight=1;
+        private int crossingWeight=1;
         /// <summary>
         /// it is equalt to the number of edges this edge represents 
         /// </summary>
         public int CrossingWeight {
-            get { return crossingWeight; }
+            get { return this.crossingWeight; }
 //            set { crossingWeight = value; }
         }
         /// <summary>

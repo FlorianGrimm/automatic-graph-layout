@@ -15,9 +15,9 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
     /// Check intersections between hubs and obstacles with kd-tree
     /// </summary>
     internal class Intersections {
-        readonly MetroGraphData metroGraphData;
-        readonly BundlingSettings bundlingSettings;
-        Func<Station, Set<Polyline>> obstaclesToIgnore;
+        private readonly MetroGraphData metroGraphData;
+        private readonly BundlingSettings bundlingSettings;
+        private Func<Station, Set<Polyline>> obstaclesToIgnore;
         /// <summary>
         /// represents loose or tight hierarchy
         /// </summary>
@@ -32,14 +32,19 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         }
 
         internal Set<Polyline> ObstaclesToIgnoreForBundle(Station node, Station adj) {
-            if (node != null && adj != null)
-                return obstaclesToIgnore(node) + obstaclesToIgnore(adj);
+            if (node != null && adj != null) {
+                return this.obstaclesToIgnore(node) + this.obstaclesToIgnore(adj);
+            }
 
-            if (node == null && adj == null)
+            if (node == null && adj == null) {
                 return new Set<Polyline>();
+            }
 
-            if (node != null) return obstaclesToIgnore(node);
-            else return obstaclesToIgnore(adj);
+            if (node != null) {
+                return this.obstaclesToIgnore(node);
+            } else {
+                return this.obstaclesToIgnore(adj);
+            }
         }
 
         #region Intersections with hub
@@ -48,29 +53,30 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             out List<Tuple<Polyline, Point>> touchedObstacles) {
             touchedObstacles = new List<Tuple<Polyline, Point>>();
             double minimalDistance = upperBound;
-            return IntersectCircleWithTree(obstacleTree, center, upperBound, obstaclesToIgnore(node), touchedObstacles, ref minimalDistance);
+            return IntersectCircleWithTree(this.obstacleTree, center, upperBound, this.obstaclesToIgnore(node), touchedObstacles, ref minimalDistance);
         }
 
         internal bool HubAvoidsObstacles(Point center, double upperBound, Set<Polyline> obstaclesToIgnore) {
             List<Tuple<Polyline, Point>> touchedObstacles;
             double minimalDistance;
-            return HubAvoidsObstacles(center, upperBound, obstaclesToIgnore, out touchedObstacles, out minimalDistance);
+            return this.HubAvoidsObstacles(center, upperBound, obstaclesToIgnore, out touchedObstacles, out minimalDistance);
         }
 
         internal double GetMinimalDistanceToObstacles(Station node, Point nodePosition, double upperBound) {
             List<Tuple<Polyline, Point>> touchedObstacles = new List<Tuple<Polyline, Point>>();
             double minimalDistance = upperBound;
-            if (!IntersectCircleWithTree(obstacleTree, nodePosition, upperBound, obstaclesToIgnore(node), touchedObstacles, ref minimalDistance))
+            if (!IntersectCircleWithTree(this.obstacleTree, nodePosition, upperBound, this.obstaclesToIgnore(node), touchedObstacles, ref minimalDistance)) {
                 return 0;
+            }
 
             return minimalDistance;
         }
 
-        bool HubAvoidsObstacles(Point center, double upperBound, Set<Polyline> obstaclesToIgnore,
+        private bool HubAvoidsObstacles(Point center, double upperBound, Set<Polyline> obstaclesToIgnore,
             out List<Tuple<Polyline, Point>> touchedObstacles, out double minimalDistance) {
             touchedObstacles = new List<Tuple<Polyline, Point>>();
             minimalDistance = upperBound;
-            return IntersectCircleWithTree(obstacleTree, center, upperBound, obstaclesToIgnore, touchedObstacles, ref minimalDistance);
+            return IntersectCircleWithTree(this.obstacleTree, center, upperBound, obstaclesToIgnore, touchedObstacles, ref minimalDistance);
         }
 
         /// <summary>
@@ -83,28 +89,40 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// <param name="touchedObstacles">list of pairs (obstacle, closest point on the obstacle)</param>
         /// <param name="minimalDistance">min distance from the center to an obstacle</param>
         /// <returns>false iff center is inside of an obstacle</returns>
-        static bool IntersectCircleWithTree(RectangleNode<Polyline, Point> node, Point center, double radius, Set<Polyline> obstaclesToIgnore,
+        private static bool IntersectCircleWithTree(RectangleNode<Polyline, Point> node, Point center, double radius, Set<Polyline> obstaclesToIgnore,
             List<Tuple<Polyline, Point>> touchedObstacles, ref double minimalDistance) {
-            if (!node.Rectangle.Contains(center, radius))
+            if (!node.Rectangle.Contains(center, radius)) {
                 return true;
+            }
 
             if (node.UserData == null) {
                 bool res = IntersectCircleWithTree(node.Left, center, radius, obstaclesToIgnore, touchedObstacles, ref minimalDistance);
-                if (!res) return false;
+                if (!res) {
+                    return false;
+                }
+
                 res = IntersectCircleWithTree(node.Right, center, radius, obstaclesToIgnore, touchedObstacles, ref minimalDistance);
-                if (!res) return false;
+                if (!res) {
+                    return false;
+                }
             }
             else {
                 Polyline obstacle = node.UserData;
-                if (obstaclesToIgnore.Contains(obstacle)) return true;
+                if (obstaclesToIgnore.Contains(obstacle)) {
+                    return true;
+                }
 
                 PointLocation pl = Curve.PointRelativeToCurveLocation(center, obstacle);
-                if (pl != PointLocation.Outside) return false;
+                if (pl != PointLocation.Outside) {
+                    return false;
+                }
 
                 Point touchPoint = obstacle[obstacle.ClosestParameter(center)];
                 double dist = (touchPoint - center).Length;
-                if (dist <= radius)
+                if (dist <= radius) {
                     touchedObstacles.Add(new Tuple<Polyline, Point>(obstacle, touchPoint));
+                }
+
                 minimalDistance = Math.Min(dist, minimalDistance);
             }
             return true;
@@ -138,38 +156,40 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// </summary>
         internal bool HubPositionsAreOK() {
             //check polylines
-            foreach (var line in metroGraphData.Metrolines) {
+            foreach (var line in this.metroGraphData.Metrolines) {
                 var poly = line.Polyline;
-                foreach (var p in poly.PolylinePoints)
-                    Debug.Assert(metroGraphData.PointToStations.ContainsKey(p.Point));
+                foreach (var p in poly.PolylinePoints) {
+                    Debug.Assert(this.metroGraphData.PointToStations.ContainsKey(p.Point));
+                }
             }
 
-            foreach (var station in metroGraphData.Stations) {
+            foreach (var station in this.metroGraphData.Stations) {
                 
-                if (!station.IsRealNode && !HubAvoidsObstacles(station.Position, 0, obstaclesToIgnore(station))) {
+                if (!station.IsRealNode && !this.HubAvoidsObstacles(station.Position, 0, this.obstaclesToIgnore(station))) {
                     if (LayoutAlgorithmSettings.ShowDebugCurvesEnumeration != null) {
-                        HubDebugger.ShowHubsWithHighligtedStation(metroGraphData, bundlingSettings, station);
-                        ShowStationWithObstaclesToIgnore(station,  obstacleTree.AllHitItems(station.Position));
+                        HubDebugger.ShowHubsWithHighligtedStation(this.metroGraphData, this.bundlingSettings, station);
+                        this.ShowStationWithObstaclesToIgnore(station, this.obstacleTree.AllHitItems(station.Position));
                     }
                     return false;
                 }
                 //bundles
                 foreach (var adj in station.Neighbors) {
-                    if (ApproximateComparer.Close(adj.Position, station.Position))
+                    if (ApproximateComparer.Close(adj.Position, station.Position)) {
                         return false;
+                    }
 
-                    if (!EdgeIsLegal(station, adj, station.Position, adj.Position)) {
+                    if (!this.EdgeIsLegal(station, adj, station.Position, adj.Position)) {
                         if (LayoutAlgorithmSettings.ShowDebugCurvesEnumeration != null) {
                             //debug visualization 
                             var l = new List<DebugCurve>();
                             //foreach (var st in metroGraphData.Stations) {
                             //    l.Add(new DebugCurve(100, 0.5, "grey", st.BoundaryCurve));
                             //}
-                            foreach (var poly in obstaclesToIgnore(station)) {
+                            foreach (var poly in this.obstaclesToIgnore(station)) {
                                 l.Add(new DebugCurve(100, 5, "green", poly));
                             }
 
-                            foreach (var obstacle in obstacleTree.GetAllLeaves()) {
+                            foreach (var obstacle in this.obstacleTree.GetAllLeaves()) {
                                 l.Add(new DebugCurve(100, 1, "red", obstacle));
                             }
 
@@ -190,18 +210,20 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return true;
         }
 
-        void ShowStationWithObstaclesToIgnore(Station station, IEnumerable<Polyline> allHitItems) {
+        private void ShowStationWithObstaclesToIgnore(Station station, IEnumerable<Polyline> allHitItems) {
             var l = new List<DebugCurve>();
             foreach (var poly in allHitItems) {
                 l.Add(new DebugCurve(100, 0.5, "brown", poly));
             }
-            if (obstaclesToIgnore(station) != null)
-                foreach (var poly in obstaclesToIgnore(station))
+            if (this.obstaclesToIgnore(station) != null) {
+                foreach (var poly in this.obstaclesToIgnore(station)) {
                     l.Add(new DebugCurve(100, 1, "red", poly));
+                }
+            }
 
-
-            foreach (var obstacle in obstacleTree.GetAllLeaves())
+            foreach (var obstacle in this.obstacleTree.GetAllLeaves()) {
                 l.Add(new DebugCurve(50, 0.1, "green", obstacle));
+            }
 
             l.Add(new DebugCurve(0.1, "blue", new Ellipse(1, 1, station.Position)));
 
@@ -212,9 +234,9 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// edge doesn't cross obstacles
         /// NOTE: use method in CdtIntersection insetad!
         /// </summary>
-        bool EdgeIsLegal(Station stationA, Station stationB, Point a, Point b) {
-            var crossings = InteractiveEdgeRouter.IntersectionsOfLineAndRectangleNodeOverPolyline(new LineSegment(a, b), obstacleTree);
-            Set<Polyline> obstaclesToIgnoreForBundle = ObstaclesToIgnoreForBundle(stationA, stationB);
+        private bool EdgeIsLegal(Station stationA, Station stationB, Point a, Point b) {
+            var crossings = InteractiveEdgeRouter.IntersectionsOfLineAndRectangleNodeOverPolyline(new LineSegment(a, b), this.obstacleTree);
+            Set<Polyline> obstaclesToIgnoreForBundle = this.ObstaclesToIgnoreForBundle(stationA, stationB);
             if (crossings.Count < 0) {
                 var l = new List<DebugCurve>();
                 var crossingSet = new Set<ICurve>(crossings.Select(ii => ii.Segment1));

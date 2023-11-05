@@ -9,8 +9,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
     /// keeps a list of active overlapping AxisEdges discovered during the sweep
     ///  </summary>
     internal class AxisEdgesContainer {
-        readonly Set<AxisEdge> edges = new Set<AxisEdge>();
-        internal IEnumerable<AxisEdge> Edges {get { return edges; } }
+        private readonly Set<AxisEdge> edges = new Set<AxisEdge>();
+        internal IEnumerable<AxisEdge> Edges {get { return this.edges; } }
         /// <summary>
         /// it is not necessarely the upper point but some point above the source
         /// </summary>
@@ -18,13 +18,13 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
 
 
         internal void AddEdge(AxisEdge edge){
-            UpPoint = edge.TargetPoint;
-            Debug.Assert(edges.Contains(edge)==false);
-            edges.Insert(edge);
+            this.UpPoint = edge.TargetPoint;
+            Debug.Assert(this.edges.Contains(edge)==false);
+            this.edges.Insert(edge);
         }
 
         internal AxisEdgesContainer(Point source){
-            Source = source;
+            this.Source = source;
         }
 
         public Point Source { get; set; }
@@ -32,12 +32,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         
         
         internal void RemoveAxis(AxisEdge edge){
-            Debug.Assert(edges.Contains(edge));
-            edges.Remove(edge);
+            Debug.Assert(this.edges.Contains(edge));
+            this.edges.Remove(edge);
         }
 
         internal bool IsEmpty(){
-            return edges.Count == 0;
+            return this.edges.Count == 0;
         }
     }
 }

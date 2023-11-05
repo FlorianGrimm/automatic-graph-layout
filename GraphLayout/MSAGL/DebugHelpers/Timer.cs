@@ -20,7 +20,7 @@ namespace Microsoft.Msagl.DebugHelpers {
         /// ctor
         /// </summary>
         public Timer() {
-            if (QueryPerformanceFrequency(out freq) == false) {
+            if (QueryPerformanceFrequency(out this.freq) == false) {
                 throw new Win32Exception(); // timer not supanchored
             }
         }
@@ -29,16 +29,16 @@ namespace Microsoft.Msagl.DebugHelpers {
         /// </summary>
         /// <returns>long - tick count</returns>
         public long Start() {
-            QueryPerformanceCounter(out startTime);
-            return startTime;
+            QueryPerformanceCounter(out this.startTime);
+            return this.startTime;
         }
         /// <summary>
         /// Stop timer 
         /// </summary>
         /// <returns>long - tick count</returns>
         public long Stop() {
-            QueryPerformanceCounter(out stopTime);
-            return stopTime;
+            QueryPerformanceCounter(out this.stopTime);
+            return this.stopTime;
         }
         /// <summary>
         /// Return the duration of the timer in seconds.
@@ -46,7 +46,7 @@ namespace Microsoft.Msagl.DebugHelpers {
         /// <returns>double - duration</returns>
         public double Duration {
             get {
-                return (double)(stopTime - startTime) / (double)freq;
+                return (double)(this.stopTime - this.startTime) / (double)this.freq;
             }
         }
         /// <summary>
@@ -55,8 +55,8 @@ namespace Microsoft.Msagl.DebugHelpers {
         ///<returns>long - Frequency</returns>
         public long Frequency {
             get {
-                QueryPerformanceFrequency(out freq);
-                return freq;
+                QueryPerformanceFrequency(out this.freq);
+                return this.freq;
             }
         }
     }

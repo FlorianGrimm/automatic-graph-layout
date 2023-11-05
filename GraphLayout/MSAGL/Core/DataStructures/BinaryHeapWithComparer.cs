@@ -9,27 +9,29 @@ namespace Microsoft.Msagl.Core.DataStructures {
     /// This class needs a comparer object to compare elements of the queue.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    internal class BinaryHeapWithComparer<T> {
-        const int initialHeapCapacity = 16;
-        T[] A; //array of the heap elems starting at A[1]
+    internal class BinaryHeapWithComparer<T> 
+        where T:notnull
+        {
+        private const int _InitialHeapCapacity = 16;
+        private T[] _Array; //array of the heap elems starting at A[1]
 
-        int heapSize = 0;
+        private int _HeapSize = 0;
 
         internal void Enqueue(T element) {
-            if (heapSize == A.Length - 1) {
-                var newA = new T[A.Length*2];
-                Array.Copy(A, 1, newA, 1, heapSize);
-                A = newA;
+            if (this._HeapSize == this._Array.Length - 1) {
+                var newA = new T[this._Array.Length*2];
+                Array.Copy(this._Array, 1, newA, 1, this._HeapSize);
+                this._Array = newA;
             }
 
-            int i = heapSize + 1;
-            A[i] = element;
-            heapSize++;
+            int i = this._HeapSize + 1;
+            this._Array[i] = element;
+            this._HeapSize++;
             int j = i >> 1;
             T parent, son;
-            while (i > 1 && Less(son = A[i], parent = A[j])) {
-                A[j] = son;
-                A[i] = parent;
+            while (i > 1 && this.Less(son = this._Array[i], parent = this._Array[j])) {
+                this._Array[j] = son;
+                this._Array[i] = parent;
                 i = j;
                 j = i >> 1;
             }
@@ -37,45 +39,47 @@ namespace Microsoft.Msagl.Core.DataStructures {
 
 
         internal T Dequeue() {
-            if (heapSize < 1)
+            if (this._HeapSize < 1) {
                 throw new InvalidOperationException();
-            T ret = A[1];
+            }
 
-            T candidate = A[heapSize];
+            T ret = this._Array[1];
 
-            heapSize--;
+            T candidate = this._Array[this._HeapSize];
 
-            ChangeMinimum(candidate);
+            this._HeapSize--;
+
+            this.ChangeMinimum(candidate);
 
             return ret;
         }
 
         internal void ChangeMinimum(T candidate) {
-            A[1] = candidate;
+            this._Array[1] = candidate;
 
             int j = 1;
             int i = 2;
             bool done = false;
-            while (i < heapSize && !done) {
+            while (i < this._HeapSize && !done) {
                 done = true;
                 //both sons exist
-                T leftSon = A[i];
-                T rigthSon = A[i + 1];
-                int compareResult = comparer.Compare(leftSon, rigthSon);
+                T leftSon = this._Array[i];
+                T rigthSon = this._Array[i + 1];
+                int compareResult = this.comparer.Compare(leftSon, rigthSon);
                 if (compareResult < 0) {
                     //left son is the smallest
-                    if (comparer.Compare(leftSon, candidate) < 0) {
-                        A[j] = leftSon;
-                        A[i] = candidate;
+                    if (this.comparer.Compare(leftSon, candidate) < 0) {
+                        this._Array[j] = leftSon;
+                        this._Array[i] = candidate;
                         done = false;
                         j = i;
                         i = j << 1;
                     }
                 } else {
                     //right son in not the greatest
-                    if (comparer.Compare(rigthSon, candidate) < 0) {
-                        A[j] = rigthSon;
-                        A[i + 1] = candidate;
+                    if (this.comparer.Compare(rigthSon, candidate) < 0) {
+                        this._Array[j] = rigthSon;
+                        this._Array[i + 1] = candidate;
                         done = false;
                         j = i + 1;
                         i = j << 1;
@@ -83,28 +87,28 @@ namespace Microsoft.Msagl.Core.DataStructures {
                 }
             }
 
-            if (i == heapSize) {
+            if (i == this._HeapSize) {
                 //can we do one more step:
-                T leftSon = A[i];
-                if (comparer.Compare(leftSon, candidate) < 0) {
-                    A[j] = leftSon;
-                    A[i] = candidate;
+                T leftSon = this._Array[i];
+                if (this.comparer.Compare(leftSon, candidate) < 0) {
+                    this._Array[j] = leftSon;
+                    this._Array[i] = candidate;
                 }
             }
         }
 
         internal int Count {
-            get { return heapSize; }
+            get { return this._HeapSize; }
         }
 
         internal bool Less(T a, T b) {
-            return comparer.Compare(a, b) < 0;
+            return this.comparer.Compare(a, b) < 0;
         }
 
-        IComparer<T> comparer;
+        private IComparer<T> comparer;
 
         internal BinaryHeapWithComparer(IComparer<T> comparer) {
-            A = new T[initialHeapCapacity + 1];
+            this._Array = new T[_InitialHeapCapacity + 1];
             this.comparer = comparer;
         }
 
@@ -112,24 +116,30 @@ namespace Microsoft.Msagl.Core.DataStructures {
 
         public override string ToString() {
             int i = 1;
-            return "{" + Print(i) + "}";
+            return "{" + this.Print(i) + "}";
         }
 
-        string Print(int i) {
-            if (2*i + 1 <= heapSize)
-                return String.Format(CultureInfo.InvariantCulture, "({0}->{1},{2})", A[i], A[i*2], A[i*2 + 1]) +
-                       Print(i*2) + Print(i*2 + 1);
-            if (2*i == heapSize)
-                return String.Format(CultureInfo.InvariantCulture, "({0}->{1}", A[i], A[i*2]);
-            if (i == heapSize && i == 1)
-                return " " + A[i].ToString() + " ";
+        private string Print(int i) {
+            if (2*i + 1 <= this._HeapSize) {
+                return String.Format(CultureInfo.InvariantCulture, "({0}->{1},{2})", this._Array[i], this._Array[i*2], this._Array[i*2 + 1]) +
+                       this.Print(i*2) + this.Print(i*2 + 1);
+            }
+
+            if (2*i == this._HeapSize) {
+                return String.Format(CultureInfo.InvariantCulture, "({0}->{1}", this._Array[i], this._Array[i*2]);
+            }
+
+            if (i == this._HeapSize && i == 1) {
+                return " " + this._Array[i].ToString() + " ";
+            }
+
             return "";
         }
 #endif
 
 
         public T GetMinimum() {
-            return A[1];
+            return this._Array[1];
         }
 
 #if TEST_MSAGL

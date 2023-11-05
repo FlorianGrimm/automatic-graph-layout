@@ -23,14 +23,14 @@ namespace Microsoft.Msagl.Layout.Layered {
     /// controls many properties of the layout algorithm
     /// </summary>
     public sealed class SugiyamaLayoutSettings : LayoutAlgorithmSettings {
-        double yLayerSep = 10*3;
+        private double yLayerSep = 10*3;
 
         /// <summary>
         /// Separation between to neighboring layers
         /// </summary>
         public double LayerSeparation {
-            get { return yLayerSep; }
-            set { yLayerSep = Math.Max(10, value); }
+            get { return this.yLayerSep; }
+            set { this.yLayerSep = Math.Max(10, value); }
         }
 
        
@@ -40,7 +40,7 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="leftNode"></param>
         /// <param name="rightNode"></param>
         public void AddLeftRightConstraint(Node leftNode, Node rightNode) {
-            HorizontalConstraints.LeftRightConstraints.Insert(new Tuple<Node, Node>(leftNode, rightNode));
+            this.HorizontalConstraints.LeftRightConstraints.Insert(new Tuple<Node, Node>(leftNode, rightNode));
         }
 
         /// <summary>
@@ -49,22 +49,22 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="leftNode"></param>
         /// <param name="rightNode"></param>
         public void RemoveLeftRightConstraint(Node leftNode, Node rightNode) {
-            HorizontalConstraints.LeftRightConstraints.Remove(new Tuple<Node, Node>(leftNode, rightNode));
+            this.HorizontalConstraints.LeftRightConstraints.Remove(new Tuple<Node, Node>(leftNode, rightNode));
         }
 
-        readonly VerticalConstraintsForSugiyama verticalConstraints = new VerticalConstraintsForSugiyama();
+        private readonly VerticalConstraintsForSugiyama verticalConstraints = new VerticalConstraintsForSugiyama();
 
         /// <summary>
         /// minLayer, maxLayer, same layer, up-down, up-down vertical and left-right constraints are supported by this class
         /// </summary>
         internal VerticalConstraintsForSugiyama VerticalConstraints {
-            get { return verticalConstraints; }
+            get { return this.verticalConstraints; }
         }
 
-        readonly HorizontalConstraintsForSugiyama horizontalConstraints = new HorizontalConstraintsForSugiyama();
+        private readonly HorizontalConstraintsForSugiyama horizontalConstraints = new HorizontalConstraintsForSugiyama();
 
         internal HorizontalConstraintsForSugiyama HorizontalConstraints {
-            get { return horizontalConstraints; }
+            get { return this.horizontalConstraints; }
         }
 
 
@@ -73,8 +73,9 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public void PinNodesToMaxLayer(params Node[] nodes) {
             ValidateArg.IsNotNull(nodes, "nodes");
-            for (int i = 0; i < nodes.Length; i++)
-                VerticalConstraints.PinNodeToMaxLayer(nodes[i]);
+            for (int i = 0; i < nodes.Length; i++) {
+                this.VerticalConstraints.PinNodeToMaxLayer(nodes[i]);
+            }
         }
 
         /// <summary>
@@ -83,8 +84,9 @@ namespace Microsoft.Msagl.Layout.Layered {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "ToMin")]
         public void PinNodesToMinLayer(params Node[] nodes) {
             ValidateArg.IsNotNull(nodes, "nodes");
-            for (int i = 0; i < nodes.Length; i++)
-                VerticalConstraints.PinNodeToMinLayer(nodes[i]);
+            for (int i = 0; i < nodes.Length; i++) {
+                this.VerticalConstraints.PinNodeToMinLayer(nodes[i]);
+            }
         }
 
         /// <summary>
@@ -92,8 +94,9 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public void PinNodesToSameLayer(params Node[] nodes) {
             ValidateArg.IsNotNull(nodes, "nodes");
-            for (int i = 1; i < nodes.Length; i++)
-                VerticalConstraints.SameLayerConstraints.Insert(new Tuple<Node, Node>(nodes[0], nodes[i]));
+            for (int i = 1; i < nodes.Length; i++) {
+                this.VerticalConstraints.SameLayerConstraints.Insert(new Tuple<Node, Node>(nodes[0], nodes[i]));
+            }
         }
 
 
@@ -102,7 +105,7 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         /// <param name="neighbors"></param>
         public void AddSameLayerNeighbors(params Node[] neighbors) {
-            AddSameLayerNeighbors(new List<Node>(neighbors));
+            this.AddSameLayerNeighbors(new List<Node>(neighbors));
         }
 
         /// <summary>
@@ -111,9 +114,10 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="neighbors"></param>
         public void AddSameLayerNeighbors(IEnumerable<Node> neighbors) {
             var neibs = new List<Node>(neighbors);
-            HorizontalConstraints.AddSameLayerNeighbors(neibs);
-            for (int i = 0; i < neibs.Count - 1; i++)
-                VerticalConstraints.SameLayerConstraints.Insert(new Tuple<Node, Node>(neibs[i], neibs[i + 1]));
+            this.HorizontalConstraints.AddSameLayerNeighbors(neibs);
+            for (int i = 0; i < neibs.Count - 1; i++) {
+                this.VerticalConstraints.SameLayerConstraints.Insert(new Tuple<Node, Node>(neibs[i], neibs[i + 1]));
+            }
         }
 
         /// <summary>
@@ -122,16 +126,16 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="leftNode"></param>
         /// <param name="rightNode"></param>
         public void AddSameLayerNeighbors(Node leftNode, Node rightNode) {
-            HorizontalConstraints.AddSameLayerNeighborsPair(leftNode, rightNode);
-            VerticalConstraints.SameLayerConstraints.Insert(new Tuple<Node, Node>(leftNode, rightNode));
+            this.HorizontalConstraints.AddSameLayerNeighborsPair(leftNode, rightNode);
+            this.VerticalConstraints.SameLayerConstraints.Insert(new Tuple<Node, Node>(leftNode, rightNode));
         }
 
         /// <summary>
         /// 
         /// </summary>
         public void RemoveAllConstraints() {
-            HorizontalConstraints.Clear();
-            VerticalConstraints.Clear();
+            this.HorizontalConstraints.Clear();
+            this.VerticalConstraints.Clear();
         }
 
 
@@ -141,7 +145,7 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="upperNode"></param>
         /// <param name="lowerNode"></param>
         public void AddUpDownConstraint(Node upperNode, Node lowerNode) {
-            VerticalConstraints.UpDownConstraints.Insert(new Tuple<Node, Node>(upperNode, lowerNode));
+            this.VerticalConstraints.UpDownConstraints.Insert(new Tuple<Node, Node>(upperNode, lowerNode));
         }
 
         /// <summary>
@@ -150,8 +154,8 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="upperNode"></param>
         /// <param name="lowerNode"></param>
         public void AddUpDownVerticalConstraint(Node upperNode, Node lowerNode) {
-            VerticalConstraints.UpDownConstraints.Insert(new Tuple<Node, Node>(upperNode, lowerNode));
-            HorizontalConstraints.UpDownVerticalConstraints.Insert(new Tuple<Node, Node>(upperNode, lowerNode));
+            this.VerticalConstraints.UpDownConstraints.Insert(new Tuple<Node, Node>(upperNode, lowerNode));
+            this.HorizontalConstraints.UpDownVerticalConstraints.Insert(new Tuple<Node, Node>(upperNode, lowerNode));
         }
 
         /// <summary>
@@ -160,8 +164,9 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="upDownNodes"></param>
         public void AddUpDownVerticalConstraints(params Node[] upDownNodes) {
             ValidateArg.IsNotNull(upDownNodes, "upDownNodes");
-            for (int i = 1; i < upDownNodes.Length; i++)
-                AddUpDownVerticalConstraint(upDownNodes[i - 1], upDownNodes[i]);
+            for (int i = 1; i < upDownNodes.Length; i++) {
+                this.AddUpDownVerticalConstraint(upDownNodes[i - 1], upDownNodes[i]);
+            }
         }
 
 
@@ -170,7 +175,7 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public bool LayeringOnly { get; set; }
 
-        int repetitionCoefficentForOrdering = 1;
+        private int repetitionCoefficentForOrdering = 1;
 
         /// <summary>
         /// This coefficient if set to the value greater than 1 will force the algorithm to search for layouts with fewer edge crossings 
@@ -183,11 +188,11 @@ namespace Microsoft.Msagl.Layout.Layered {
         [DefaultValue(1)]
 #endif
             public int RepetitionCoefficientForOrdering {
-            get { return repetitionCoefficentForOrdering; }
-            set { repetitionCoefficentForOrdering = Math.Max(value, 1); }
+            get { return this.repetitionCoefficentForOrdering; }
+            set { this.repetitionCoefficentForOrdering = Math.Max(value, 1); }
         }
 
-        int randomSeedForOrdering = 1;
+        private int randomSeedForOrdering = 1;
 
         /// <summary>
         /// The seed for the random element inside of the ordering
@@ -199,11 +204,11 @@ namespace Microsoft.Msagl.Layout.Layered {
         [DefaultValue(1)]
 #endif
             public int RandomSeedForOrdering {
-            get { return randomSeedForOrdering; }
-            set { randomSeedForOrdering = value; }
+            get { return this.randomSeedForOrdering; }
+            set { this.randomSeedForOrdering = value; }
         }
 
-        int noGainStepsBound = 5;
+        private int noGainStepsBound = 5;
 
         /// <summary>
         /// Maximal number of sequential steps without gain in the adjacent swap process
@@ -214,11 +219,11 @@ namespace Microsoft.Msagl.Layout.Layered {
         [DefaultValue(5)]
 #endif
             public int NoGainAdjacentSwapStepsBound {
-            get { return noGainStepsBound; }
-            set { noGainStepsBound = value; }
+            get { return this.noGainStepsBound; }
+            set { this.noGainStepsBound = value; }
         }
 
-        int maxNumberOfPassesInOrdering = 24;
+        private int maxNumberOfPassesInOrdering = 24;
 
         /// <summary>
         /// Maximal number of passes over layers applying the median algorithm in ordering
@@ -230,12 +235,11 @@ namespace Microsoft.Msagl.Layout.Layered {
         [DefaultValue(24)]
 #endif
             public int MaxNumberOfPassesInOrdering {
-            get { return maxNumberOfPassesInOrdering; }
-            set { maxNumberOfPassesInOrdering = value; }
+            get { return this.maxNumberOfPassesInOrdering; }
+            set { this.maxNumberOfPassesInOrdering = value; }
         }
 
-
-        int groupSplit = 2;
+        private int groupSplit = 2;
         /// <summary>
         /// The ratio of the group splitting algorithm used in the spatial hierarchy constructions for edge routing
         /// </summary>
@@ -245,11 +249,11 @@ namespace Microsoft.Msagl.Layout.Layered {
         [DefaultValue(2)]
 #endif
             public int GroupSplit {
-            get { return groupSplit; }
-            set { groupSplit = value; }
+            get { return this.groupSplit; }
+            set { this.groupSplit = value; }
         }
 
-        double labelCornersPreserveCoefficient = 0.1;
+        private double labelCornersPreserveCoefficient = 0.1;
         /// <summary>
         /// We create a hexagon for a label boundary: this coeffiecient defines the ratio of the top and the bottom side to the width of the label
         /// </summary>
@@ -262,11 +266,11 @@ namespace Microsoft.Msagl.Layout.Layered {
         [DefaultValue(0.1)]
 #endif
             public double LabelCornersPreserveCoefficient {
-            get { return labelCornersPreserveCoefficient; }
-            set { labelCornersPreserveCoefficient = value; }
+            get { return this.labelCornersPreserveCoefficient; }
+            set { this.labelCornersPreserveCoefficient = value; }
         }
 
-        int brandesThreshold = 600;
+        private int brandesThreshold = 600;
 
         /// <summary>
         /// When the number of vertices in the proper layered graph is the threshold or more we switch to
@@ -283,8 +287,8 @@ namespace Microsoft.Msagl.Layout.Layered {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming",
             "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Brandes")]
         public int BrandesThreshold {
-            get { return brandesThreshold; }
-            set { brandesThreshold = value; }
+            get { return this.brandesThreshold; }
+            set { this.brandesThreshold = value; }
         }
 
 
@@ -323,40 +327,39 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         /// <returns></returns>
         public override LayoutAlgorithmSettings Clone() {
-            return MemberwiseClone() as LayoutAlgorithmSettings;
+            return this.MemberwiseClone() as LayoutAlgorithmSettings;
         }
 
-
-        double minimalWidth;
+        private double minimalWidth;
 
         /// <summary>
         /// The resulting layout should be not more narrow than this value. 
         /// </summary>
         public double MinimalWidth {
-            get { return minimalWidth; }
-            set { minimalWidth = Math.Max(value, 0); }
+            get { return this.minimalWidth; }
+            set { this.minimalWidth = Math.Max(value, 0); }
         }
 
-        double minimalHeight;
+        private double minimalHeight;
 
         /// <summary>
         /// The resulting layout should at least as high as this this value
         /// </summary>
         public double MinimalHeight {
-            get { return minimalHeight; }
-            set { minimalHeight = Math.Max(value, 0); }
+            get { return this.minimalHeight; }
+            set { this.minimalHeight = Math.Max(value, 0); }
         }
 
-        double minNodeHeight = 72*0.5/4;
-        double minNodeWidth = 72*0.75/4;
+        private double minNodeHeight = 72*0.5/4;
+        private double minNodeWidth = 72*0.75/4;
 
 
         /// <summary>
         /// The minimal node height
         /// </summary>
         public double MinNodeHeight {
-            get { return minNodeHeight; }
-            set { minNodeHeight = Math.Max(0.4, value); }
+            get { return this.minNodeHeight; }
+            set { this.minNodeHeight = Math.Max(0.4, value); }
         }
 
 
@@ -364,38 +367,37 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// The minimal node width
         /// </summary>
         public double MinNodeWidth {
-            get { return minNodeWidth; }
-            set { minNodeWidth = Math.Max(0.8, value); }
+            get { return this.minNodeWidth; }
+            set { this.minNodeWidth = Math.Max(0.8, value); }
         }
 
-        PlaneTransformation transformation = PlaneTransformation.UnitTransformation;
+        private PlaneTransformation transformation = PlaneTransformation.UnitTransformation;
 
         /// <summary>
         /// This transformation is to be applied to the standard top - bottom layout.
         /// However, node boundaries remain unchanged.
         /// </summary>
         public PlaneTransformation Transformation {
-            get { return transformation; }
-            set { transformation = value; }
+            get { return this.transformation; }
+            set { this.transformation = value; }
         }
 
-        double aspectRatio;
+        private double aspectRatio;
 
         /// <summary>
         /// The ratio width/height of the final layout. 
         /// The value zero means that the aspect ratio has not been set.
         /// </summary>
         public double AspectRatio {
-            get { return aspectRatio; }
-            set { aspectRatio = value; }
+            get { return this.aspectRatio; }
+            set { this.aspectRatio = value; }
         }
 
         internal double ActualLayerSeparation(bool layersAreDoubled) {
-            return layersAreDoubled ? LayerSeparation/2.0 : LayerSeparation;
+            return layersAreDoubled ? this.LayerSeparation /2.0 : this.LayerSeparation;
         }
 
-        
-        double maxAspectRatioEccentricity = 5;
+        private double maxAspectRatioEccentricity = 5;
 
         /// <summary>
         /// InitialLayoutByCluster requires the layered layout aspect ratio
@@ -404,8 +406,8 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public double MaxAspectRatioEccentricity
         {
-            get { return maxAspectRatioEccentricity; }
-            set { maxAspectRatioEccentricity = value; }
+            get { return this.maxAspectRatioEccentricity; }
+            set { this.maxAspectRatioEccentricity = value; }
         }
 
         /// <summary>
@@ -413,28 +415,28 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public LayoutAlgorithmSettings FallbackLayoutSettings { get; set; }
 
-        SnapToGridByY snapToGridByY = SnapToGridByY.None;
+        private SnapToGridByY snapToGridByY = SnapToGridByY.None;
         
         public SnapToGridByY SnapToGridByY
         {
-            get { return snapToGridByY; }
-            set { snapToGridByY = value; }
+            get { return this.snapToGridByY; }
+            set { this.snapToGridByY = value; }
         }
 
-        double gridSizeByY = 0;
+        private double gridSizeByY = 0;
 
         public double GridSizeByY
         {
-            get { return gridSizeByY; }
-            set { gridSizeByY = value; }
+            get { return this.gridSizeByY; }
+            set { this.gridSizeByY = value; }
         }
 
-        double gridSizeByX = 0;
+        private double gridSizeByX = 0;
 
         public double GridSizeByX
         {
-            get { return gridSizeByX; }
-            set { gridSizeByX = value; }
+            get { return this.gridSizeByX; }
+            set { this.gridSizeByX = value; }
         }
 
         /// <summary>

@@ -8,24 +8,23 @@ namespace Microsoft.Msagl.Routing.Visibility {
     /// No three sequential elements have the same value
     /// </summary>
     internal class UnimodalSequence {
-
-        Func<int,double> sequence;
+        private Func<int,double> sequence;
 
         /// <summary>
         /// the sequence values
         /// </summary>
         internal Func<int,double> Sequence {
-            get { return sequence; }
-            set { sequence = value; }
+            get { return this.sequence; }
+            set { this.sequence = value; }
         }
 
-        int length;
+        private int length;
         /// <summary>
         /// the length of the sequence: the sequence starts from 0
         /// </summary>
         internal int Length {
-            get { return length; }
-            set { length = value; }
+            get { return this.length; }
+            set { this.length = value; }
         }
 
         internal UnimodalSequence(Func<int,double> sequenceDelegate, int length) {
@@ -40,16 +39,16 @@ namespace Microsoft.Msagl.Routing.Visibility {
         internal int FindMinimum() {
             //find out first that the minimum is inside of the domain
             int a = 0;
-            int b = Length - 1;
+            int b = this.Length - 1;
             int m = a + (b - a) / 2;
-            double valAtM = Sequence(m);
-            if (valAtM >= Sequence(0) && valAtM >= Sequence(Length - 1))
-                return Sequence(0) < Sequence(Length - 1) ? 0 : Length - 1;
+            double valAtM = this.Sequence(m);
+            if (valAtM >= this.Sequence(0) && valAtM >= this.Sequence(this.Length - 1)) {
+                return this.Sequence(0) < this.Sequence(this.Length - 1) ? 0 : this.Length - 1;
+            }
 
-          
             while (b - a > 1) {
                 m = a + (b - a) / 2;
-                switch (BehaviourAtIndex(m)) {
+                switch (this.BehaviourAtIndex(m)) {
                     case Behavior.Decreasing:
                         a = m;
                         break;
@@ -60,30 +59,37 @@ namespace Microsoft.Msagl.Routing.Visibility {
                         return m;
                 }
             }
-            if (a == b)
+            if (a == b) {
                 return a;
-            return Sequence(a) <= Sequence(b) ? a : b;
+            }
+
+            return this.Sequence(a) <= this.Sequence(b) ? a : b;
         }
 
         private Behavior BehaviourAtIndex(int m) {
-            double seqAtM=Sequence(m);
+            double seqAtM= this.Sequence(m);
             if (m == 0) {
-                double seqAt1 = Sequence(1);
-                if (seqAt1 == seqAtM)
+                double seqAt1 = this.Sequence(1);
+                if (seqAt1 == seqAtM) {
                     return Behavior.Extremum;
+                }
+
                 return seqAt1 > seqAtM ? Behavior.Increasing : Behavior.Decreasing;
             }
-            if (m == Length-1) {
-                double seqAt1 = Sequence(Length-2);
-                if (seqAt1 == seqAtM)
+            if (m == this.Length -1) {
+                double seqAt1 = this.Sequence(this.Length -2);
+                if (seqAt1 == seqAtM) {
                     return Behavior.Extremum;
+                }
+
                 return seqAt1 > seqAtM ? Behavior.Decreasing : Behavior.Increasing;
             }
 
-            double delLeft = seqAtM - Sequence(m - 1);
-            double delRight = Sequence(m + 1) - seqAtM;
-            if (delLeft * delRight <= 0)
+            double delLeft = seqAtM - this.Sequence(m - 1);
+            double delRight = this.Sequence(m + 1) - seqAtM;
+            if (delLeft * delRight <= 0) {
                 return Behavior.Extremum;
+            }
 
             return delLeft > 0 ? Behavior.Increasing : Behavior.Decreasing;
         }
@@ -91,16 +97,16 @@ namespace Microsoft.Msagl.Routing.Visibility {
         internal int FindMaximum() {
             //find out first that the maximum is inside of the domain
             int a = 0;
-            int b = Length - 1;
+            int b = this.Length - 1;
             int m = a + (b - a) / 2;
-            double valAtM = Sequence(m);
-            if (valAtM <= Sequence(0) && valAtM <= Sequence(Length - 1))
-                return Sequence(0) > Sequence(Length - 1) ? 0 : Length - 1;
-
+            double valAtM = this.Sequence(m);
+            if (valAtM <= this.Sequence(0) && valAtM <= this.Sequence(this.Length - 1)) {
+                return this.Sequence(0) > this.Sequence(this.Length - 1) ? 0 : this.Length - 1;
+            }
 
             while (b - a > 1) {
                 m = a + (b - a) / 2;
-                switch (BehaviourAtIndex(m)) {
+                switch (this.BehaviourAtIndex(m)) {
                     case Behavior.Decreasing:
                         b = m;
                         break;
@@ -111,9 +117,11 @@ namespace Microsoft.Msagl.Routing.Visibility {
                         return m;
                 }
             }
-            if (a == b)
+            if (a == b) {
                 return a;
-            return Sequence(a) >= Sequence(b) ? a : b;
+            }
+
+            return this.Sequence(a) >= this.Sequence(b) ? a : b;
             
         }
     }

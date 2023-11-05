@@ -16,10 +16,10 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
     /// Stores intersections between edges, hubs, and obstacles to speed up simulated annealing
     /// </summary>
     internal class IntersectionCache {
-        readonly MetroGraphData metroGraphData;
-        readonly BundlingSettings bundlingSettings;
-        readonly CostCalculator costCalculator;
-        readonly Cdt cdt;
+        private readonly MetroGraphData metroGraphData;
+        private readonly BundlingSettings bundlingSettings;
+        private readonly CostCalculator costCalculator;
+        private readonly Cdt cdt;
 
         public IntersectionCache(MetroGraphData metroGraphData, BundlingSettings bundlingSettings, CostCalculator costCalculator, Cdt cdt) {
             Debug.Assert(cdt!=null);
@@ -30,40 +30,40 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         }
 
         internal void InitializeCostCache() {
-            foreach (var v in metroGraphData.VirtualNodes()) {
-                v.cachedIdealRadius = HubRadiiCalculator.CalculateIdealHubRadiusWithNeighbors(metroGraphData, bundlingSettings, v);
-                v.cachedRadiusCost = costCalculator.RadiusCost(v, v.Position);
+            foreach (var v in this.metroGraphData.VirtualNodes()) {
+                v.cachedIdealRadius = HubRadiiCalculator.CalculateIdealHubRadiusWithNeighbors(this.metroGraphData, this.bundlingSettings, v);
+                v.cachedRadiusCost = this.costCalculator.RadiusCost(v, v.Position);
                 v.cachedBundleCost = 0;
             }
 
-            foreach (var edge in metroGraphData.VirtualEdges()) {
+            foreach (var edge in this.metroGraphData.VirtualEdges()) {
                 var v = edge.Item1;
                 var u = edge.Item2;
-                StationEdgeInfo edgeInfo = metroGraphData.GetIjInfo(v, u);
-                edgeInfo.cachedBundleCost = costCalculator.BundleCost(v, u, v.Position);
+                StationEdgeInfo edgeInfo = this.metroGraphData.GetIjInfo(v, u);
+                edgeInfo.cachedBundleCost = this.costCalculator.BundleCost(v, u, v.Position);
                 v.cachedBundleCost += edgeInfo.cachedBundleCost;
                 u.cachedBundleCost += edgeInfo.cachedBundleCost;
             }
         }
 
         internal void UpdateCostCache(Station node) {
-            RectangleNode<CdtTriangle,Point> cdtTree = cdt.GetCdtTree();
+            RectangleNode<CdtTriangle,Point> cdtTree = this.cdt.GetCdtTree();
             node.CdtTriangle = cdtTree.FirstHitNode(node.Position, Test).UserData;
 
-            node.cachedIdealRadius = HubRadiiCalculator.CalculateIdealHubRadiusWithNeighbors(metroGraphData, bundlingSettings, node);
-            node.cachedRadiusCost = costCalculator.RadiusCost(node, node.Position);
+            node.cachedIdealRadius = HubRadiiCalculator.CalculateIdealHubRadiusWithNeighbors(this.metroGraphData, this.bundlingSettings, node);
+            node.cachedRadiusCost = this.costCalculator.RadiusCost(node, node.Position);
             node.cachedBundleCost = 0;
 
             foreach (var adj in node.Neighbors) {
                 if (!adj.IsRealNode) {
-                    adj.cachedIdealRadius = HubRadiiCalculator.CalculateIdealHubRadiusWithNeighbors(metroGraphData, bundlingSettings, adj);
-                    adj.cachedRadiusCost = costCalculator.RadiusCost(adj, adj.Position);
+                    adj.cachedIdealRadius = HubRadiiCalculator.CalculateIdealHubRadiusWithNeighbors(this.metroGraphData, this.bundlingSettings, adj);
+                    adj.cachedRadiusCost = this.costCalculator.RadiusCost(adj, adj.Position);
                 }
 
-                StationEdgeInfo edgeInfo = metroGraphData.GetIjInfo(node, adj);
+                StationEdgeInfo edgeInfo = this.metroGraphData.GetIjInfo(node, adj);
                 adj.cachedBundleCost -= edgeInfo.cachedBundleCost;
 
-                edgeInfo.cachedBundleCost = costCalculator.BundleCost(node, adj, node.Position);
+                edgeInfo.cachedBundleCost = this.costCalculator.BundleCost(node, adj, node.Position);
                 node.cachedBundleCost += edgeInfo.cachedBundleCost;
                 adj.cachedBundleCost += edgeInfo.cachedBundleCost;
             }

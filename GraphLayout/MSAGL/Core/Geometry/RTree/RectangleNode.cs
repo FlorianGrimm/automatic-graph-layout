@@ -21,21 +21,21 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <returns></returns>
         [SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider", MessageId = "System.Int32.ToString")]
         public override string ToString() {
-            return IsLeaf ? (Count + " " + UserData) : Count.ToString();
+            return this.IsLeaf ? (this.Count + " " + this.UserData) : this.Count.ToString();
         }
 #endif
         /// <summary>
         /// 
         /// </summary>
         public int Count { get; set; }
-        RectangleNode<T, P> left;
 
-        RectangleNode<T, P> right;
+        private RectangleNode<T, P>? left;
+        private RectangleNode<T, P>? right;
 
         /// <summary>
         /// creates an empty node
         /// </summary>
-        public RectangleNode() {            
+        public RectangleNode() {
         }
 
         /// <summary>
@@ -44,13 +44,13 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <param name="data"></param>
         /// <param name="rect"></param>
         public RectangleNode(T data, IRectangle<P> rect) {
-            UserData = data;
-            Rectangle = rect;
-            Count = 1;
+            this.UserData = data;
+            this.Rectangle = rect;
+            this.Count = 1;
         }
 
-        RectangleNode(int count) {
-            Count=count;
+        private RectangleNode(int count) {
+            this.Count =count;
         }
 
         /// <summary>
@@ -58,15 +58,15 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// modify directly with .Add(); the auto-property returns a temporary value-by-copy that is immediately discarded.
         /// </summary>
 // ReSharper disable InconsistentNaming
-        internal IRectangle<P> rectangle;
+        internal IRectangle<P>? IntenalRectangle;
 // ReSharper restore InconsistentNaming
 
         /// <summary>
         /// gets or sets the rectangle of the node
         /// </summary>
-        public IRectangle<P> Rectangle {
-            get { return rectangle; }
-            set { rectangle = value; }
+        public IRectangle<P>? Rectangle {
+            get { return this.IntenalRectangle; }
+            set { this.IntenalRectangle = value; }
         }
 
         /// <summary>
@@ -74,17 +74,18 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// </summary>
         internal bool IsLeaf
         {
-            get { return left==null /*&& right==null*/; } //if left is a null then right is also a null
+            get { return this.left ==null /*&& right==null*/; } //if left is a null then right is also a null
         }
         /// <summary>
         /// 
         /// </summary>
         public RectangleNode<T,  P> Left {
-            get { return left; }
-            internal set {                
-                left = value;
-                if (left != null)
-                    left.Parent = this;
+            get { return this.left; }
+            internal set {
+                this.left = value;
+                if (this.left != null) {
+                    this.left.Parent = this;
+                }
             }
         }
 
@@ -92,28 +93,29 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// 
         /// </summary>
         public RectangleNode<T,  P> Right {
-            get { return right; }
+            get { return this.right; }
             internal set {
-                right = value;
-                if (right != null)
-                    right.Parent = this;
+                this.right = value;
+                if (this.right != null) {
+                    this.right.Parent = this;
+                }
             }
         }
 
         /// <summary>
         /// The actual data if a leaf node, else null or a value-type default.
         /// </summary>
-        public T UserData { get; set; }
+        public T? UserData { get; set; }
 
         /// <summary>
         /// Parent of this node.
         /// </summary>
-        public RectangleNode<T,  P> Parent { get; private set; }
+        public RectangleNode<T,  P>? Parent { get; private set; }
 
         internal bool IsLeftChild {
             get {
-                Debug.Assert(Parent!=null);
-                return Equals(Parent.Left);
+                Debug.Assert(this.Parent !=null);
+                return this.Equals(this.Parent.Left);
             }
         }
 
@@ -124,15 +126,15 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <param name="hitTestForPointDelegate"></param>
         /// <returns></returns>
         public RectangleNode<T,  P> FirstHitNode(P point, Func<P, T, HitTestBehavior> hitTestForPointDelegate) {
-            if (rectangle.Contains(point)) {
-                if (IsLeaf) {
+            if (this.IntenalRectangle.Contains(point)) {
+                if (this.IsLeaf) {
                     if (hitTestForPointDelegate != null) {
-                        return hitTestForPointDelegate(point, UserData) == HitTestBehavior.Stop ? this : null;
+                        return hitTestForPointDelegate(point, this.UserData) == HitTestBehavior.Stop ? this : null;
                     }
                     return this;
                 }
-                return Left.FirstHitNode(point, hitTestForPointDelegate) ??
-                        Right.FirstHitNode(point, hitTestForPointDelegate);
+                return this.Left.FirstHitNode(point, hitTestForPointDelegate) ??
+                        this.Right.FirstHitNode(point, hitTestForPointDelegate);
             }
             return null;
         }
@@ -143,10 +145,12 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// </summary>
         /// <returns></returns>
         public RectangleNode<T,  P> FirstIntersectedNode(IRectangle<P> r) {
-            if (r.Intersects(rectangle)) {
-                if (IsLeaf)
+            if (r.Intersects(this.IntenalRectangle)) {
+                if (this.IsLeaf) {
                     return this;
-                return Left.FirstIntersectedNode(r) ?? Right.FirstIntersectedNode(r);
+                }
+
+                return this.Left.FirstIntersectedNode(r) ?? this.Right.FirstIntersectedNode(r);
             }
             return null;
         }
@@ -159,10 +163,12 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <param name="point"></param>
         /// <returns></returns>
         public RectangleNode<T,  P> FirstHitNode(P point) {
-            if (rectangle.Contains(point)) {
-                if (IsLeaf)                    
-                    return this;                
-                return Left.FirstHitNode(point) ?? Right.FirstHitNode(point);
+            if (this.IntenalRectangle.Contains(point)) {
+                if (this.IsLeaf) {
+                    return this;
+                }
+
+                return this.Left.FirstHitNode(point) ?? this.Right.FirstHitNode(point);
             }
             return null;
         }
@@ -203,9 +209,9 @@ namespace Microsoft.Msagl.Core.Geometry {
             while (stack.Count > 0) {
                 var node = stack.Pop();
                 if (node.Rectangle.Contains(point)) {
-                    if (node.IsLeaf)
+                    if (node.IsLeaf) {
                         yield return node.UserData;
-                    else {
+                    } else {
                         stack.Push(node.left);
                         stack.Push(node.right);
                     }
@@ -224,7 +230,7 @@ namespace Microsoft.Msagl.Core.Geometry {
             VisitTreeStatic(this, hitTest, hitRectangle);
         }
 
-        static HitTestBehavior VisitTreeStatic(RectangleNode<T,  P> rectangleNode, Func<T, HitTestBehavior> hitTest, IRectangle<P> hitRectangle) {
+        private static HitTestBehavior VisitTreeStatic(RectangleNode<T,  P> rectangleNode, Func<T, HitTestBehavior> hitTest, IRectangle<P> hitRectangle) {
             if (rectangleNode.Rectangle.Intersects(hitRectangle)) {
                 if (hitTest(rectangleNode.UserData) == HitTestBehavior.Continue) {
                     if (rectangleNode.Left != null) {
@@ -247,11 +253,15 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// </summary>
         /// <returns></returns>
         public RectangleNode<T,  P> Clone() {
-            var ret = new RectangleNode<T,  P>(Count) {UserData = UserData, Rectangle = Rectangle};
-            if (Left != null)
-                ret.Left = Left.Clone();
-            if (Right != null)
-                ret.Right = Right.Clone();
+            var ret = new RectangleNode<T,  P>(this.Count) {UserData = this.UserData, Rectangle = this.Rectangle };
+            if (this.Left != null) {
+                ret.Left = this.Left.Clone();
+            }
+
+            if (this.Right != null) {
+                ret.Right = this.Right.Clone();
+            }
+
             return ret;
         }
 
@@ -261,7 +271,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <param name="rectanglePar"></param>
         /// <returns></returns>
         public IEnumerable<T> GetNodeItemsIntersectingRectangle(IRectangle<P> rectanglePar) {
-            return GetLeafRectangleNodesIntersectingRectangle(rectanglePar).Select(node => node.UserData);
+            return this.GetLeafRectangleNodesIntersectingRectangle(rectanglePar).Select(node => node.UserData);
         }
 
         /// <summary>
@@ -292,14 +302,14 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <returns></returns>
         [SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
         public IEnumerable<T> GetAllLeaves() {
-            return GetAllLeafNodes().Select(n => n.UserData);
+            return this.GetAllLeafNodes().Select(n => n.UserData);
         }
 
         internal IEnumerable<RectangleNode<T,  P>> GetAllLeafNodes() {
-            return EnumRectangleNodes(true /*leafOnly*/);
+            return this.EnumRectangleNodes(true /*leafOnly*/);
         }
 
-        IEnumerable<RectangleNode<T,  P>> EnumRectangleNodes(bool leafOnly) {
+        private IEnumerable<RectangleNode<T,  P>> EnumRectangleNodes(bool leafOnly) {
             var stack = new Stack<RectangleNode<T,  P>>();
             stack.Push(this);
             while (stack.Count > 0) {
@@ -314,7 +324,7 @@ namespace Microsoft.Msagl.Core.Geometry {
             }
         }
 
-        const int GroupSplitThreshold = 2;
+        private const int GroupSplitThreshold = 2;
 
         
         /// <summary>
@@ -324,8 +334,10 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <returns></returns>
         [SuppressMessage("Microsoft.Design", "CA1000:DoNotDeclareStaticMembersOnGenericTypes"), SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
         public static RectangleNode<T,  P> CreateRectangleNodeOnEnumeration(IEnumerable<RectangleNode<T,  P>> nodes) {
-            if(nodes==null)
+            if(nodes==null) {
                 return null;
+            }
+
             var nodeList = new List<RectangleNode<T,  P>>(nodes);
             return CreateRectangleNodeOnListOfNodes(nodeList);
         }
@@ -338,8 +350,10 @@ namespace Microsoft.Msagl.Core.Geometry {
         ///<returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1000:DoNotDeclareStaticMembersOnGenericTypes")]
         public static RectangleNode<T,  P> CreateRectangleNodeOnData(IEnumerable<T>  dataEnumeration, Func<T, IRectangle<P>> rectangleDelegate) {
-            if (dataEnumeration == null || rectangleDelegate == null)
+            if (dataEnumeration == null || rectangleDelegate == null) {
                 return null;
+            }
+
             var nodeList = new List<RectangleNode<T,  P>>(dataEnumeration.Select(d=>new RectangleNode<T,  P>(d, rectangleDelegate(d))));
             return CreateRectangleNodeOnListOfNodes(nodeList);
         }
@@ -353,12 +367,16 @@ namespace Microsoft.Msagl.Core.Geometry {
         [SuppressMessage("Microsoft.Design", "CA1000:DoNotDeclareStaticMembersOnGenericTypes"), SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures")]
         static public RectangleNode<T,  P> CreateRectangleNodeOnListOfNodes(IList<RectangleNode<T,  P>> nodes) {
             ValidateArg.IsNotNull(nodes, "nodes");
-            if (nodes.Count == 0) return null;
+            if (nodes.Count == 0) {
+                return null;
+            }
 
-            if (nodes.Count == 1)return nodes[0];
+            if (nodes.Count == 1) {
+                return nodes[0];
+            }
 
             //Finding the seeds
-            
+
             //the first seed
             int seed0 = 1;
 
@@ -388,12 +406,14 @@ namespace Microsoft.Msagl.Core.Geometry {
 
         }
 
-        static int ChooseSeeds(IList<RectangleNode<T,  P>> nodes, ref int seed0) {
+        private static int ChooseSeeds(IList<RectangleNode<T,  P>> nodes, ref int seed0) {
             var b0 = nodes[seed0].Rectangle;
             double area = b0.Area;
             for (int i = 0; i < nodes.Count; i++) {
-                if (i == seed0)
+                if (i == seed0) {
                     continue;
+                }
+
                 double area0 = b0.Unite(nodes[i].Rectangle).Area;
                 if (area0 > area) {
                     seed0 = i;
@@ -417,8 +437,10 @@ namespace Microsoft.Msagl.Core.Geometry {
             //Now try to improve the second seed
 
             for (int i = 0; i < nodes.Count; i++) {
-                if (i == seed0)
+                if (i == seed0) {
                     continue;
+                }
+
                 double area1 = nodes[seed0].Rectangle.Unite(nodes[i].Rectangle).Area;
                 if (area1 > area) {
                     seed1 = i;
@@ -429,14 +451,15 @@ namespace Microsoft.Msagl.Core.Geometry {
             return seed1;
         }
 
-        static void DivideNodes(IList<RectangleNode<T,  P>> nodes, int seed0, int seed1, List<RectangleNode<T,  P>> gr0, List<RectangleNode<T,  P>> gr1, 
+        private static void DivideNodes(IList<RectangleNode<T,  P>> nodes, int seed0, int seed1, List<RectangleNode<T,  P>> gr0, List<RectangleNode<T,  P>> gr1, 
             ref IRectangle<P> box0, ref IRectangle<P> box1, int groupSplitThreshold) {
             for (int i = 0; i < nodes.Count; i++) {
 
-                if (i == seed0 || i == seed1)
+                if (i == seed0 || i == seed1) {
                     continue;
+                }
 
-// ReSharper disable InconsistentNaming
+                // ReSharper disable InconsistentNaming
                 var box0_ = box0.Unite(nodes[i].Rectangle);
                 double delta0 = box0_.Area - box0.Area;
 
@@ -480,10 +503,13 @@ namespace Microsoft.Msagl.Core.Geometry {
             ValidateArg.IsNotNull(node, "node");
             ValidateArg.IsNotNull(visitor, "visitor");
             visitor(node);
-            if (node.Left != null)
+            if (node.Left != null) {
                 TraverseHierarchy(node.Left, visitor);
-            if (node.Right != null)
+            }
+
+            if (node.Right != null) {
                 TraverseHierarchy(node.Right, visitor);
+            }
         }
     }
 }

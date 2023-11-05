@@ -16,29 +16,29 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         static internal IEnumerable<IEdge> GetFeedbackSetWithConstraints(BasicGraphOnEdges<TEdge> graph, Set<IntPair> constraints) {
             if (constraints == null || constraints.Count == 0) {
                 return GetFeedbackSet(graph);
-            } else
+            } else {
                 return GetFeedbackSetWithConstraintsLocal(graph, constraints);
+            }
         }
 
-        static IEnumerable<IEdge> GetFeedbackSetWithConstraintsLocal(BasicGraphOnEdges<TEdge> graph, Set<IntPair> constraints) {
+        private static IEnumerable<IEdge> GetFeedbackSetWithConstraintsLocal(BasicGraphOnEdges<TEdge> graph, Set<IntPair> constraints) {
             var v = new CycleRemovalWithConstraints<TEdge>(graph, constraints);
             return v.GetFeedbackSet();
         }
 
-
-        static void Push(Stack<IEnumerator<TEdge>> enumStack, Stack<int> vertexStack, VertStatus[] status, int vertex, IEnumerator<TEdge> outEnum) {
+        private static void Push(Stack<IEnumerator<TEdge>> enumStack, Stack<int> vertexStack, VertStatus[] status, int vertex, IEnumerator<TEdge> outEnum) {
             status[vertex] = VertStatus.InStack;
             enumStack.Push(outEnum);
             vertexStack.Push(vertex);
         }
 
-        static void Pop(Stack<IEnumerator<TEdge>> enumStack, Stack<int> vertexStack, VertStatus[] status, out int vertex, out IEnumerator<TEdge> outEnum) {
+        private static void Pop(Stack<IEnumerator<TEdge>> enumStack, Stack<int> vertexStack, VertStatus[] status, out int vertex, out IEnumerator<TEdge> outEnum) {
             outEnum = enumStack.Pop();
             vertex = vertexStack.Pop();
             status[vertex] = VertStatus.Visited;
         }
 
-        enum VertStatus {
+        private enum VertStatus {
             NotVisited,
             InStack,
             Visited,
@@ -60,8 +60,9 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
                     status[i] = VertStatus.NotVisited;
 #endif
                 for (int vertex = 0; vertex < graph.NodeCount; vertex++) {
-                    if (status[vertex] == VertStatus.Visited)
+                    if (status[vertex] == VertStatus.Visited) {
                         continue;
+                    }
 
                     System.Diagnostics.Debug.Assert(status[vertex] != VertStatus.InStack);
 
@@ -75,8 +76,9 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
                         while (outEnum.MoveNext()) {
                             TEdge e = outEnum.Current;
 
-                            if (e.Source == e.Target)
+                            if (e.Source == e.Target) {
                                 continue;
+                            }
 
                             VertStatus targetStatus = status[e.Target];
                             if (targetStatus == VertStatus.InStack) {
@@ -91,8 +93,9 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
                     }
                 }
                 return feedbackSet as IEnumerable<IEdge>;
-            } else
+            } else {
                 return new Set<IEdge>();
+            }
         }
     }
 }

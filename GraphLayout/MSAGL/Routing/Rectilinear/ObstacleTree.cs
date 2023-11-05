@@ -18,8 +18,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// <summary>
         /// The root of the hierarchy.
         /// </summary>
-        internal RectangleNode<Obstacle, Point> Root { get; private set; }
-        internal Rectangle GraphBox { get { return (Rectangle)Root.Rectangle; } }
+        internal RectangleNode<Obstacle, Point>? Root { get; private set; }
+        internal Rectangle? GraphBox { get { return this.Root?.Rectangle; /*(Rectangle)this.Root.Rectangle*/; } }
 
         /// <summary>
         /// Dictionary of sets of ancestors for each shape, for evaluating necessary group-boundary crossings.
@@ -69,7 +69,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// <param name="idToObstacleMap"></param>
         internal void Init(IEnumerable<Obstacle> obstacles, Dictionary<Shape, Set<Shape>> ancestorSets
                         , Dictionary<Shape, Obstacle> idToObstacleMap) {
-            CreateObstacleListAndOrdinals(obstacles);
+            this.CreateObstacleListAndOrdinals(obstacles);
             this.AncestorSets = ancestorSets;
             this.CreateRoot();
             this.shapeIdToObstacleMap = idToObstacleMap;
@@ -94,12 +94,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// </summary>
         private void CreateRoot() {
             this.Root = CalculateHierarchy(this.GetAllObstacles());
-            if (!OverlapsExist()) {
+            if (!this.OverlapsExist()) {
                 return;
             }
-            AccreteClumps();
-            AccreteConvexHulls();
-            GrowGroupsToAccommodateOverlaps();
+            this.AccreteClumps();
+            this.AccreteConvexHulls();
+            this.GrowGroupsToAccommodateOverlaps();
             this.Root = CalculateHierarchy(this.GetAllObstacles().Where(obs => obs.IsPrimaryObstacle));
         }
 
@@ -221,13 +221,13 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             }
 
             this.overlapPairs.Insert(new IntPair(a.Ordinal, b.Ordinal));
-            AddClumpToConvexHull(a);
-            AddClumpToConvexHull(b);
-            AddConvexHullToConvexHull(a);
-            AddConvexHullToConvexHull(b);
+            this.AddClumpToConvexHull(a);
+            this.AddClumpToConvexHull(b);
+            this.AddConvexHullToConvexHull(a);
+            this.AddConvexHullToConvexHull(b);
         }
 
-        void GrowGroupsToAccommodateOverlaps() {
+        private void GrowGroupsToAccommodateOverlaps() {
             // Group growth is transitive, because the created hull may overlap additional obstacles.
             for (; ; ) {
                 this.AccumulateObstaclesForGroupOverlaps();
@@ -320,7 +320,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 if (component.Count() == 1) {
                     continue;
                 }
-                createClump(component);
+                this.createClump(component);
             }
         }
 
@@ -452,20 +452,20 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             }
 
             // Add each group to the AncestorSet of any spatial children (duplicate Insert() is ignored).
-            foreach (var group in GetAllGroups()) {
+            foreach (var group in this.GetAllGroups()) {
                 var groupBox = group.VisibilityBoundingBox;
 
-                foreach (var obstacle in Root.GetNodeItemsIntersectingRectangle(groupBox)) {
+                foreach (var obstacle in this.Root.GetNodeItemsIntersectingRectangle(groupBox)) {
                     if ((obstacle != group) && Curve.ClosedCurveInteriorsIntersect(obstacle.VisibilityPolyline, group.VisibilityPolyline)) {
                         if (obstacle.IsInConvexHull) 
                         {
                             Debug.Assert(obstacle.IsPrimaryObstacle, "Only primary obstacles should be in the hierarchy");
                             foreach (var sibling in obstacle.ConvexHull.Obstacles) 
                             {
-                                AncestorSets[sibling.InputShape].Insert(group.InputShape);
+                                this.AncestorSets[sibling.InputShape].Insert(group.InputShape);
                             }
                         }
-                        AncestorSets[obstacle.InputShape].Insert(group.InputShape);
+                        this.AncestorSets[obstacle.InputShape].Insert(group.InputShape);
                     }
                 }
             }
@@ -476,13 +476,13 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // removing them here we not only get a better graph (avoiding some spurious crossings) but we're faster
             // both in path generation and Nudging.
             var nonSpatialGroups = new List<Shape>();
-            foreach (var child in Root.GetAllLeaves()) {
+            foreach (var child in this.Root.GetAllLeaves()) {
                 var childBox = child.VisibilityBoundingBox;
 
                 // This has to be two steps because we can't modify the Set during enumeration.
-                nonSpatialGroups.AddRange(AncestorSets[child.InputShape].Where(anc => !childBox.Intersects(this.shapeIdToObstacleMap[anc].VisibilityBoundingBox)));
+                nonSpatialGroups.AddRange(this.AncestorSets[child.InputShape].Where(anc => !childBox.Intersects(this.shapeIdToObstacleMap[anc].VisibilityBoundingBox)));
                 foreach (var group in nonSpatialGroups) {
-                    AncestorSets[child.InputShape].Remove(group);
+                    this.AncestorSets[child.InputShape].Remove(group);
                 }
                 nonSpatialGroups.Clear();
             }
@@ -492,15 +492,15 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         internal IEnumerable<Obstacle> GetAllGroups() {
-            return GetAllObstacles().Where(obs => obs.IsGroup);
+            return this.GetAllObstacles().Where(obs => obs.IsGroup);
         } 
 
         /// <summary>
         /// Clear the internal state.
         /// </summary>
         internal void Clear() {
-            Root = null;
-            AncestorSets = null;
+            this.Root = null;
+            this.AncestorSets = null;
         }
 
         /// <summary>
@@ -538,32 +538,32 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         // Hit-testing.
         internal bool IntersectionIsInsideAnotherObstacle(Obstacle sideObstacle, Obstacle eventObstacle, Point intersect, ScanDirection scanDirection) {
-            insideHitTestIgnoreObstacle1 = eventObstacle;
-            insideHitTestIgnoreObstacle2 = sideObstacle;
-            insideHitTestScanDirection = scanDirection;
-            RectangleNode<Obstacle, Point> obstacleNode = Root.FirstHitNode(intersect, InsideObstacleHitTest);
+            this.insideHitTestIgnoreObstacle1 = eventObstacle;
+            this.insideHitTestIgnoreObstacle2 = sideObstacle;
+            this.insideHitTestScanDirection = scanDirection;
+            RectangleNode<Obstacle, Point> obstacleNode = this.Root.FirstHitNode(intersect, this.InsideObstacleHitTest);
             return (null != obstacleNode);
         }
 
         internal bool PointIsInsideAnObstacle(Point intersect, Direction direction) {
-            return PointIsInsideAnObstacle(intersect, ScanDirection.GetInstance(direction));
+            return this.PointIsInsideAnObstacle(intersect, ScanDirection.GetInstance(direction));
         }
 
         internal bool PointIsInsideAnObstacle(Point intersect, ScanDirection scanDirection) {
-            insideHitTestIgnoreObstacle1 = null;
-            insideHitTestIgnoreObstacle2 = null;
-            insideHitTestScanDirection = scanDirection;
-            RectangleNode<Obstacle, Point> obstacleNode = Root.FirstHitNode(intersect, InsideObstacleHitTest);
+            this.insideHitTestIgnoreObstacle1 = null;
+            this.insideHitTestIgnoreObstacle2 = null;
+            this.insideHitTestScanDirection = scanDirection;
+            RectangleNode<Obstacle, Point> obstacleNode = this.Root.FirstHitNode(intersect, this.InsideObstacleHitTest);
             return (null != obstacleNode);
         }
 
         // Ignore one (always) or both (depending on location) of these obstacles on Obstacle hit testing.
-        Obstacle insideHitTestIgnoreObstacle1;
-        Obstacle insideHitTestIgnoreObstacle2;
-        ScanDirection insideHitTestScanDirection;
+        private Obstacle insideHitTestIgnoreObstacle1;
+        private Obstacle insideHitTestIgnoreObstacle2;
+        private ScanDirection insideHitTestScanDirection;
 
-        HitTestBehavior InsideObstacleHitTest(Point location, Obstacle obstacle) {
-            if ((obstacle == insideHitTestIgnoreObstacle1) || (obstacle == insideHitTestIgnoreObstacle2)) {
+        private HitTestBehavior InsideObstacleHitTest(Point location, Obstacle obstacle) {
+            if ((obstacle == this.insideHitTestIgnoreObstacle1) || (obstacle == this.insideHitTestIgnoreObstacle2)) {
                 // It's one of the two obstacles we already know about.
                 return HitTestBehavior.Continue;
             }
@@ -583,11 +583,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // Note: There are rounding issues using Curve.PointRelativeToCurveLocation at angled
             // obstacle boundaries, hence this function.
             Point high = StaticGraphUtility.RectangleBorderIntersect(obstacle.VisibilityBoundingBox, location
-                                , insideHitTestScanDirection.Direction)
-                        + insideHitTestScanDirection.DirectionAsPoint;
+                                , this.insideHitTestScanDirection.Direction)
+                        + this.insideHitTestScanDirection.DirectionAsPoint;
             Point low = StaticGraphUtility.RectangleBorderIntersect(obstacle.VisibilityBoundingBox, location
-                                , insideHitTestScanDirection.OppositeDirection)
-                        - insideHitTestScanDirection.DirectionAsPoint;
+                                , this.insideHitTestScanDirection.OppositeDirection)
+                        - this.insideHitTestScanDirection.DirectionAsPoint;
             var testSeg = new LineSegment(low, high);
             IList<IntersectionInfo> xxs = Curve.GetAllIntersections(testSeg, obstacle.VisibilityPolyline, true /*liftIntersections*/);
 
@@ -617,71 +617,72 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         internal bool SegmentCrossesAnObstacle(Point startPoint, Point endPoint) {
-            stopAtGroups = true;
-            wantGroupCrossings = false;
-            LineSegment obstacleIntersectSeg = RestrictSegmentPrivate(startPoint, endPoint);
+            this.stopAtGroups = true;
+            this.wantGroupCrossings = false;
+            LineSegment obstacleIntersectSeg = this.RestrictSegmentPrivate(startPoint, endPoint);
             return !PointComparer.Equal(obstacleIntersectSeg.End, endPoint);
         }
 
 #if TEST_MSAGL
         internal bool SegmentCrossesANonGroupObstacle(Point startPoint, Point endPoint) {
-            stopAtGroups = false;
-            wantGroupCrossings = false;
-            LineSegment obstacleIntersectSeg = RestrictSegmentPrivate(startPoint, endPoint);
+            this.stopAtGroups = false;
+            this.wantGroupCrossings = false;
+            LineSegment obstacleIntersectSeg = this.RestrictSegmentPrivate(startPoint, endPoint);
             return !PointComparer.Equal(obstacleIntersectSeg.End, endPoint);
         }
 #endif // TEST_MSAGL
 
         internal LineSegment RestrictSegmentWithObstacles(Point startPoint, Point endPoint) {
-            stopAtGroups = false;
-            wantGroupCrossings = true;
-            return RestrictSegmentPrivate(startPoint, endPoint);
+            this.stopAtGroups = false;
+            this.wantGroupCrossings = true;
+            return this.RestrictSegmentPrivate(startPoint, endPoint);
         }
 
         private LineSegment RestrictSegmentPrivate(Point startPoint, Point endPoint) {
-            GetRestrictedIntersectionTestSegment(startPoint, endPoint);
-            currentRestrictedRay = new LineSegment(startPoint, endPoint);
-            restrictedRayLengthSquared = (startPoint - endPoint).LengthSquared;
-            CurrentGroupBoundaryCrossingMap.Clear();
-            RecurseRestrictRayWithObstacles(Root);
-            return currentRestrictedRay;
+            this.GetRestrictedIntersectionTestSegment(startPoint, endPoint);
+            this.currentRestrictedRay = new LineSegment(startPoint, endPoint);
+            this.restrictedRayLengthSquared = (startPoint - endPoint).LengthSquared;
+            this.CurrentGroupBoundaryCrossingMap.Clear();
+            this.RecurseRestrictRayWithObstacles(this.Root);
+            return this.currentRestrictedRay;
         }
 
         private void GetRestrictedIntersectionTestSegment(Point startPoint, Point endPoint) {
             // Due to rounding issues use a larger line span for intersection calculations.
             Direction segDir = PointComparer.GetPureDirection(startPoint, endPoint);
-            double startX = (Direction.West == segDir) ? GraphBox.Right : ((Direction.East == segDir) ? GraphBox.Left : startPoint.X);
-            double endX = (Direction.West == segDir) ? GraphBox.Left : ((Direction.East == segDir) ? GraphBox.Right : endPoint.X);
-            double startY = (Direction.South == segDir) ? GraphBox.Top * 2: ((Direction.North == segDir) ? GraphBox.Bottom : startPoint.Y);
-            double endY = (Direction.South == segDir) ? GraphBox.Bottom : ((Direction.North == segDir) ? GraphBox.Top : startPoint.Y);
-            restrictedIntersectionTestSegment = new LineSegment(new Point(startX, startY), new Point(endX, endY));
+            double startX = (Direction.West == segDir) ? this.GraphBox.Right : ((Direction.East == segDir) ? this.GraphBox.Left : startPoint.X);
+            double endX = (Direction.West == segDir) ? this.GraphBox.Left : ((Direction.East == segDir) ? this.GraphBox.Right : endPoint.X);
+            double startY = (Direction.South == segDir) ? this.GraphBox.Top * 2: ((Direction.North == segDir) ? this.GraphBox.Bottom : startPoint.Y);
+            double endY = (Direction.South == segDir) ? this.GraphBox.Bottom : ((Direction.North == segDir) ? this.GraphBox.Top : startPoint.Y);
+            this.restrictedIntersectionTestSegment = new LineSegment(new Point(startX, startY), new Point(endX, endY));
         }
 
         // Due to rounding at the endpoints of the segment on intersection calculations, we need to preserve the original full-length segment.
-        LineSegment restrictedIntersectionTestSegment;
-        LineSegment currentRestrictedRay;
-        bool wantGroupCrossings;
-        bool stopAtGroups;
-        double restrictedRayLengthSquared;
+        private LineSegment restrictedIntersectionTestSegment;
+        private LineSegment currentRestrictedRay;
+        private bool wantGroupCrossings;
+        private bool stopAtGroups;
+        private double restrictedRayLengthSquared;
 
-        private void RecurseRestrictRayWithObstacles(RectangleNode<Obstacle, Point> rectNode) {
+        private void RecurseRestrictRayWithObstacles(RectangleNode<Obstacle, Point>? rectNode) {
+            if (rectNode is null) { return; }
             // A lineSeg that moves along the boundary of an obstacle is not blocked by it.
-            if (!StaticGraphUtility.RectangleInteriorsIntersect(currentRestrictedRay.BoundingBox, (Rectangle)rectNode.Rectangle)) {
+            if (!StaticGraphUtility.RectangleInteriorsIntersect(this.currentRestrictedRay.BoundingBox, (Rectangle)rectNode.Rectangle)) {
                 return;
             }
 
-            Obstacle obstacle = rectNode.UserData;
+            Obstacle? obstacle = rectNode.UserData;
             if (null != obstacle) {
                 // Leaf node. Get the interior intersections.  Use the full-length original segment for the intersection calculation.
-                IList<IntersectionInfo> intersections = Curve.GetAllIntersections(restrictedIntersectionTestSegment, obstacle.VisibilityPolyline, true /*liftIntersections*/);
+                IList<IntersectionInfo> intersections = Curve.GetAllIntersections(this.restrictedIntersectionTestSegment, obstacle.VisibilityPolyline, true /*liftIntersections*/);
 
-                if (!obstacle.IsGroup || stopAtGroups) {
-                    LookForCloserNonGroupIntersectionToRestrictRay(intersections);
+                if (!obstacle.IsGroup || this.stopAtGroups) {
+                    this.LookForCloserNonGroupIntersectionToRestrictRay(intersections);
                     return;
                 }
 
-                if (wantGroupCrossings) {
-                    AddGroupIntersectionsToRestrictedRay(obstacle, intersections);
+                if (this.wantGroupCrossings) {
+                    this.AddGroupIntersectionsToRestrictedRay(obstacle, intersections);
                 }
 
                 Debug.Assert(rectNode.IsLeaf, "RectNode with UserData is not a Leaf");
@@ -689,18 +690,18 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             }
 
             // Not a leaf; recurse into children.
-            RecurseRestrictRayWithObstacles(rectNode.Left);
-            RecurseRestrictRayWithObstacles(rectNode.Right);
+            this.RecurseRestrictRayWithObstacles(rectNode.Left);
+            this.RecurseRestrictRayWithObstacles(rectNode.Right);
         }
 
         private void LookForCloserNonGroupIntersectionToRestrictRay(IList<IntersectionInfo> intersections) {
             int numberOfGoodIntersections = 0;
-            IntersectionInfo closestIntersectionInfo = null;
+            IntersectionInfo? closestIntersectionInfo = null;
             var localLeastDistSquared = this.restrictedRayLengthSquared;
-            var testDirection = PointComparer.GetDirections(restrictedIntersectionTestSegment.Start, restrictedIntersectionTestSegment.End);
+            var testDirection = PointComparer.GetDirections(this.restrictedIntersectionTestSegment.Start, this.restrictedIntersectionTestSegment.End);
             foreach (var intersectionInfo in intersections) {
                 var intersect = ApproximateComparer.Round(intersectionInfo.IntersectionPoint);
-                var dirToIntersect = PointComparer.GetDirections(currentRestrictedRay.Start, intersect);
+                var dirToIntersect = PointComparer.GetDirections(this.currentRestrictedRay.Start, intersect);
 
                 if (dirToIntersect == CompassVector.OppositeDir(testDirection)) {
                     continue;
@@ -713,11 +714,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                     continue;
                 }
 
-                var distSquared = (intersect - currentRestrictedRay.Start).LengthSquared;
+                var distSquared = (intersect - this.currentRestrictedRay.Start).LengthSquared;
                 if (distSquared < localLeastDistSquared) {
                     // Rounding may falsely report two intersections as different when they are actually "Close",
                     // e.g. a horizontal vs. vertical intersection on a slanted edge.
-                    var rawDistSquared = (intersectionInfo.IntersectionPoint - currentRestrictedRay.Start).LengthSquared;
+                    var rawDistSquared = (intersectionInfo.IntersectionPoint - this.currentRestrictedRay.Start).LengthSquared;
                     if (rawDistSquared < ApproximateComparer.SquareOfDistanceEpsilon) {
                         continue;
                     } 
@@ -737,8 +738,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                     }
                 }
                 this.restrictedRayLengthSquared = localLeastDistSquared;
-                currentRestrictedRay.End = SpliceUtility.MungeClosestIntersectionInfo(currentRestrictedRay.Start, closestIntersectionInfo
-                                                   , !StaticGraphUtility.IsVertical(currentRestrictedRay.Start, currentRestrictedRay.End));
+                this.currentRestrictedRay.End = SpliceUtility.MungeClosestIntersectionInfo(this.currentRestrictedRay.Start, closestIntersectionInfo
+                                                   , !StaticGraphUtility.IsVertical(this.currentRestrictedRay.Start, this.currentRestrictedRay.End));
             }
         }
 
@@ -749,12 +750,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
                 // Skip intersections that are past the end of the restricted segment (though there may still be some
                 // there if we shorten it later, but we'll skip them later).
-                var distSquared = (intersect - currentRestrictedRay.Start).LengthSquared;
-                if (distSquared > restrictedRayLengthSquared) {
+                var distSquared = (intersect - this.currentRestrictedRay.Start).LengthSquared;
+                if (distSquared > this.restrictedRayLengthSquared) {
                     continue;
                 }
 
-                var dirTowardIntersect = PointComparer.GetPureDirection(currentRestrictedRay.Start, currentRestrictedRay.End);
+                var dirTowardIntersect = PointComparer.GetPureDirection(this.currentRestrictedRay.Start, this.currentRestrictedRay.End);
                 var polyline = (Polyline)intersectionInfo.Segment1; // this is the second arg to GetAllIntersections
                 var dirsOfSide = CompassVector.VectorDirection(polyline.Derivative(intersectionInfo.Par1));
 
@@ -764,7 +765,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 if (0 != (dirsOfSide & CompassVector.RotateRight(dirTowardIntersect))) {
                     dirToInsideOfGroup = CompassVector.OppositeDir(dirToInsideOfGroup);
                 }
-                CurrentGroupBoundaryCrossingMap.AddIntersection(intersect, obstacle, dirToInsideOfGroup);
+                this.CurrentGroupBoundaryCrossingMap.AddIntersection(intersect, obstacle, dirToInsideOfGroup);
             }
         }
     }

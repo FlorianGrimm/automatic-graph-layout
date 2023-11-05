@@ -50,15 +50,15 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal ScanSegmentTree VerticalScanSegments;
 
         protected ScanSegmentTree ParallelScanSegments        // Parallel to scanline
-            { get { return ScanDirection.IsHorizontal ? HorizontalScanSegments : VerticalScanSegments; } }
+            { get { return this.ScanDirection.IsHorizontal ? this.HorizontalScanSegments : this.VerticalScanSegments; } }
 
         protected ScanSegmentTree PerpendicularScanSegments   // Perpendicular to scanline
-            { get { return ScanDirection.IsHorizontal ? VerticalScanSegments : HorizontalScanSegments; } }
+            { get { return this.ScanDirection.IsHorizontal ? this.VerticalScanSegments : this.HorizontalScanSegments; } }
 
         // For lookahead points, we record the point of the intersection on the reflecting side, then
         // whenever we load a side, we check for active lookahead lines within this range.  Since we
         // are just intersecting rays, we only care about the X (H scan) or Y (V scan) coordinate.
-        LookaheadScan lookaheadScan;
+        private LookaheadScan lookaheadScan;
         private readonly bool wantReflections;
 
         // This is the tree of rectangle nodes of the input obstacles' padded encompassing polylines.
@@ -94,16 +94,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // Generate the Polyline tree from the padded shapes.  ObstacleTree allows us to do
             // obstacle hit-testing for dynamic obstacles, as well as providing input for the Nudger.
             // Each PolylinePoint contains a reference to the Polyline of which it is a member.
-            if (null == ObsTree.Root) {
+            if (null == this.ObsTree.Root) {
                 return;
             }
-            
+
             // Now enqueue initial events for the vertical sweep (horizontal scan); start with the lowest
             // vertices and then we'll load subsequent vertices (and intersections) as we encounter them.
             // We'll defer the generation of vertex events in the perpendicular direction until we're done
             // with this sweep, to save memory; but we may enqueue intersection events in the perpendicular
             // direction during this sweep.
-            InitializeEventQueue(ScanDirection.HorizontalInstance);
+            this.InitializeEventQueue(ScanDirection.HorizontalInstance);
 
             // Create the sentinels and add them to the scanline.  Do NOT add them to the event queue
             // because we're not going to close them.  We're also effectively adding only the inner side
@@ -117,42 +117,42 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             int scanlineSentinelOrdinal = Obstacle.FirstSentinelOrdinal;
 
             // Low sentinel...
-            var lowerCorner = new Point(ObsTree.GraphBox.Left - SentinelOffset, ObsTree.GraphBox.Bottom - SentinelOffset);
-            var upperCorner = new Point(ObsTree.GraphBox.Left - SentinelOffset, ObsTree.GraphBox.Top + SentinelOffset);
-            var sentinel = Obstacle.CreateSentinel(lowerCorner, upperCorner, ScanDirection, scanlineSentinelOrdinal++);
-            scanLine.Insert(sentinel.ActiveHighSide, ObsTree.GraphBox.LeftBottom);
+            var lowerCorner = new Point(this.ObsTree.GraphBox.Left - SentinelOffset, this.ObsTree.GraphBox.Bottom - SentinelOffset);
+            var upperCorner = new Point(this.ObsTree.GraphBox.Left - SentinelOffset, this.ObsTree.GraphBox.Top + SentinelOffset);
+            var sentinel = Obstacle.CreateSentinel(lowerCorner, upperCorner, this.ScanDirection, scanlineSentinelOrdinal++);
+            this.scanLine.Insert(sentinel.ActiveHighSide, this.ObsTree.GraphBox.LeftBottom);
 
             // High sentinel...
-            lowerCorner = new Point(ObsTree.GraphBox.Right + SentinelOffset, ObsTree.GraphBox.Bottom - SentinelOffset);
-            upperCorner = new Point(ObsTree.GraphBox.Right + SentinelOffset, ObsTree.GraphBox.Top + SentinelOffset);
-            sentinel = Obstacle.CreateSentinel(lowerCorner, upperCorner, ScanDirection, scanlineSentinelOrdinal++);
-            scanLine.Insert(sentinel.ActiveLowSide, ObsTree.GraphBox.LeftBottom);
+            lowerCorner = new Point(this.ObsTree.GraphBox.Right + SentinelOffset, this.ObsTree.GraphBox.Bottom - SentinelOffset);
+            upperCorner = new Point(this.ObsTree.GraphBox.Right + SentinelOffset, this.ObsTree.GraphBox.Top + SentinelOffset);
+            sentinel = Obstacle.CreateSentinel(lowerCorner, upperCorner, this.ScanDirection, scanlineSentinelOrdinal++);
+            this.scanLine.Insert(sentinel.ActiveLowSide, this.ObsTree.GraphBox.LeftBottom);
 
             // Process the Hscan events.`
-            DevTraceInfoVgGen(1, "Processing Horizontal Scan events");
-            ProcessEvents();
+            this.DevTraceInfoVgGen(1, "Processing Horizontal Scan events");
+            this.ProcessEvents();
 
             // Now do the horizontal sweep (vertical scan).  Note: Because we use Cartesian coordinates
             // rather than Page coordinates, the High and Low sides reverse the direction they traverse
             // when doing vertical scan; this information is passed as a ctor param.  This allows for
             // consistent comparisons.
-            InitializeEventQueue(ScanDirection.VerticalInstance);
+            this.InitializeEventQueue(ScanDirection.VerticalInstance);
 
             // Lower sentinel...
-            lowerCorner = new Point(ObsTree.GraphBox.Left - SentinelOffset, ObsTree.GraphBox.Bottom - SentinelOffset);
-            upperCorner = new Point(ObsTree.GraphBox.Right + SentinelOffset, ObsTree.GraphBox.Bottom - SentinelOffset);
-            sentinel = Obstacle.CreateSentinel(lowerCorner, upperCorner, ScanDirection, scanlineSentinelOrdinal++);
-            scanLine.Insert(sentinel.ActiveHighSide, ObsTree.GraphBox.LeftBottom);
+            lowerCorner = new Point(this.ObsTree.GraphBox.Left - SentinelOffset, this.ObsTree.GraphBox.Bottom - SentinelOffset);
+            upperCorner = new Point(this.ObsTree.GraphBox.Right + SentinelOffset, this.ObsTree.GraphBox.Bottom - SentinelOffset);
+            sentinel = Obstacle.CreateSentinel(lowerCorner, upperCorner, this.ScanDirection, scanlineSentinelOrdinal++);
+            this.scanLine.Insert(sentinel.ActiveHighSide, this.ObsTree.GraphBox.LeftBottom);
 
             // Upper sentinel
-            lowerCorner = new Point(ObsTree.GraphBox.Left - SentinelOffset, ObsTree.GraphBox.Top + SentinelOffset);
-            upperCorner = new Point(ObsTree.GraphBox.Right + SentinelOffset, ObsTree.GraphBox.Top + SentinelOffset);
-            sentinel = Obstacle.CreateSentinel(lowerCorner, upperCorner, ScanDirection, scanlineSentinelOrdinal);
-            scanLine.Insert(sentinel.ActiveLowSide, ObsTree.GraphBox.LeftBottom);
+            lowerCorner = new Point(this.ObsTree.GraphBox.Left - SentinelOffset, this.ObsTree.GraphBox.Top + SentinelOffset);
+            upperCorner = new Point(this.ObsTree.GraphBox.Right + SentinelOffset, this.ObsTree.GraphBox.Top + SentinelOffset);
+            sentinel = Obstacle.CreateSentinel(lowerCorner, upperCorner, this.ScanDirection, scanlineSentinelOrdinal);
+            this.scanLine.Insert(sentinel.ActiveLowSide, this.ObsTree.GraphBox.LeftBottom);
 
             // Process the Vscan events.
-            DevTraceInfoVgGen(1, "Processing Vertical Scan events");
-            ProcessEvents();
+            this.DevTraceInfoVgGen(1, "Processing Vertical Scan events");
+            this.ProcessEvents();
         }
 
         [Conditional("TEST_MSAGL")]
@@ -204,17 +204,17 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             return intersect;
         }
 
-        PolylinePoint GetOpenVertex(Polyline poly) {
+        private PolylinePoint GetOpenVertex(Polyline poly) {
             PolylinePoint lowest = poly.StartPoint;
-            PolylinePoint next = TraversePolylineForEvents(lowest);
+            PolylinePoint next = this.TraversePolylineForEvents(lowest);
 
             // We want the bottom vertex to be the lowest in scanline-parallel coordinate if there is a
             // flat bottom side, and we've guaranteed that the lines are oriented clockwise.  This means
             // that we want a <= comparison of the current node vs. the candidate, to store the last
             // lowest vertex of the clockwise rotation.  Stop when we've turned upward from descending/flat.
-            int iPrevCmp = PointCompare(next.Point, lowest.Point);
-            for (; ; next = TraversePolylineForEvents(next)) {
-                int iCurCmp = PointCompare(next.Point, lowest.Point);
+            int iPrevCmp = this.PointCompare(next.Point, lowest.Point);
+            for (; ; next = this.TraversePolylineForEvents(next)) {
+                int iCurCmp = this.PointCompare(next.Point, lowest.Point);
                 if (iCurCmp <= 0) {
                     lowest = next;
                 } else if ((iCurCmp > 0) && (iPrevCmp <= 0)) {
@@ -225,62 +225,62 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             return lowest;
         }
 
-        PolylinePoint TraversePolylineForEvents(PolylinePoint polyPoint) {
+        private PolylinePoint TraversePolylineForEvents(PolylinePoint polyPoint) {
             // When loading scanline events, we'll go clockwise for horizontal scan, where the
             // scanline-parallel coordinate increases to the right, or counterclockwise for vertical
             // scan, where the scanline-parallel coordinate increases to the left.
-            if (ScanDirection.IsHorizontal) {
+            if (this.ScanDirection.IsHorizontal) {
                 return polyPoint.NextOnPolyline;
             }
             return polyPoint.PrevOnPolyline;
         }
 
         internal virtual void InitializeEventQueue(ScanDirection scanDir) {
-            ScanDirection = scanDir;
-            eventQueue.Reset(ScanDirection);
-            EnqueueBottomVertexEvents();
-            scanLine = new RectilinearScanLine(ScanDirection, ObsTree.GraphBox.LeftBottom);
-            lookaheadScan = new LookaheadScan(ScanDirection);
+            this.ScanDirection = scanDir;
+            this.eventQueue.Reset(this.ScanDirection);
+            this.EnqueueBottomVertexEvents();
+            this.scanLine = new RectilinearScanLine(this.ScanDirection, this.ObsTree.GraphBox.LeftBottom);
+            this.lookaheadScan = new LookaheadScan(this.ScanDirection);
         }
 
-        void EnqueueBottomVertexEvents() {
-            foreach (var obstacle in ObsTree.GetAllPrimaryObstacles()) {
-                PolylinePoint bottomVertex = GetOpenVertex(obstacle.VisibilityPolyline);
-                eventQueue.Enqueue(new OpenVertexEvent(obstacle, bottomVertex));
+        private void EnqueueBottomVertexEvents() {
+            foreach (var obstacle in this.ObsTree.GetAllPrimaryObstacles()) {
+                PolylinePoint bottomVertex = this.GetOpenVertex(obstacle.VisibilityPolyline);
+                this.eventQueue.Enqueue(new OpenVertexEvent(obstacle, bottomVertex));
             }
         } // end EnqueueBottomVertexEvents
 
         internal bool IsFlat(BasicObstacleSide side) {
-            return ScanDirection.IsFlat(side);
+            return this.ScanDirection.IsFlat(side);
         }
         internal bool IsPerpendicular(BasicObstacleSide side) {
             // If it's perpendicular we won't generate reflections.
-            return ScanDirection.IsPerpendicular(side);
+            return this.ScanDirection.IsPerpendicular(side);
         }
 
         // Params are event site (vertex point) and the obstacle side adjacent to that site.
         protected Point ScanLineIntersectSide(Point site, BasicObstacleSide side) {
-            return ScanLineIntersectSide(site, side, ScanDirection);
+            return ScanLineIntersectSide(site, side, this.ScanDirection);
         }
 
         protected bool SideReflectsUpward(BasicObstacleSide side) {
             // Returns false if vertical.
             if (side is LowObstacleSide) {
                 // Low side slopes upward if slope is positive (to the high direction).
-                return ScanDirection.Coord(side.End) > ScanDirection.Coord(side.Start);
+                return this.ScanDirection.Coord(side.End) > this.ScanDirection.Coord(side.Start);
             }
             // High side slopes upward if slope is negative (to the low direction).
-            return ScanDirection.Coord(side.End) < ScanDirection.Coord(side.Start);
+            return this.ScanDirection.Coord(side.End) < this.ScanDirection.Coord(side.Start);
         }
 
-        bool SideReflectsDownward(BasicObstacleSide side) {
+        private bool SideReflectsDownward(BasicObstacleSide side) {
             // Returns false if vertical.
             if (side is LowObstacleSide) {
                 // Low side slopes downward if slope is negative (to the low direction).
-                return ScanDirection.Coord(side.End) < ScanDirection.Coord(side.Start);
+                return this.ScanDirection.Coord(side.End) < this.ScanDirection.Coord(side.Start);
             }
             // High side slopes downward if slope is positive (to the high direction).
-            return ScanDirection.Coord(side.End) > ScanDirection.Coord(side.Start);
+            return this.ScanDirection.Coord(side.End) > this.ScanDirection.Coord(side.Start);
         }
 
         // Calculate reflections from the lines, depending on line side (Low vs. High) and slope.
@@ -292,7 +292,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             }
 
             // If the line is perpendicular, we won't generate reflections (they'd be redundant).
-            if (!IsPerpendicular(reflectingSide)) {
+            if (!this.IsPerpendicular(reflectingSide)) {
                 // If this is hitting an extreme vertex in the forward direction, we will (or already did) create a normal
                 // ScanSegment in the perpendicular direction.
                 if (!wantExtreme && !StaticGraphUtility.PointIsInRectangleInterior(reflectionSite, reflectingSide.Obstacle.VisibilityBoundingBox)) {
@@ -300,7 +300,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 }
 
                 // We can only do upward reflections, which fortunately is all we need.
-                if (SideReflectsUpward(reflectingSide)) {
+                if (this.SideReflectsUpward(reflectingSide)) {
                     // We defer actually creating the perpendicular line until we've processed
                     // the reflection event we're about to enqueue, so we may legitimately encounter
                     // two (or more) reflections at the same point along the parallel-to-scanline
@@ -323,12 +323,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
                     // Don't worry about enqueueing a reflection at the extreme scanline-parallel
                     // vertex because we'll MergeSegments to handle that.
-                    if (null == lookaheadScan.Find(reflectionSite)) {
-                        lookaheadScan.Add(new BasicReflectionEvent(initialObstacle, reflectingSide.Obstacle, reflectionSite));
-                        DevTraceInfoVgGen(1, "Storing reflection lookahead site {0}", reflectionSite);
+                    if (null == this.lookaheadScan.Find(reflectionSite)) {
+                        this.lookaheadScan.Add(new BasicReflectionEvent(initialObstacle, reflectingSide.Obstacle, reflectionSite));
+                        this.DevTraceInfoVgGen(1, "Storing reflection lookahead site {0}", reflectionSite);
                     }
                     else {
-                        DevTraceInfoVgGen(1, "Reflection lookahead site {0} already exists", reflectionSite);
+                        this.DevTraceInfoVgGen(1, "Reflection lookahead site {0} already exists", reflectionSite);
                     }
                 }
             }
@@ -336,7 +336,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         // Load any lookahead scan ray intersections with a side we've just added.
         protected void LoadReflectionEvents(BasicObstacleSide sideToQueue) {
-            LoadReflectionEvents(sideToQueue, sideToQueue);
+            this.LoadReflectionEvents(sideToQueue, sideToQueue);
         }
 
         // sideWithRange is either the same as sideToQueue, if that side is being loaded by an
@@ -345,7 +345,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // If this line reflects upward then it cannot receive rays from below (they would pass
             // through its obstacle), and of course a perpendicular lookahead line will never
             // intersect a perpendicular side.
-            if ((null == sideToQueue) || SideReflectsUpward(sideToQueue) || IsPerpendicular(sideToQueue)) {
+            if ((null == sideToQueue) || this.SideReflectsUpward(sideToQueue) || this.IsPerpendicular(sideToQueue)) {
                 return;
             }
 
@@ -353,7 +353,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // to do.  This reduces (but doesn't prevent) duplicate events being loaded.
             var bbox1 = new Rectangle(sideToQueue.Start, sideToQueue.End);
             var bbox2 = new Rectangle(sideWithRange.Start, sideWithRange.End);
-            if ((ScanDirection.IsHorizontal) ? !bbox1.IntersectsOnX(bbox2) : !bbox1.IntersectsOnY(bbox2)) {
+            if ((this.ScanDirection.IsHorizontal) ? !bbox1.IntersectsOnX(bbox2) : !bbox1.IntersectsOnY(bbox2)) {
                 return;
             }
 
@@ -366,17 +366,17 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // This is inclusive of the endpoints of sideWithRange, to be sure that we remove the item
             // from LookaheadScan; if it's on an extreme vertex in the perpendicular sweep then it will
             // stop the chain; see TestRectilinear.Reflection_Staircase_Stops_At_BoundingBox_Side*.
-            RBNode<BasicReflectionEvent> lookaheadSiteNode = lookaheadScan.FindFirstInRange(low, high);
+            RBNode<BasicReflectionEvent> lookaheadSiteNode = this.lookaheadScan.FindFirstInRange(low, high);
             while (null != lookaheadSiteNode) {
                 // Calculate the lookahead intersection with this side in the perpendicular direction to
                 // the scanline.  Note: due to rounding error, this may be different from the calculation
                 // in the parallel direction when the scanline gets up to the ScanDirection.PerpCoord(intersect);
                 // this will be adjusted in ScanSegmentTree.MergeSegments.
                 Point intersect = ScanLineIntersectSide(lookaheadSiteNode.Item.Site, sideToQueue
-                            , ScanDirection.PerpendicularInstance);
-                DevTraceInfoVgGen(1, "Loading reflection from lookahead site {0} to intersect at {1}"
+                            , this.ScanDirection.PerpendicularInstance);
+                this.DevTraceInfoVgGen(1, "Loading reflection from lookahead site {0} to intersect at {1}"
                             , lookaheadSiteNode.Item.Site, intersect);
-                DevTraceInfoVgGen(2, "     side {0})", sideToQueue);    // same indent as AddSegment
+                this.DevTraceInfoVgGen(2, "     side {0})", sideToQueue);    // same indent as AddSegment
 
                 // In some cases where the ActiveLowSide and ActiveHighSide of an obstacle lean in the same
                 // direction such that LowSide is above HighSide, e.g. on the horizontal pass when they both
@@ -391,25 +391,25 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 // so we're parallel to the extreme-vertex line and it's fine to just absorb the photon.
                 // This also handles the case of reflections into intersecting sides - at some point
                 // they converge such that the intersection is not ahead of the lookahead site.
-                if (ScanDirection.ComparePerpCoord(intersect, lookaheadSiteNode.Item.Site) > 0) {
+                if (this.ScanDirection.ComparePerpCoord(intersect, lookaheadSiteNode.Item.Site) > 0) {
                     // Add an event to continue the chain, "shifting" the site's reflecting
                     // obstacle back to the initialObstacle position.  We must load this here 
                     // and process it in ConfirmLookaheadEvent so it will be removed from
                     // the lookahead list; we can't remove it here if it doesn't satisfy the
                     // staircase requirements, because this may be called from loading a "higher"
                     // side (during the sweep) which could steal events from the lower side.
-                    AddReflectionEvent(lookaheadSiteNode.Item, sideToQueue, intersect);
+                    this.AddReflectionEvent(lookaheadSiteNode.Item, sideToQueue, intersect);
                 }
                 else {
                     if (lookaheadSiteNode.Item.ReflectingObstacle != sideToQueue.Obstacle) {
-                        DevTraceInfoVgGen(1, "  (discarding reflection at intersect {0} as it is not ahead of the previous site)", intersect);
+                        this.DevTraceInfoVgGen(1, "  (discarding reflection at intersect {0} as it is not ahead of the previous site)", intersect);
 
                         // We need to remove the site.  We're in the middle of Node enumeration so just
                         // mark the site and on function exit we'll remove any so marked.
-                        lookaheadScan.MarkStaleSite(lookaheadSiteNode.Item);
+                        this.lookaheadScan.MarkStaleSite(lookaheadSiteNode.Item);
                     }
                     else {
-                        DevTraceInfoVgGen(1, "  (skipping reflection at intersect {0} as it is the same obstacle)", intersect);
+                        this.DevTraceInfoVgGen(1, "  (skipping reflection at intersect {0} as it is the same obstacle)", intersect);
                     }
                 }
 
@@ -418,14 +418,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 // obstacle may be opened and intercepted the reflection. ConfirmLookaheadEvents
                 // will actually do the removal when the lowest side containing the lookahead
                 // site is loaded.  See RectilinearTests.ReflectionsRemoveInterceptedSite.
-                lookaheadSiteNode = lookaheadScan.FindNextInRange(lookaheadSiteNode, high);
+                lookaheadSiteNode = this.lookaheadScan.FindNextInRange(lookaheadSiteNode, high);
             } // endwhile previousSiteNode
 
-            lookaheadScan.RemoveStaleSites();
+            this.lookaheadScan.RemoveStaleSites();
         }
 
         // Determine whether the event is valid and do some common processing.
-        bool AddPerpendicularReflectionSegment(BasicReflectionEvent currentEvent, BasicObstacleSide eventSide, BasicObstacleSide nborSide) {
+        private bool AddPerpendicularReflectionSegment(BasicReflectionEvent currentEvent, BasicObstacleSide eventSide, BasicObstacleSide nborSide) {
             // If eventSide is null it means we had the wrong side type as a scanline neighbor.
             // If another obstacle opened up, then that obstacle (or another intervening one) should have
             // drained this reflection event.
@@ -439,7 +439,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // otherwise the currentEvent could be a stale event with the lower scanline-parallel
             // coordinate, and would remove the site from the lookahead list before the "live" event
             // looks for it.  See RectilinearTests.ReflectionsRemoveInterceptedSite.
-            if (lookaheadScan.RemoveExact(currentEvent.PreviousSite)) {
+            if (this.lookaheadScan.RemoveExact(currentEvent.PreviousSite)) {
                 Debug.Assert(currentEvent.InitialObstacle == currentEvent.PreviousSite.ReflectingObstacle
                             , "Inconsistency: currentEvent.InitialObstacle != currentEvent.PreviousSite.ReflectingObstacle");
 // ReSharper disable HeuristicUnreachableCode
@@ -454,7 +454,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 // If the two sides intersect ahead of the scanline, we don't want the reflection.
 
                 // If the reflecting side is flat, no reflection is done - that's handled by OpenVertexEvent.
-                Debug.Assert(!IsFlat(eventSide), "Flat sides should not be encountered in reflections");
+                Debug.Assert(!this.IsFlat(eventSide), "Flat sides should not be encountered in reflections");
                 if (currentEvent.PreviousSite.IsStaircaseStep(currentEvent.ReflectingObstacle)) {
                     // We need to draw the perpendicular lines here because we may be on the second
                     // sweep so there won't be a subsequent sweep to draw them.  And if we're on the
@@ -467,9 +467,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                     {
                         return false;
                     }
-                    DevTraceInfoVgGen(1, "Perpendicular Reflection - Adding Segment [{0} -> {1}]", currentEvent.PreviousSite.Site, currentEvent.Site);
-                    DevTraceInfoVgGen(2, "  -> side {0}", eventSide);   // same indent as AddSegment; eventSide is highNbor
-                    if (!InsertPerpendicularReflectionSegment(currentEvent.PreviousSite.Site, currentEvent.Site)) {
+                    this.DevTraceInfoVgGen(1, "Perpendicular Reflection - Adding Segment [{0} -> {1}]", currentEvent.PreviousSite.Site, currentEvent.Site);
+                    this.DevTraceInfoVgGen(2, "  -> side {0}", eventSide);   // same indent as AddSegment; eventSide is highNbor
+                    if (!this.InsertPerpendicularReflectionSegment(currentEvent.PreviousSite.Site, currentEvent.Site)) {
                         return false;
                     }
 
@@ -478,14 +478,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                     if ((null != nborSide) && currentEvent.IsStaircaseStep(nborSide.Obstacle)) {
                         return this.ScanLineCrossesObstacle(currentEvent.Site, nborSide.Obstacle);
                     }
-                    DevTraceInfoVgGen(1, "Reflection Lookahead site {0} is not an outgoing staircase step; discontinuing", currentEvent.PreviousSite);
+                    this.DevTraceInfoVgGen(1, "Reflection Lookahead site {0} is not an outgoing staircase step; discontinuing", currentEvent.PreviousSite);
                 }
                 else {
-                    DevTraceInfoVgGen(1, "Reflection Lookahead site {0} is not an incoming staircase step; discontinuing", currentEvent.PreviousSite);
+                    this.DevTraceInfoVgGen(1, "Reflection Lookahead site {0} is not an incoming staircase step; discontinuing", currentEvent.PreviousSite);
                 }
             }
             else {
-                DevTraceInfoVgGen(1, "Reflection Lookahead site {0} is no longer in the lookahead table; skipping", currentEvent.PreviousSite);
+                this.DevTraceInfoVgGen(1, "Reflection Lookahead site {0} is no longer in the lookahead table; skipping", currentEvent.PreviousSite);
             }
             return false;
         }
@@ -497,79 +497,79 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // If this is reflecting to a low neighbor, then that intersect is 'start' in the low-to-high
             // sequence, and the event site is the end; otherwise we start at the event site and end at
             // the high neighbor.
-            Point intersect = ScanLineIntersectSide(action.Site, lowNborSide ?? highNborSide);
+            Point intersect = this.ScanLineIntersectSide(action.Site, lowNborSide ?? highNborSide);
             Point start = (null != lowNborSide) ? intersect : action.Site;
             Point end = (null != lowNborSide) ? action.Site : intersect;
             
             // Now get the opposite neighbors so AddSegment can continue the reflection chain.
             if (null == lowNborSide) {
-                lowNborSide = scanLine.NextLow(highNborSide).Item;
+                lowNborSide = this.scanLine.NextLow(highNborSide).Item;
             }
             else {
-                highNborSide = scanLine.NextHigh(lowNborSide).Item;
+                highNborSide = this.scanLine.NextHigh(lowNborSide).Item;
             }
-            return InsertParallelReflectionSegment(start, end, eventObstacle, lowNborSide, highNborSide, action);
+            return this.InsertParallelReflectionSegment(start, end, eventObstacle, lowNborSide, highNborSide, action);
         }
 
         protected abstract bool InsertParallelReflectionSegment(Point start, Point end, Obstacle eventObstacle,
                 BasicObstacleSide lowNborSide, BasicObstacleSide highNborSide, BasicReflectionEvent action);
 
-        void AddReflectionEvent(BasicReflectionEvent previousSite, BasicObstacleSide side, Point site) {
-            Debug.Assert(null != scanLine.Find(side), "AddReflectionEvent could not find 'side' in the scanline");
+        private void AddReflectionEvent(BasicReflectionEvent previousSite, BasicObstacleSide side, Point site) {
+            Debug.Assert(null != this.scanLine.Find(side), "AddReflectionEvent could not find 'side' in the scanline");
 
             // Add an event that will be drained when a side spanning the scanline-parallel is loaded
             // as the sweep moves "up".
             var lowSide = side as LowObstacleSide;
             if (lowSide != null) {
-                eventQueue.Enqueue(new LowReflectionEvent(previousSite, lowSide, site));
+                this.eventQueue.Enqueue(new LowReflectionEvent(previousSite, lowSide, site));
             } else {
-                eventQueue.Enqueue(new HighReflectionEvent(previousSite, (HighObstacleSide)side, site));
+                this.eventQueue.Enqueue(new HighReflectionEvent(previousSite, (HighObstacleSide)side, site));
             }
         }
 
-        RBNode<BasicObstacleSide> AddSideToScanLine(BasicObstacleSide side, Point scanPos) {
-            RBNode<BasicObstacleSide> node = scanLine.Insert(side, scanPos);
+        private RBNode<BasicObstacleSide> AddSideToScanLine(BasicObstacleSide side, Point scanPos) {
+            RBNode<BasicObstacleSide> node = this.scanLine.Insert(side, scanPos);
 
             // Now get any pending LookaheadScan intersections along this side.
-            LoadReflectionEvents(side);
+            this.LoadReflectionEvents(side);
             return node;
         }
 
-        void RemoveSideFromScanLine(RBNode<BasicObstacleSide> sideNode, Point scanPos) {
-            scanLine.Remove(sideNode.Item, scanPos);
+        private void RemoveSideFromScanLine(RBNode<BasicObstacleSide> sideNode, Point scanPos) {
+            this.scanLine.Remove(sideNode.Item, scanPos);
         }
 
-        int PointCompare(Point lhs, Point rhs) {
-            return ScanDirection.Compare(lhs, rhs);
+        private int PointCompare(Point lhs, Point rhs) {
+            return this.ScanDirection.Compare(lhs, rhs);
         }
 
         internal virtual void Clear() {
-            ObsTree.Clear();
-            eventQueue = new EventQueue();
-            HorizontalScanSegments = new ScanSegmentTree(ScanDirection.HorizontalInstance);
-            VerticalScanSegments = new ScanSegmentTree(ScanDirection.VerticalInstance);
-            VisibilityGraph = null;
+            this.ObsTree.Clear();
+            this.eventQueue = new EventQueue();
+            this.HorizontalScanSegments = new ScanSegmentTree(ScanDirection.HorizontalInstance);
+            this.VerticalScanSegments = new ScanSegmentTree(ScanDirection.VerticalInstance);
+            this.VisibilityGraph = null;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily")]
         private void ProcessEvents() {
             // Note: Sentinel vertices are not in EventQueue so eventcount will go to 0.
-            while (eventQueue.Count > 0) {
-                SweepEvent evt = eventQueue.Dequeue();
+            while (this.eventQueue.Count > 0) {
+                SweepEvent evt = this.eventQueue.Dequeue();
                 if (evt is OpenVertexEvent) {
-                    ProcessEvent(evt as OpenVertexEvent);
+                    this.ProcessEvent(evt as OpenVertexEvent);
                 } else if (evt is LowBendVertexEvent) {
-                    ProcessEvent(evt as LowBendVertexEvent);
+                    this.ProcessEvent(evt as LowBendVertexEvent);
                 } else if (evt is HighBendVertexEvent) {
-                    ProcessEvent(evt as HighBendVertexEvent);
+                    this.ProcessEvent(evt as HighBendVertexEvent);
                 } else if (evt is CloseVertexEvent) {
-                    ProcessEvent(evt as CloseVertexEvent);
+                    this.ProcessEvent(evt as CloseVertexEvent);
                 } else if (evt is LowReflectionEvent) {
-                    ProcessEvent(evt as LowReflectionEvent);
+                    this.ProcessEvent(evt as LowReflectionEvent);
                 } else if (evt is HighReflectionEvent) {
-                    ProcessEvent(evt as HighReflectionEvent);
+                    this.ProcessEvent(evt as HighReflectionEvent);
                 } else {
-                    ProcessCustomEvent(evt);
+                    this.ProcessCustomEvent(evt);
                 }
 
 #if DEVTRACE
@@ -577,12 +577,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                     scanLine.DevTrace_VerifyConsistency("after {0}", evt);
                 }
 #endif // DEVTRACE
-                LowNeighborSides.Clear();
-                HighNeighborSides.Clear();
+                this.LowNeighborSides.Clear();
+                this.HighNeighborSides.Clear();
             } // endwhile there are events
 
             // Ensure we have no leftovers in the scanline - we should have the two sentinels and nothing else.
-            Debug.Assert(2 == scanLine.Count, "There are leftovers in the scanline");
+            Debug.Assert(2 == this.scanLine.Count, "There are leftovers in the scanline");
         }
 
         protected virtual void ProcessCustomEvent(SweepEvent evt)
@@ -594,11 +594,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         protected bool ScanLineCrossesObstacle(Point eventSite, Obstacle obstacle) {
             // An inner or outer neighbor's side is only an overlap start/stop candidate if its obstacle 
             // brackets the open/close event's Perpendicular Scan coord.
-            return (ScanDirection.ComparePerpCoord(eventSite, obstacle.VisibilityBoundingBox.LeftBottom) > 0)
-                && (ScanDirection.ComparePerpCoord(eventSite, obstacle.VisibilityBoundingBox.RightTop) < 0);
+            return (this.ScanDirection.ComparePerpCoord(eventSite, obstacle.VisibilityBoundingBox.LeftBottom) > 0)
+                && (this.ScanDirection.ComparePerpCoord(eventSite, obstacle.VisibilityBoundingBox.RightTop) < 0);
         }
 
-        void FindInitialNeighborSides(RBNode<BasicObstacleSide> sideNode, out RBNode<BasicObstacleSide> lowNborSideNode,
+        private void FindInitialNeighborSides(RBNode<BasicObstacleSide> sideNode, out RBNode<BasicObstacleSide> lowNborSideNode,
                                       out RBNode<BasicObstacleSide> highNborSideNode)
         {
             lowNborSideNode = this.scanLine.NextLow(sideNode);
@@ -610,15 +610,15 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         // continue the chain of open/close+addSegment, and we don't want to follow the full length of the
         // segment each time if there are a lot of collinear obstacle open/close events.
         protected void FindNeighbors(BasicVertexEvent vertexEvent, RBNode<BasicObstacleSide> lowSideNode, RBNode<BasicObstacleSide> highSideNode) {
-            LowNeighborSides.Clear();
-            HighNeighborSides.Clear();
+            this.LowNeighborSides.Clear();
+            this.HighNeighborSides.Clear();
 
             // Find the first HighObstacleSide in the low (scanline-decreasing) direction (this may be the low
             // sentinel) and the lowest LowObstacleSide toward that that we cross *through*, if any.  Then do
             // the same thing in the high direction.  If we are not overlapped, then we'll jump out immediately
             // from SkipToNeighbor, so there won't be a lot of redundant effort in that case.
-            FindNeighbors(vertexEvent, lowSideNode, LowNeighborSides);
-            FindNeighbors(vertexEvent, highSideNode, HighNeighborSides);
+            this.FindNeighbors(vertexEvent, lowSideNode, this.LowNeighborSides);
+            this.FindNeighbors(vertexEvent, highSideNode, this.HighNeighborSides);
         }
 
         protected void FindNeighbors(BasicVertexEvent vertexEvent, RBNode<BasicObstacleSide> sideNode, NeighborSides neighborSides) {
@@ -631,20 +631,20 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             this.SkipToNeighbor(this.ScanDirection.Direction, sideNode.Item, sideReferencePoint, initialHighNbor, neighborSides);
         }
 
-        void SkipToNeighbor(Direction nborSearchDir, BasicObstacleSide side, Point sideReferencePoint,
+        private void SkipToNeighbor(Direction nborSearchDir, BasicObstacleSide side, Point sideReferencePoint,
                             RBNode<BasicObstacleSide> nborNode, NeighborSides neighborSides) {
             // Find the first neighbor side (LowObstacleSide if going high, HighObstacleSide if going low) and
             // the side of opposite type (which would potentially end overlap), that that we cross *through*, if any.
             RBNode<BasicObstacleSide> overlapSideNode = null;
             BasicObstacleSide interveningGroupSide = null;
-            for (; ; nborNode = scanLine.Next(nborSearchDir, nborNode)) {
+            for (; ; nborNode = this.scanLine.Next(nborSearchDir, nborNode)) {
                 // Ignore the opposite side of the current obstacle.
                 if (nborNode.Item.Obstacle == side.Obstacle) {
                     continue;
                 }
 
                 if (nborNode.Item.Obstacle.IsGroup) {
-                    if (ProcessGroupSideEncounteredOnTraversalToNeighbor(nborNode, sideReferencePoint, nborSearchDir)) {
+                    if (this.ProcessGroupSideEncounteredOnTraversalToNeighbor(nborNode, sideReferencePoint, nborSearchDir)) {
                         // Keep the first one (outermost) encountered.
                         if (null == interveningGroupSide) {
                             interveningGroupSide = nborNode.Item;
@@ -655,7 +655,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
                 // Check for overlap-ending obstacle.
                 if ((nborNode.Item is HighObstacleSide) == StaticGraphUtility.IsAscending(nborSearchDir)) {
-                    if (ScanLineCrossesObstacle(sideReferencePoint, nborNode.Item.Obstacle)) {
+                    if (this.ScanLineCrossesObstacle(sideReferencePoint, nborNode.Item.Obstacle)) {
                         overlapSideNode = nborNode;
                         interveningGroupSide = null;
                     }
@@ -685,15 +685,15 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             return true;
         }
 
-        void FindNeighborsAndProcessVertexEvent(RBNode<BasicObstacleSide> lowSideNode
+        private void FindNeighborsAndProcessVertexEvent(RBNode<BasicObstacleSide> lowSideNode
                                                 , RBNode<BasicObstacleSide> highSideNode
                                                 , BasicVertexEvent vertexEvent) {
-            CurrentGroupBoundaryCrossingMap.Clear();
-            FindNeighbors(vertexEvent, lowSideNode, highSideNode);
+            this.CurrentGroupBoundaryCrossingMap.Clear();
+            this.FindNeighbors(vertexEvent, lowSideNode, highSideNode);
             this.ProcessVertexEvent(lowSideNode, highSideNode, vertexEvent);
 
             // Clear this again because we don't want Reflections to access stale values.
-            CurrentGroupBoundaryCrossingMap.Clear();
+            this.CurrentGroupBoundaryCrossingMap.Clear();
         }
 
         protected abstract void ProcessVertexEvent(RBNode<BasicObstacleSide> lowSideNode,
@@ -709,20 +709,20 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 #endif // DEVTRACE
         }
 
-        void ProcessEvent(OpenVertexEvent openVertEvent) {
+        private void ProcessEvent(OpenVertexEvent openVertEvent) {
             // First insert the two new lines into the scanline.  Note: Although the lines are clockwise oriented,
             // LowObstacleSide and HighObstacleSide take a parameter to know when to go counterclockwise.
             var obstacle = openVertEvent.Obstacle;
-            obstacle.CreateInitialSides(openVertEvent.Vertex, ScanDirection);
-            Debug.Assert(!IsFlat(obstacle.ActiveLowSide), "OpenVertexEvent ActiveLowSide should not be flat");
-            Debug.Assert(!IsFlat(obstacle.ActiveHighSide), "RemoveCollinearSides should have been called");
-            DevTraceIfFlatSide(true /*isObstacleOpen*/, obstacle.ActiveLowSide.Start, obstacle.ActiveHighSide.Start);
+            obstacle.CreateInitialSides(openVertEvent.Vertex, this.ScanDirection);
+            Debug.Assert(!this.IsFlat(obstacle.ActiveLowSide), "OpenVertexEvent ActiveLowSide should not be flat");
+            Debug.Assert(!this.IsFlat(obstacle.ActiveHighSide), "RemoveCollinearSides should have been called");
+            this.DevTraceIfFlatSide(true /*isObstacleOpen*/, obstacle.ActiveLowSide.Start, obstacle.ActiveHighSide.Start);
 
             // Adding can rotate the RBTree which modifies RBNodes so get the lowSideNode after adding highSideNode.
             // AddSideToScanLine loads any reflection events for the side.
-            AddSideToScanLine(obstacle.ActiveLowSide, openVertEvent.Site);
-            RBNode<BasicObstacleSide> highSideNode = AddSideToScanLine(obstacle.ActiveHighSide, openVertEvent.Site);
-            RBNode<BasicObstacleSide> lowSideNode = scanLine.Find(obstacle.ActiveLowSide);
+            this.AddSideToScanLine(obstacle.ActiveLowSide, openVertEvent.Site);
+            RBNode<BasicObstacleSide> highSideNode = this.AddSideToScanLine(obstacle.ActiveHighSide, openVertEvent.Site);
+            RBNode<BasicObstacleSide> lowSideNode = this.scanLine.Find(obstacle.ActiveLowSide);
 
             // Get the neighbors.  In the simple, non-overlapped case, we'll generate a segment between them which
             // includes the vertex point (and any flat border of the current obstacle).  These neighbors will
@@ -734,28 +734,28 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // the Active*Side of the overlapping obstacle may if there is a non-overlapped segment extension.
 
             // Check the neighbors in both directions.
-            var lowReflector = LowNeighborSides.GroupSideInterveningBeforeLowNeighbor ?? LowNeighborSides.LowNeighborSide;
-            if (SideReflectsUpward(lowReflector)) {
-                LoadReflectionEvents(obstacle.ActiveLowSide);
+            var lowReflector = this.LowNeighborSides.GroupSideInterveningBeforeLowNeighbor ?? this.LowNeighborSides.LowNeighborSide;
+            if (this.SideReflectsUpward(lowReflector)) {
+                this.LoadReflectionEvents(obstacle.ActiveLowSide);
             }
-            var highReflector = HighNeighborSides.GroupSideInterveningBeforeHighNeighbor ?? HighNeighborSides.HighNeighborSide;
-            if (SideReflectsUpward(highReflector)) {
-                LoadReflectionEvents(obstacle.ActiveHighSide);
+            var highReflector = this.HighNeighborSides.GroupSideInterveningBeforeHighNeighbor ?? this.HighNeighborSides.HighNeighborSide;
+            if (this.SideReflectsUpward(highReflector)) {
+                this.LoadReflectionEvents(obstacle.ActiveHighSide);
             }
 
             // If this is a flat side it must absorb any outstanding reflection sites.
             if (obstacle.ActiveHighSide.Start != obstacle.ActiveLowSide.Start) {
                 // Create a temp HighObstacleSide so the "next vertex" moves in the correct direction.
-                var tempSide = new HighObstacleSide(obstacle, openVertEvent.Vertex, ScanDirection);
-                lookaheadScan.RemoveSitesForFlatBottom(tempSide.Start, tempSide.End);
+                var tempSide = new HighObstacleSide(obstacle, openVertEvent.Vertex, this.ScanDirection);
+                this.lookaheadScan.RemoveSitesForFlatBottom(tempSide.Start, tempSide.End);
             }
 
             // Add events for the low and high sides.
-            EnqueueLowBendVertexEvent(obstacle.ActiveLowSide);
-            EnqueueHighBendOrCloseVertexEvent(obstacle.ActiveHighSide);
+            this.EnqueueLowBendVertexEvent(obstacle.ActiveLowSide);
+            this.EnqueueHighBendOrCloseVertexEvent(obstacle.ActiveHighSide);
         } // end ProcessEvent(OpenVertexEvent)
 
-        void ProcessEvent(LowBendVertexEvent lowVertEvent) {
+        private void ProcessEvent(LowBendVertexEvent lowVertEvent) {
             // Note:  we only draw lines only from "interesting" vertices, which would be those
             // that open or close an obstacle, as well as staircase Reflections (see doc). This means
             // Low/HighVertexEvents routines will just track the change in ActiveLowSide/ActiveHighSide.
@@ -763,7 +763,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // This is a vertex on the low side of the obstacle.  Update the ActiveLowSide in the obstacle
             // and scanline (this also checks for Reflection events).
             var obstacle = lowVertEvent.Obstacle;
-            var lowSide = new LowObstacleSide(obstacle, lowVertEvent.Vertex, ScanDirection);
+            var lowSide = new LowObstacleSide(obstacle, lowVertEvent.Vertex, this.ScanDirection);
 
             // If the new lowSide is flat we don't remove it due to potential overlaps; that lets any collinear 
             // OpenVertexEvents know they are overlapped (touching == overlap).  When we get to CloseVertexEvent,
@@ -771,28 +771,28 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // so we know when we've found a neighbor.  Similarly, if we're turning down toward the
             // scanline, we let CloseVertexEvent remove the side (in case there are coincident vertices).
             // That leaves the case of still ascending, where we replace the side in the scanline.
-            if (ScanDirection.ComparePerpCoord(lowSide.End, lowSide.Start) > 0) {
+            if (this.ScanDirection.ComparePerpCoord(lowSide.End, lowSide.Start) > 0) {
                 this.RemoveSideFromScanLine(this.scanLine.Find(obstacle.ActiveLowSide), lowVertEvent.Site);
-                AddSideToScanLine(lowSide, lowVertEvent.Site);
+                this.AddSideToScanLine(lowSide, lowVertEvent.Site);
                 obstacle.ActiveLowSide = lowSide;
-                EnqueueLowBendVertexEvent(lowSide);
+                this.EnqueueLowBendVertexEvent(lowSide);
             }
         } // end ProcessEvent(LowBendVertexEvent)
 
-        void EnqueueLowBendVertexEvent(BasicObstacleSide lowSide) {
+        private void EnqueueLowBendVertexEvent(BasicObstacleSide lowSide) {
             // We've already ensured the extension is valid so just queue the next event.
-            eventQueue.Enqueue(new LowBendVertexEvent(lowSide.Obstacle, lowSide.EndVertex));
+            this.eventQueue.Enqueue(new LowBendVertexEvent(lowSide.Obstacle, lowSide.EndVertex));
         }
 
-        void ProcessEvent(HighBendVertexEvent highVertEvent) {
+        private void ProcessEvent(HighBendVertexEvent highVertEvent) {
             // See comments in LowBendVertexEvent; this is mostly the same thing to the other side.
             var obstacle = highVertEvent.Obstacle;
-            var highSide = new HighObstacleSide(obstacle, highVertEvent.Vertex, ScanDirection);
+            var highSide = new HighObstacleSide(obstacle, highVertEvent.Vertex, this.ScanDirection);
 
             this.RemoveSideFromScanLine(this.scanLine.Find(obstacle.ActiveHighSide), highVertEvent.Site);
-            RBNode<BasicObstacleSide> highSideNode = AddSideToScanLine(highSide, highVertEvent.Site);
+            RBNode<BasicObstacleSide> highSideNode = this.AddSideToScanLine(highSide, highVertEvent.Site);
             obstacle.ActiveHighSide = highSide;
-            EnqueueHighBendOrCloseVertexEvent(obstacle.ActiveHighSide);
+            this.EnqueueHighBendOrCloseVertexEvent(obstacle.ActiveHighSide);
 
             // If this is an extreme high-side lateral vertex on the horizontal pass turning to an upward-reflecting
             // side - i.e. if it is a vertex on the right-most border of the bounding box, and the new HighObstacleSide
@@ -811,37 +811,37 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // Test is RectilinearFileTests.Overlap_ExtremeSide_Lookahead.
             if (this.wantReflections && this.ScanDirection.IsHorizontal 
                     && (highSide.Start.X == obstacle.VisibilityBoundingBox.Right)
-                    && SideReflectsUpward(highSide)) {
+                    && this.SideReflectsUpward(highSide)) {
                 var nborSideNode = this.scanLine.NextHigh(highSideNode);
                 if ((nborSideNode.Item is LowObstacleSide) && this.SideReflectsDownward(nborSideNode.Item)) {
                     if (!obstacle.IsOverlapped || !this.ObsTree.PointIsInsideAnObstacle(highSide.Start, this.ScanDirection)) {
                         this.StoreLookaheadSite(nborSideNode.Item.Obstacle, highSide, highSide.Start, wantExtreme: true);
-                        LoadReflectionEvents(nborSideNode.Item);
+                        this.LoadReflectionEvents(nborSideNode.Item);
                     }
                 }
             } 
         }
 
-        void EnqueueHighBendOrCloseVertexEvent(BasicObstacleSide highSide) {
+        private void EnqueueHighBendOrCloseVertexEvent(BasicObstacleSide highSide) {
             // If the next side segment after highSide is ascending from the scanline we want to queue another 
             // HighBendVertexEvent; otherwise it is flat or turns down toward the scanline so queue a CloseVertexEvent.
             Obstacle obstacle = highSide.Obstacle;
-            PolylinePoint nextHighSideEnd = ScanDirection.IsHorizontal  // Traverse clockwise or counterclockwise
+            PolylinePoint nextHighSideEnd = this.ScanDirection.IsHorizontal  // Traverse clockwise or counterclockwise
                                         ? highSide.EndVertex.PrevOnPolyline 
                                         : highSide.EndVertex.NextOnPolyline;
-            if (ScanDirection.ComparePerpCoord(nextHighSideEnd.Point, highSide.End) > 0) {
-                eventQueue.Enqueue(new HighBendVertexEvent(obstacle, highSide.EndVertex));
+            if (this.ScanDirection.ComparePerpCoord(nextHighSideEnd.Point, highSide.End) > 0) {
+                this.eventQueue.Enqueue(new HighBendVertexEvent(obstacle, highSide.EndVertex));
             }
             else {
-                eventQueue.Enqueue(new CloseVertexEvent(obstacle, highSide.EndVertex));
+                this.eventQueue.Enqueue(new CloseVertexEvent(obstacle, highSide.EndVertex));
             }
         } // end ProcessEvent(HighBendVertexEvent)
 
-        void CreateCloseEventSegmentsAndFindNeighbors(CloseVertexEvent closeVertEvent) {
+        private void CreateCloseEventSegmentsAndFindNeighbors(CloseVertexEvent closeVertEvent) {
             var obstacle = closeVertEvent.Obstacle;
-            DevTraceIfFlatSide(false /*isObstacleOpen*/, obstacle.ActiveLowSide.End, obstacle.ActiveHighSide.End);
-            RBNode<BasicObstacleSide> lowSideNode = scanLine.Find(obstacle.ActiveLowSide);
-            RBNode<BasicObstacleSide> highSideNode = scanLine.Find(obstacle.ActiveHighSide);
+            this.DevTraceIfFlatSide(false /*isObstacleOpen*/, obstacle.ActiveLowSide.End, obstacle.ActiveHighSide.End);
+            RBNode<BasicObstacleSide> lowSideNode = this.scanLine.Find(obstacle.ActiveLowSide);
+            RBNode<BasicObstacleSide> highSideNode = this.scanLine.Find(obstacle.ActiveHighSide);
 
             // Two sides coming together at a top point will be reverse-ordered in the scanline,
             // because their projections ahead of the intersection are slope-based.  This must
@@ -849,7 +849,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // check the comparison and reverse the local variables if necessary.  Fortunately
             // we only concern ourselves with the actual Low-vs-High side type for neighbors,
             // not the sides of the obstacle.
-            if (1 == scanLine.Compare(obstacle.ActiveLowSide, obstacle.ActiveHighSide)) {
+            if (1 == this.scanLine.Compare(obstacle.ActiveLowSide, obstacle.ActiveHighSide)) {
                 var temp = lowSideNode;
                 lowSideNode = highSideNode;
                 highSideNode = temp;
@@ -863,23 +863,23 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // drained for any that were generated from sides of the closing obstacle if they extend
             // outside the closing obstacle.
             if (this.wantReflections && obstacle.IsOverlapped) {
-                for (RBNode<BasicObstacleSide> nextNode = scanLine.NextHigh(lowSideNode);
-                        nextNode.Item != highSideNode.Item; nextNode = scanLine.NextHigh(nextNode)) {
-                    LoadReflectionEvents(nextNode.Item);
+                for (RBNode<BasicObstacleSide> nextNode = this.scanLine.NextHigh(lowSideNode);
+                        nextNode.Item != highSideNode.Item; nextNode = this.scanLine.NextHigh(nextNode)) {
+                    this.LoadReflectionEvents(nextNode.Item);
                 }
             }
 
             // Remove the obstacle from the Scanline.  This comes after the foregoing which is why it's a
             // separate function; the RBTree modifies RBNodes, so doing the .Remove at the end of a separate 
             // function ensures we won't access RBNodes that may no longer contain what we expect.
-            scanLine.Remove(obstacle.ActiveLowSide, closeVertEvent.Site);
-            scanLine.Remove(obstacle.ActiveHighSide, closeVertEvent.Site);
+            this.scanLine.Remove(obstacle.ActiveLowSide, closeVertEvent.Site);
+            this.scanLine.Remove(obstacle.ActiveHighSide, closeVertEvent.Site);
         }
 
-        void ProcessEvent(CloseVertexEvent closeVertEvent) {
+        private void ProcessEvent(CloseVertexEvent closeVertEvent) {
             // This event closes the obstacle.  It removes the ActiveLowSide and ActiveHighSide from the scanline and does
             // not add new sides.  As above, see comments in OpenVertexEvent and its callees for more detailed explanations.
-            CreateCloseEventSegmentsAndFindNeighbors(closeVertEvent);
+            this.CreateCloseEventSegmentsAndFindNeighbors(closeVertEvent);
             
             // For reflection, in addition to the delayed lookahead we do in the other *VertexEvents, we need to
             // detect pending reflections up to an already loaded obstacle side.  This may be transitive; using
@@ -904,58 +904,58 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // site that the current CloseVertexEvent just stored on the highNborSide).
             // Fix: Updated this to remove restricted-range as it skips the range that includes the far side of the 
             // current obstacle when called for neighbors that extend across the top vertex.
-            var lowNborSide = (HighObstacleSide)LowNeighborSides.LowNeighbor.Item;
-            var highNborSide = (LowObstacleSide)HighNeighborSides.HighNeighbor.Item;
+            var lowNborSide = (HighObstacleSide)this.LowNeighborSides.LowNeighbor.Item;
+            var highNborSide = (LowObstacleSide)this.HighNeighborSides.HighNeighbor.Item;
             var obstacle = closeVertEvent.Obstacle;
-            LoadReflectionEvents(lowNborSide);
-            LoadReflectionEvents(highNborSide);
+            this.LoadReflectionEvents(lowNborSide);
+            this.LoadReflectionEvents(highNborSide);
 
             // This prepares the object for the second (perpendicular) sweep.
             obstacle.Close();
         } // end ProcessEvent(CloseVertexEvent)
 
-        void ProcessEvent(LowReflectionEvent lowIntEvent) {
+        private void ProcessEvent(LowReflectionEvent lowIntEvent) {
             // Unlike LowBendVertexEvent we don't update the ActiveLowSide in the obstacle and scanline.
             var obstacle = lowIntEvent.Side.Obstacle;
 
             // Add a perpendicular segment from the previous site to the lowNbor intersection, then from
             // the lowNbor intersection to the event site.
-            var lowNborSide = scanLine.NextLow(lowIntEvent.Side).Item as HighObstacleSide;
-            if (AddPerpendicularReflectionSegment(lowIntEvent, lowIntEvent.Side, lowNborSide)) {
-                if (AddParallelReflectionSegment(obstacle, lowNborSide, null /*highNborSide*/, lowIntEvent)) {
+            var lowNborSide = this.scanLine.NextLow(lowIntEvent.Side).Item as HighObstacleSide;
+            if (this.AddPerpendicularReflectionSegment(lowIntEvent, lowIntEvent.Side, lowNborSide)) {
+                if (this.AddParallelReflectionSegment(obstacle, lowNborSide, null /*highNborSide*/, lowIntEvent)) {
                     // We may have just added a reflection that reflects back onto obstacle.ActiveLowSide.
-                    LoadReflectionEvents(obstacle.ActiveLowSide);
+                    this.LoadReflectionEvents(obstacle.ActiveLowSide);
                 }
             }
         } // end ProcessEvent(LowReflectionEvent)
 
-        void ProcessEvent(HighReflectionEvent highIntEvent) {
+        private void ProcessEvent(HighReflectionEvent highIntEvent) {
             // Unlike HighBendVertexEvent we don't update the ActiveHighSide in the obstacle and scanline.
             var obstacle = highIntEvent.Side.Obstacle;
 
             // Add a perpendicular segment from the previous site to the highNbor intersection, then from
             // the highNbor intersection to the event site.
-            var highNborSide = scanLine.NextHigh(highIntEvent.Side).Item as LowObstacleSide;
-            if (AddPerpendicularReflectionSegment(highIntEvent, highIntEvent.Side, highNborSide)) {
-                if (AddParallelReflectionSegment(obstacle, null /*lowNborSide*/, highNborSide, highIntEvent)) {
+            var highNborSide = this.scanLine.NextHigh(highIntEvent.Side).Item as LowObstacleSide;
+            if (this.AddPerpendicularReflectionSegment(highIntEvent, highIntEvent.Side, highNborSide)) {
+                if (this.AddParallelReflectionSegment(obstacle, null /*lowNborSide*/, highNborSide, highIntEvent)) {
                     // We may have just added a reflection that reflects back onto obstacle.ActiveHighSide.
-                    LoadReflectionEvents(obstacle.ActiveHighSide);
+                    this.LoadReflectionEvents(obstacle.ActiveHighSide);
                 }
             }
         } // end ProcessEvent(HighReflectionEvent)
 
         internal Point MakeInBoundsLocation(Point location) {
-            double xPos = Math.Max(location.X, ObsTree.GraphBox.Left);
-            double yPos = Math.Max(location.Y, ObsTree.GraphBox.Bottom);
-            return new Point(Math.Min(xPos, ObsTree.GraphBox.Right), Math.Min(yPos, ObsTree.GraphBox.Top));
+            double xPos = Math.Max(location.X, this.ObsTree.GraphBox.Left);
+            double yPos = Math.Max(location.Y, this.ObsTree.GraphBox.Bottom);
+            return new Point(Math.Min(xPos, this.ObsTree.GraphBox.Right), Math.Min(yPos, this.ObsTree.GraphBox.Top));
         }
 
         internal bool IsInBounds(VisibilityVertex vertex) {
-            return IsInBounds(vertex.Point);
+            return this.IsInBounds(vertex.Point);
         }
 
         internal bool IsInBounds(Point p) {
-            return PointComparer.Equal(p, MakeInBoundsLocation(p));
+            return PointComparer.Equal(p, this.MakeInBoundsLocation(p));
         }
 
         #region DevTrace
@@ -975,7 +975,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         [Conditional("DEVTRACE")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        void DevTraceIfFlatSide(bool isObstacleOpen, Point lowEndpoint, Point highEndpoint) {
+        private void DevTraceIfFlatSide(bool isObstacleOpen, Point lowEndpoint, Point highEndpoint) {
 #if DEVTRACE
             if (lowEndpoint != highEndpoint) {
                 visGraphGenTrace.WriteLineIf(DevTrace.Level.Info, 2, "IsFlat side on {0}VertexEvent: [{1}{2}]"
@@ -986,7 +986,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         [Conditional("DEVTRACE")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        void DevTraceScanSegmentDump(int verboseLevel) {
+        private void DevTraceScanSegmentDump(int verboseLevel) {
 #if DEVTRACE
             if (scanSegmentDump.IsLevel(verboseLevel)) {
                 StaticGraphUtility.Test_DumpScanSegments(ObstacleTree, HorizontalScanSegments, VerticalScanSegments);

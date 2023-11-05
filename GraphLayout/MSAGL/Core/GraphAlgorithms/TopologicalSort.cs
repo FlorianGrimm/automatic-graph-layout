@@ -38,8 +38,9 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms{
 
             IEnumerator<int> en;
             for (int u = 0; u < graph.NodeCount; u++){
-                if (visited[u])
+                if (visited[u]) {
                     continue;
+                }
 
                 int cu = u;
                 visited[cu] = true;
@@ -63,8 +64,9 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms{
                         en = se.Pop();
                         cu = sv.Pop();
                     }
-                    else
+                    else {
                         break;
+                    }
                 } while (true);
             }
             order.Reverse();
@@ -98,15 +100,22 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms{
 
             IEnumerator<int> en;
             foreach (var  u in visited.Keys.ToArray()) {
-                if (visited[u])
+                if (visited[u]) {
                     continue;
+                }
 
                 int cu = u;
 
                 visited[cu] = true;
                 List<int> glist;
-                if (!graph.TryGetValue(u, out glist)) continue;
-                if (glist == null) continue;
+                if (!graph.TryGetValue(u, out glist)) {
+                    continue;
+                }
+
+                if (glist == null) {
+                    continue;
+                }
+
                 en = glist.GetEnumerator();
                 do {
                     while (en.MoveNext()) {
@@ -129,8 +138,9 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms{
                     if (sv.Count > 0) {
                         en = se.Pop();
                         cu = sv.Pop();
-                    } else
+                    } else {
                         break;
+                    }
                 } while (true);
             }
             order.Reverse();

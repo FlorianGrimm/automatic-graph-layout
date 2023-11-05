@@ -1,24 +1,23 @@
 namespace Microsoft.Msagl.Core.Geometry.Curves {
     public partial class Curve {
-
-        double parStart;
+        private double parStart;
 
         /// <summary>
         /// the start of the parameter domain
         /// </summary>
         public double ParStart {
-            get { return parStart; }
-            set { parStart = value; }
+            get { return this.parStart; }
+            set { this.parStart = value; }
         }
 
-        double parEnd;
+        private double parEnd;
 
         /// <summary>
         /// the end of the parameter domain
         /// </summary>
         public double ParEnd {
-            get { return parEnd; }
-            set { parEnd = value; }
+            get { return this.parEnd; }
+            set { this.parEnd = value; }
         }
 
         /// <summary>
@@ -28,10 +27,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         {
             lock (this)
             {
-                foreach (ICurve s in segs)
+                foreach (ICurve s in this.segs) {
                     s.Translate(delta);
+                }
 
-                pBNode = null;
+                this.pBNode = null;
             }
         }
 
@@ -43,9 +43,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>     
         public ICurve ScaleFromOrigin(double xScale, double yScale)
         {
-            Curve c = new Curve(segs.Count);
-            foreach (ICurve s in segs)
+            Curve c = new Curve(this.segs.Count);
+            foreach (ICurve s in this.segs) {
                 c.AddSegment(s.ScaleFromOrigin(xScale, yScale));
+            }
 
             return c;
         }
@@ -56,9 +57,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="transformation"></param>
         /// <returns>the transformed curve</returns>
         public ICurve Transform(PlaneTransformation transformation) {
-            Curve c = new Curve(segs.Count);
-            foreach (ICurve s in segs)
+            Curve c = new Curve(this.segs.Count);
+            foreach (ICurve s in this.segs) {
                 c.AddSegment(s.Transform(transformation));
+            }
 
             return c;
         }
@@ -72,17 +74,18 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         public double LengthPartial(double start, double end) {
             double s, e;
             int i, j;
-            
-            AdjustStartEndEndParametersToDomain(ref start, ref end);
+
+            this.AdjustStartEndEndParametersToDomain(ref start, ref end);
             this.GetSegmentAndParameter(start, out s, out i);
             this.GetSegmentAndParameter(end, out e, out j);
 
             ICurve seg = this.segs[i];
             double ret = seg.LengthPartial(s, seg.ParEnd);
-            for (int k = i + 1; k < j; k++)
-                ret += segs[k].Length;
+            for (int k = i + 1; k < j; k++) {
+                ret += this.segs[k].Length;
+            }
 
-            seg = segs[j];
+            seg = this.segs[j];
             return ret + seg.LengthPartial(seg.ParStart, e);
 
         }
@@ -94,8 +97,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         static public double LengthWithInterpolation(ICurve curve) {
             double ret = 0;
-            foreach (LineSegment ls in Interpolate(curve, lineSegThreshold))
+            foreach (LineSegment ls in Interpolate(curve, lineSegThreshold)) {
                 ret += ls.Length;
+            }
+
             return ret;
         }
 
@@ -108,8 +113,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         static public double LengthWithInterpolationAndThreshold(ICurve curve, double threshold)
         {
             double ret = 0;
-            foreach (LineSegment ls in Interpolate(curve, threshold))
+            foreach (LineSegment ls in Interpolate(curve, threshold)) {
                 ret += ls.Length;
+            }
+
             return ret;
         }
 
@@ -119,8 +126,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         public double Length {
             get {
                 double ret = 0;
-                foreach (ICurve ic in segs)
+                foreach (ICurve ic in this.segs) {
                     ret += ic.Length;
+                }
+
                 return ret;
             }
         }

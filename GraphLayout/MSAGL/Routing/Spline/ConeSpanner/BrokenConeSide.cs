@@ -12,7 +12,7 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner{
         internal Point start;
 
         internal override Point Start {
-            get { return start; }
+            get { return this.start; }
         }
 
         /// <summary>
@@ -23,23 +23,23 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner{
         internal PolylinePoint EndVertex { get; set; }
 
         internal Point End {
-            get { return EndVertex.Point; }
+            get { return this.EndVertex.Point; }
         }
       
 
         internal BrokenConeSide(Point start, PolylinePoint end, ConeSide coneSide) {
             this.start = start;
-            EndVertex = end;
-            ConeSide = coneSide;
+            this.EndVertex = end;
+            this.ConeSide = coneSide;
         }
 
 
         internal override Point Direction {
-            get { return End-Start; }
+            get { return this.End - this.Start; }
         }
 
         public override string ToString() {
-            return "BrokenConeSide: " + Start + "," + End;
+            return "BrokenConeSide: " + this.Start + "," + this.End;
         }
     }
 }

@@ -5,18 +5,18 @@ using Microsoft.Msagl.Core.Layout;
 
 namespace Microsoft.Msagl.Layout.LargeGraphLayout {
     internal class SimpleNodeCollection : IList<Node> {
-        List<Node> nodes;
+        private List<Node> nodes;
 
         public SimpleNodeCollection(IEnumerable<Node> nodes) {
             this.nodes = new List<Node>(nodes);
         }
 
         public IEnumerator<Node> GetEnumerator() {
-            return nodes.GetEnumerator();
+            return this.nodes.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
-            return GetEnumerator();
+            return this.GetEnumerator();
         }
 
         public void Add(Node item) {
@@ -32,14 +32,14 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         }
 
         public void CopyTo(Node[] array, int arrayIndex) {
-            nodes.CopyTo(array,arrayIndex);
+            this.nodes.CopyTo(array,arrayIndex);
         }
 
         public bool Remove(Node item) {
             throw new NotImplementedException();
         }
 
-        public int Count { get { return nodes.Count; } }
+        public int Count { get { return this.nodes.Count; } }
         public bool IsReadOnly { get; private set; }
         public int IndexOf(Node item) {
             throw new NotImplementedException();
@@ -54,8 +54,8 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         }
 
         public Node this[int index] {
-            get { return nodes[index]; }
-            set { nodes[index]=value; }
+            get { return this.nodes[index]; }
+            set { this.nodes[index]=value; }
         }
     }
 }

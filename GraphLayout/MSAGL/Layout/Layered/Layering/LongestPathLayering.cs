@@ -12,23 +12,23 @@ namespace Microsoft.Msagl.Layout.Layered {
     /// Layering the DAG by longest path
     /// </summary>
     internal class LongestPathLayering : LayerCalculator {
-
-        BasicGraphOnEdges<PolyIntEdge> graph;
+        private BasicGraphOnEdges<PolyIntEdge> graph;
 
         public int[] GetLayers() {
             //sort the vertices in topological order
-            int[] topoOrder = PolyIntEdge.GetOrder(graph);
-            int[] layering = new int[graph.NodeCount];
+            int[] topoOrder = PolyIntEdge.GetOrder(this.graph);
+            int[] layering = new int[this.graph.NodeCount];
 
             //going backward from leaves
-            int k = graph.NodeCount;
+            int k = this.graph.NodeCount;
             while (k-- > 0) {
                 int v = topoOrder[k];
-                foreach (PolyIntEdge e in graph.InEdges(v)) {
+                foreach (PolyIntEdge e in this.graph.InEdges(v)) {
                     int u = e.Source;
                     int l = layering[v] + e.Separation;
-                    if (layering[u] < l)
+                    if (layering[u] < l) {
                         layering[u] = l;
+                    }
                 }
             }
             return layering;

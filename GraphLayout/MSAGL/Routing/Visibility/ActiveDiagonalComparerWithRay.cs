@@ -5,32 +5,32 @@ using Microsoft.Msagl.Core;
 
 namespace Microsoft.Msagl.Routing.Visibility {
       internal class ActiveDiagonalComparerWithRay: IComparer<Diagonal> {
-
-          Point pointOnTheRay;
+        private Point pointOnTheRay;
 
           [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
           internal Point PointOnTangentAndInsertedDiagonal {
-              get { return pointOnTheRay; }
-              set { pointOnTheRay = value; }
+              get { return this.pointOnTheRay; }
+              set { this.pointOnTheRay = value; }
           }
 
           public int Compare(Diagonal x, Diagonal y) {
               ValidateArg.IsNotNull(x, "x");
               ValidateArg.IsNotNull(y, "y");
-              System.Diagnostics.Debug.Assert(BelongsToTheDiagonal(PointOnTangentAndInsertedDiagonal, x.Start, x.End));
-              if (x.Start != y.Start)
-                  switch (Point.GetTriangleOrientation(PointOnTangentAndInsertedDiagonal, y.Start, y.End)) {
+              System.Diagnostics.Debug.Assert(BelongsToTheDiagonal(this.PointOnTangentAndInsertedDiagonal, x.Start, x.End));
+              if (x.Start != y.Start) {
+                switch (Point.GetTriangleOrientation(this.PointOnTangentAndInsertedDiagonal, y.Start, y.End)) {
                       case TriangleOrientation.Counterclockwise:
                           return -1;
                       default:
                           return 1;
-                  } else {
+                  }
+            } else {
                   return 0;
               }
           }
 
           [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-          static bool BelongsToTheDiagonal(Point IntersectionOfTheRayAndInsertedEdge, Point start, Point end) {
+        private static bool BelongsToTheDiagonal(Point IntersectionOfTheRayAndInsertedEdge, Point start, Point end) {
               return ApproximateComparer.Close(IntersectionOfTheRayAndInsertedEdge, Point.ClosestPointAtLineSegment(IntersectionOfTheRayAndInsertedEdge, start, end));
           }
 

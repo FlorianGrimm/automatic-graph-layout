@@ -20,16 +20,16 @@ namespace Microsoft.Msagl.Routing.ConstrainedDelaunayTriangulation {
         ///</summary>
         public readonly ThreeArray<CdtSite> Sites = new ThreeArray<CdtSite>();
 
-        public TriangleOrientation Orientation { get { return Point.GetTriangleOrientation(Sites[0].Point, Sites[1].Point, Sites[2].Point); } }
+        public TriangleOrientation Orientation { get { return Point.GetTriangleOrientation(this.Sites[0].Point, this.Sites[1].Point, this.Sites[2].Point); } }
 
         internal CdtTriangle(CdtSite a, CdtSite b, CdtSite c, Func<CdtSite, CdtSite, CdtEdge> createEdgeDelegate) {
             var orientation = Point.GetTriangleOrientation(a.Point, b.Point, c.Point);
             switch (orientation) {
                 case TriangleOrientation.Counterclockwise:
-                    FillCcwTriangle(a, b, c, createEdgeDelegate);
+                    this.FillCcwTriangle(a, b, c, createEdgeDelegate);
                     break;
                 case TriangleOrientation.Clockwise:
-                    FillCcwTriangle(a, c, b, createEdgeDelegate);
+                    this.FillCcwTriangle(a, c, b, createEdgeDelegate);
                     break;
                 default: throw new InvalidOperationException();
             }
@@ -39,46 +39,48 @@ namespace Microsoft.Msagl.Routing.ConstrainedDelaunayTriangulation {
             switch (Point.GetTriangleOrientation(edge.upperSite.Point, edge.lowerSite.Point, pi.Point)) {
                 case TriangleOrientation.Counterclockwise:
                     edge.CcwTriangle = this;
-                    Sites[0] = edge.upperSite;
-                    Sites[1] = edge.lowerSite;
+                    this.Sites[0] = edge.upperSite;
+                    this.Sites[1] = edge.lowerSite;
                     break;
                 case TriangleOrientation.Clockwise:
                     edge.CwTriangle = this;
-                    Sites[0] = edge.lowerSite;
-                    Sites[1] = edge.upperSite;
+                    this.Sites[0] = edge.lowerSite;
+                    this.Sites[1] = edge.upperSite;
                     break;
                 default:
                     throw new InvalidOperationException();
             }
-            Edges[0] = edge;
-            Sites[2] = pi;
-            CreateEdge(1, createEdgeDelegate);
-            CreateEdge(2, createEdgeDelegate);
+            this.Edges[0] = edge;
+            this.Sites[2] = pi;
+            this.CreateEdge(1, createEdgeDelegate);
+            this.CreateEdge(2, createEdgeDelegate);
         }
 
         //
         internal CdtTriangle(CdtSite aLeft, CdtSite aRight, CdtSite bRight, CdtEdge a, CdtEdge b, Func<CdtSite, CdtSite, CdtEdge> createEdgeDelegate) {
-           // Debug.Assert(Point.GetTriangleOrientation(aLeft.Point, aRight.Point, bRight.Point) == TriangleOrientation.Counterclockwise);
-            Sites[0] = aLeft;
-            Sites[1] = aRight;
-            Sites[2] = bRight;
-            Edges[0] = a;
-            Edges[1] = b;
-            BindEdgeToTriangle(aLeft, a);
-            BindEdgeToTriangle(aRight, b);
-            CreateEdge(2, createEdgeDelegate);
-            Debug.Assert(Orientation != TriangleOrientation.Collinear);
+            // Debug.Assert(Point.GetTriangleOrientation(aLeft.Point, aRight.Point, bRight.Point) == TriangleOrientation.Counterclockwise);
+            this.Sites[0] = aLeft;
+            this.Sites[1] = aRight;
+            this.Sites[2] = bRight;
+            this.Edges[0] = a;
+            this.Edges[1] = b;
+            this.BindEdgeToTriangle(aLeft, a);
+            this.BindEdgeToTriangle(aRight, b);
+            this.CreateEdge(2, createEdgeDelegate);
+            Debug.Assert(this.Orientation != TriangleOrientation.Collinear);
         }
+
         /// <summary>
         /// in the trianlge, which is always oriented counterclockwise, the edge starts at site 
         /// </summary>
         /// <param name="site"></param>
         /// <param name="edge"></param>
-        void BindEdgeToTriangle(CdtSite site, CdtEdge edge) {
-            if (site == edge.upperSite)
+        private void BindEdgeToTriangle(CdtSite site, CdtEdge edge) {
+            if (site == edge.upperSite) {
                 edge.CcwTriangle = this;
-            else
+            } else {
                 edge.CwTriangle = this;
+            }
         }
 
         /// <summary>
@@ -88,27 +90,28 @@ namespace Microsoft.Msagl.Routing.ConstrainedDelaunayTriangulation {
         /// <param name="b"></param>
         /// <param name="c"></param>
         /// <param name="createEdgeDelegate"></param>
-        void FillCcwTriangle(CdtSite a, CdtSite b, CdtSite c, Func<CdtSite, CdtSite, CdtEdge> createEdgeDelegate) {
-            Sites[0] = a; Sites[1] = b; Sites[2] = c;
-            for (int i = 0; i < 3; i++)
-                CreateEdge(i, createEdgeDelegate);
+        private void FillCcwTriangle(CdtSite a, CdtSite b, CdtSite c, Func<CdtSite, CdtSite, CdtEdge> createEdgeDelegate) {
+            this.Sites[0] = a; this.Sites[1] = b; this.Sites[2] = c;
+            for (int i = 0; i < 3; i++) {
+                this.CreateEdge(i, createEdgeDelegate);
+            }
         }
 
-        void CreateEdge(int i, Func<CdtSite, CdtSite, CdtEdge> createEdgeDelegate) {
-            var a = Sites[i];
-            var b = Sites[i + 1];
-            var edge = Edges[i] = createEdgeDelegate(a, b);
-            BindEdgeToTriangle(a, edge);
+        private void CreateEdge(int i, Func<CdtSite, CdtSite, CdtEdge> createEdgeDelegate) {
+            var a = this.Sites[i];
+            var b = this.Sites[i + 1];
+            var edge = this.Edges[i] = createEdgeDelegate(a, b);
+            this.BindEdgeToTriangle(a, edge);
         }
 
         internal bool Contains(CdtSite cdtSite) {
-            return Sites.Contains(cdtSite);
+            return this.Sites.Contains(cdtSite);
         }
 
         internal CdtEdge OppositeEdge(CdtSite pi) {
-            var index = Sites.Index(pi);
+            var index = this.Sites.Index(pi);
             Debug.Assert(index != -1);
-            return Edges[index + 1];
+            return this.Edges[index + 1];
         }
 
 #if TEST_MSAGL
@@ -120,18 +123,18 @@ namespace Microsoft.Msagl.Routing.ConstrainedDelaunayTriangulation {
         /// </returns>
         /// <filterpriority>2</filterpriority>
         public override string ToString() {
-            return String.Format("({0},{1},{2}", Sites[0], Sites[1], Sites[2]);
+            return String.Format("({0},{1},{2}", this.Sites[0], this.Sites[1], this.Sites[2]);
         }
 #endif
 
         internal CdtSite OppositeSite(CdtEdge cdtEdge) {
-            var i = Edges.Index(cdtEdge);
-            return Sites[i + 2];
+            var i = this.Edges.Index(cdtEdge);
+            return this.Sites[i + 2];
         }
 
         internal Rectangle BoundingBox() {
-            Rectangle rect = new Rectangle(Sites[0].Point, Sites[1].Point);
-            rect.Add(Sites[2].Point);
+            Rectangle rect = new Rectangle(this.Sites[0].Point, this.Sites[1].Point);
+            rect.Add(this.Sites[2].Point);
             return rect;
         }
     }

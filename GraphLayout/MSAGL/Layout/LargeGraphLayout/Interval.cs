@@ -12,8 +12,8 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         /// <param name="start"></param>
         /// <param name="end"></param>
         public Interval(double start, double end) {
-            Start = start;
-            End = end;
+            this.Start = start;
+            this.End = end;
         }
 
         /// <summary>
@@ -23,10 +23,10 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         /// <param name="b"></param>
         public Interval(Interval a, Interval b)
         {
-            Start = a.Start;
-            End = a.End;
-            Add(b.Start);
-            Add(b.End);
+            this.Start = a.Start;
+            this.End = a.End;
+            this.Add(b.Start);
+            this.Add(b.End);
         }
 
 
@@ -36,10 +36,13 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         /// </summary>
         /// <param name="v"></param>
         public void Add(double v) {
-            if (Start > v)
-                Start = v;
-            if (End < v)
-                End = v;
+            if (this.Start > v) {
+                this.Start = v;
+            }
+
+            if (this.End < v) {
+                this.End = v;
+            }
         }
 
         /// <summary>
@@ -54,14 +57,14 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         /// <summary>
         /// the length
         /// </summary>
-        public double Area { get { return End - Start; } }
+        public double Area { get { return this.End - this.Start; } }
         /// <summary>
         /// return true if the value is inside the range
         /// </summary>
         /// <param name="v"></param>
         /// <returns></returns>
         public bool Contains(double v) {
-            return Start <= v && v <= End;
+            return this.Start <= v && v <= this.End;
         }
 
         /// <summary>
@@ -70,7 +73,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         /// <param name="v"></param>
         /// <returns></returns>
         public double GetInRange(double v) {
-            return v < Start ? Start : (v > End ? End : v);
+            return v < this.Start ? this.Start : (v > this.End ? this.End : v);
         }
 
         /// <summary>
@@ -79,10 +82,11 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         /// <param name="other"></param>
         /// <returns></returns>
         public bool Intersects(Interval other) {
-            if (other.Start > End + ApproximateComparer.DistanceEpsilon)
+            if (other.Start > this.End + ApproximateComparer.DistanceEpsilon) {
                 return false;
+            }
 
-            return !(other.End < Start - ApproximateComparer.DistanceEpsilon);
+            return !(other.End < this.Start - ApproximateComparer.DistanceEpsilon);
         }
 
         public bool Contains(IRectangle<double> rect) {
@@ -92,7 +96,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
 
         public IRectangle<double> Intersection(IRectangle<double> rectangle) {
             var r = (Interval)rectangle;
-            return new Interval(Math.Max(Start, r.Start), Math.Min(End, r.End));
+            return new Interval(Math.Max(this.Start, r.Start), Math.Min(this.End, r.End));
         }
 
         public bool Intersects(IRectangle<double> rectangle) {
@@ -102,12 +106,12 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
 
         public void Add(IRectangle<double> rectangle) {
             var r = (Interval)rectangle;
-            Add(r.Start);
-            Add(r.End);
+            this.Add(r.Start);
+            this.Add(r.End);
         }
 
         public bool Contains(double p, double radius) {
-            return Contains(p - radius) && Contains(p + radius);
+            return this.Contains(p - radius) && this.Contains(p + radius);
         }
 
         public IRectangle<double> Unite(IRectangle<double> rectangle) {

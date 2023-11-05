@@ -6,14 +6,14 @@ using Microsoft.Msagl.Core.Layout;
 
 namespace Microsoft.Msagl.Layout.Layered {
     internal class NetworkSimplexForGeneralGraph : LayerCalculator {
-        BasicGraphOnEdges<PolyIntEdge> graph;
+        private BasicGraphOnEdges<PolyIntEdge> graph;
         /// <summary>
         /// a place holder for the cancel flag
         /// </summary>
         internal CancelToken Cancel { get; set; }
 
         public int[] GetLayers() {
-            NetworkSimplex ns = new NetworkSimplex(graph, this.Cancel);
+            NetworkSimplex ns = new NetworkSimplex(this.graph, this.Cancel);
             return ns.GetLayers();
         }
 

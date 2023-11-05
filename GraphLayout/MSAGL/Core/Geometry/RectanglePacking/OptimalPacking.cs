@@ -13,15 +13,12 @@ namespace Microsoft.Msagl.Core.Geometry
     /// </summary>
     public abstract class OptimalPacking<TData> : AlgorithmBase
     {
-         double desiredAspectRatio = 1.2;
-
-         double bestPackingCost;
-
-         Packing bestPacking = null;
+        private double desiredAspectRatio = 1.2;
+        private double bestPackingCost;
+        private Packing bestPacking = null;
 
         protected IList<RectangleToPack<TData>> rectangles;
-
-         Dictionary<double, double> cachedCosts = new Dictionary<double, double>();
+        private Dictionary<double, double> cachedCosts = new Dictionary<double, double>();
 
         protected OptimalPacking(IList<RectangleToPack<TData>> rectangles, double aspectRatio)
         {
@@ -35,9 +32,9 @@ namespace Microsoft.Msagl.Core.Geometry
         public double PackedWidth { 
             get
             {
-                if (bestPacking != null)
+                if (this.bestPacking != null)
                 {
-                    return bestPacking.PackedWidth;
+                    return this.bestPacking.PackedWidth;
                 }
                 return 0;
             }
@@ -49,9 +46,9 @@ namespace Microsoft.Msagl.Core.Geometry
         public double PackedHeight { 
             get
             {
-                if (bestPacking != null)
+                if (this.bestPacking != null)
                 {
-                    return bestPacking.PackedHeight;
+                    return this.bestPacking.PackedHeight;
                 }
                 return 0;
             }
@@ -78,40 +75,40 @@ namespace Microsoft.Msagl.Core.Geometry
             // need to overshoot upperbound in case upperbound is actually optimal
             upperBound += precision;
 
-            bestPackingCost = double.MaxValue;
+            this.bestPackingCost = double.MaxValue;
 
-            if (rectangles.Count == 1)
+            if (this.rectangles.Count == 1)
             {
                 // the trivial solution for just one rectangle is widthLowerBound
-                Pack(lowerBound);
+                this.Pack(lowerBound);
             }
-            else if (rectangles.Count == 2)
+            else if (this.rectangles.Count == 2)
             {
                 // if we have 2 rectangles just try the two possibilities
-                Pack(lowerBound);
-                Pack(upperBound);
+                this.Pack(lowerBound);
+                this.Pack(upperBound);
             }
-            else if (rectangles.Count > 2)
+            else if (this.rectangles.Count > 2)
             {
-                GoldenSectionSearch(Pack, lowerBound, c0, upperBound, precision);
+                GoldenSectionSearch(this.Pack, lowerBound, c0, upperBound, precision);
             }
 
             // packing works on the rectangles in place, so we need to rerun to get back the best packing.
-            bestPacking.Run();
+            this.bestPacking.Run();
         }
 
-         double Pack(double limit)
+        private double Pack(double limit)
         {
             double cost;
-            if (!cachedCosts.TryGetValue(limit, out cost))
+            if (!this.cachedCosts.TryGetValue(limit, out cost))
             {
-                var packing = this.createPacking(rectangles, limit);
+                var packing = this.createPacking(this.rectangles, limit);
                 packing.Run();
-                cachedCosts[limit] = cost = Math.Abs(packing.PackedAspectRatio - desiredAspectRatio);
-                if (cost < bestPackingCost)
+                this.cachedCosts[limit] = cost = Math.Abs(packing.PackedAspectRatio - this.desiredAspectRatio);
+                if (cost < this.bestPackingCost)
                 {
-                    bestPackingCost = cost;
-                    bestPacking = packing;
+                    this.bestPackingCost = cost;
+                    this.bestPacking = packing;
                 }
             }
             return cost;
@@ -165,7 +162,7 @@ namespace Microsoft.Msagl.Core.Geometry
             return f(left) < f(right) ? left : right;
         }
 
-         static double GetGoldenSectionStep(double x1, double x2)
+        private static double GetGoldenSectionStep(double x1, double x2)
         {
             if (x1 < x2)
             {

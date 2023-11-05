@@ -4,31 +4,32 @@ using Microsoft.Msagl.Core.Geometry.Curves;
 namespace Microsoft.Msagl.Layout.Layered {
     
     internal class HierarchyCalculator {
-
-        List<ParallelogramNode> initialNodes;
-        int groupSplitThreshold = 2;
+        private List<ParallelogramNode> initialNodes;
+        private int groupSplitThreshold = 2;
         
         internal static ParallelogramNode Calculate(List<ParallelogramNode> nodes, int groupSplitThresholdPar){
             HierarchyCalculator calc=new HierarchyCalculator(nodes,groupSplitThresholdPar);
             return calc.Calculate();
         }
 
-        HierarchyCalculator(List<ParallelogramNode> nodes, int groupSplitThresholdPar){
-            initialNodes=nodes;
-            groupSplitThreshold=groupSplitThresholdPar;
+        private HierarchyCalculator(List<ParallelogramNode> nodes, int groupSplitThresholdPar){
+            this.initialNodes =nodes;
+            this.groupSplitThreshold =groupSplitThresholdPar;
         }
 
-        ParallelogramNode Calculate(){
-            return Calc(initialNodes);
+        private ParallelogramNode Calculate(){
+            return this.Calc(this.initialNodes);
         }
 
-        ParallelogramNode Calc(List<ParallelogramNode> nodes) {
+        private ParallelogramNode Calc(List<ParallelogramNode> nodes) {
 
-            if (nodes.Count == 0)
+            if (nodes.Count == 0) {
                 return null;
+            }
 
-            if (nodes.Count == 1)
+            if (nodes.Count == 1) {
                 return nodes[0];
+            }
 
             //Finding the seeds
             Parallelogram b0 = nodes[0].Parallelogram;
@@ -61,8 +62,10 @@ namespace Microsoft.Msagl.Layout.Layered {
             //Now try to improve the second seed
 
             for (int i = 0; i < nodes.Count; i++) {
-                if (i == seed0)
+                if (i == seed0) {
                     continue;
+                }
+
                 double area1 = new Parallelogram(nodes[seed0].Parallelogram, nodes[i].Parallelogram).Area;
                 if (area1 > area) {
                     seed1 = i;
@@ -82,8 +85,9 @@ namespace Microsoft.Msagl.Layout.Layered {
             //divide nodes on two groups
             for (int i = 0; i < nodes.Count; i++) {
 
-                if (i == seed0 || i == seed1)
+                if (i == seed0 || i == seed1) {
                     continue;
+                }
 
                 Parallelogram box0_ = new Parallelogram(box0, nodes[i].Parallelogram);
                 double delta0 = box0_.Area - box0.Area;
@@ -93,10 +97,10 @@ namespace Microsoft.Msagl.Layout.Layered {
 
                 //keep the tree roughly balanced
 
-                if (gr0.Count * groupSplitThreshold < gr1.Count) {
+                if (gr0.Count * this.groupSplitThreshold < gr1.Count) {
                     gr0.Add(nodes[i]);
                     box0 = box0_;
-                } else if (gr1.Count * groupSplitThreshold < gr0.Count) {
+                } else if (gr1.Count * this.groupSplitThreshold < gr0.Count) {
                     gr1.Add(nodes[i]);
                     box1 = box1_;
                 } else if (delta0 < delta1) {
@@ -112,8 +116,8 @@ namespace Microsoft.Msagl.Layout.Layered {
             ParallelogramBinaryTreeNode ret = new ParallelogramBinaryTreeNode();
             ret.Parallelogram = new Parallelogram(box0, box1);
         
-            ret.LeftSon = Calc(gr0);
-            ret.RightSon = Calc(gr1);
+            ret.LeftSon = this.Calc(gr0);
+            ret.RightSon = this.Calc(gr1);
          
             return ret;
 

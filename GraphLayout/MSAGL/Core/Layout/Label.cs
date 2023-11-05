@@ -17,10 +17,10 @@ namespace Microsoft.Msagl.Core.Layout {
         /// The center of the label bounding box
         /// </summary>
         public Point Center {
-            get { return boundingBox.Center; }
+            get { return this.boundingBox.Center; }
             set {
-                RaiseLayoutChangeEvent(value);
-                boundingBox.Center = value;
+                this.RaiseLayoutChangeEvent(value);
+                this.boundingBox.Center = value;
             }
         }
 
@@ -30,10 +30,10 @@ namespace Microsoft.Msagl.Core.Layout {
         /// of the layout is horizontal. This change is used only during the calcualations.
         /// </summary>
         public double Width {
-            get { return boundingBox.Width; }
+            get { return this.boundingBox.Width; }
             set {
-                RaiseLayoutChangeEvent(value);
-                boundingBox.Width = value;
+                this.RaiseLayoutChangeEvent(value);
+                this.boundingBox.Width = value;
             }
         }
 
@@ -43,10 +43,10 @@ namespace Microsoft.Msagl.Core.Layout {
         /// of the layout is horizontal. This change is used only during the calcualations 
         /// </summary>
         public double Height {
-            get { return boundingBox.Height; }
+            get { return this.boundingBox.Height; }
             set {
-                RaiseLayoutChangeEvent(value);
-                boundingBox.Height = value;
+                this.RaiseLayoutChangeEvent(value);
+                this.boundingBox.Height = value;
             }
         }
 
@@ -58,10 +58,10 @@ namespace Microsoft.Msagl.Core.Layout {
         ///<param name="parentP">the corresponding edge</param>
 
         public Label(double labelWidth, double labelHeight, GeometryObject parentP) {
-            Width = labelWidth;
-            Height = labelHeight;
-            GeometryParent = parentP;
-            PlacementStrategyPriority = new[] {PlacementStrategy.AlongCurve, PlacementStrategy.Horizontal};
+            this.Width = labelWidth;
+            this.Height = labelHeight;
+            this.GeometryParent = parentP;
+            this.PlacementStrategyPriority = new[] {PlacementStrategy.AlongCurve, PlacementStrategy.Horizontal};
         }
 
         /// <summary>
@@ -70,47 +70,47 @@ namespace Microsoft.Msagl.Core.Layout {
         public Label() {
         }
 
-        Rectangle boundingBox;
+        private Rectangle boundingBox;
 
         /// <summary>
         /// gets or sets the boundary box of the label
         /// </summary>
         public override Rectangle BoundingBox {
-            get { return boundingBox; }
+            get { return this.boundingBox; }
             set {
-                RaiseLayoutChangeEvent(value);
-                boundingBox = value;
+                this.RaiseLayoutChangeEvent(value);
+                this.boundingBox = value;
             }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Label(GeometryObject parentPar) {
-            GeometryParent = parentPar;
+            this.GeometryParent = parentPar;
         }
 
-        Point attachmentSegmentStart;
+        private Point attachmentSegmentStart;
 
         /// <summary>
         /// the start of the segment showing the connection between the label and the edge
         /// </summary>
         public Point AttachmentSegmentStart {
-            get { return attachmentSegmentStart; }
+            get { return this.attachmentSegmentStart; }
             set {
-                RaiseLayoutChangeEvent(value);
-                attachmentSegmentStart = value;
+                this.RaiseLayoutChangeEvent(value);
+                this.attachmentSegmentStart = value;
             }
         }
 
-        Point edgeAttachmentPoint;
+        private Point edgeAttachmentPoint;
 
         /// <summary>
         /// the point on the edge closest to the label center
         /// </summary>
         public Point AttachmentSegmentEnd {
-            get { return edgeAttachmentPoint; }
+            get { return this.edgeAttachmentPoint; }
             set {
-                RaiseLayoutChangeEvent(value);
-                edgeAttachmentPoint = value;
+                this.RaiseLayoutChangeEvent(value);
+                this.edgeAttachmentPoint = value;
             }
         }
 
@@ -118,8 +118,8 @@ namespace Microsoft.Msagl.Core.Layout {
         /// 0 is the start of the edge, 0.5 middle, 1 the end
         /// </summary>
         public double PlacementOffset {
-            get { return placementOffset; }
-            set { placementOffset = value; }
+            get { return this.placementOffset; }
+            set { this.placementOffset = value; }
         }
 
         /// <summary>
@@ -190,19 +190,18 @@ namespace Microsoft.Msagl.Core.Layout {
             Horizontal
         }
 
-        IEnumerable<PlacementStrategy> placementStrategyPriority = new[] {
+        private IEnumerable<PlacementStrategy> placementStrategyPriority = new[] {
                                                                              PlacementStrategy.Horizontal,
                                                                              PlacementStrategy.AlongCurve
                                                                          };
-
-        double placementOffset = 0.5;
+        private double placementOffset = 0.5;
 
         ///<summary>
         /// an array of placement strategies
         ///</summary>
         public IEnumerable<PlacementStrategy> PlacementStrategyPriority {
-            get { return placementStrategyPriority; }
-            set { placementStrategyPriority = value; }
+            get { return this.placementStrategyPriority; }
+            set { this.placementStrategyPriority = value; }
         }
 
         /// <summary>
@@ -229,18 +228,18 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <param name="delta"></param>
         public void Translate(Point delta) {
-            RaiseLayoutChangeEvent(delta);
-            if (InnerPoints != null) {
-                for (int i = 0; i < InnerPoints.Count; ++i) {
-                    InnerPoints[i] = InnerPoints[i] + delta;
+            this.RaiseLayoutChangeEvent(delta);
+            if (this.InnerPoints != null) {
+                for (int i = 0; i < this.InnerPoints.Count; ++i) {
+                    this.InnerPoints[i] = this.InnerPoints[i] + delta;
                 }
             }
-            if (OuterPoints != null) {
-                for (int i = 0; i < OuterPoints.Count; ++i) {
-                    OuterPoints[i] = OuterPoints[i] + delta;
+            if (this.OuterPoints != null) {
+                for (int i = 0; i < this.OuterPoints.Count; ++i) {
+                    this.OuterPoints[i] = this.OuterPoints[i] + delta;
                 }
             }
-            boundingBox = Rectangle.Translate(boundingBox, delta);
+            this.boundingBox = Rectangle.Translate(this.boundingBox, delta);
             
         }
     }

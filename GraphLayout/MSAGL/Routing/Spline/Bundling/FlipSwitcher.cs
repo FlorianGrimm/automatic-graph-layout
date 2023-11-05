@@ -12,15 +12,14 @@ using Microsoft.Msagl.DebugHelpers;
 
 namespace Microsoft.Msagl.Routing.Spline.Bundling {
     internal class FlipSwitcher {
-        readonly MetroGraphData metroGraphData;
+        private readonly MetroGraphData metroGraphData;
+        private Dictionary<Polyline, EdgeGeometry> polylineToEdgeGeom = new Dictionary<Polyline, EdgeGeometry>();
+        private Dictionary<Point, Set<PolylinePoint>> pathsThroughPoints = new Dictionary<Point, Set<PolylinePoint>>();
+        private Set<Point> interestingPoints = new Set<Point>();
+        private int numberOfReducedCrossings;
 
-        Dictionary<Polyline, EdgeGeometry> polylineToEdgeGeom = new Dictionary<Polyline, EdgeGeometry>();
-        Dictionary<Point, Set<PolylinePoint>> pathsThroughPoints = new Dictionary<Point, Set<PolylinePoint>>();
-        Set<Point> interestingPoints = new Set<Point>();
-        int numberOfReducedCrossings;
-
-        IEnumerable<Polyline> Polylines {
-            get { return polylineToEdgeGeom.Keys; }
+        private IEnumerable<Polyline> Polylines {
+            get { return this.polylineToEdgeGeom.Keys; }
         }
 
         internal FlipSwitcher(MetroGraphData metroGraphData) {
@@ -29,45 +28,51 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
         internal void Run() {
             //TimeMeasurer.DebugOutput("switching flips...");
-            Init();
-            SwitchFlips();
+            this.Init();
+            this.SwitchFlips();
         }
 
-        void Init() {
-            foreach (EdgeGeometry e in metroGraphData.Edges)
-                polylineToEdgeGeom[(Polyline)e.Curve] = e;
+        private void Init() {
+            foreach (EdgeGeometry e in this.metroGraphData.Edges) {
+                this.polylineToEdgeGeom[(Polyline)e.Curve] = e;
+            }
 
-            foreach (Polyline poly in Polylines)
-                RegisterPolylinePointInPathsThrough(poly.PolylinePoints);
+            foreach (Polyline poly in this.Polylines) {
+                this.RegisterPolylinePointInPathsThrough(poly.PolylinePoints);
+            }
         }
 
-        void RegisterPolylinePointInPathsThrough(IEnumerable<PolylinePoint> points) {
-            foreach (var pp in points)
-                RegisterPolylinePointInPathsThrough(pp);
+        private void RegisterPolylinePointInPathsThrough(IEnumerable<PolylinePoint> points) {
+            foreach (var pp in points) {
+                this.RegisterPolylinePointInPathsThrough(pp);
+            }
         }
 
-        void RegisterPolylinePointInPathsThrough(PolylinePoint pp) {
-            CollectionUtilities.AddToMap(pathsThroughPoints, pp.Point, pp);
+        private void RegisterPolylinePointInPathsThrough(PolylinePoint pp) {
+            CollectionUtilities.AddToMap(this.pathsThroughPoints, pp.Point, pp);
         }
 
-        void UnregisterPolylinePointInPathsThrough(IEnumerable<PolylinePoint> points) {
-            foreach (var pp in points)
-                UnregisterPolylinePointInPathsThrough(pp);
+        private void UnregisterPolylinePointInPathsThrough(IEnumerable<PolylinePoint> points) {
+            foreach (var pp in points) {
+                this.UnregisterPolylinePointInPathsThrough(pp);
+            }
         }
 
-        void UnregisterPolylinePointInPathsThrough(PolylinePoint pp) {
-            CollectionUtilities.RemoveFromMap(pathsThroughPoints, pp.Point, pp);
+        private void UnregisterPolylinePointInPathsThrough(PolylinePoint pp) {
+            CollectionUtilities.RemoveFromMap(this.pathsThroughPoints, pp.Point, pp);
         }
 
-        void SwitchFlips() {
-            var queued = new Set<Polyline>(Polylines);
+        private void SwitchFlips() {
+            var queued = new Set<Polyline>(this.Polylines);
             var queue = new Queue<Polyline>();
-            foreach (Polyline e in Polylines)
+            foreach (Polyline e in this.Polylines) {
                 queue.Enqueue(e);
+            }
+
             while (queue.Count > 0) {
                 Polyline initialPolyline = queue.Dequeue();
                 queued.Remove(initialPolyline);
-                Polyline changedPolyline = ProcessPolyline(initialPolyline);
+                Polyline changedPolyline = this.ProcessPolyline(initialPolyline);
                 if (changedPolyline != null) {
                     //we changed both polylines
                     if (!queued.Contains(initialPolyline)) {
@@ -82,16 +87,18 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             }
         }
 
-        Polyline ProcessPolyline(Polyline polyline) {
+        private Polyline ProcessPolyline(Polyline polyline) {
             var departed = new Dictionary<Polyline, PolylinePoint>();
             for (PolylinePoint pp = polyline.StartPoint.Next; pp != null; pp = pp.Next) {
-                FillDepartedPolylinePoints(pp, departed);
+                this.FillDepartedPolylinePoints(pp, departed);
 
                 //find returning
-                foreach (PolylinePoint polyPoint in pathsThroughPoints[pp.Point]) {
+                foreach (PolylinePoint polyPoint in this.pathsThroughPoints[pp.Point]) {
                     if (departed.ContainsKey(polyPoint.Polyline)) {
-                        if (ProcessFlip(polyline, polyPoint.Polyline, departed[polyPoint.Polyline].Point, pp.Point))
+                        if (this.ProcessFlip(polyline, polyPoint.Polyline, departed[polyPoint.Polyline].Point, pp.Point)) {
                             return polyPoint.Polyline;
+                        }
+
                         departed.Remove(polyPoint.Polyline);
                     }
                 }
@@ -100,52 +107,59 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return null;
         }
 
-        void FillDepartedPolylinePoints(PolylinePoint pp, Dictionary<Polyline, PolylinePoint> departed) {
+        private void FillDepartedPolylinePoints(PolylinePoint pp, Dictionary<Polyline, PolylinePoint> departed) {
             Point prevPoint = pp.Prev.Point;
-            foreach (PolylinePoint polyPoint in pathsThroughPoints[prevPoint]) {
-                if (!IsNeighbor(polyPoint, pp)) {
+            foreach (PolylinePoint polyPoint in this.pathsThroughPoints[prevPoint]) {
+                if (!this.IsNeighbor(polyPoint, pp)) {
                     Debug.Assert(!departed.ContainsKey(polyPoint.Polyline));
                     departed[polyPoint.Polyline] = polyPoint;
                 }
             }
         }
 
-        bool ProcessFlip(Polyline polylineA, Polyline polylineB, Point flipStart, Point flipEnd) {
+        private bool ProcessFlip(Polyline polylineA, Polyline polylineB, Point flipStart, Point flipEnd) {
             //temporary switching polylines of the same width only
             //need to check capacities here
-            if (polylineToEdgeGeom[polylineA].LineWidth != polylineToEdgeGeom[polylineB].LineWidth) return false;
+            if (this.polylineToEdgeGeom[polylineA].LineWidth != this.polylineToEdgeGeom[polylineB].LineWidth) {
+                return false;
+            }
+
             PolylinePoint aFirst, aLast, bFirst, bLast;
             bool forwardOrderA, forwardOrderB;
-            FindPointsOnPolyline(polylineA, flipStart, flipEnd, out aFirst, out aLast, out forwardOrderA);
-            FindPointsOnPolyline(polylineB, flipStart, flipEnd, out bFirst, out bLast, out forwardOrderB);
-            Debug.Assert(PolylinePointsAreInForwardOrder(aFirst, aLast) == forwardOrderA);
-            Debug.Assert(PolylinePointsAreInForwardOrder(bFirst, bLast) == forwardOrderB);
+            this.FindPointsOnPolyline(polylineA, flipStart, flipEnd, out aFirst, out aLast, out forwardOrderA);
+            this.FindPointsOnPolyline(polylineB, flipStart, flipEnd, out bFirst, out bLast, out forwardOrderB);
+            Debug.Assert(this.PolylinePointsAreInForwardOrder(aFirst, aLast) == forwardOrderA);
+            Debug.Assert(this.PolylinePointsAreInForwardOrder(bFirst, bLast) == forwardOrderB);
 
             //0 - the end
             //1 - not intersect
             //2 - intersect
-            int rel1 = FindRelationOnFirstPoint(aFirst, bFirst, forwardOrderA, forwardOrderB);
-            int rel2 = FindRelationOnLastPoint(aLast, bLast, forwardOrderA, forwardOrderB);
+            int rel1 = this.FindRelationOnFirstPoint(aFirst, bFirst, forwardOrderA, forwardOrderB);
+            int rel2 = this.FindRelationOnLastPoint(aLast, bLast, forwardOrderA, forwardOrderB);
 
             //no intersection on both sides
-            if (rel1 != 2 && rel2 != 2) return false;
+            if (rel1 != 2 && rel2 != 2) {
+                return false;
+            }
             //can't swap to reduce crossings
-            if (rel1 == 1 || rel2 == 1) return false;
+            if (rel1 == 1 || rel2 == 1) {
+                return false;
+            }
 
             //unregister
-            UnregisterPolylinePointInPathsThrough(polylineA.PolylinePoints);
-            UnregisterPolylinePointInPathsThrough(polylineB.PolylinePoints);
+            this.UnregisterPolylinePointInPathsThrough(polylineA.PolylinePoints);
+            this.UnregisterPolylinePointInPathsThrough(polylineB.PolylinePoints);
 
             //switching
-            Swap(aFirst, bFirst, aLast, bLast, forwardOrderA, forwardOrderB);
+            this.Swap(aFirst, bFirst, aLast, bLast, forwardOrderA, forwardOrderB);
 
             //register back
-            RegisterPolylinePointInPathsThrough(polylineA.PolylinePoints);
-            RegisterPolylinePointInPathsThrough(polylineB.PolylinePoints);
+            this.RegisterPolylinePointInPathsThrough(polylineA.PolylinePoints);
+            this.RegisterPolylinePointInPathsThrough(polylineB.PolylinePoints);
 
-            RegisterInterestingPoint(aFirst.Point);
-            RegisterInterestingPoint(aLast.Point);
-            numberOfReducedCrossings++;
+            this.RegisterInterestingPoint(aFirst.Point);
+            this.RegisterInterestingPoint(aLast.Point);
+            this.numberOfReducedCrossings++;
 
             /*dc = new List<DebugCurve>();
             Polyline pl = new Polyline(polylineA);
@@ -157,92 +171,111 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return true;
         }
 
-        void FindPointsOnPolyline(Polyline polyline, Point first, Point last,
+        private void FindPointsOnPolyline(Polyline polyline, Point first, Point last,
             out PolylinePoint ppFirst, out PolylinePoint ppLast, out bool forwardOrder) {
             ppFirst = ppLast = null;
             forwardOrder = false;
             for (PolylinePoint pp = polyline.StartPoint; pp != null; pp = pp.Next) {
-                if (pp.Point == first) ppFirst = pp;
-                if (pp.Point == last) ppLast = pp;
-                if (ppFirst != null && ppLast == null) forwardOrder = true;
-                if (ppFirst == null && ppLast != null) forwardOrder = false;
+                if (pp.Point == first) {
+                    ppFirst = pp;
+                }
+
+                if (pp.Point == last) {
+                    ppLast = pp;
+                }
+
+                if (ppFirst != null && ppLast == null) {
+                    forwardOrder = true;
+                }
+
+                if (ppFirst == null && ppLast != null) {
+                    forwardOrder = false;
+                }
             }
             Debug.Assert(ppFirst != null && ppLast != null);
         }
 
-        bool PolylinePointsAreInForwardOrder(PolylinePoint u, PolylinePoint v) {
+        private bool PolylinePointsAreInForwardOrder(PolylinePoint u, PolylinePoint v) {
             Debug.Assert(u.Polyline == v.Polyline);
-            for (PolylinePoint p = u; p != null; p = p.Next)
-                if (p == v) return true;
+            for (PolylinePoint p = u; p != null; p = p.Next) {
+                if (p == v) {
+                    return true;
+                }
+            }
+
             return false;
         }
 
-        PolylinePoint Next(PolylinePoint p, bool forwardOrder) {
+        private PolylinePoint Next(PolylinePoint p, bool forwardOrder) {
             return forwardOrder ? p.Next : p.Prev;
         }
 
-        PolylinePoint Prev(PolylinePoint p, bool forwardOrder) {
+        private PolylinePoint Prev(PolylinePoint p, bool forwardOrder) {
             return forwardOrder ? p.Prev : p.Next;
         }
 
-        int FindRelationOnFirstPoint(PolylinePoint aFirst, PolylinePoint bFirst, bool forwardOrderA, bool forwardOrderB) {
+        private int FindRelationOnFirstPoint(PolylinePoint aFirst, PolylinePoint bFirst, bool forwardOrderA, bool forwardOrderB) {
             Debug.Assert(aFirst.Point == bFirst.Point);
 
             PolylinePoint a0 = aFirst;
             PolylinePoint b0 = bFirst;
             while (true) {
-                PolylinePoint prevA = Prev(aFirst, forwardOrderA);
-                PolylinePoint prevB = Prev(bFirst, forwardOrderB);
+                PolylinePoint prevA = this.Prev(aFirst, forwardOrderA);
+                PolylinePoint prevB = this.Prev(bFirst, forwardOrderB);
 
                 if (prevA == null || prevB == null) {
                     Debug.Assert(prevA == null && prevB == null);
                     return 0;
                 }
 
-                if (prevA.Point != prevB.Point) break;
+                if (prevA.Point != prevB.Point) {
+                    break;
+                }
 
                 aFirst = prevA;
                 bFirst = prevB;
             }
 
-            return PolylinesIntersect(a0, b0, aFirst, bFirst, forwardOrderA, forwardOrderB);
+            return this.PolylinesIntersect(a0, b0, aFirst, bFirst, forwardOrderA, forwardOrderB);
         }
 
-        int FindRelationOnLastPoint(PolylinePoint aLast, PolylinePoint bLast, bool forwardOrderA, bool forwardOrderB) {
+        private int FindRelationOnLastPoint(PolylinePoint aLast, PolylinePoint bLast, bool forwardOrderA, bool forwardOrderB) {
             Debug.Assert(aLast.Point == bLast.Point);
 
             PolylinePoint a0 = aLast;
             PolylinePoint b0 = bLast;
             while (true) {
-                PolylinePoint nextA = Next(aLast, forwardOrderA);
-                PolylinePoint nextB = Next(bLast, forwardOrderB);
+                PolylinePoint nextA = this.Next(aLast, forwardOrderA);
+                PolylinePoint nextB = this.Next(bLast, forwardOrderB);
 
                 if (nextA == null || nextB == null) {
                     Debug.Assert(nextA == null && nextB == null);
                     return 0;
                 }
 
-                if (nextA.Point != nextB.Point) break;
+                if (nextA.Point != nextB.Point) {
+                    break;
+                }
 
                 aLast = nextA;
                 bLast = nextB;
             }
 
-            while (Next(aLast, forwardOrderA).Point == Prev(bLast, forwardOrderB).Point) {
-                aLast = Next(aLast, forwardOrderA);
-                bLast = Prev(bLast, forwardOrderB);
+            while (this.Next(aLast, forwardOrderA).Point == this.Prev(bLast, forwardOrderB).Point) {
+                aLast = this.Next(aLast, forwardOrderA);
+                bLast = this.Prev(bLast, forwardOrderB);
             }
 
-            return PolylinesIntersect(aLast, bLast, a0, b0, forwardOrderA, forwardOrderB);
+            return this.PolylinesIntersect(aLast, bLast, a0, b0, forwardOrderA, forwardOrderB);
         }
 
-        int PolylinesIntersect(PolylinePoint a0, PolylinePoint b0, PolylinePoint a1, PolylinePoint b1, bool forwardOrderA, bool forwardOrderB) {
-            PolylinePoint a0p = Prev(a0, forwardOrderA);
-            PolylinePoint a0n = Next(a0, forwardOrderA);
-            PolylinePoint a1n = Next(a1, forwardOrderA);
-            PolylinePoint a1p = Prev(a1, forwardOrderA);
-            PolylinePoint b0n = Next(b0, forwardOrderB);
-            PolylinePoint b1p = Prev(b1, forwardOrderB);
+        private int PolylinesIntersect(PolylinePoint a0, PolylinePoint b0, PolylinePoint a1, PolylinePoint b1, bool forwardOrderA, bool forwardOrderB) {
+            PolylinePoint a0p = this.Prev(a0, forwardOrderA);
+            PolylinePoint a0n = this.Next(a0, forwardOrderA);
+            PolylinePoint a1n = this.Next(a1, forwardOrderA);
+            PolylinePoint a1p = this.Prev(a1, forwardOrderA);
+            PolylinePoint b0n = this.Next(b0, forwardOrderB);
+            PolylinePoint b1p = this.Prev(b1, forwardOrderB);
 
             if (a0.Point == a1.Point) {
                 Point bs = a0.Point;
@@ -275,26 +308,25 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             }
         }
 
-
-        void Swap(PolylinePoint aFirst, PolylinePoint bFirst, PolylinePoint aLast, PolylinePoint bLast, bool forwardOrderA, bool forwardOrderB) {
-            List<PolylinePoint> intermediateAPoints = GetRangeOnPolyline(Next(aFirst, forwardOrderA), aLast, forwardOrderA);
-            List<PolylinePoint> intermediateBPoints = GetRangeOnPolyline(Next(bFirst, forwardOrderB), bLast, forwardOrderB);
+        private void Swap(PolylinePoint aFirst, PolylinePoint bFirst, PolylinePoint aLast, PolylinePoint bLast, bool forwardOrderA, bool forwardOrderB) {
+            List<PolylinePoint> intermediateAPoints = this.GetRangeOnPolyline(this.Next(aFirst, forwardOrderA), aLast, forwardOrderA);
+            List<PolylinePoint> intermediateBPoints = this.GetRangeOnPolyline(this.Next(bFirst, forwardOrderB), bLast, forwardOrderB);
 
             //changing a
-            ChangePolylineSegment(aFirst, aLast, forwardOrderA, intermediateBPoints);
+            this.ChangePolylineSegment(aFirst, aLast, forwardOrderA, intermediateBPoints);
 
             //changing b
-            ChangePolylineSegment(bFirst, bLast, forwardOrderB, intermediateAPoints);
+            this.ChangePolylineSegment(bFirst, bLast, forwardOrderB, intermediateAPoints);
 
             //resulting polylines might have cycles
             PathFixer.RemoveSelfCyclesFromPolyline(aFirst.Polyline);
-            Debug.Assert(PolylineIsOK(aFirst.Polyline));
+            Debug.Assert(this.PolylineIsOK(aFirst.Polyline));
 
             PathFixer.RemoveSelfCyclesFromPolyline(bFirst.Polyline);
-            Debug.Assert(PolylineIsOK(bFirst.Polyline));
+            Debug.Assert(this.PolylineIsOK(bFirst.Polyline));
         }
 
-        void ChangePolylineSegment(PolylinePoint aFirst, PolylinePoint aLast, bool forwardOrderA, List<PolylinePoint> intermediateBPoints) {
+        private void ChangePolylineSegment(PolylinePoint aFirst, PolylinePoint aLast, bool forwardOrderA, List<PolylinePoint> intermediateBPoints) {
             PolylinePoint curA = aFirst;
             foreach (PolylinePoint b in intermediateBPoints) {
                 var newp = new PolylinePoint(b.Point) { Polyline = curA.Polyline };
@@ -318,53 +350,72 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             }
         }
 
-        List<PolylinePoint> GetRangeOnPolyline(PolylinePoint start, PolylinePoint end, bool forwardOrder) {
+        private List<PolylinePoint> GetRangeOnPolyline(PolylinePoint start, PolylinePoint end, bool forwardOrder) {
             List<PolylinePoint> res = new List<PolylinePoint>();
-            for (PolylinePoint pp = start; pp != end; pp = Next(pp, forwardOrder))
+            for (PolylinePoint pp = start; pp != end; pp = this.Next(pp, forwardOrder)) {
                 res.Add(pp);
+            }
 
             return res;
         }
 
-        bool IsNeighbor(PolylinePoint a, PolylinePoint b) {
+        private bool IsNeighbor(PolylinePoint a, PolylinePoint b) {
             return a.Prev != null && a.Prev.Point == b.Point || a.Next != null && a.Next.Point == b.Point;
         }
 
-        void RegisterInterestingPoint(Point p) {
-            if (!interestingPoints.Contains(p))
-                interestingPoints.Insert(p);
+        private void RegisterInterestingPoint(Point p) {
+            if (!this.interestingPoints.Contains(p)) {
+                this.interestingPoints.Insert(p);
+            }
         }
 
         internal Set<Point> GetChangedHubs() {
-            return interestingPoints;
+            return this.interestingPoints;
         }
 
         internal int NumberOfReducedCrossings() {
-            return numberOfReducedCrossings;
+            return this.numberOfReducedCrossings;
         }
 
-        bool PolylineIsOK(Polyline poly) {
+        private bool PolylineIsOK(Polyline poly) {
             HashSet<Point> pointsToPP = new HashSet<Point>();
             for (var pp = poly.StartPoint; pp != null; pp = pp.Next) {
                 if (pp == poly.StartPoint) {
-                    if (pp.Prev != null) return false;
+                    if (pp.Prev != null) {
+                        return false;
+                    }
                 }
                 else {
-                    if (pp.Prev.Next != pp) return false;
+                    if (pp.Prev.Next != pp) {
+                        return false;
+                    }
                 }
                 if (pp == poly.EndPoint) {
-                    if (pp.Next != null) return false;
+                    if (pp.Next != null) {
+                        return false;
+                    }
                 }
                 else {
-                    if (pp.Next.Prev != pp) return false;
+                    if (pp.Next.Prev != pp) {
+                        return false;
+                    }
                 }
 
-                if (pointsToPP.Contains(pp.Point)) return false;
+                if (pointsToPP.Contains(pp.Point)) {
+                    return false;
+                }
+
                 pointsToPP.Add(pp.Point);
             }
 
-            if (poly.StartPoint.Prev != null) return false;
-            if (poly.EndPoint.Next != null) return false;
+            if (poly.StartPoint.Prev != null) {
+                return false;
+            }
+
+            if (poly.EndPoint.Next != null) {
+                return false;
+            }
+
             return true;
         }
     }

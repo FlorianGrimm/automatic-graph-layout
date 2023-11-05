@@ -7,16 +7,16 @@ using Microsoft.Msagl.Core.Layout;
 
 namespace Microsoft.Msagl.Layout.LargeGraphLayout {
     internal class ShortestPartRouterForLg {
-        readonly Node source;
-        readonly Node target;
-        GenericBinaryHeapPriorityQueue<Node> queue = new GenericBinaryHeapPriorityQueue<Node>();
-        Dictionary<Node, Tuple<Edge,double>> prev = new Dictionary<Node, Tuple<Edge,double>>();
-        Point pathDirection;
-        double alpha = 0.5;
-        double costToTarget;
-        Edge bestEdgeIntoTarget;
-        bool ignoreInteresingEdgesFunc;
-        Func<Node,LgNodeInfo> geomNodeToLgNode;
+        private readonly Node source;
+        private readonly Node target;
+        private GenericBinaryHeapPriorityQueue<Node> queue = new GenericBinaryHeapPriorityQueue<Node>();
+        private Dictionary<Node, Tuple<Edge,double>> prev = new Dictionary<Node, Tuple<Edge,double>>();
+        private Point pathDirection;
+        private double alpha = 0.5;
+        private double costToTarget;
+        private Edge bestEdgeIntoTarget;
+        private bool ignoreInteresingEdgesFunc;
+        private Func<Node,LgNodeInfo> geomNodeToLgNode;
 
         internal Func<Node,Node, bool> EdgeIsInterestingFunc { get; set; }
         internal bool ConsiderOnlyInterestingEdges { get; set; }
@@ -26,146 +26,164 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
             this.source = source;
             this.target = target;
             this.geomNodeToLgNode = geomNodeToLgNode;
-            queue.Enqueue(source, 0);
-            pathDirection = target.Center - source.Center;
-            costToTarget = double.PositiveInfinity;
-            EdgeIsInterestingFunc = MonotonicityFunc;
+            this.queue.Enqueue(source, 0);
+            this.pathDirection = target.Center - source.Center;
+            this.costToTarget = double.PositiveInfinity;
+            this.EdgeIsInterestingFunc = this.MonotonicityFunc;
         }
 
-        bool MonotonicityFunc(Node a, Node b) {
+        private bool MonotonicityFunc(Node a, Node b) {
             var edgeVector = a.Center - b.Center;
-            return edgeVector*pathDirection >= 0;
+            return edgeVector* this.pathDirection >= 0;
         }
 
 
         public Edge[] Run() {
-            ignoreInteresingEdgesFunc = false;
-            var ret=SearchForPath().ToArray();
-            if (ret.Length>0)
+            this.ignoreInteresingEdgesFunc = false;
+            var ret= this.SearchForPath().ToArray();
+            if (ret.Length>0) {
                 return ret;
+            }
 
-            if (ConsiderOnlyInterestingEdges)
-                    return null;
-            ignoreInteresingEdgesFunc = true;
-            Cleanup();
-            var p= SearchForPath().ToArray();
+            if (this.ConsiderOnlyInterestingEdges) {
+                return null;
+            }
+
+            this.ignoreInteresingEdgesFunc = true;
+            this.Cleanup();
+            var p= this.SearchForPath().ToArray();
             return p;
         }
 
-    
-        void Cleanup() {
-            costToTarget = double.PositiveInfinity;
-            bestEdgeIntoTarget = null;
-            prev.Clear();
-            queue = new GenericBinaryHeapPriorityQueue<Node>();
-            queue.Enqueue(source, 0);
+        private void Cleanup() {
+            this.costToTarget = double.PositiveInfinity;
+            this.bestEdgeIntoTarget = null;
+            this.prev.Clear();
+            this.queue = new GenericBinaryHeapPriorityQueue<Node>();
+            this.queue.Enqueue(this.source, 0);
         }
 
-        IEnumerable<Edge> SearchForPath() {
-            while (queue.Count > 0 ) {
+        private IEnumerable<Edge> SearchForPath() {
+            while (this.queue.Count > 0 ) {
                 double costPlus;
-                var node=queue.Dequeue(out costPlus);
-                if (costPlus >= costToTarget)
+                var node= this.queue.Dequeue(out costPlus);
+                if (costPlus >= this.costToTarget) {
                     break;
-                double cost = node == source ? 0 : prev[node].Item2;
-                ProcessVertex(node, cost);
+                }
+
+                double cost = node == this.source ? 0 : this.prev[node].Item2;
+                this.ProcessVertex(node, cost);
             }
-            IEnumerable<Edge> ret = RecoverPath();
+            IEnumerable<Edge> ret = this.RecoverPath();
             return ret;
         }
 
-        IEnumerable<Edge> RecoverPath() {
-            if (bestEdgeIntoTarget != null) {
-                Node currentNode = target;
-                Edge currentEdge = bestEdgeIntoTarget;
+        private IEnumerable<Edge> RecoverPath() {
+            if (this.bestEdgeIntoTarget != null) {
+                Node currentNode = this.target;
+                Edge currentEdge = this.bestEdgeIntoTarget;
                 do {
                     yield return currentEdge;
-                    currentNode = GetOtherVertex(currentEdge, currentNode);
-                    if (currentNode == source)
+                    currentNode = this.GetOtherVertex(currentEdge, currentNode);
+                    if (currentNode == this.source) {
                         break;
-                    currentEdge = prev[currentNode].Item1;
+                    }
+
+                    currentEdge = this.prev[currentNode].Item1;
                 } while (true);
             }
         }
 
-        Node GetOtherVertex(Edge currentEdge, Node currentNode) {
+        private Node GetOtherVertex(Edge currentEdge, Node currentNode) {
             return currentEdge.Source == currentNode ? currentEdge.Target : currentEdge.Source;
         }
 
-        void ProcessVertex(Node node, double cost) {
-            foreach (Edge outEdge in node.OutEdges)
-                ProcessOutEdge(outEdge, cost);
+        private void ProcessVertex(Node node, double cost) {
+            foreach (Edge outEdge in node.OutEdges) {
+                this.ProcessOutEdge(outEdge, cost);
+            }
 
-            foreach (Edge outEdge in node.InEdges)
-                ProcessInEdge(outEdge, cost);
+            foreach (Edge outEdge in node.InEdges) {
+                this.ProcessInEdge(outEdge, cost);
+            }
         }
 
-        void ProcessInEdge(Edge inEdge, double cost) {
+        private void ProcessInEdge(Edge inEdge, double cost) {
             var edgeVector = inEdge.Source.Center - inEdge.Target.Center;
-            if (!ignoreInteresingEdgesFunc && EdgeIsInterestingFunc!=null &&  !EdgeIsInterestingFunc(inEdge.Target,inEdge.Source)) return;
-            double costPlus = CalculateCostPlus(inEdge, edgeVector);
+            if (!this.ignoreInteresingEdgesFunc && this.EdgeIsInterestingFunc !=null &&  !this.EdgeIsInterestingFunc(inEdge.Target,inEdge.Source)) {
+                return;
+            }
+
+            double costPlus = this.CalculateCostPlus(inEdge, edgeVector);
             var totalCostToEdgeEnd = cost + costPlus;
-            if (inEdge.Source == target) {
-                if (totalCostToEdgeEnd < costToTarget) {
-                    costToTarget = totalCostToEdgeEnd;
-                    bestEdgeIntoTarget = inEdge;
+            if (inEdge.Source == this.target) {
+                if (totalCostToEdgeEnd < this.costToTarget) {
+                    this.costToTarget = totalCostToEdgeEnd;
+                    this.bestEdgeIntoTarget = inEdge;
                 }
             } else {
-                double h = AStarH(inEdge.Source);
-                if (totalCostToEdgeEnd + h >= costToTarget)
+                double h = this.AStarH(inEdge.Source);
+                if (totalCostToEdgeEnd + h >= this.costToTarget) {
                     return;
+                }
+
                 Tuple<Edge, double> storedPrev;
-                if (prev.TryGetValue(inEdge.Source, out storedPrev)) {
+                if (this.prev.TryGetValue(inEdge.Source, out storedPrev)) {
                     if (storedPrev.Item2 > totalCostToEdgeEnd) {
-                        prev[inEdge.Source] = new Tuple<Edge, double>(inEdge, totalCostToEdgeEnd);
-                        queue.Enqueue(inEdge.Source, totalCostToEdgeEnd + h);
+                        this.prev[inEdge.Source] = new Tuple<Edge, double>(inEdge, totalCostToEdgeEnd);
+                        this.queue.Enqueue(inEdge.Source, totalCostToEdgeEnd + h);
                     }
                 } else {
-                    prev[inEdge.Source]=new Tuple<Edge, double>(inEdge, totalCostToEdgeEnd);
-                    queue.Enqueue(inEdge.Source, totalCostToEdgeEnd + h);
+                    this.prev[inEdge.Source]=new Tuple<Edge, double>(inEdge, totalCostToEdgeEnd);
+                    this.queue.Enqueue(inEdge.Source, totalCostToEdgeEnd + h);
                 }
             }
         }
 
-        void ProcessOutEdge(Edge outEdge, double cost) {
+        private void ProcessOutEdge(Edge outEdge, double cost) {
             var edgeVector = outEdge.Target.Center - outEdge.Source.Center;
-            if (!ignoreInteresingEdgesFunc && EdgeIsInterestingFunc != null && !EdgeIsInterestingFunc(outEdge.Source, outEdge.Target)) return; 
-            double costPlus = CalculateCostPlus(outEdge, edgeVector);
+            if (!this.ignoreInteresingEdgesFunc && this.EdgeIsInterestingFunc != null && !this.EdgeIsInterestingFunc(outEdge.Source, outEdge.Target)) {
+                return;
+            }
+
+            double costPlus = this.CalculateCostPlus(outEdge, edgeVector);
             var totalCostToEdgeEnd = cost + costPlus;
-            if (outEdge.Target == target) {
-                if (totalCostToEdgeEnd < costToTarget) {
-                    costToTarget = totalCostToEdgeEnd;
-                    bestEdgeIntoTarget = outEdge;
+            if (outEdge.Target == this.target) {
+                if (totalCostToEdgeEnd < this.costToTarget) {
+                    this.costToTarget = totalCostToEdgeEnd;
+                    this.bestEdgeIntoTarget = outEdge;
                 }
             }
             else {
-                double h = AStarH(outEdge.Target);
-                if (totalCostToEdgeEnd + h >= costToTarget)
+                double h = this.AStarH(outEdge.Target);
+                if (totalCostToEdgeEnd + h >= this.costToTarget) {
                     return;
+                }
+
                 Tuple<Edge, double> storedPrev;
-                if(prev.TryGetValue(outEdge.Target, out storedPrev)) {
+                if(this.prev.TryGetValue(outEdge.Target, out storedPrev)) {
                     if (storedPrev.Item2 > totalCostToEdgeEnd) {
-                        prev[outEdge.Target] = new Tuple<Edge, double>(outEdge, totalCostToEdgeEnd);
-                        queue.Enqueue(outEdge.Target, totalCostToEdgeEnd+h);
+                        this.prev[outEdge.Target] = new Tuple<Edge, double>(outEdge, totalCostToEdgeEnd);
+                        this.queue.Enqueue(outEdge.Target, totalCostToEdgeEnd+h);
                     }
                 } else {
-                    prev[outEdge.Target] = new Tuple<Edge, double>(outEdge, totalCostToEdgeEnd);
-                    queue.Enqueue(outEdge.Target, totalCostToEdgeEnd + h);
+                    this.prev[outEdge.Target] = new Tuple<Edge, double>(outEdge, totalCostToEdgeEnd);
+                    this.queue.Enqueue(outEdge.Target, totalCostToEdgeEnd + h);
                 }
             }
         }
 
-        double AStarH(Node node) {
-            return (node.Center - target.Center).Length*(1 - alpha);
+        private double AStarH(Node node) {
+            return (node.Center - this.target.Center).Length*(1 - this.alpha);
         }
 
-        double CalculateCostPlus(Edge edge, Point edgeVector) {
-            return edgeVector.Length*(1 - alpha/ZoomLevel(edge));//diminishing the edge length for important edges
+        private double CalculateCostPlus(Edge edge, Point edgeVector) {
+            return edgeVector.Length*(1 - this.alpha / this.ZoomLevel(edge));//diminishing the edge length for important edges
         }
 
-        double ZoomLevel(Edge edge) {
-            var src = geomNodeToLgNode(edge.Source);
-            var trg = geomNodeToLgNode(edge.Target);
+        private double ZoomLevel(Edge edge) {
+            var src = this.geomNodeToLgNode(edge.Source);
+            var trg = this.geomNodeToLgNode(edge.Target);
             return Math.Max(src.ZoomLevel, trg.ZoomLevel);
         }
     }

@@ -12,113 +12,119 @@ namespace Microsoft.Msagl.Core.DataStructures {
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1711:IdentifiersShouldNotHaveIncorrectSuffix")]
     public class GenericBinaryHeapPriorityQueue<T> : IEnumerable<T> {
-
-        const int InitialHeapCapacity = 16;
+        private const int InitialHeapCapacity = 16;
 
 
         // ReSharper disable InconsistentNaming
-        GenericHeapElement<T>[] A;//array of heap elements
-        // ReSharper restore InconsistentNaming
+        private GenericHeapElement<T>[] A;//array of heap elements
+                                         // ReSharper restore InconsistentNaming
+
 
         /// <summary>
         /// it is a mapping from queue elements and their correspondent HeapElements
         /// </summary>
-        readonly Dictionary<T, GenericHeapElement<T>> cache;
-        internal int Count { get { return heapSize; } }
-        int heapSize;
+        private readonly Dictionary<T, GenericHeapElement<T>> cache;
+        internal int Count { get { return this.heapSize; } }
+
+        private int heapSize;
 
         internal bool ContainsElement(T key) {
-            return cache.ContainsKey(key);
+            return this.cache.ContainsKey(key);
         }
 
 
         internal GenericBinaryHeapPriorityQueue() {
-            cache = new Dictionary<T, GenericHeapElement<T>>();
-            A = new GenericHeapElement<T>[InitialHeapCapacity + 1];
+            this.cache = new Dictionary<T, GenericHeapElement<T>>();
+            this.A = new GenericHeapElement<T>[InitialHeapCapacity + 1];
         }
 
+        private void SwapWithParent(int i) {
+            var parent = this.A[i >> 1];
 
-        void SwapWithParent(int i) {
-            var parent = A[i >> 1];
-
-            PutAtI(i >> 1, A[i]);
-            PutAtI(i, parent);
+            this.PutAtI(i >> 1, this.A[i]);
+            this.PutAtI(i, parent);
         }
 
 
 
         internal void Enqueue(T element, double priority) {
-            if (heapSize == A.Length - 1) {
-                var newA = new GenericHeapElement<T>[A.Length * 2];
-                Array.Copy(A, 1, newA, 1, heapSize);
-                A = newA;
+            if (this.heapSize == this.A.Length - 1) {
+                var newA = new GenericHeapElement<T>[this.A.Length * 2];
+                Array.Copy(this.A, 1, newA, 1, this.heapSize);
+                this.A = newA;
             }
 
-            heapSize++;
-            int i = heapSize;
-            A[i] = cache[element] = new GenericHeapElement<T>(i, priority, element);
-            while (i > 1 && A[i >> 1].priority.CompareTo(priority) > 0) {
-                SwapWithParent(i);
+            this.heapSize++;
+            int i = this.heapSize;
+            this.A[i] = this.cache[element] = new GenericHeapElement<T>(i, priority, element);
+            while (i > 1 && this.A[i >> 1].priority.CompareTo(priority) > 0) {
+                this.SwapWithParent(i);
                 i >>= 1;
             }          
         }
 
         internal bool IsEmpty() {
-            return heapSize == 0;
+            return this.heapSize == 0;
         }
 
-        void PutAtI(int i, GenericHeapElement<T> h) {
-            A[i] = h;
+        private void PutAtI(int i, GenericHeapElement<T> h) {
+            this.A[i] = h;
             h.indexToA = i;
         }
 
         internal T Dequeue() {
-            if (heapSize == 0)
+            if (this.heapSize == 0) {
                 throw new InvalidOperationException();
+            }
 
-            var ret = A[1].v;
+            var ret = this.A[1].v;
 
-            MoveQueueOneStepForward(ret);
+            this.MoveQueueOneStepForward(ret);
 
             return ret;
 
         }
 
         internal T Dequeue(out double priority) {
-            if (heapSize == 0) throw new InvalidOperationException();
+            if (this.heapSize == 0) {
+                throw new InvalidOperationException();
+            }
 
-            var ret = A[1].v;
-            priority = A[1].priority;
-            MoveQueueOneStepForward(ret);
+            var ret = this.A[1].v;
+            priority = this.A[1].priority;
+            this.MoveQueueOneStepForward(ret);
             return ret;
         }
 
-        void MoveQueueOneStepForward(T ret) {
-            cache.Remove(ret);
-            PutAtI(1, A[heapSize]);
+        private void MoveQueueOneStepForward(T ret) {
+            this.cache.Remove(ret);
+            this.PutAtI(1, this.A[this.heapSize]);
             int i = 1;
             while (true) {
                 int smallest = i;
                 int l = i << 1;
 
-                if (l <= heapSize && A[l].priority.CompareTo(A[i].priority) < 0)
+                if (l <= this.heapSize && this.A[l].priority.CompareTo(this.A[i].priority) < 0) {
                     smallest = l;
+                }
 
                 int r = l + 1;
 
-                if (r <= heapSize && A[r].priority.CompareTo(A[smallest].priority) < 0)
+                if (r <= this.heapSize && this.A[r].priority.CompareTo(this.A[smallest].priority) < 0) {
                     smallest = r;
+                }
 
-                if (smallest != i)
-                    SwapWithParent(smallest);
-                else
+                if (smallest != i) {
+                    this.SwapWithParent(smallest);
+                } else {
                     break;
+                }
 
                 i = smallest;
 
             }
 
-            heapSize--;
+            this.heapSize--;
         }
 
         /// <summary>
@@ -129,16 +135,20 @@ namespace Microsoft.Msagl.Core.DataStructures {
         {
             GenericHeapElement<T> h;
             //ignore the element if it is not in the queue
-            if (!cache.TryGetValue(element, out h)) return;
-                
+            if (!this.cache.TryGetValue(element, out h)) {
+                return;
+            }
+
             //var h = cache[element];
             h.priority = newPriority;
             int i = h.indexToA;
             while (i > 1) {
-                if (A[i].priority.CompareTo(A[i >> 1].priority) < 0)
-                    SwapWithParent(i);
-                else
+                if (this.A[i].priority.CompareTo(this.A[i >> 1].priority) < 0) {
+                    this.SwapWithParent(i);
+                } else {
                     break;
+                }
+
                 i >>= 1;
             }
         }
@@ -150,8 +160,9 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// </summary>
         /// <returns></returns>
         public IEnumerator<T> GetEnumerator() {
-            for (int i = 1; i <= heapSize; i++)
-                yield return A[i].v;
+            for (int i = 1; i <= this.heapSize; i++) {
+                yield return this.A[i].v;
+            }
         }
 
         /// <summary>
@@ -160,17 +171,18 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// <param name="priority"></param>
         /// <returns></returns>
         public T Peek(out double priority) {
-            if (Count == 0) {
+            if (this.Count == 0) {
                 priority = 0.0;
                 return default(T);
             }
-            priority = A[1].priority;
-            return A[1].v;         
+            priority = this.A[1].priority;
+            return this.A[1].v;         
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
-            for (int i = 1; i <= heapSize; i++)
-                yield return A[i].v;
+            for (int i = 1; i <= this.heapSize; i++) {
+                yield return this.A[i].v;
+            }
         }
 #if TEST_MSAGL
         /// <summary>
@@ -179,8 +191,10 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// <returns></returns>
         public override string ToString() {
             StringBuilder sb=new StringBuilder();
-            foreach (var i in this)
+            foreach (var i in this) {
                 sb.Append(i + ",");
+            }
+
             return sb.ToString();
         }
   

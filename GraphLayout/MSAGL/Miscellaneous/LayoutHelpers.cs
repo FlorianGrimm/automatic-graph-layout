@@ -40,23 +40,25 @@ namespace Microsoft.Msagl.Miscellaneous {
                 var mdsLayoutSettings = settings as MdsLayoutSettings;
                 var mdsLayout = new MdsGraphLayout(mdsLayoutSettings, geometryGraph);
                 mdsLayout.Run(cancelToken);
-                if (settings.EdgeRoutingSettings.EdgeRoutingMode != EdgeRoutingMode.None)
+                if (settings.EdgeRoutingSettings.EdgeRoutingMode != EdgeRoutingMode.None) {
                     RouteAndLabelEdges(geometryGraph, settings, geometryGraph.Edges, 0, cancelToken);
+                }
             }
             else if (settings is FastIncrementalLayoutSettings) {
                 var incrementalSettings = settings as FastIncrementalLayoutSettings;
                 incrementalSettings.AvoidOverlaps = true;
                 var initialLayout = new InitialLayout(geometryGraph, incrementalSettings);
                 initialLayout.Run(cancelToken);
-                if (settings.EdgeRoutingSettings.EdgeRoutingMode != EdgeRoutingMode.None)
+                if (settings.EdgeRoutingSettings.EdgeRoutingMode != EdgeRoutingMode.None) {
                     RouteAndLabelEdges(geometryGraph, settings, geometryGraph.Edges, 0, cancelToken);
+                }
                 //incrementalSettings.IncrementalRun(geometryGraph);
             }
             else {
                 var sugiyamaLayoutSettings = settings as SugiyamaLayoutSettings;
-                if (sugiyamaLayoutSettings != null)
+                if (sugiyamaLayoutSettings != null) {
                     ProcessSugiyamaLayout(geometryGraph, sugiyamaLayoutSettings, cancelToken);
-                else {
+                } else {
                     Debug.Assert(settings is LgLayoutSettings);
                     LayoutLargeGraphWithLayers(geometryGraph, settings, cancelToken, tileDirectory);
                 }
@@ -83,7 +85,7 @@ namespace Microsoft.Msagl.Miscellaneous {
             largeGraphLayout.LabelingOfOneRun();
         }
 
-        static void ProcessSugiyamaLayout(GeometryGraph geometryGraph, SugiyamaLayoutSettings sugiyamaLayoutSettings, CancelToken cancelToken) {
+        private static void ProcessSugiyamaLayout(GeometryGraph geometryGraph, SugiyamaLayoutSettings sugiyamaLayoutSettings, CancelToken cancelToken) {
             PlaneTransformation originalTransform;
             var transformIsNotIdentity = HandleTransformIsNotIdentity(geometryGraph, sugiyamaLayoutSettings, out originalTransform);
 
@@ -101,23 +103,27 @@ namespace Microsoft.Msagl.Miscellaneous {
                 var edgesToRoute = sugiyamaLayoutSettings.EdgeRoutingSettings.EdgeRoutingMode == EdgeRoutingMode.SplineBundling ? geometryGraph.Edges.ToArray() : geometryGraph.Edges.Where(e => e.Curve == null).ToArray();
                 RouteAndLabelEdges(geometryGraph, sugiyamaLayoutSettings, edgesToRoute, 0, cancelToken);
             }
-            else
+            else {
                 geometryGraph.AlgorithmData = SugiyamaLayoutSettings.CalculateLayout(geometryGraph,
                     sugiyamaLayoutSettings, cancelToken);
+            }
 
-            if (transformIsNotIdentity)
+            if (transformIsNotIdentity) {
                 sugiyamaLayoutSettings.Transformation = originalTransform;
+            }
 
             PostRunTransform(geometryGraph, sugiyamaLayoutSettings);
         }
 
-        static bool HandleTransformIsNotIdentity(GeometryGraph geometryGraph, SugiyamaLayoutSettings sugiyamaLayoutSettings,
+        private static bool HandleTransformIsNotIdentity(GeometryGraph geometryGraph, SugiyamaLayoutSettings sugiyamaLayoutSettings,
             out PlaneTransformation originalTransform) {
             var transformIsNotIdentity = !sugiyamaLayoutSettings.Transformation.IsIdentity;
             originalTransform = sugiyamaLayoutSettings.Transformation;
             if (transformIsNotIdentity) {
                 var m = sugiyamaLayoutSettings.Transformation.Inverse;
-                foreach (Node n in geometryGraph.Nodes) n.Transform(m);
+                foreach (Node n in geometryGraph.Nodes) {
+                    n.Transform(m);
+                }
                 //calculate new label widths and heights
                 foreach (Edge e in geometryGraph.Edges) {
                     if (e.Label != null) {
@@ -133,14 +139,16 @@ namespace Microsoft.Msagl.Miscellaneous {
             return transformIsNotIdentity;
         }
 
-        static void PrepareGraphForInitialLayoutByCluster(GeometryGraph geometryGraph,
+        private static void PrepareGraphForInitialLayoutByCluster(GeometryGraph geometryGraph,
             SugiyamaLayoutSettings sugiyamaLayoutSettings) {
             foreach (var cluster in geometryGraph.RootCluster.AllClustersDepthFirst()) {
-                if (cluster.RectangularBoundary == null)
+                if (cluster.RectangularBoundary == null) {
                     cluster.RectangularBoundary = new RectangularClusterBoundary { TopMargin = 10 };
+                }
 
-                if (cluster.BoundaryCurve == null)
+                if (cluster.BoundaryCurve == null) {
                     cluster.BoundaryCurve = new RoundedRect(new Rectangle(0, 0, 10, 10), 3, 3);
+                }
             }
 
             foreach (var edge in geometryGraph.Edges) {
@@ -166,19 +174,26 @@ namespace Microsoft.Msagl.Miscellaneous {
 #endif
                 }
             }
-            if (sugiyamaLayoutSettings.FallbackLayoutSettings == null)
+            if (sugiyamaLayoutSettings.FallbackLayoutSettings == null) {
                 sugiyamaLayoutSettings.FallbackLayoutSettings = new FastIncrementalLayoutSettings() {
                     AvoidOverlaps = true
                 };
+            }
+
             AddOrphanNodesToRootCluster(geometryGraph);
         }
 
-        static void AddOrphanNodesToRootCluster(GeometryGraph geometryGraph) {
+        private static void AddOrphanNodesToRootCluster(GeometryGraph geometryGraph) {
             var clusterNodeSet = new Set<Node>();
-            foreach (var cl in geometryGraph.RootCluster.AllClustersDepthFirst())
+            foreach (var cl in geometryGraph.RootCluster.AllClustersDepthFirst()) {
                 clusterNodeSet.InsertRange(cl.Nodes);
+            }
+
             foreach (var node in geometryGraph.Nodes) {
-                if (clusterNodeSet.Contains(node)) continue;
+                if (clusterNodeSet.Contains(node)) {
+                    continue;
+                }
+
                 geometryGraph.RootCluster.AddNode(node);
             }
         }
@@ -192,8 +207,10 @@ namespace Microsoft.Msagl.Miscellaneous {
             //todo: what about parent edges!!!!
             var filteredEdgesToRoute =
                 edgesToRoute.Where(e => !e.UnderCollapsedCluster()).ToArray();
-            if (filteredEdgesToRoute.Length == 0)
+            if (filteredEdgesToRoute.Length == 0) {
                 return;
+            }
+
             var ers = layoutSettings.EdgeRoutingSettings;
             var nodes = new Set<Node>(geometryGraph.Nodes);
             foreach (var e in filteredEdgesToRoute) {
@@ -246,17 +263,18 @@ namespace Microsoft.Msagl.Miscellaneous {
             geometryGraph.UpdateBoundingBox();
         }
 
-
-
-        static void PostRunTransform(GeometryGraph geometryGraph, SugiyamaLayoutSettings settings) {
+        private static void PostRunTransform(GeometryGraph geometryGraph, SugiyamaLayoutSettings settings) {
             bool transform = !settings.Transformation.IsIdentity;
             if (transform) {
-                foreach (Node n in geometryGraph.Nodes)
+                foreach (Node n in geometryGraph.Nodes) {
                     n.Transform(settings.Transformation);
+                }
+
                 foreach (var n in geometryGraph.RootCluster.AllClustersDepthFirst()) {
                     n.Transform(settings.Transformation);
-                    if (n.BoundaryCurve != null)
+                    if (n.BoundaryCurve != null) {
                         n.RectangularBoundary.Rect = n.BoundaryCurve.BoundingBox;
+                    }
                 }
 
                 //restore labels widths and heights
@@ -272,25 +290,31 @@ namespace Microsoft.Msagl.Miscellaneous {
             geometryGraph.UpdateBoundingBox();
         }
 
-        static void TransformCurves(GeometryGraph geometryGraph, SugiyamaLayoutSettings settings) {
+        private static void TransformCurves(GeometryGraph geometryGraph, SugiyamaLayoutSettings settings) {
             PlaneTransformation transformation = settings.Transformation;
             geometryGraph.BoundingBox = new Rectangle(transformation * geometryGraph.LeftBottom, transformation * geometryGraph.RightTop);
             foreach (Edge e in geometryGraph.Edges) {
-                if (e.Label != null)
+                if (e.Label != null) {
                     e.Label.Center = transformation * e.Label.Center;
+                }
+
                 if (e.Curve != null) {
                     e.Curve = e.Curve.Transform(transformation);
                     var eg = e.EdgeGeometry;
-                    if (eg.SourceArrowhead != null)
+                    if (eg.SourceArrowhead != null) {
                         eg.SourceArrowhead.TipPosition = transformation * eg.SourceArrowhead.TipPosition;
-                    if (eg.TargetArrowhead != null)
+                    }
+
+                    if (eg.TargetArrowhead != null) {
                         eg.TargetArrowhead.TipPosition = transformation * eg.TargetArrowhead.TipPosition;
+                    }
+
                     TransformUnderlyingPolyline(e, settings);
                 }
             }
         }
 
-        static void TransformUnderlyingPolyline(Edge e, SugiyamaLayoutSettings settings) {
+        private static void TransformUnderlyingPolyline(Edge e, SugiyamaLayoutSettings settings) {
             if (e.UnderlyingPolyline != null) {
                 for (CornerSite s = e.UnderlyingPolyline.HeadSite; s != null; s = s.Next) {
                     s.Point = settings.Transformation * s.Point;

@@ -5,8 +5,8 @@ namespace Microsoft.Msagl.Core.Geometry {
     /// A segment line wrapper used for creation Dictionary of pairs of points
     /// </summary>
     internal class PointPair : IComparable<PointPair> {
-        Point first;
-        Point second;
+        private Point first;
+        private Point second;
 
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289
         //SharpKit/Colin - hashing
@@ -29,45 +29,54 @@ namespace Microsoft.Msagl.Core.Geometry {
         }
 
         public Point First {
-            get { return first; }
+            get { return this.first; }
         }
 
         public Point Second {
-            get { return second; }
+            get { return this.second; }
         }
 
         public double Length {
-            get { return (first - second).Length; }
+            get { return (this.first - this.second).Length; }
         }
 
         #region IComparable<PointPair> Members
 
         public int CompareTo(PointPair other) {
             ValidateArg.IsNotNull(other, "other");
-            int cr = first.CompareTo(other.first);
-            if (cr != 0) return cr;
-            return second.CompareTo(other.second);
+            int cr = this.first.CompareTo(other.first);
+            if (cr != 0) {
+                return cr;
+            }
+
+            return this.second.CompareTo(other.second);
         }
 
         #endregion
 
-        static bool IsLess(Point p1, Point p2) {
-            if (p1.Y < p2.Y)
+        private static bool IsLess(Point p1, Point p2) {
+            if (p1.Y < p2.Y) {
                 return true;
-            if (p1.Y > p2.Y)
+            }
+
+            if (p1.Y > p2.Y) {
                 return false;
+            }
+
             return p1.X < p2.X;
         }
 
         public override int GetHashCode() {
-            var hc = (uint) first.GetHashCode();
-            return (int) ((hc << 5 | hc >> 27) + (uint) second.GetHashCode());
+            var hc = (uint)this.first.GetHashCode();
+            return (int) ((hc << 5 | hc >> 27) + (uint)this.second.GetHashCode());
         }
 
         public override bool Equals(object obj) {
             var otherPair = obj as PointPair;
-            if (ReferenceEquals(otherPair, null))
+            if (ReferenceEquals(otherPair, null)) {
                 return false;
+            }
+
             return otherPair == this;
         }
 
@@ -80,7 +89,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         }
 
         public override string ToString() {
-            return first + " " + second;
+            return this.first + " " + this.second;
         }
     }
 }

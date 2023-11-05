@@ -20,8 +20,9 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
                     while (queue.Count > 0) {
                         int s = queue.Dequeue();
                         nodes.Add(s);
-                        foreach (int neighbor in Neighbors(graph, s))
+                        foreach (int neighbor in Neighbors(graph, s)) {
                             Enqueue(neighbor, queue, enqueueed);
+                        }
                     }
 
                     yield return nodes;
@@ -29,14 +30,17 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
             }
         }
 
-        static IEnumerable<int> Neighbors(BasicGraphOnEdges<TEdge> graph, int s) {
-            foreach (TEdge e in graph.OutEdges(s))
+        private static IEnumerable<int> Neighbors(BasicGraphOnEdges<TEdge> graph, int s) {
+            foreach (TEdge e in graph.OutEdges(s)) {
                 yield return e.Target;
-            foreach (TEdge e in graph.InEdges(s))
+            }
+
+            foreach (TEdge e in graph.InEdges(s)) {
                 yield return e.Source;
+            }
         }
-    
-        static void Enqueue(int i, Queue<int> q, bool[] enqueueed) {
+
+        private static void Enqueue(int i, Queue<int> q, bool[] enqueueed) {
             if (enqueueed[i] == false) {
                 q.Enqueue(i);
                 enqueueed[i] = true;

@@ -86,7 +86,7 @@ namespace Microsoft.Msagl.Core.Geometry
         /// </summary>
         public double Open
         {
-            get { return Position - (Size / 2); }
+            get { return this.Position - (this.Size / 2); }
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Microsoft.Msagl.Core.Geometry
         /// </summary>
         public double Close
         {
-            get { return Position + (Size / 2); }
+            get { return this.Position + (this.Size / 2); }
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace Microsoft.Msagl.Core.Geometry
         /// </summary>
         public double OpenP
         {
-            get { return PositionP - (SizeP / 2); }
+            get { return this.PositionP - (this.SizeP / 2); }
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace Microsoft.Msagl.Core.Geometry
         /// </summary>
         public double CloseP
         {
-            get { return PositionP + (SizeP / 2); }
+            get { return this.PositionP + (this.SizeP / 2); }
         }
 
         /// <summary>
@@ -205,7 +205,7 @@ namespace Microsoft.Msagl.Core.Geometry
             {
                 // Make sure the position is updated as the caller may have called this before and then we recalculated
                 // the position at some point (e.g. for Cluster boundary nodes).
-                UpdateDesiredPosition(this.Position);
+                this.UpdateDesiredPosition(this.Position);
             }
         }
 

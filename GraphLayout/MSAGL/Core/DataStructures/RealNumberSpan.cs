@@ -6,19 +6,20 @@ namespace Microsoft.Msagl.Core.DataStructures {
     /// </summary>
     public class RealNumberSpan{
         internal RealNumberSpan(){
-            IsEmpty = true;
+            this.IsEmpty = true;
         }
 
         internal bool IsEmpty { get; set; }
 
         internal void AddValue(double x){
-            if(IsEmpty){
-                Min = Max = x;
-                IsEmpty = false;
-            } else if(x < Min)
-                Min = x;
-            else if(x > Max)
-                Max = x;
+            if(this.IsEmpty) {
+                this.Min = this.Max = x;
+                this.IsEmpty = false;
+            } else if(x < this.Min) {
+                this.Min = x;
+            } else if(x > this.Max) {
+                this.Max = x;
+            }
         }
 
         internal double Min { get; set; }
@@ -27,7 +28,7 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// 
         /// </summary>
         public double Length{
-            get { return Max-Min; }
+            get { return this.Max - this.Min; }
         }
 #if TEST_MSAGL
         /// <summary>
@@ -36,7 +37,7 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider", MessageId = "System.String.Format(System.String,System.Object,System.Object)")]
         public override string ToString() {
-            return IsEmpty ? "empty" : String.Format("{0},{1}", Min, Max);
+            return this.IsEmpty ? "empty" : String.Format("{0},{1}", this.Min, this.Max);
         }
 #endif
     }

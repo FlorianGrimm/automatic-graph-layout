@@ -98,7 +98,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         //          Y[B] = (AD[B] - AB[B])/A2[B]
 
         // A MatrixCell implements A[i][j] as above.
-        struct MatrixCell
+        private struct MatrixCell
         {
             // Initially the summed weights of all variables to which this variable has a relationship
             // (including self as described above for the diagonal), then modified with scale.
@@ -109,8 +109,8 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
 
             internal MatrixCell(double w, uint index)
             {
-                Value = w;
-                Column = index;
+                this.Value = w;
+                this.Column = index;
             }
         }
 
@@ -124,10 +124,10 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             internal readonly double OrigDesiredPos;
             internal QpscVar(Variable v)
             {
-                Variable = v;
-                OrigWeight = v.Weight;
-                OrigScale = v.Scale;
-                OrigDesiredPos = Variable.DesiredPos;
+                this.Variable = v;
+                this.OrigWeight = v.Weight;
+                this.OrigScale = v.Scale;
+                this.OrigDesiredPos = this.Variable.DesiredPos;
             }
         }
 
@@ -271,7 +271,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                 {
                     if (cell.Column == variable.Ordinal)
                     {
-                        if (solverParameters.Advanced.ScaleInQpsc)
+                        if (this.solverParameters.Advanced.ScaleInQpsc)
                         {
                             variable.Scale = 1.0 / Math.Sqrt(Math.Abs(cell.Value));
                             if (double.IsInfinity(variable.Scale))
@@ -306,7 +306,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             }
 #endif // VERBOSE
 
-            if (!solverParameters.Advanced.ScaleInQpsc)
+            if (!this.solverParameters.Advanced.ScaleInQpsc)
             {
                 return;
             }
@@ -377,12 +377,12 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             // Compute: g = Q'y + b' (in the Scaling paper terminology)
             //
             // g(radient) = Q'y...
-            MatrixVectorMultiply(this.vectorCurY, this.gradientVector /*result*/);
+            this.MatrixVectorMultiply(this.vectorCurY, this.gradientVector /*result*/);
 
             // If we've minimized the goal function (far enough), we're done.
             // This uses the Q'y value we've just put into gradientVector and tests the goal-function value
             // to see if it is sufficiently close to the previous value to be considered converged.
-            if (HasConverged())
+            if (this.HasConverged())
             {
                 return false;
             }
@@ -397,7 +397,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             double alphaDenominator = 0.0;
             if (0.0 != alphaNumerator)
             {
-                MatrixVectorMultiply(this.gradientVector, this.vectorQg /*result*/);
+                this.MatrixVectorMultiply(this.gradientVector, this.vectorQg /*result*/);
                 alphaDenominator = VectorVectorMultiply(this.vectorQg, this.gradientVector);
             }
             if (0.0 == alphaDenominator)
@@ -507,7 +507,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             {
                 // Calculate Qp first (matrix ops are associative so (AB)C == A(BC), so calculate the rhs first
                 // with MatrixVectorMultiply).  Temporarily hijack vectorQg for this operation.
-                MatrixVectorMultiply(this.vectorCurY /*p*/, this.vectorQg /*result*/);
+                this.MatrixVectorMultiply(this.vectorCurY /*p*/, this.vectorQg /*result*/);
 
                 // Now p#(Qp).
                 double betaDenominator = VectorVectorMultiply(this.vectorQg, this.vectorCurY /*p*/);
@@ -557,7 +557,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                 qvar.Variable.Weight = qvar.OrigWeight;
                 qvar.Variable.DesiredPos = qvar.OrigDesiredPos;
 
-                if (solverParameters.Advanced.ScaleInQpsc)
+                if (this.solverParameters.Advanced.ScaleInQpsc)
                 {
                     // This multiplication essentially does what Constraint.Violation does, so the "satisfied" state
                     // of constraints won't be changed.
@@ -587,7 +587,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             // We don't need to do the Ax operation as this is done as part of PreProject which has
             // already put this into gradientVector.
             //
-            double currentFunctionValue = GetFunctionValue(this.vectorCurY);
+            double currentFunctionValue = this.GetFunctionValue(this.vectorCurY);
 
 #if VERBOSE
             // (x'Ax)/2 + bx + (w d).d, to test against the Mathematica output.
@@ -636,8 +636,8 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                                 previousFunctionValue, currentFunctionValue, diff, quotient);
 #endif // VERBOSE
 
-                if ((Math.Abs(diff) < solverParameters.QpscConvergenceEpsilon)
-                        || (Math.Abs(quotient) < solverParameters.QpscConvergenceQuotient))
+                if ((Math.Abs(diff) < this.solverParameters.QpscConvergenceEpsilon)
+                        || (Math.Abs(quotient) < this.solverParameters.QpscConvergenceQuotient))
                 {
 #if VERBOSE
                     System.Diagnostics.Debug.WriteLine("  Terminating due to function value change within convergence epsilon");

@@ -18,12 +18,14 @@ namespace Microsoft.Msagl.Routing {
         ///<summary>
         ///</summary>
         public CdtSite lowerSite;
+
         ///<summary>
         ///</summary>
-        CdtTriangle ccwTriangle; //in this triangle the edge goes counterclockwise
+        private CdtTriangle ccwTriangle; //in this triangle the edge goes counterclockwise
+
         ///<summary>
         ///</summary>
-        CdtTriangle cwTriangle; //in this triangle the edge goes clockwise, against the triangle orientation
+        private CdtTriangle cwTriangle; //in this triangle the edge goes clockwise, against the triangle orientation
         ///<summary>
         /// is an obstacle side, or a given segment
         ///</summary>
@@ -36,16 +38,16 @@ namespace Microsoft.Msagl.Routing {
         public CdtEdge(CdtSite a, CdtSite b) {
             var above = Cdt.Above(a.Point, b.Point);
             if (above == 1) {
-                upperSite = a;
-                lowerSite = b;
+                this.upperSite = a;
+                this.lowerSite = b;
             }
             else {
                 Debug.Assert(above != 0);
-                lowerSite = a;
-                upperSite = b;
+                this.lowerSite = a;
+                this.upperSite = b;
             }
 
-            upperSite.AddEdgeToSite(this);
+            this.upperSite.AddEdgeToSite(this);
         }
 
         /// <summary>
@@ -62,22 +64,22 @@ namespace Microsoft.Msagl.Routing {
         ///<summary>
         ///</summary>
         public CdtTriangle CcwTriangle {
-            get { return ccwTriangle; }
+            get { return this.ccwTriangle; }
             set {
-                Debug.Assert(value == null || cwTriangle==null || value.OppositeSite(this) !=
-                    cwTriangle.OppositeSite(this));
-                ccwTriangle = value;
+                Debug.Assert(value == null || this.cwTriangle ==null || value.OppositeSite(this) !=
+                    this.cwTriangle.OppositeSite(this));
+                this.ccwTriangle = value;
             }
         }
 
         ///<summary>
         ///</summary>
         public CdtTriangle CwTriangle {
-            get { return cwTriangle; }
+            get { return this.cwTriangle; }
             set {
-                Debug.Assert(value == null || ccwTriangle==null || value.OppositeSite(this) !=
-                    ccwTriangle.OppositeSite(this));
-                cwTriangle = value;
+                Debug.Assert(value == null || this.ccwTriangle ==null || value.OppositeSite(this) !=
+                    this.ccwTriangle.OppositeSite(this));
+                this.cwTriangle = value;
             }
         }
 
@@ -88,7 +90,7 @@ namespace Microsoft.Msagl.Routing {
         /// <param name="p"></param>
         /// <returns></returns>
         public CdtTriangle GetOtherTriangle(CdtSite p) {
-            return cwTriangle.Contains(p) ? ccwTriangle : cwTriangle;
+            return this.cwTriangle.Contains(p) ? this.ccwTriangle : this.cwTriangle;
         }
 
         ///<summary>
@@ -96,7 +98,7 @@ namespace Microsoft.Msagl.Routing {
         ///<param name="pi"></param>
         ///<returns></returns>
         public bool IsAdjacent(CdtSite pi) {
-            return pi == upperSite || pi == lowerSite;
+            return pi == this.upperSite || pi == this.lowerSite;
         }
 
         ///<summary>
@@ -104,7 +106,7 @@ namespace Microsoft.Msagl.Routing {
         ///<param name="triangle"></param>
         ///<returns></returns>
         public CdtTriangle GetOtherTriangle(CdtTriangle triangle) {
-            return ccwTriangle == triangle ? cwTriangle : ccwTriangle;
+            return this.ccwTriangle == triangle ? this.cwTriangle : this.ccwTriangle;
         }
 
         /// <summary>
@@ -115,7 +117,7 @@ namespace Microsoft.Msagl.Routing {
         /// </returns>
         /// <filterpriority>2</filterpriority>
         public override string ToString() {
-            return String.Format("({0},{1})", upperSite, lowerSite);
+            return String.Format("({0},{1})", this.upperSite, this.lowerSite);
         }
 
         ///<summary>
@@ -123,8 +125,8 @@ namespace Microsoft.Msagl.Routing {
         ///<param name="site"></param>
         ///<returns></returns>
         public CdtSite OtherSite(CdtSite site) {
-            Debug.Assert(IsAdjacent(site));
-            return upperSite == site ? lowerSite : upperSite;
+            Debug.Assert(this.IsAdjacent(site));
+            return this.upperSite == site ? this.lowerSite : this.upperSite;
         }
     }
 }

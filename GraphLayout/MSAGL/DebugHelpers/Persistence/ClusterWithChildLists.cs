@@ -12,7 +12,7 @@ namespace Microsoft.Msagl.DebugHelpers {
         internal List<string> ChildNodes = new List<string>();
         internal Cluster Cluster;
         internal ClusterWithChildLists(Cluster cl) {
-            Cluster = cl;
+            this.Cluster = cl;
         }
     }
 }

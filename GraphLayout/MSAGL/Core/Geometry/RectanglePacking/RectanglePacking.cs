@@ -11,9 +11,8 @@ namespace Microsoft.Msagl.Core.Geometry
     /// </summary>
     public class RectanglePacking<TData> : Packing
     {
-         IEnumerable<RectangleToPack<TData>> rectanglesByDescendingHeight;
-
-         double wrapWidth;
+        private IEnumerable<RectangleToPack<TData>> rectanglesByDescendingHeight;
+        private double wrapWidth;
 
         /// <summary>
         /// Constructor for packing, call Run to do the actual pack.
@@ -47,7 +46,7 @@ namespace Microsoft.Msagl.Core.Geometry
         /// </summary>
         protected override void RunInternal()
         {
-            this.Pack(rectanglesByDescendingHeight.GetEnumerator());
+            this.Pack(this.rectanglesByDescendingHeight.GetEnumerator());
         }
 
         /// <summary>
@@ -56,9 +55,9 @@ namespace Microsoft.Msagl.Core.Geometry
         /// a stack, when there is no room for the rectangle we pop the stack for a new parent and try again.
         /// </summary>
         /// <param name="rectangleEnumerator">rectangles to pack</param>
-         void Pack(IEnumerator<RectangleToPack<TData>> rectangleEnumerator)
+        private void Pack(IEnumerator<RectangleToPack<TData>> rectangleEnumerator)
         {
-            PackedHeight = PackedWidth = 0;
+            this.PackedHeight = this.PackedWidth = 0;
 
             // get next rectangle
             var stack = new Stack<RectangleToPack<TData>>();
@@ -72,7 +71,7 @@ namespace Microsoft.Msagl.Core.Geometry
                 var parent = stack.Count > 0 ? stack.Peek() : null;
                 Rectangle r = current.Rectangle;
                 if (parent == null ||
-                    parent.Rectangle.Right + r.Width <= wrapWidth &&
+                    parent.Rectangle.Right + r.Width <= this.wrapWidth &&
                     verticalPosition + r.Height <= parent.Rectangle.Top)
                 {
                     r = current.Rectangle = new Rectangle(

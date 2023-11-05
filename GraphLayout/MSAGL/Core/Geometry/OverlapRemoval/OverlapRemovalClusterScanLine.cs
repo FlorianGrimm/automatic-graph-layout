@@ -14,7 +14,7 @@ namespace Microsoft.Msagl.Core.Geometry
 {
     public partial class OverlapRemovalCluster
     {
-         class ScanLine
+        private class ScanLine
         {
 
             // This is the data structure that allows fast insert/remove of nodes as well as
@@ -29,7 +29,7 @@ namespace Microsoft.Msagl.Core.Geometry
             // the nearer midpoint would have a constraint generated on the node with the
             // further midpoint (though in that case we probably generate a duplicative constraint
             // between the current node and the node with the further midpoint).
-             readonly RbTree<OverlapRemovalNode> nodeTree = new RbTree<OverlapRemovalNode>((lhs, rhs)=> lhs.CompareTo(rhs));
+            private readonly RbTree<OverlapRemovalNode> nodeTree = new RbTree<OverlapRemovalNode>((lhs, rhs)=> lhs.CompareTo(rhs));
 
             internal void Insert(OverlapRemovalNode node)
             {

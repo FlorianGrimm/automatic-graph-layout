@@ -23,8 +23,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             double AP_AB_Dot = AP[0] * AB[0] + AP[1] * AB[1];
             double t = AP_AB_Dot / AB_length;
 
-            if (t < 0) t = 0;
-            if (t > 1) t = 1;
+            if (t < 0) {
+                t = 0;
+            }
+
+            if (t > 1) {
+                t = 1;
+            }
+
             double pointx = pointA.XLoc + AB[0] * t;
             double pointy = pointA.YLoc + AB[1] * t;
             return new Microsoft.Msagl.Core.Geometry.Point(pointx, pointy);
@@ -36,12 +42,14 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             double dist = CrossProduct(pointA, pointB, pointC) / Distance(pointA, pointB);
 
             double dot1 = DotProduct(pointA, pointB, pointC);
-            if (dot1 > 0)
+            if (dot1 > 0) {
                 return Distance(pointB, pointC);
+            }
 
             double dot2 = DotProduct(pointB, pointA, pointC);
-            if (dot2 > 0)
+            if (dot2 > 0) {
                 return Distance(pointA, pointC);
+            }
 
             return Math.Abs(dist);
         }
@@ -77,7 +85,7 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
         }
 
         //Compute the distance from A to B
-        static double Distance(Vertex pointA, Vertex pointB)
+        private static double Distance(Vertex pointA, Vertex pointB)
         {
             double d1 = pointA.XLoc - pointB.XLoc;
             double d2 = pointA.YLoc - pointB.YLoc;

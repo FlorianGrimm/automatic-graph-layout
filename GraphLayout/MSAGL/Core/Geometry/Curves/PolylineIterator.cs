@@ -5,9 +5,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves
 {
     internal class PolylineIterator:IEnumerator<Point>
     {
-        Polyline polyline;
-
-        PolylinePoint currentPolyPoint;
+        private Polyline polyline;
+        private PolylinePoint currentPolyPoint;
 
         internal PolylineIterator(Polyline poly)
         {
@@ -22,7 +21,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves
         Point IEnumerator<Point>.Current
 #endif
         {
-            get { return currentPolyPoint.Point; }
+            get { return this.currentPolyPoint.Point; }
         }
 
         #endregion
@@ -44,7 +43,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves
 
         object System.Collections.IEnumerator.Current
         {
-            get { return currentPolyPoint.Point; }
+            get { return this.currentPolyPoint.Point; }
         }
 
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=332&thanks=332
@@ -53,20 +52,22 @@ namespace Microsoft.Msagl.Core.Geometry.Curves
         bool System.Collections.IEnumerator.MoveNext()
 #endif
         {
-            if (currentPolyPoint == null)
+            if (this.currentPolyPoint == null)
             {
-                currentPolyPoint = polyline.StartPoint;
-                return currentPolyPoint != null;
+                this.currentPolyPoint = this.polyline.StartPoint;
+                return this.currentPolyPoint != null;
             }
-            if(currentPolyPoint==polyline.EndPoint)
+            if(this.currentPolyPoint == this.polyline.EndPoint) {
                 return false;
-            currentPolyPoint = currentPolyPoint.Next;
+            }
+
+            this.currentPolyPoint = this.currentPolyPoint.Next;
             return true;
         }
 
         void System.Collections.IEnumerator.Reset()
         {
-            currentPolyPoint = null;
+            this.currentPolyPoint = null;
         }
 
         #endregion

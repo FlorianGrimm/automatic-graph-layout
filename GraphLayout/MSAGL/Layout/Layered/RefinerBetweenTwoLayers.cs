@@ -11,22 +11,22 @@ namespace Microsoft.Msagl.Layout.Layered {
     internal delegate IEnumerable<Point> Points();
 
     internal class RefinerBetweenTwoLayers {
-        int topNode;
-        int bottomNode;
-        CornerSite topSite;
-        CornerSite bottomSite;
-        CornerSite currentTopSite;
-        CornerSite currentBottomSite;
-        LayerArrays layerArrays;
-        ProperLayeredGraph layeredGraph;
-        GeometryGraph originalGraph;
-        Points topCorners;
-        Points bottomCorners;
-        Anchor[] anchors;
-        Random random = new Random(1);
-        double layerSeparation;
+        private int topNode;
+        private int bottomNode;
+        private CornerSite topSite;
+        private CornerSite bottomSite;
+        private CornerSite currentTopSite;
+        private CornerSite currentBottomSite;
+        private LayerArrays layerArrays;
+        private ProperLayeredGraph layeredGraph;
+        private GeometryGraph originalGraph;
+        private Points topCorners;
+        private Points bottomCorners;
+        private Anchor[] anchors;
+        private Random random = new Random(1);
+        private double layerSeparation;
 
-        RefinerBetweenTwoLayers(
+        private RefinerBetweenTwoLayers(
                 int topNodeP,
                 int bottomNodeP,
                 CornerSite topSiteP,
@@ -61,42 +61,50 @@ namespace Microsoft.Msagl.Layout.Layered {
             refiner.Refine();
         }
 
-        void Refine() {
-            Init();
-            while (InsertSites());
+        private void Refine() {
+            this.Init();
+            while (this.InsertSites()) {
+                ;
+            }
         }
 
         private Point FixCorner(Point start, Point corner, Point end) {
-            if (start == corner)
+            if (start == corner) {
                 return corner;
+            }
+
             Point a = Point.ClosestPointAtLineSegment(corner, start, end);
             Point offsetInTheChannel = corner - a;
             double y = Math.Abs(offsetInTheChannel.Y);
             double sep = this.layerSeparation / 2.0;
             if (y > sep) //push the return value closer to the corner
+{
                 offsetInTheChannel *= (sep / (y * 2));
+            }
 
             return offsetInTheChannel + corner;
         }
 
 
         private bool InsertSites() {
-            if (this.random.Next(2) == 0)
-                return CalculateNewTopSite() | CalculateNewBottomSite();
-            else
-                return CalculateNewBottomSite() | CalculateNewTopSite();
+            if (this.random.Next(2) == 0) {
+                return this.CalculateNewTopSite() | this.CalculateNewBottomSite();
+            } else {
+                return this.CalculateNewBottomSite() | this.CalculateNewTopSite();
+            }
         }
+
         /// <summary>
         /// circimvating from the side
         /// </summary>
         /// <returns></returns>
-        bool CalculateNewBottomSite() {
-            Point mainSeg = currentBottomSite.Point - currentTopSite.Point;
+        private bool CalculateNewBottomSite() {
+            Point mainSeg = this.currentBottomSite.Point - this.currentTopSite.Point;
             double cotan = AbsCotan(mainSeg);
             Point vOfNewSite = new Point();//to silence the compiler
             bool someBottomCorners = false;
             foreach (Point p in this.bottomCorners()) {
-                double cornerCotan = AbsCotan(p - currentBottomSite.Point);
+                double cornerCotan = AbsCotan(p - this.currentBottomSite.Point);
                 if (cornerCotan < cotan) {
                     cotan = cornerCotan;
                     vOfNewSite = p;
@@ -104,10 +112,12 @@ namespace Microsoft.Msagl.Layout.Layered {
                 }
             }
 
-            if (!someBottomCorners)
+            if (!someBottomCorners) {
                 return false;
+            }
+
             if (!ApproximateComparer.Close(cotan, AbsCotan(mainSeg))) {
-                currentBottomSite = new CornerSite(currentTopSite, FixCorner(currentTopSite.Point, vOfNewSite, currentBottomSite.Point), currentBottomSite);//consider a different FixCorner
+                this.currentBottomSite = new CornerSite(this.currentTopSite, this.FixCorner(this.currentTopSite.Point, vOfNewSite, this.currentBottomSite.Point), this.currentBottomSite);//consider a different FixCorner
                 return true;
             }
 
@@ -121,24 +131,26 @@ namespace Microsoft.Msagl.Layout.Layered {
         }
 
         private bool CalculateNewTopSite() {
-            Point mainSeg = currentBottomSite.Point - currentTopSite.Point;
+            Point mainSeg = this.currentBottomSite.Point - this.currentTopSite.Point;
             double cotan = AbsCotan(mainSeg);
             Point vOfNewSite = new Point();//to silence the compiler
             bool someTopCorners = false;
             foreach (Point p in this.topCorners()) {
-                double cornerCotan = AbsCotan(p - currentTopSite.Point);
+                double cornerCotan = AbsCotan(p - this.currentTopSite.Point);
                 if (cornerCotan < cotan) {
                     cotan = cornerCotan;
                     vOfNewSite = p;
                     someTopCorners = true;
                 }
             }
-            if (!someTopCorners)
+            if (!someTopCorners) {
                 return false;
+            }
+
             if (!ApproximateComparer.Close(cotan, AbsCotan(mainSeg))) {
-                currentTopSite = new CornerSite(currentTopSite,
-                    FixCorner(currentTopSite.Point, vOfNewSite, currentBottomSite.Point),
-                    currentBottomSite
+                this.currentTopSite = new CornerSite(this.currentTopSite,
+                    this.FixCorner(this.currentTopSite.Point, vOfNewSite, this.currentBottomSite.Point),
+                    this.currentBottomSite
                     );//consider a different FixCorner
                 return true;
             }
@@ -184,12 +196,12 @@ namespace Microsoft.Msagl.Layout.Layered {
         //}
 
         private void Init() {
-            if (IsTopToTheLeftOfBottom()) {
-                this.topCorners = new Points(CornersToTheRightOfTop);
-                this.bottomCorners = new Points(CornersToTheLeftOfBottom);
+            if (this.IsTopToTheLeftOfBottom()) {
+                this.topCorners = new Points(this.CornersToTheRightOfTop);
+                this.bottomCorners = new Points(this.CornersToTheLeftOfBottom);
             } else {
-                this.topCorners = new Points(CornersToTheLeftOfTop);
-                this.bottomCorners = new Points(CornersToTheRightOfBottom);
+                this.topCorners = new Points(this.CornersToTheLeftOfTop);
+                this.bottomCorners = new Points(this.CornersToTheRightOfBottom);
             }
         }
 
@@ -197,53 +209,69 @@ namespace Microsoft.Msagl.Layout.Layered {
             return (this.topSite.Point.X < this.topSite.Next.Point.X);
         }
 
-        IEnumerable<Point> NodeCorners(int node) {
-            foreach (Point p in NodeAnchor(node).PolygonalBoundary)
+        private IEnumerable<Point> NodeCorners(int node) {
+            foreach (Point p in this.NodeAnchor(node).PolygonalBoundary) {
                 yield return p;
+            }
         }
 
-        Anchor NodeAnchor(int node) {
-            return anchors[node];
+        private Anchor NodeAnchor(int node) {
+            return this.anchors[node];
         }
-        IEnumerable<Point> CornersToTheLeftOfBottom() {
-            int bottomPosition = layerArrays.X[this.bottomNode];
+
+        private IEnumerable<Point> CornersToTheLeftOfBottom() {
+            int bottomPosition = this.layerArrays.X[this.bottomNode];
             double leftMost = this.currentTopSite.Point.X;
             double rightMost = this.currentBottomSite.Point.X;
-            foreach (int node in this.LeftFromTheNode(NodeLayer(bottomNode), bottomPosition,
-                NodeKind.Bottom, leftMost, rightMost))
-                foreach (Point p in NodeCorners(node))
-                    if (p.Y > currentBottomSite.Point.Y && PossibleCorner(leftMost, rightMost, p))
+            foreach (int node in this.LeftFromTheNode(this.NodeLayer(this.bottomNode), bottomPosition,
+                NodeKind.Bottom, leftMost, rightMost)) {
+                foreach (Point p in this.NodeCorners(node)) {
+                    if (p.Y > this.currentBottomSite.Point.Y && PossibleCorner(leftMost, rightMost, p)) {
                         yield return p;
+                    }
+                }
+            }
         }
-        IEnumerable<Point> CornersToTheLeftOfTop() {
-            int topPosition = layerArrays.X[this.topNode];
+
+        private IEnumerable<Point> CornersToTheLeftOfTop() {
+            int topPosition = this.layerArrays.X[this.topNode];
             double leftMost = this.currentBottomSite.Point.X;
             double rightMost = this.currentTopSite.Point.X;
-            foreach (int node in this.LeftFromTheNode(NodeLayer(topNode), topPosition, NodeKind.Top, leftMost, rightMost))
-                foreach (Point p in NodeCorners(node))
-                    if (p.Y < currentTopSite.Point.Y && PossibleCorner(leftMost, rightMost, p))
+            foreach (int node in this.LeftFromTheNode(this.NodeLayer(this.topNode), topPosition, NodeKind.Top, leftMost, rightMost)) {
+                foreach (Point p in this.NodeCorners(node)) {
+                    if (p.Y < this.currentTopSite.Point.Y && PossibleCorner(leftMost, rightMost, p)) {
                         yield return p;
+                    }
+                }
+            }
         }
-        IEnumerable<Point> CornersToTheRightOfBottom() {
-            int bottomPosition = layerArrays.X[this.bottomNode];
+
+        private IEnumerable<Point> CornersToTheRightOfBottom() {
+            int bottomPosition = this.layerArrays.X[this.bottomNode];
             double leftMost = this.currentBottomSite.Point.X;
             double rightMost = this.currentTopSite.Point.X;
 
-            foreach (int node in this.RightFromTheNode(NodeLayer(bottomNode), bottomPosition,
-                NodeKind.Bottom, leftMost, rightMost))
-                foreach (Point p in NodeCorners(node))
-                    if (p.Y > currentBottomSite.Point.Y && PossibleCorner(leftMost, rightMost, p))
+            foreach (int node in this.RightFromTheNode(this.NodeLayer(this.bottomNode), bottomPosition,
+                NodeKind.Bottom, leftMost, rightMost)) {
+                foreach (Point p in this.NodeCorners(node)) {
+                    if (p.Y > this.currentBottomSite.Point.Y && PossibleCorner(leftMost, rightMost, p)) {
                         yield return p;
-
+                    }
+                }
+            }
         }
-        IEnumerable<Point> CornersToTheRightOfTop() {
-            int topPosition = layerArrays.X[this.topNode];
+
+        private IEnumerable<Point> CornersToTheRightOfTop() {
+            int topPosition = this.layerArrays.X[this.topNode];
             double leftMost = this.currentTopSite.Point.X;
             double rightMost = this.currentBottomSite.Point.X;
-            foreach (int node in this.RightFromTheNode(NodeLayer(topNode), topPosition, NodeKind.Top, leftMost, rightMost))
-                foreach (Point p in NodeCorners(node))
-                    if (p.Y < currentTopSite.Point.Y && PossibleCorner(leftMost, rightMost, p))
+            foreach (int node in this.RightFromTheNode(this.NodeLayer(this.topNode), topPosition, NodeKind.Top, leftMost, rightMost)) {
+                foreach (Point p in this.NodeCorners(node)) {
+                    if (p.Y < this.currentTopSite.Point.Y && PossibleCorner(leftMost, rightMost, p)) {
                         yield return p;
+                    }
+                }
+            }
         }
 
         private static bool PossibleCorner(double leftMost, double rightMost, Point p) {
@@ -251,7 +279,7 @@ namespace Microsoft.Msagl.Layout.Layered {
         }
 
         private int[] NodeLayer(int j) {
-            return layerArrays.Layers[layerArrays.Y[j]];
+            return this.layerArrays.Layers[this.layerArrays.Y[j]];
         }
 
         //private static bool CounterClockwise(ref Point topPoint, ref Point cornerPoint, ref Point p) {
@@ -262,59 +290,71 @@ namespace Microsoft.Msagl.Layout.Layered {
         //    return Point.GetTriangleOrientation(topPoint, cornerPoint, p) == TriangleOrientation.Clockwise;
         //}
 
-        bool IsLabel(int u) {
+        private bool IsLabel(int u) {
             return this.anchors[u].RepresentsLabel;
         }
 
         private bool NodeUCanBeCrossedByNodeV(int u, int v) {
-            if (IsLabel(u) || IsLabel(v))
+            if (this.IsLabel(u) || this.IsLabel(v)) {
                 return false;
-            if (this.IsVirtualVertex(u) && this.IsVirtualVertex(v) && AdjacentEdgesIntersect(u, v))
+            }
+
+            if (this.IsVirtualVertex(u) && this.IsVirtualVertex(v) && this.AdjacentEdgesIntersect(u, v)) {
                 return true;
+            }
+
             return false;
         }
 
         private bool AdjacentEdgesIntersect(int u, int v) {
-            return Intersect(IncomingEdge(u), IncomingEdge(v)) || Intersect(OutcomingEdge(u), OutcomingEdge(v));
+            return this.Intersect(this.IncomingEdge(u), this.IncomingEdge(v)) || this.Intersect(this.OutcomingEdge(u), this.OutcomingEdge(v));
         }
 
         private bool Intersect(LayerEdge e, LayerEdge m) {
-            return (layerArrays.X[e.Source] - layerArrays.X[m.Source]) * (layerArrays.X[e.Target] - layerArrays.X[m.Target]) < 0;
+            return (this.layerArrays.X[e.Source] - this.layerArrays.X[m.Source]) * (this.layerArrays.X[e.Target] - this.layerArrays.X[m.Target]) < 0;
         }
 
         private LayerEdge IncomingEdge(int u) {
-            foreach (LayerEdge le in layeredGraph.InEdges(u))
+            foreach (LayerEdge le in this.layeredGraph.InEdges(u)) {
                 return le;
+            }
 
             throw new InvalidOperationException();
         }
         //here u is a virtual vertex
         private LayerEdge OutcomingEdge(int u) {
-            foreach (LayerEdge le in layeredGraph.OutEdges(u))
+            foreach (LayerEdge le in this.layeredGraph.OutEdges(u)) {
                 return le;
+            }
 
             throw new InvalidOperationException();
         }
-        bool IsVirtualVertex(int v) {
+
+        private bool IsVirtualVertex(int v) {
             return v >= this.originalGraph.Nodes.Count;
         }
 
-        IEnumerable<int> RightFromTheNode(int[] layer, int vPosition, NodeKind nodeKind, double leftMostX, double rightMostX) {
+        private IEnumerable<int> RightFromTheNode(int[] layer, int vPosition, NodeKind nodeKind, double leftMostX, double rightMostX) {
             double t = 0, b = 0;
-            if (nodeKind == NodeKind.Bottom)
+            if (nodeKind == NodeKind.Bottom) {
                 b = Single.MaxValue;//we don't have bottom boundaries here since they will be cut off
-            else if (nodeKind == NodeKind.Top)
+            } else if (nodeKind == NodeKind.Top) {
                 t = Single.MaxValue;//we don't have top boundaries here since they will be cut off
+            }
 
             int v = layer[vPosition];
 
             for (int i = vPosition + 1; i < layer.Length; i++) {
                 int u = layer[i];
-                if (NodeUCanBeCrossedByNodeV(u, v))
+                if (this.NodeUCanBeCrossedByNodeV(u, v)) {
                     continue;
-                Anchor anchor = anchors[u];
-                if (anchor.Left >= rightMostX)
+                }
+
+                Anchor anchor = this.anchors[u];
+                if (anchor.Left >= rightMostX) {
                     break;
+                }
+
                 if (anchor.Right > leftMostX) {
                     if (anchor.TopAnchor > t + ApproximateComparer.DistanceEpsilon) {
                         t = anchor.TopAnchor;
@@ -327,22 +367,27 @@ namespace Microsoft.Msagl.Layout.Layered {
             }
         }
 
-        IEnumerable<int> LeftFromTheNode(int[] layer, int vPosition, NodeKind nodeKind, double leftMostX, double rightMostX) {
+        private IEnumerable<int> LeftFromTheNode(int[] layer, int vPosition, NodeKind nodeKind, double leftMostX, double rightMostX) {
             double t = 0, b = 0;
-            if (nodeKind == NodeKind.Bottom)
+            if (nodeKind == NodeKind.Bottom) {
                 b = Single.MaxValue;//we don't have bottom boundaries here since they will be cut off
-            else if (nodeKind == NodeKind.Top)
+            } else if (nodeKind == NodeKind.Top) {
                 t = Single.MaxValue;//we don't have top boundaries here since they will be cut off
+            }
 
             int v = layer[vPosition];
 
             for (int i = vPosition - 1; i > -1; i--) {
                 int u = layer[i];
-                if (NodeUCanBeCrossedByNodeV(u, v))
+                if (this.NodeUCanBeCrossedByNodeV(u, v)) {
                     continue;
-                Anchor anchor = anchors[u];
-                if (anchor.Right <= leftMostX)
+                }
+
+                Anchor anchor = this.anchors[u];
+                if (anchor.Right <= leftMostX) {
                     break;
+                }
+
                 if (anchor.Left < rightMostX) {
                     if (anchor.TopAnchor > t + ApproximateComparer.DistanceEpsilon) {
                         t = anchor.TopAnchor;

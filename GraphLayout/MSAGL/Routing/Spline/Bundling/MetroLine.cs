@@ -25,19 +25,19 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         public int Index { get; set; }
 
         internal Metroline(Polyline polyline, double width, Func<Tuple<Polyline, Polyline>> sourceAndTargetLoosePolys, int index) {
-            Width = width;
-            Polyline = polyline;
+            this.Width = width;
+            this.Polyline = polyline;
             this.sourceAndTargetLoosePolylines = sourceAndTargetLoosePolys;
             this.Index = index;
         }
 
         internal void UpdateLengths() {
             var l = 0.0;
-            for (var p = Polyline.StartPoint; p.Next != null; p = p.Next) {
+            for (var p = this.Polyline.StartPoint; p.Next != null; p = p.Next) {
                 l += (p.Next.Point - p.Point).Length;
             }
-            Length = l;
-            IdealLength = (Polyline.End - Polyline.Start).Length;
+            this.Length = l;
+            this.IdealLength = (this.Polyline.End - this.Polyline.Start).Length;
         }
 
         internal Func<Tuple<Polyline, Polyline>> sourceAndTargetLoosePolylines;

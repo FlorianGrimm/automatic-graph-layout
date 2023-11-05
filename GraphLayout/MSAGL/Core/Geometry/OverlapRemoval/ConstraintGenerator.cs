@@ -40,7 +40,8 @@ namespace Microsoft.Msagl.Core.Geometry
         {
             get { return this.clusterHierarchies; }
         }
-         readonly List<OverlapRemovalCluster> clusterHierarchies = new List<OverlapRemovalCluster>();
+
+        private readonly List<OverlapRemovalCluster> clusterHierarchies = new List<OverlapRemovalCluster>();
 
         /// <summary>
         /// The initial, default ClusterHierarchy; a "flat" graph (with no user-defined clusters)
@@ -81,7 +82,7 @@ namespace Microsoft.Msagl.Core.Geometry
         // one encountered gets all the neighbours).  This sequence is shared with Clusters,
         // which are derived from Node; each Cluster consumes 3 IDs, one for the cluster
         // itself and one for each of its fake border nodes.
-         uint nextNodeId;
+        private uint nextNodeId;
 
         /// <summary>
         /// As passed to ctor; if this is true, we are doing horizontal (x) constraint generation,
@@ -113,7 +114,7 @@ namespace Microsoft.Msagl.Core.Geometry
             this.ClusterPaddingP = clusterPaddingP;
 
             // Create the DefaultClusterHierarchy.
-            this.clusterHierarchies.Add(new OverlapRemovalCluster(0, null /* parentCluster */, 0 /* default userData is 0 id */, Padding, PaddingP));
+            this.clusterHierarchies.Add(new OverlapRemovalCluster(0, null /* parentCluster */, 0 /* default userData is 0 id */, this.Padding, this.PaddingP));
             this.nextNodeId += OverlapRemovalCluster.NumInternalNodes;
         }
 
@@ -171,7 +172,7 @@ namespace Microsoft.Msagl.Core.Geometry
                             BorderInfo openBorderInfo, BorderInfo closeBorderInfo,
                             BorderInfo openBorderInfoP, BorderInfo closeBorderInfoP)
         {
-            return AddCluster(parentCluster, userData, 0.0 /*minSize*/, 0.0 /*minSizeP*/,
+            return this.AddCluster(parentCluster, userData, 0.0 /*minSize*/, 0.0 /*minSizeP*/,
                             openBorderInfo, closeBorderInfo, openBorderInfoP, closeBorderInfoP);
         }
 
@@ -283,7 +284,7 @@ namespace Microsoft.Msagl.Core.Geometry
             }
             if (doGenerate)
             {
-                Generate(solver, parameters);
+                this.Generate(solver, parameters);
             }
             ProjectionSolver.Solution solverSolution = solver.Solve(parameters.SolverParameters);
             foreach (OverlapRemovalCluster cluster in this.clusterHierarchies)

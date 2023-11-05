@@ -13,41 +13,44 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// the underlying basic graph
         /// </summary>
         internal BasicGraph<Node, PolyIntEdge>  BaseGraph;
-        LayerEdge[] virtualNodesToInEdges;
-        LayerEdge[] virtualNodesToOutEdges;
-        int totalNumberOfNodes;
-        int firstVirtualNode;
+        private LayerEdge[] virtualNodesToInEdges;
+        private LayerEdge[] virtualNodesToOutEdges;
+        private int totalNumberOfNodes;
+        private int firstVirtualNode;
 
         private int FirstVirtualNode {
             get {
-                return firstVirtualNode;
+                return this.firstVirtualNode;
             }
         }
 
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         internal ProperLayeredGraph(BasicGraph<Node, PolyIntEdge> intGraph) {
-            Initialize(intGraph);
+            this.Initialize(intGraph);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
         internal void Initialize(BasicGraph<Node, PolyIntEdge> intGraph)
         {
-            BaseGraph = intGraph;
+            this.BaseGraph = intGraph;
 
-            if (BaseGraph.Edges.Count > 0) {
-                var edgesGoingDown = from edge in BaseGraph.Edges
+            if (this.BaseGraph.Edges.Count > 0) {
+                var edgesGoingDown = from edge in this.BaseGraph.Edges
                                      where edge.LayerEdges != null
                                      select edge;
-                if(edgesGoingDown.Any() )               
-                   totalNumberOfNodes= (from edge in edgesGoingDown from layerEdge in edge.LayerEdges
+                if(edgesGoingDown.Any() ) {
+                    this.totalNumberOfNodes = (from edge in edgesGoingDown from layerEdge in edge.LayerEdges
                                            select Math.Max(layerEdge.Source, layerEdge.Target) + 1).Max();
-                else totalNumberOfNodes = intGraph.NodeCount;
-            } else
-                totalNumberOfNodes = intGraph.NodeCount;
+                } else {
+                    this.totalNumberOfNodes = intGraph.NodeCount;
+                }
+            } else {
+                this.totalNumberOfNodes = intGraph.NodeCount;
+            }
 
-            if (ExistVirtualNodes(BaseGraph.Edges)) {
-                firstVirtualNode = (from edge in BaseGraph.Edges
+            if (ExistVirtualNodes(this.BaseGraph.Edges)) {
+                this.firstVirtualNode = (from edge in this.BaseGraph.Edges
                                     where edge.LayerEdges != null && edge.LayerEdges.Count > 1
                                     let source = edge.Source
                                     from layerEdge in edge.LayerEdges
@@ -55,27 +58,34 @@ namespace Microsoft.Msagl.Layout.Layered {
                                     where layerEdge.Source != source
                                     select layerEdgeSource).Min();
             } else {
-                firstVirtualNode = BaseGraph.NodeCount;
-                totalNumberOfNodes = BaseGraph.NodeCount;
+                this.firstVirtualNode = this.BaseGraph.NodeCount;
+                this.totalNumberOfNodes = this.BaseGraph.NodeCount;
             }
 
-            virtualNodesToInEdges = new LayerEdge[totalNumberOfNodes - FirstVirtualNode];
-            virtualNodesToOutEdges = new LayerEdge[totalNumberOfNodes - FirstVirtualNode];
-            foreach (PolyIntEdge e in BaseGraph.Edges)
-                if (e.LayerSpan > 0)
+            this.virtualNodesToInEdges = new LayerEdge[this.totalNumberOfNodes - this.FirstVirtualNode];
+            this.virtualNodesToOutEdges = new LayerEdge[this.totalNumberOfNodes - this.FirstVirtualNode];
+            foreach (PolyIntEdge e in this.BaseGraph.Edges) {
+                if (e.LayerSpan > 0) {
                     foreach (LayerEdge le in e.LayerEdges) {
-                        if (le.Target != e.Target)
-                            virtualNodesToInEdges[le.Target - FirstVirtualNode] = le;
-                        if (le.Source != e.Source)
-                            virtualNodesToOutEdges[le.Source - FirstVirtualNode] = le;
-                    }
+                        if (le.Target != e.Target) {
+                            this.virtualNodesToInEdges[le.Target - this.FirstVirtualNode] = le;
+                        }
 
+                        if (le.Source != e.Source) {
+                            this.virtualNodesToOutEdges[le.Source - this.FirstVirtualNode] = le;
+                        }
+                    }
+                }
+            }
         }
 
-        static bool ExistVirtualNodes(ICollection<PolyIntEdge> iCollection) {
-            foreach (var edge in iCollection)
-                if (edge.LayerEdges != null && edge.LayerEdges.Count > 1)
+        private static bool ExistVirtualNodes(ICollection<PolyIntEdge> iCollection) {
+            foreach (var edge in iCollection) {
+                if (edge.LayerEdges != null && edge.LayerEdges.Count > 1) {
                     return true;
+                }
+            }
+
             return false;
         }
 
@@ -106,10 +116,12 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         public IEnumerable<LayerEdge> Edges {
             get {
-                foreach (PolyIntEdge ie in BaseGraph.Edges) {
-                    if (ie.LayerSpan > 0)
-                        foreach (LayerEdge le in ie.LayerEdges)
+                foreach (PolyIntEdge ie in this.BaseGraph.Edges) {
+                    if (ie.LayerSpan > 0) {
+                        foreach (LayerEdge le in ie.LayerEdges) {
                             yield return le;
+                        }
+                    }
                 }
             }
         }
@@ -119,14 +131,16 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="node"></param>
         /// <returns></returns>
         public IEnumerable<LayerEdge> InEdges(int node) {
-            if (node < BaseGraph.NodeCount)//original node
-                foreach (PolyIntEdge e in BaseGraph.InEdges(node)) {
-                    if (e.Source != e.Target && e.LayerEdges != null)
+            if (node < this.BaseGraph.NodeCount)//original node
+{
+                foreach (PolyIntEdge e in this.BaseGraph.InEdges(node)) {
+                    if (e.Source != e.Target && e.LayerEdges != null) {
                         yield return LastEdge(e);
+                    }
                 }
-            else if (node >= firstVirtualNode)
-                yield return InEdgeOfVirtualNode(node);
-
+            } else if (node >= this.firstVirtualNode) {
+                yield return this.InEdgeOfVirtualNode(node);
+            }
         }
 
         private static LayerEdge LastEdge(PolyIntEdge e) {
@@ -135,7 +149,7 @@ namespace Microsoft.Msagl.Layout.Layered {
         }
 
         internal LayerEdge InEdgeOfVirtualNode(int node) {
-            return virtualNodesToInEdges[node - FirstVirtualNode];
+            return this.virtualNodesToInEdges[node - this.FirstVirtualNode];
         }
 /// <summary>
 /// enumerates over the node outcoming edges
@@ -143,28 +157,35 @@ namespace Microsoft.Msagl.Layout.Layered {
 /// <param name="node"></param>
 /// <returns></returns>
         public IEnumerable<LayerEdge> OutEdges(int node) {
-            if (node < BaseGraph.NodeCount)//original node
-                foreach (PolyIntEdge e in BaseGraph.OutEdges(node)) {
-                    if (e.Source != e.Target && e.LayerEdges!=null)
+            if (node < this.BaseGraph.NodeCount)//original node
+{
+                foreach (PolyIntEdge e in this.BaseGraph.OutEdges(node)) {
+                    if (e.Source != e.Target && e.LayerEdges!=null) {
                         yield return FirstEdge(e);
+                    }
                 }
-            else if (node >= FirstVirtualNode)
-                yield return OutEdgeOfVirtualNode(node);
+            } else if (node >= this.FirstVirtualNode) {
+                yield return this.OutEdgeOfVirtualNode(node);
+            }
         }
         public bool OutDegreeIsMoreThanOne(int node) {
-            if (node < BaseGraph.NodeCount)//original node
-                return BaseGraph.OutEdges(node).Count() > 1;
-            else
-                return false;            
+            if (node < this.BaseGraph.NodeCount)//original node
+{
+                return this.BaseGraph.OutEdges(node).Count() > 1;
+            } else {
+                return false;
+            }
         }
         public bool InDegreeIsMoreThanOne(int node) {
-            if (node < BaseGraph.NodeCount)//original node
-                return BaseGraph.InEdges(node).Count() > 1;
-            else
+            if (node < this.BaseGraph.NodeCount)//original node
+{
+                return this.BaseGraph.InEdges(node).Count() > 1;
+            } else {
                 return false;
+            }
         }
         internal LayerEdge OutEdgeOfVirtualNode(int node) {
-            return virtualNodesToOutEdges[node - FirstVirtualNode];
+            return this.virtualNodesToOutEdges[node - this.FirstVirtualNode];
         }
 
         private static LayerEdge FirstEdge(PolyIntEdge e) {
@@ -176,11 +197,11 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="node"></param>
         /// <returns></returns>
         public int InEdgesCount(int node) {
-            return RealInEdgesCount(node);
+            return this.RealInEdgesCount(node);
         }
 
         private int RealInEdgesCount(int node) {
-            return node < this.BaseGraph.NodeCount ? BaseGraph.InEdges(node).Count(e=>e.LayerEdges!=null): 1;
+            return node < this.BaseGraph.NodeCount ? this.BaseGraph.InEdges(node).Count(e=>e.LayerEdges!=null): 1;
         }
 
 
@@ -190,11 +211,11 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="node"></param>
         /// <returns></returns>
         public int OutEdgesCount(int node) {
-            return RealOutEdgesCount(node);
+            return this.RealOutEdgesCount(node);
         }
 
         private int RealOutEdgesCount(int node) {
-            return node < this.BaseGraph.NodeCount ? BaseGraph.OutEdges(node).Count(l=>l.LayerEdges!=null):  1;
+            return node < this.BaseGraph.NodeCount ? this.BaseGraph.OutEdges(node).Count(l=>l.LayerEdges!=null):  1;
         }
 
         /// <summary>
@@ -209,30 +230,35 @@ namespace Microsoft.Msagl.Layout.Layered {
         }
 
         public bool IsVirtualNode(int node) {
-            return !IsRealNode(node);
+            return !this.IsRealNode(node);
         }
 
         internal ProperLayeredGraph ReversedClone() {
-            List<PolyIntEdge> reversedEdges = CreateReversedEdges();
+            List<PolyIntEdge> reversedEdges = this.CreateReversedEdges();
             return new ProperLayeredGraph(new BasicGraph<Node, PolyIntEdge>(reversedEdges, this.BaseGraph.NodeCount));
         }
 
         private List<PolyIntEdge> CreateReversedEdges() {
             List<PolyIntEdge> ret = new List<PolyIntEdge>();
-            foreach (PolyIntEdge e in BaseGraph.Edges) 
-                if(!e.SelfEdge())
-                   ret.Add(e.ReversedClone());
-           return ret;
+            foreach (PolyIntEdge e in this.BaseGraph.Edges) {
+                if (!e.SelfEdge()) {
+                    ret.Add(e.ReversedClone());
+                }
+            }
+
+            return ret;
         }
 
         internal IEnumerable<int> Succ(int node) {
-            foreach (LayerEdge le in this.OutEdges(node))
+            foreach (LayerEdge le in this.OutEdges(node)) {
                 yield return le.Target;
+            }
         }
 
         internal IEnumerable<int> Pred(int node) {
-            foreach (LayerEdge le in this.InEdges(node))
+            foreach (LayerEdge le in this.InEdges(node)) {
                 yield return le.Source;
+            }
         }
 
     }

@@ -13,14 +13,14 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         {
         }
 
-        IList<TNode> nodes;
+        private IList<TNode> nodes;
 
         /// <summary>
         /// array of nodes
         /// </summary>
         public IList<TNode> Nodes {
-            get { return nodes; }
-            set { nodes = value; }
+            get { return this.nodes; }
+            set { this.nodes = value; }
         }
     }
 }

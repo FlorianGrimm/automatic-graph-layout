@@ -11,19 +11,18 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
     /// Settings for Overlap Removal process. Usage of the properties depends on the algorithm.
     /// </summary>
     public class OverlapRemovalSettings {
-        
-        double epsilon = 0.01;
-        int iterationsMax=1000;
-        bool stopOnMaxIterat = false;
-        double nodeSeparation = 4;
-        int randomizationSeed = 1;
-        bool workInInches;
+        private double epsilon = 0.01;
+        private int iterationsMax=1000;
+        private bool stopOnMaxIterat = false;
+        private double nodeSeparation = 4;
+        private int randomizationSeed = 1;
+        private bool workInInches;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public OverlapRemovalSettings() {
-            StressSettings=new StressMajorizationSettings();
+            this.StressSettings =new StressMajorizationSettings();
         }
 
         /// <summary>
@@ -31,37 +30,37 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// </summary>
         public StressMajorizationSettings StressSettings { get; set; }
 
-         bool randomizeAllPointsOnStart = false;
+        private bool randomizeAllPointsOnStart = false;
         /// <summary>
         /// If true, the overlap iteration process stops after maxIterat iterations.
         /// </summary>
         public bool StopOnMaxIterat {
-            get { return stopOnMaxIterat; }
-            set { stopOnMaxIterat = value; }
+            get { return this.stopOnMaxIterat; }
+            set { this.stopOnMaxIterat = value; }
         }
 
         /// <summary>
         /// Epsilon
         /// </summary>
         public double Epsilon {
-            get { return epsilon; }
-            set { epsilon = value; }
+            get { return this.epsilon; }
+            set { this.epsilon = value; }
         }
 
         /// <summary>
         /// Number of maxIterat to be made. In each iteration overlap is partly removed.
         /// </summary>
         public int IterationsMax {
-            get { return iterationsMax; }
-            set { iterationsMax = value; }
+            get { return this.iterationsMax; }
+            set { this.iterationsMax = value; }
         }
 
         /// <summary>
         /// Minimal distance between nodes.
         /// </summary>
         public double NodeSeparation {
-            get { return nodeSeparation; }
-            set { nodeSeparation = value; }
+            get { return this.nodeSeparation; }
+            set { this.nodeSeparation = value; }
         }
 
      
@@ -69,24 +68,24 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// 
         /// </summary>
         public int RandomizationSeed {
-            get { return randomizationSeed; }
-            set { randomizationSeed = value; }
+            get { return this.randomizationSeed; }
+            set { this.randomizationSeed = value; }
         }
 
         /// <summary>
         /// 
         /// </summary>
         public bool RandomizeAllPointsOnStart {
-            get { return randomizeAllPointsOnStart; }
-            set { randomizeAllPointsOnStart = value; }
+            get { return this.randomizeAllPointsOnStart; }
+            set { this.randomizeAllPointsOnStart = value; }
         }
         
         /// <summary>
         /// Divide the coordinates by 72(Pixels) to work in inches. At the end this transformation is reverted again.
         /// </summary>
         public bool WorkInInches {
-            get { return workInInches; }
-            set { workInInches = value; }
+            get { return this.workInInches; }
+            set { this.workInInches = value; }
         }
 
         
@@ -98,26 +97,26 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
             OverlapRemovalSettings settings = new OverlapRemovalSettings();
             settings.Epsilon = this.Epsilon;
             settings.IterationsMax = this.IterationsMax;
-            settings.StopOnMaxIterat = StopOnMaxIterat;
-            settings.NodeSeparation = NodeSeparation;
-            settings.RandomizationSeed = RandomizationSeed;
-            settings.RandomizeAllPointsOnStart = randomizeAllPointsOnStart;
+            settings.StopOnMaxIterat = this.StopOnMaxIterat;
+            settings.NodeSeparation = this.NodeSeparation;
+            settings.RandomizationSeed = this.RandomizationSeed;
+            settings.RandomizeAllPointsOnStart = this.randomizeAllPointsOnStart;
             settings.WorkInInches = this.WorkInInches;
        
             settings.StressSettings=new StressMajorizationSettings();
-            settings.StressSettings.MaxStressIterations = StressSettings.MaxStressIterations;
-            settings.StressSettings.SolvingMethod = StressSettings.SolvingMethod;
-            settings.StressSettings.UpdateMethod = StressSettings.UpdateMethod;
-            settings.StressSettings.StressChangeTolerance = StressSettings.StressChangeTolerance;
-            settings.StressSettings.CancelOnStressConvergence = StressSettings.CancelOnStressConvergence;
-            settings.StressSettings.CancelOnStressMaxIteration = StressSettings.CancelOnStressMaxIteration;
+            settings.StressSettings.MaxStressIterations = this.StressSettings.MaxStressIterations;
+            settings.StressSettings.SolvingMethod = this.StressSettings.SolvingMethod;
+            settings.StressSettings.UpdateMethod = this.StressSettings.UpdateMethod;
+            settings.StressSettings.StressChangeTolerance = this.StressSettings.StressChangeTolerance;
+            settings.StressSettings.CancelOnStressConvergence = this.StressSettings.CancelOnStressConvergence;
+            settings.StressSettings.CancelOnStressMaxIteration = this.StressSettings.CancelOnStressMaxIteration;
             //relevant for conjugate gradient methods only
-            settings.StressSettings.ResidualTolerance =StressSettings.ResidualTolerance;
-            settings.StressSettings.CancelAfterFirstConjugate = StressSettings.CancelAfterFirstConjugate;
-            settings.StressSettings.MaxSolverIterations = StressSettings.MaxSolverIterations;
-            settings.StressSettings.SolverMaxIteratMethod = StressSettings.SolverMaxIteratMethod;
-            settings.StressSettings.Parallelize = StressSettings.Parallelize;
-            settings.StressSettings.ParallelDegree = StressSettings.ParallelDegree;
+            settings.StressSettings.ResidualTolerance = this.StressSettings.ResidualTolerance;
+            settings.StressSettings.CancelAfterFirstConjugate = this.StressSettings.CancelAfterFirstConjugate;
+            settings.StressSettings.MaxSolverIterations = this.StressSettings.MaxSolverIterations;
+            settings.StressSettings.SolverMaxIteratMethod = this.StressSettings.SolverMaxIteratMethod;
+            settings.StressSettings.Parallelize = this.StressSettings.Parallelize;
+            settings.StressSettings.ParallelDegree = this.StressSettings.ParallelDegree;
             return settings;
         }
     }

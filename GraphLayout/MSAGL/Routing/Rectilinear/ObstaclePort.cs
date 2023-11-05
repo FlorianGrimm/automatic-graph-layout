@@ -36,7 +36,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         internal void CreatePortEntrance(Point unpaddedBorderIntersect, Direction outDir, ObstacleTree obstacleTree) {
             var entrance = new ObstaclePortEntrance(this, unpaddedBorderIntersect, outDir, obstacleTree);
-            PortEntrances.Add(entrance);
+            this.PortEntrances.Add(entrance);
             this.VisibilityRectangle.Add(entrance.MaxVisibilitySegment.End);
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=370
             this.HasCollinearEntrances = this.HasCollinearEntrances | entrance.IsCollinearWithPort;
@@ -53,12 +53,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal void AddToGraph(TransientGraphUtility transUtil, bool routeToCenter) {
             // We use only border vertices if !routeToCenter.
             if (routeToCenter) {
-                CenterVertex = transUtil.FindOrAddVertex(this.Location);
+                this.CenterVertex = transUtil.FindOrAddVertex(this.Location);
             }
         }
 
         internal void RemoveFromGraph() {
-            CenterVertex = null;
+            this.CenterVertex = null;
         }
 
         // PortManager will recreate the Port if it detects this (this.Location has already been rounded).

@@ -19,41 +19,41 @@ namespace Microsoft.Msagl.Routing {
     /// </summary>
     [DebuggerDisplay("Shape = {UserData}")]
     public class Shape {
-
-        readonly Set<Shape> parents = new Set<Shape>();
+        private readonly Set<Shape> parents = new Set<Shape>();
         ///<summary>
         /// shape parents
         ///</summary>
         public IEnumerable<Shape> Parents {
-            get { return parents; }
+            get { return this.parents; }
         }
 
-        readonly Set<Shape> children = new Set<Shape>();
+        private readonly Set<Shape> children = new Set<Shape>();
         /// <summary>
         /// shape children
         /// </summary>
         public IEnumerable<Shape> Children {
-            get { return children; }
+            get { return this.children; }
         }
         /// <summary>
         /// The curve of the shape.
         /// </summary>
-        public virtual ICurve BoundaryCurve { 
-            get { return boundaryCurve; }
-            set {boundaryCurve = value; }
+        public virtual ICurve? BoundaryCurve { 
+            get { return this._BoundaryCurve; }
+            set { this._BoundaryCurve = value; }
         }
-        ICurve boundaryCurve;
+
+        private ICurve? _BoundaryCurve;
 
         /// <summary>
         /// The bounding box of the shape.
         /// </summary>
-        public Rectangle BoundingBox { get { return BoundaryCurve.BoundingBox; } }
+        public Rectangle BoundingBox { get { return this.BoundaryCurve.BoundingBox; } }
 
         /// <summary>
         /// The set of Ports for this obstacle, usually RelativePorts.  In the event of overlapping
         /// obstacles, this identifies the obstacle to which the port applies.
         /// </summary>
-        public Set<Port> Ports { get { return ports; } }
+        public Set<Port> Ports { get { return this.ports; } }
 
         private readonly Set<Port> ports = new Set<Port>();
 
@@ -72,15 +72,15 @@ namespace Microsoft.Msagl.Routing {
         /// Constructor taking the ID and the curve of the shape.
         /// </summary>
         /// <param name="boundaryCurve"></param>
-        public Shape(ICurve boundaryCurve) {
-            this.boundaryCurve = boundaryCurve;     // RelativeShape throws an exception on BoundaryCurve_set so set _boundaryCurve directly.
+        public Shape(ICurve? boundaryCurve) {
+            this._BoundaryCurve = boundaryCurve;     // RelativeShape throws an exception on BoundaryCurve_set so set _boundaryCurve directly.
         }
 
         /// <summary>
         /// A group is a shape that has children.
         /// </summary>
         public bool IsGroup {
-            get { return children.Count > 0; }
+            get { return this.children.Count > 0; }
         }
 
         internal bool IsTransparent { get; set; }
@@ -88,13 +88,16 @@ namespace Microsoft.Msagl.Routing {
         internal IEnumerable<Shape> Descendants {
             get {
                 var q = new Queue<Shape>();
-                foreach (var shape in Children)
+                foreach (var shape in this.Children) {
                     q.Enqueue(shape);
+                }
+
                 while (q.Count > 0) {
                     var sh = q.Dequeue();
                     yield return sh;
-                    foreach (var shape in sh.Children)
+                    foreach (var shape in sh.Children) {
                         q.Enqueue(shape);
+                    }
                 }
             }
         }
@@ -102,13 +105,16 @@ namespace Microsoft.Msagl.Routing {
         internal IEnumerable<Shape> Ancestors {
             get {
                 var q = new Queue<Shape>();
-                foreach (var shape in Parents)
+                foreach (var shape in this.Parents) {
                     q.Enqueue(shape);
+                }
+
                 while (q.Count > 0) {
                     var sh = q.Dequeue();
                     yield return sh;
-                    foreach (var shape in sh.Parents)
+                    foreach (var shape in sh.Parents) {
                         q.Enqueue(shape);
+                    }
                 }
             }
         }
@@ -118,7 +124,7 @@ namespace Microsoft.Msagl.Routing {
         ///<param name="shape"></param>
         public void AddParent(Shape shape) {
             ValidateArg.IsNotNull(shape, "shape");
-            parents.Insert(shape);
+            this.parents.Insert(shape);
             shape.children.Insert(this);
         }
 
@@ -128,7 +134,7 @@ namespace Microsoft.Msagl.Routing {
         public void AddChild(Shape shape) {
             ValidateArg.IsNotNull(shape, "shape");
             shape.parents.Insert(this);
-            children.Insert(shape);
+            this.children.Insert(shape);
         }
         /// <summary>
         /// 
@@ -136,7 +142,7 @@ namespace Microsoft.Msagl.Routing {
         /// <param name="shape"></param>
         public void RemoveChild(Shape shape) {
             ValidateArg.IsNotNull(shape, "shape");
-            children.Remove(shape);
+            this.children.Remove(shape);
             shape.parents.Remove(this);
         }
 
@@ -146,7 +152,7 @@ namespace Microsoft.Msagl.Routing {
         /// <param name="shape"></param>
         public void RemoveParent(Shape shape) {
             ValidateArg.IsNotNull(shape, "shape");
-            parents.Remove(shape);
+            this.parents.Remove(shape);
             shape.children.Remove(this);
         }
 
@@ -157,7 +163,7 @@ namespace Microsoft.Msagl.Routing {
         /// <returns></returns>
         public override string ToString()
         {
-            return UserData == null ? "null" : UserData.ToString();
+            return this.UserData == null ? "null" : this.UserData.ToString();
         }
 #endif 
     }

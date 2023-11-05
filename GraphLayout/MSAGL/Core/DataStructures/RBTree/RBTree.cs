@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Microsoft.Msagl.Core.DataStructures {
 
 #if TEST_MSAGL
     [Serializable]
 #endif
-    internal class RbTree<T> : IEnumerable<T> {
-  
+    internal class RbTree<T> : IEnumerable<T>
+        where T : notnull {
+
         /// <summary>
         /// find the first, minimal, node in the tree such that predicate holds
         /// </summary>
@@ -15,16 +18,18 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// so the predicate values have a form (false, false, ..., false, true, true, ..., true)
         /// </param>
         /// <returns>the first node where predicate holds or null</returns>
-        internal RBNode<T> FindFirst(Func<T, bool> predicate) {
-            return FindFirst(root, predicate);
-        }
+        internal RBNode<T>? FindFirst(Func<T, bool> predicate)
+            => this.FindFirst(this._Root, predicate);
 
-        RBNode<T> FindFirst(RBNode<T> n, Func<T, bool> p) {
-            if (n == nil)
+        private RBNode<T>? FindFirst(RBNode<T> n, Func<T, bool> p) {
+            if (n == this._Nil) {
                 return null;
-            RBNode<T> good = null;
-            while (n != nil)
+            }
+
+            RBNode<T>? good = null;
+            while (n != this._Nil) {
                 n = p(n.Item) ? (good = n).left : n.right;
+            }
 
             return good;
         }
@@ -36,173 +41,175 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// so the predicate values on the tree have a form (true, true, ..., true, false, false, ..., false)
         /// </param>
         /// <returns>the last node where predicate holds or null</returns>
-        internal RBNode<T> FindLast(Func<T,bool> predicate) {
-            return FindLast(root, predicate);
-        }
+        internal RBNode<T>? FindLast(Func<T, bool> predicate)
+            => this.FindLast(this._Root, predicate);
 
-        RBNode<T> FindLast(RBNode<T> n, Func<T,bool> p) {
-            if (n == nil)
+        private RBNode<T>? FindLast(RBNode<T> n, Func<T, bool> p) {
+            if (n == this._Nil) {
                 return null;
-            RBNode<T> good = null;
-            while (n != nil)
+            }
+
+            RBNode<T>? good = null;
+            while (n != this._Nil) {
                 n = p(n.Item) ? (good = n).right : n.left;
+            }
 
             return good;
         }
 
+        private readonly IComparer<T> _Comparer;
 
-        readonly IComparer<T> comparer;
-
-        IComparer<T> Comparer {
-            get { return comparer; }
-        }
+        private IComparer<T> Comparer => this._Comparer;
 
         public IEnumerator<T> GetEnumerator() { return new RBTreeEnumerator<T>(this); }
 
-        RBNode<T> nil;
+        private RBNode<T> _Nil;
+        internal RBNode<T> Nil { get { return this._Nil; } }
 
-        internal RBNode<T> Nil { get { return nil; } }
+        private RBNode<T> _Root;
+        internal RBNode<T> Root { get { return this._Root; } }
 
-        RBNode<T> root;
-        internal RBNode<T> Root { get { return root; } }
+        internal RBNode<T>? Next(RBNode<T> x) {
+            if (x.right != this._Nil) {
+                return this.TreeMinimum(x.right);
+            }
 
-        internal RBNode<T> Next(RBNode<T> x) {
-            if (x.right != nil)
-                return TreeMinimum(x.right);
             RBNode<T> y = x.parent;
-            while (y != nil && x == y.right) {
+            while (y != this._Nil && x == y.right) {
                 x = y;
                 y = y.parent;
             }
-            return ToNull(y);
+            return this.ToNull(y);
         }
 
-        RBNode<T> ToNull(RBNode<T> y) {
-            return y != nil ? y : null;
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private RBNode<T>? ToNull(RBNode<T>? y) => (y is null || y == this._Nil) ? null : y;
 
-        internal RBNode<T> Previous(RBNode<T> x) {
-            if (x.left != nil)
-                return TreeMaximum(x.left);
+        internal RBNode<T>? Previous(RBNode<T> x) {
+            if (x.left != this._Nil) {
+                return this.TreeMaximum(x.left);
+            }
+
             RBNode<T> y = x.parent;
-            while (y != nil && x == y.left) {
+            while (y != this._Nil && x == y.left) {
                 x = y;
                 y = y.parent;
             }
-            return ToNull(y);
+            return this.ToNull(y);
         }
 
-        RBNode<T> TreeMinimum(RBNode<T> x) {
-            while (x.left != nil)
+        private RBNode<T>? TreeMinimum(RBNode<T> x) {
+            while (x.left != this._Nil) {
                 x = x.left;
-            return ToNull(x);
+            }
+
+            return this.ToNull(x);
         }
 
-        internal RBNode<T> TreeMinimum() {
-            return TreeMinimum(root);
-        }
+        internal RBNode<T>? TreeMinimum() => this.TreeMinimum(this._Root);
 
-
-        RBNode<T> TreeMaximum(RBNode<T> x) {
-            while (x.right != nil)
+        private RBNode<T>? TreeMaximum(RBNode<T> x) {
+            while (x.right != this._Nil) {
                 x = x.right;
-            return ToNull(x);
+            }
+
+            return this.ToNull(x);
         }
 
-        internal RBNode<T> TreeMaximum() {
-            return TreeMaximum(root);
-        }
-
+        internal RBNode<T>? TreeMaximum() => this.TreeMaximum(this._Root);
 
         public override string ToString() {
-            string ret = "{";
-            int i = 0;
+            var result = new StringBuilder();
+            result.Append('{');
             foreach (T p in this) {
-                ret += p.ToString();
-                if (i != count - 1) {
-                    ret += ",";
-                }
-
-                i++;
+                if (p is null) { continue; }
+                if (result.Length > 1) { result.Append(','); }
+                result.Append(p.ToString());
             }
-
-            return ret + "}";
+            result.Append('}');
+            return result.ToString();
         }
 
 
-        internal RBNode<T> DeleteSubtree(RBNode<T> z) {
-            System.Diagnostics.Debug.Assert(z != nil);
+        internal RBNode<T>? DeleteSubtree(RBNode<T> z) {
+            System.Diagnostics.Debug.Assert(z != this._Nil);
 
             RBNode<T> y;
-            if (z.left == nil || z.right == nil) {
+            if (z.left == this._Nil || z.right == this._Nil) {
                 /* y has a nil node as a child */
                 y = z;
             } else {
                 /* find tree successor with a nil node as a child */
                 y = z.right;
-                while (y.left != nil) y = y.left;
+                while (y.left != this._Nil) {
+                    y = y.left;
+                }
             }
 
             /* x is y's only child */
-            RBNode<T> x = y.left != nil ? y.left : y.right;
+            RBNode<T> x = y.left != this._Nil ? y.left : y.right;
 
             x.parent = y.parent;
-            if (y.parent == nil)
-                root = x;
-            else {
-                if (y == y.parent.left)
+            if (y.parent == this._Nil) {
+                this._Root = x;
+            } else {
+                if (y == y.parent.left) {
                     y.parent.left = x;
-                else
+                } else {
                     y.parent.right = x;
+                }
             }
-            if (y != z)
+            if (y != z) {
                 z.Item = y.Item;
-            if (y.color == RBColor.Black)
-                DeleteFixup(x);
+            }
+
+            if (y.color == RBColor.Black) {
+                this.DeleteFixup(x);
+            }
 
             //	checkTheTree();
 
-            return ToNull(z);
+            return this.ToNull(z);
 
         }
 
-        int count;
-        public int Count { get { return count; } }
+        private int _Count;
+        public int Count { get { return this._Count; } }
 
-        internal RBNode<T> Remove(T i) {
-            RBNode<T> n = Find(i);
-            if (n != null) {
-                count--;
-                return DeleteSubtree(n);
+        internal RBNode<T>? Remove(T i) {
+            RBNode<T>? n = this.Find(i);
+            if (n == null) {
+                return null;
             }
-            return null;
+            this._Count--;
+            return this.DeleteSubtree(n);
         }
 
         internal void DeleteNodeInternal(RBNode<T> x) {
-            count--;
-            DeleteSubtree(x);
+            this._Count--;
+            this.DeleteSubtree(x);
         }
 
-        RBNode<T> Find(RBNode<T> x, T i) {
+        private RBNode<T>? Find(RBNode<T> x, T i) {
             int compareResult;
-            while (x != nil && (compareResult = Comparer.Compare(i, x.Item)) != 0)
+            while (x != this._Nil && (compareResult = this.Comparer.Compare(i, x.Item)) != 0) {
                 x = compareResult < 0 ? x.left : x.right;
+            }
 
-            return ToNull(x);
+            return this.ToNull(x);
         }
 
-        internal RBNode<T> Find(T i) {
-            return Find(root, i);
-        }
+        internal RBNode<T>? Find(T i)
+            => this.Find(this._Root, i);
 
-        void DeleteFixup(RBNode<T> x) {
-            while (x != root && x.color == RBColor.Black) {
+        private void DeleteFixup(RBNode<T> x) {
+            while (x != this._Root && x.color == RBColor.Black) {
                 if (x == x.parent.left) {
                     RBNode<T> w = x.parent.right;
                     if (w.color == RBColor.Red) {
                         w.color = RBColor.Black;
                         x.parent.color = RBColor.Red;
-                        LeftRotate(x.parent);
+                        this.LeftRotate(x.parent);
                         w = x.parent.right;
                     }
                     if (w.left.color == RBColor.Black && w.right.color == RBColor.Black) {
@@ -212,21 +219,21 @@ namespace Microsoft.Msagl.Core.DataStructures {
                         if (w.right.color == RBColor.Black) {
                             w.left.color = RBColor.Black;
                             w.color = RBColor.Red;
-                            RightRotate(w);
+                            this.RightRotate(w);
                             w = x.parent.right;
                         }
                         w.color = x.parent.color;
                         x.parent.color = RBColor.Black;
                         w.right.color = RBColor.Black;
-                        LeftRotate(x.parent);
-                        x = root;
+                        this.LeftRotate(x.parent);
+                        x = this._Root;
                     }
                 } else {
                     RBNode<T> w = x.parent.left;
                     if (w.color == RBColor.Red) {
                         w.color = RBColor.Black;
                         x.parent.color = RBColor.Red;
-                        RightRotate(x.parent);
+                        this.RightRotate(x.parent);
                         w = x.parent.left;
                     }
                     if (w.right.color == RBColor.Black && w.left.color == RBColor.Black) {
@@ -236,52 +243,53 @@ namespace Microsoft.Msagl.Core.DataStructures {
                         if (w.left.color == RBColor.Black) {
                             w.right.color = RBColor.Black;
                             w.color = RBColor.Red;
-                            LeftRotate(w);
+                            this.LeftRotate(w);
                             w = x.parent.left;
                         }
                         w.color = x.parent.color;
                         x.parent.color = RBColor.Black;
                         w.left.color = RBColor.Black;
-                        RightRotate(x.parent);
-                        x = root;
+                        this.RightRotate(x.parent);
+                        x = this._Root;
                     }
                 }
             }
             x.color = RBColor.Black;
         }
 
-        internal bool IsEmpty() { return root == nil; }
+        internal bool IsEmpty() { return this._Root == this._Nil; }
 
-        RBNode<T> TreeInsert(T z) {
-            var y = nil;
-            var x = root;
+        private RBNode<T>? TreeInsert(T z) {
+            var y = this._Nil;
+            var x = this._Root;
             var compareRes = 0;
-            while (x != nil) {
+            while (x != this._Nil) {
                 y = x;
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=368
                 compareRes = Comparer.Compare(z, x.Item);
                 x = compareRes < 0 ? x.left : x.right;
 #else
-                x = (compareRes = Comparer.Compare(z, x.Item)) < 0 ? x.left : x.right;
+                x = (compareRes = this.Comparer.Compare(z, x.Item)) < 0 ? x.left : x.right;
 #endif
             }
 
-            var nz = new RBNode<T>(RBColor.Black, z, y, nil, nil);
+            var nz = new RBNode<T>(RBColor.Black, z, y, this._Nil, this._Nil);
 
-            if (y == nil)
-                root = nz;
-            else if (compareRes < 0)
+            if (y == this._Nil) {
+                this._Root = nz;
+            } else if (compareRes < 0) {
                 y.left = nz;
-            else
+            } else {
                 y.right = nz;
+            }
 
-            return ToNull(nz);
+            return this.ToNull(nz);
         }
 
-        void InsertPrivate(RBNode<T> x) {
-            count++;
+        private void InsertPrivate(RBNode<T> x) {
+            this._Count++;
             x.color = RBColor.Red;
-            while (x != root && x.parent.color == RBColor.Red) {
+            while (x != this._Root && x.parent.color == RBColor.Red) {
                 if (x.parent == x.parent.parent.left) {
                     RBNode<T> y = x.parent.parent.right;
                     if (y.color == RBColor.Red) {
@@ -292,11 +300,11 @@ namespace Microsoft.Msagl.Core.DataStructures {
                     } else {
                         if (x == x.parent.right) {
                             x = x.parent;
-                            LeftRotate(x);
+                            this.LeftRotate(x);
                         }
                         x.parent.color = RBColor.Black;
                         x.parent.parent.color = RBColor.Red;
-                        RightRotate(x.parent.parent);
+                        this.RightRotate(x.parent.parent);
                     }
                 } else {
                     RBNode<T> y = x.parent.parent.left;
@@ -308,78 +316,83 @@ namespace Microsoft.Msagl.Core.DataStructures {
                     } else {
                         if (x == x.parent.left) {
                             x = x.parent;
-                            RightRotate(x);
+                            this.RightRotate(x);
                         }
                         x.parent.color = RBColor.Black;
                         x.parent.parent.color = RBColor.Red;
-                        LeftRotate(x.parent.parent);
+                        this.LeftRotate(x.parent.parent);
                     }
                 }
 
             }
 
-            root.color = RBColor.Black;
+            this._Root.color = RBColor.Black;
         }
 
-        internal RBNode<T> Insert(T v) {
-            RBNode<T> x = TreeInsert(v);
-            InsertPrivate(x);
-            return ToNull(x);
+        internal RBNode<T>? Insert(T v) {
+            RBNode<T>? x = this.TreeInsert(v);
+            if (x is not null) {
+                this.InsertPrivate(x);
+            }
+            return this.ToNull(x);
         }
 
-        void LeftRotate(RBNode<T> x) {
+        private void LeftRotate(RBNode<T> x) {
             RBNode<T> y = x.right;
             x.right = y.left;
-            if (y.left != nil)
+            if (y.left != this._Nil) {
                 y.left.parent = x;
+            }
+
             y.parent = x.parent;
-            if (x.parent == nil)
-                root = y;
-            else if (x == x.parent.left)
+            if (x.parent == this._Nil) {
+                this._Root = y;
+            } else if (x == x.parent.left) {
                 x.parent.left = y;
-            else
+            } else {
                 x.parent.right = y;
+            }
 
             y.left = x;
             x.parent = y;
         }
 
-        void RightRotate(RBNode<T> x) {
+        private void RightRotate(RBNode<T> x) {
             RBNode<T> y = x.left;
             x.left = y.right;
-            if (y.right != nil)
+            if (y.right != this._Nil) {
                 y.right.parent = x;
+            }
+
             y.parent = x.parent;
-            if (x.parent == nil)
-                root = y;
-            else if (x == x.parent.right)
+            if (x.parent == this._Nil) {
+                this._Root = y;
+            } else if (x == x.parent.right) {
                 x.parent.right = y;
-            else
+            } else {
                 x.parent.left = y;
+            }
 
             y.right = x;
             x.parent = y;
 
         }
 
-        internal RbTree(Func<T, T, int> func) : this(new ComparerOnDelegate<T>(func)) {}
+        internal RbTree(Func<T?, T?, int> func) : this(new ComparerOnDelegate<T>(func)) { }
 
 
         internal RbTree(IComparer<T> comparer) {
-            Clear();
-            this.comparer = comparer;
+            this._Root = this._Nil = new RBNode<T>(RBColor.Black);
+            this._Comparer = comparer;
         }
 
         internal void Clear() {
-            root = nil = new RBNode<T>(RBColor.Black);
+            this._Root = this._Nil = new RBNode<T>(RBColor.Black);
         }
 
-        #region IEnumerable Members
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
             return new RBTreeEnumerator<T>(this);
         }
-
-        #endregion
     }
 }

@@ -115,7 +115,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         /// <returns>The created variable</returns>
         public Variable AddVariable(Object userData, double desiredPos)
         {
-            return AddVariable(userData, desiredPos, /*weight:*/ 1.0, /*scale:*/ 1.0);
+            return this.AddVariable(userData, desiredPos, /*weight:*/ 1.0, /*scale:*/ 1.0);
         }
         /// <summary>
         /// Add a Variable (for example, wrapping a node on one axis of the graph) to the Solver.
@@ -126,7 +126,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         /// <returns></returns>
         public Variable AddVariable(Object userData, double desiredPos, double weight)
         {
-            return AddVariable(userData, desiredPos, weight, /*scale:*/ 1.0);
+            return this.AddVariable(userData, desiredPos, weight, /*scale:*/ 1.0);
         }
 
         /// <summary>
@@ -259,7 +259,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         /// <returns></returns>
         public Constraint AddEqualityConstraint(Variable left, Variable right, double gap)
         {
-            return AddConstraint(left, right, gap, true);
+            return this.AddConstraint(left, right, gap, true);
         }
 
         /// <summary>
@@ -349,7 +349,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         /// <returns>The new constraint.</returns>
         public Constraint AddConstraint(Variable left, Variable right, double gap)
         {
-            return AddConstraint(left, right, gap, false /*isEquality*/);
+            return this.AddConstraint(left, right, gap, false /*isEquality*/);
         }
 
         /// <summary>
@@ -409,7 +409,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         /// <returns>A Solution object.</returns>
         public Solution Solve()
         {
-            return Solve(null);
+            return this.Solve(null);
         }
 
         /// <summary>
@@ -454,7 +454,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
 
             // ReSolving can be done for updated constraints.
             bool isReSolve = !this.allConstraints.IsEmpty;
-            CheckForUpdatedConstraints();
+            this.CheckForUpdatedConstraints();
 
             this.solverSolution = new Solution { MinInnerProjectIterations = int.MaxValue };
             this.allConstraints.MaxConstraintTreeDepth = 0;
@@ -479,7 +479,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             }
             else if (!isReSolve)
             {
-                SetupConstraints();
+                this.SetupConstraints();
             }
 
             // This is the number of unsatisfiable constraints encountered.
@@ -488,7 +488,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             // Merge Equality constraints first.  These do not do any constraint-splitting, and thus
             // remain in the same blocks, always satisfied, regardless of whether we're solving the full
             // Qpsc or the simpler loop.
-            MergeEqualityConstraints();
+            this.MergeEqualityConstraints();
 
             // Prepare for timeout checking.
             if (this.solverParams.TimeLimit > 0)
@@ -565,7 +565,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                 constraint.UpdateGap(kvpUpdate.Value);
                 if (!mustReinitializeBlocks && !constraint.IsEquality)
                 {
-                    SplitOnConstraintIfActive(constraint);
+                    this.SplitOnConstraintIfActive(constraint);
                     continue;
                 }
 
@@ -699,7 +699,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                 }
 
                 // If SplitBlocks doesn't find anything to split then Project would do nothing.
-                if (!SplitBlocks())
+                if (!this.SplitBlocks())
                 {
                     break;
                 }
@@ -709,10 +709,10 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         private bool RunProject()
         {
             ++this.solverSolution.OuterProjectIterations;
-            Project();
+            this.Project();
 
             // Examine limits post-Project but pre-SplitBlocks to ensure a feasible stopping state.
-            return !CheckForLimitsExceeded();
+            return !this.CheckForLimitsExceeded();
         }
 
         private bool CheckForLimitsExceeded()
@@ -775,7 +775,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         private void SolveQpsc()
         {
             this.solverSolution.AlgorithmUsed = this.solverParams.Advanced.ScaleInQpsc ? SolverAlgorithm.QpscWithScaling : SolverAlgorithm.QpscWithoutScaling;
-            if (!QpscMakeFeasible())
+            if (!this.QpscMakeFeasible())
             {
                 return;
             }
@@ -792,7 +792,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             qpsc.VariablesComplete();
             this.ReinitializeBlocks();
             this.MergeEqualityConstraints();
-            VerifyConstraintsAreFeasible();
+            this.VerifyConstraintsAreFeasible();
 
             // Iterations
             bool foundSplit = false;
@@ -815,7 +815,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                 // own block except for any equality constraints, which we don't split; but we still need to
                 // have UpdateReferencePos called).
                 //
-                foundSplit = SplitBlocks();
+                foundSplit = this.SplitBlocks();
 
                 // Examine limits post-Project to ensure a feasible stopping state.  We don't test for 
                 // termination due to "no violations found" here, deferring that to the next iteration's PreProject().
@@ -914,7 +914,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                     }
                     continue;
                 }
-                MergeBlocks(constraint);
+                this.MergeBlocks(constraint);
             }
 #if VERBOSE
             System.Diagnostics.Debug.WriteLine("  -- End ProcessEqualityConstraints -- ");
@@ -941,7 +941,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             int cIterations = 1;
 
             double maxViolation;
-            Constraint maxViolatedConstraint = GetMaxViolatedConstraint(out maxViolation, useViolationCache);
+            Constraint maxViolatedConstraint = this.GetMaxViolatedConstraint(out maxViolation, useViolationCache);
             if (null == maxViolatedConstraint)
             {
 #if VERBOSE
@@ -979,7 +979,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                 else
                 {
                     // The variables are in different blocks so merge the blocks.
-                    this.lastModifiedBlock = MergeBlocks(maxViolatedConstraint);
+                    this.lastModifiedBlock = this.MergeBlocks(maxViolatedConstraint);
                 }
 #if VERBOSE
                 DumpCost();
@@ -1006,7 +1006,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                     this.violationCache.Clear();
                 }
                 ++cIterations;
-                maxViolatedConstraint = GetMaxViolatedConstraint(out maxViolation, useViolationCache);
+                maxViolatedConstraint = this.GetMaxViolatedConstraint(out maxViolation, useViolationCache);
             } // endwhile violations exist
 
             this.solverSolution.InnerProjectIterationsTotal += cIterations;
@@ -1181,7 +1181,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
 
             // Nothing in ViolationCache or we've got too many Constraints in the block, so search 
             // the list of all constraints.
-            return SearchAllConstraints(maxViolation, useViolationCache);
+            return this.SearchAllConstraints(maxViolation, useViolationCache);
         } // end GetMaxViolatedConstraint()
 
         private Constraint SearchViolationCache(double maxViolation)

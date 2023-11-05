@@ -8,33 +8,36 @@ namespace Microsoft.Msagl.Layout.Layered {
     /// Preparing the graph for x-coordinate calculation by inserting dummy nodes into the layers
     /// </summary>
     internal class LayerInserter {
-        BasicGraph<Node, PolyIntEdge> intGraph;
-        Database database;
+        private BasicGraph<Node, PolyIntEdge> intGraph;
+        private Database database;
+
         /// <summary>
         /// Old layered graph: 
         /// </summary>
-        ProperLayeredGraph layeredGraph;
+        private ProperLayeredGraph layeredGraph;
+
         /// <summary>
         /// new layered graph 
         /// </summary>
-        ProperLayeredGraph nLayeredGraph;
-        PolyIntEdge[] virtNodesToIntEdges;
+        private ProperLayeredGraph nLayeredGraph;
+        private PolyIntEdge[] virtNodesToIntEdges;
 
         internal ProperLayeredGraph NLayeredGraph {
-            get { return nLayeredGraph; }
+            get { return this.nLayeredGraph; }
         }
+
         /// <summary>
         /// old layer arrays
         /// </summary>
-        LayerArrays la;
+        private LayerArrays la;
 
         /// <summary>
         /// new layer arrays
         /// </summary>
-        LayerArrays nla;
+        private LayerArrays nla;
 
         internal LayerArrays Nla {
-            get { return nla; }
+            get { return this.nla; }
         }
 
 
@@ -45,7 +48,7 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="la"></param>
         /// <param name="database"></param>
         /// <param name="intGraphP"></param>
-        LayerInserter(
+        private LayerInserter(
           ProperLayeredGraph layeredGraph, LayerArrays la, Database database, BasicGraph<Node, PolyIntEdge> intGraphP) {
             this.la = la;
             this.database = database;
@@ -68,10 +71,11 @@ namespace Microsoft.Msagl.Layout.Layered {
             la = li.Nla.DropEmptyLayers();
 
         }
+
         /// <summary>
         /// new Y-layering
         /// </summary>
-        int[] NLayering {
+        private int[] NLayering {
             get {
                 return this.nla.Y;
             }
@@ -80,21 +84,21 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <summary>
         /// does the main work
         /// </summary>
-        void InsertLayers() {
+        private void InsertLayers() {
 
-            EditOldLayering();
+            this.EditOldLayering();
 
-            CreateFullLayeredGraph();
+            this.CreateFullLayeredGraph();
 
-            InitNewLayering();
+            this.InitNewLayering();
 
-            MapVirtualNodesToEdges();
+            this.MapVirtualNodesToEdges();
 
-            FillUnsortedNewOddLayers();
+            this.FillUnsortedNewOddLayers();
 
-            WidenOriginalLayers();
+            this.WidenOriginalLayers();
 
-            SortNewOddLayers();
+            this.SortNewOddLayers();
 
         }
         /// <summary>
@@ -103,7 +107,7 @@ namespace Microsoft.Msagl.Layout.Layered {
         private void EditOldLayering() {
             int curVNode = this.intGraph.NodeCount;
 
-            foreach (List<PolyIntEdge> list in database.RegularMultiedges) {
+            foreach (List<PolyIntEdge> list in this.database.RegularMultiedges) {
                 int span = 0;
                 PolyIntEdge e = list[0];
                 span = e.LayerSpan * 2;
@@ -111,7 +115,7 @@ namespace Microsoft.Msagl.Layout.Layered {
                     foreach (LayerEdge le in e.LayerEdges) {
                         if (le.Target != e.Target) {
                             curVNode++;
-                            UpdateOldLayer(curVNode++, le.Target);
+                            this.UpdateOldLayer(curVNode++, le.Target);
                         }
                     }
                     curVNode += (span - 1) * (list.Count - 1) + 1;
@@ -133,29 +137,29 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// Here we add new virtices in such layers and 
         /// set new x-offsets of original and dummy vertices in these layers.
         /// </summary>
-        void WidenOriginalLayers() {
-            for (int i = 0; i < la.Layers.Length; i++) {
-                int[] layer = nla.Layers[i * 2];
+        private void WidenOriginalLayers() {
+            for (int i = 0; i < this.la.Layers.Length; i++) {
+                int[] layer = this.nla.Layers[i * 2];
                 int offset = 0;
-                foreach (int v in la.Layers[i]) {
-                    PolyIntEdge e = virtNodesToIntEdges[v];
+                foreach (int v in this.la.Layers[i]) {
+                    PolyIntEdge e = this.virtNodesToIntEdges[v];
                     if (e != null) {
-                        int layerOffsetInTheEdge = NLayering[e.Source] - NLayering[v];
-                        List<PolyIntEdge> list = database.Multiedges[new IntPair(e.Source, e.Target)];
+                        int layerOffsetInTheEdge = this.NLayering[e.Source] - this.NLayering[v];
+                        List<PolyIntEdge> list = this.database.Multiedges[new IntPair(e.Source, e.Target)];
 
                         foreach (PolyIntEdge ie in list) {
                             if (ie != e) {
                                 int u = ie.LayerEdges[layerOffsetInTheEdge].Source;
                                 layer[offset] = u;
-                                nla.X[u] = offset++;
+                                this.nla.X[u] = offset++;
                             } else {
                                 layer[offset] = v;
-                                nla.X[v] = offset++;
+                                this.nla.X[v] = offset++;
                             }
                         }
                     } else {
                         layer[offset] = v;
-                        nla.X[v] = offset++;
+                        this.nla.X[v] = offset++;
                     }
                 }
             }
@@ -164,12 +168,12 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <summary>
         /// filling new layers not corresponding to the original layers
         /// </summary>
-        void FillUnsortedNewOddLayers() {
-            int[] c = new int[nla.Layers.Length];
-            for (int i = intGraph.NodeCount; i < nLayeredGraph.NodeCount; i++) {
-                int layer = NLayering[i];
+        private void FillUnsortedNewOddLayers() {
+            int[] c = new int[this.nla.Layers.Length];
+            for (int i = this.intGraph.NodeCount; i < this.nLayeredGraph.NodeCount; i++) {
+                int layer = this.NLayering[i];
                 if (layer % 2 == 1) {//new layers have odd numbers
-                    nla.Layers[layer][c[layer]++] = i;
+                    this.nla.Layers[layer][c[layer]++] = i;
                 }
             }
         }
@@ -178,21 +182,26 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <summary>
         /// create the mapping from the vertices to edges to which they belong
         /// </summary>
-        void MapVirtualNodesToEdges() {
-            virtNodesToIntEdges = new PolyIntEdge[this.NLayering.Length];
-            foreach (PolyIntEdge e in database.AllIntEdges)
-                if (e.Source != e.Target && e.LayerEdges!=null)
-                    foreach (LayerEdge le in e.LayerEdges)
-                        if (le.Target != e.Target)
-                            virtNodesToIntEdges[le.Target] = e;
+        private void MapVirtualNodesToEdges() {
+            this.virtNodesToIntEdges = new PolyIntEdge[this.NLayering.Length];
+            foreach (PolyIntEdge e in this.database.AllIntEdges) {
+                if (e.Source != e.Target && e.LayerEdges!=null) {
+                    foreach (LayerEdge le in e.LayerEdges) {
+                        if (le.Target != e.Target) {
+                            this.virtNodesToIntEdges[le.Target] = e;
+                        }
+                    }
+                }
+            }
         }
-        int totalNodes;
+
+        private int totalNodes;
         /// <summary>
         /// Creating buckets for multi edges and allocating the graph.
         /// </summary>
         private void CreateFullLayeredGraph() {
-            totalNodes = this.intGraph.NodeCount;
-            foreach (List<PolyIntEdge> list in database.RegularMultiedges) {
+            this.totalNodes = this.intGraph.NodeCount;
+            foreach (List<PolyIntEdge> list in this.database.RegularMultiedges) {
                 int span = 0;
                 bool first = true;
                 foreach (PolyIntEdge e in list) {
@@ -203,8 +212,8 @@ namespace Microsoft.Msagl.Layout.Layered {
                     if (span > 0) {
                         e.LayerEdges = new LayerEdge[span];
                         for (int i = 0; i < span; i++) {
-                            int source = EdgePathsInserter.GetSource(ref totalNodes, e, i);
-                            int target = EdgePathsInserter.GetTarget(ref totalNodes, e, i, span);
+                            int source = EdgePathsInserter.GetSource(ref this.totalNodes, e, i);
+                            int target = EdgePathsInserter.GetTarget(ref this.totalNodes, e, i, span);
                             e.LayerEdges[i] = new LayerEdge(source, target, e.CrossingWeight);
                         }
                         LayerInserter.RegisterDontStepOnVertex(this.database, e);
@@ -219,22 +228,25 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// Sort new odd layers by the sum of x-coordinatates of predecessors and the successors of 
         /// dummy nodes.
         /// </summary>
-        void SortNewOddLayers() {
+        private void SortNewOddLayers() {
 
-            for (int i = 1; i < nla.Layers.Length; i += 2) {
+            for (int i = 1; i < this.nla.Layers.Length; i += 2) {
                 SortedDictionary<int, object> sd = new SortedDictionary<int, object>();
-                int[] layer = nla.Layers[i];
+                int[] layer = this.nla.Layers[i];
                 foreach (int v in layer) {
 
                     //find unique predecessor and successor
                     int predecessor = -1;
-                    foreach (LayerEdge ie in nLayeredGraph.InEdges(v))
+                    foreach (LayerEdge ie in this.nLayeredGraph.InEdges(v)) {
                         predecessor = ie.Source;
-                    int successor = -1;
-                    foreach (LayerEdge ie in nLayeredGraph.OutEdges(v))
-                        successor = ie.Target;
+                    }
 
-                    int x = nla.X[predecessor] + nla.X[successor];
+                    int successor = -1;
+                    foreach (LayerEdge ie in this.nLayeredGraph.OutEdges(v)) {
+                        successor = ie.Target;
+                    }
+
+                    int x = this.nla.X[predecessor] + this.nla.X[successor];
 
                     if (sd.ContainsKey(x)) {
                         object o = sd[x];
@@ -251,65 +263,76 @@ namespace Microsoft.Msagl.Layout.Layered {
                             List<int> l = o as List<int>;
                             l.Add(v);
                         }
-                    } else
+                    } else {
                         sd[x] = v;
+                    }
                 }
                 //fill the layer according to this order
                 int c = 0;
-                foreach (object v in sd.Values)
+                foreach (object v in sd.Values) {
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=347
                     if (v.GetType() == typeof(int))
 #else
                     if (v is int)
 #endif
                         layer[c++] = (int)v;
-                    else foreach (int k in v as List<int>)
+                    else {
+                        foreach (int k in v as List<int>) {
                             layer[c++] = k;
+                        }
+                    }
+                }
 
                 //update X now
-                for (int m = 0; m < layer.Length; m++)
-                    nla.X[layer[m]] = m;
+                for (int m = 0; m < layer.Length; m++) {
+                    this.nla.X[layer[m]] = m;
+                }
             }
         }
 
         /// <summary>
         /// Allocating new layering and filling its y-layers
         /// </summary>
-        void InitNewLayering() {
+        private void InitNewLayering() {
 
 
-            nla = new LayerArrays(new int[totalNodes]);
+            this.nla = new LayerArrays(new int[this.totalNodes]);
 
-            for (int i = 0; i < layeredGraph.NodeCount; i++)
-                NLayering[i] = la.Y[i] * 2;
+            for (int i = 0; i < this.layeredGraph.NodeCount; i++) {
+                this.NLayering[i] = this.la.Y[i] * 2;
+            }
 
-            foreach (KeyValuePair<IntPair, List<PolyIntEdge>> kv in database.Multiedges) {
+            foreach (KeyValuePair<IntPair, List<PolyIntEdge>> kv in this.database.Multiedges) {
                 IntPair ip = kv.Key;
 
-                if (ip.First != ip.Second && la.Y[ip.First] != la.Y[ip.Second]) {//not a self edge and not a flat edge
-                    int top = la.Y[ip.x] * 2;
+                if (ip.First != ip.Second && this.la.Y[ip.First] != this.la.Y[ip.Second]) {//not a self edge and not a flat edge
+                    int top = this.la.Y[ip.x] * 2;
                     foreach (PolyIntEdge e in kv.Value) {
                         int layer = top - 1;
-                        foreach (LayerEdge le in e.LayerEdges)
-                            if (le.Target != e.Target)
-                                NLayering[le.Target] = layer--;
+                        foreach (LayerEdge le in e.LayerEdges) {
+                            if (le.Target != e.Target) {
+                                this.NLayering[le.Target] = layer--;
+                            }
+                        }
                     }
                 }
             }
 
-            int[][] newLayers = new int[2 * la.Layers.Length - 1][];
+            int[][] newLayers = new int[2 * this.la.Layers.Length - 1][];
 
             //count new layer widths
             int[] counts = new int[newLayers.Length];
 
-            foreach (int l in NLayering)
+            foreach (int l in this.NLayering) {
                 counts[l]++;
+            }
 
-            for (int i = 0; i < counts.Length; i++)
+            for (int i = 0; i < counts.Length; i++) {
                 newLayers[i] = new int[counts[i]];
+            }
 
-            nla = new LayerArrays(NLayering);
-            nla.Layers = newLayers;
+            this.nla = new LayerArrays(this.NLayering);
+            this.nla.Layers = newLayers;
 
         }
         ///// <summary>

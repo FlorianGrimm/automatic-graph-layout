@@ -42,21 +42,21 @@ namespace Microsoft.Msagl.Layout.MDS {
         /// Executes the algorithm.
         /// </summary>
         protected override void RunInternal() {
-            this.StartListenToLocalProgress(graph.Nodes.Count);
+            this.StartListenToLocalProgress(this.graph.Nodes.Count);
 
-            Result = new double[graph.Nodes.Count];
+            this.Result = new double[this.graph.Nodes.Count];
 
             var q = new Microsoft.Msagl.Core.DataStructures.GenericBinaryHeapPriorityQueue<Node>();
             Dictionary<Node, double> d = new Dictionary<Node, double>();
-            foreach (Node node in graph.Nodes) {
+            foreach (Node node in this.graph.Nodes) {
                 q.Enqueue(node, Double.PositiveInfinity);
                 d[node] = Double.PositiveInfinity;
             }
-            q.DecreasePriority(source, 0);
+            q.DecreasePriority(this.source, 0);
 
             while (q.Count>0) {
-                
-                ProgressStep();
+
+                this.ProgressStep();
 
                 double prio;
                 Node u = q.Dequeue(out prio);
@@ -67,8 +67,9 @@ namespace Microsoft.Msagl.Layout.MDS {
                 while (enumerator.MoveNext()) {
                     Edge uv = enumerator.Current;
                     Node v = uv.Target;
-                    if (u == v)
+                    if (u == v) {
                         v = uv.Source;
+                    }
                     // relaxation step
                     if (d[v] > d[u] + uv.Length) {
                         d[v] = d[u] + uv.Length;
@@ -77,15 +78,16 @@ namespace Microsoft.Msagl.Layout.MDS {
                 }
             }
             int i = 0;
-            foreach (Node v in graph.Nodes) {
+            foreach (Node v in this.graph.Nodes) {
 #if SHARPKIT //https://github.com/SharpKit/SharpKit/issues/7 out keyword not working with arrays
                 double dummy;
                 if (!d.TryGetValue(v, out dummy))
                     dummy = Double.PositiveInfinity;
                 Result[i] = dummy;
 #else
-                if (!d.TryGetValue(v, out Result[i]))
-                    Result[i] = Double.PositiveInfinity;
+                if (!d.TryGetValue(v, out this.Result[i])) {
+                    this.Result[i] = Double.PositiveInfinity;
+                }
 #endif
                 i++;
             }

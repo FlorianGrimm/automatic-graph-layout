@@ -9,7 +9,7 @@ using Microsoft.Msagl.Layout.Incremental;
 
 namespace Microsoft.Msagl.Prototype.MultiScale
 {
-    class MultiScaleLayout
+    internal class MultiScaleLayout
     {
         /// <summary>
         /// Fastest method we have for laying out large graphs.  Also does a pretty good job
@@ -31,7 +31,7 @@ namespace Microsoft.Msagl.Prototype.MultiScale
             {
                 GraphStack.Push(G);
                 int n = G.Nodes.Count;
-                G = CreateAbridgedGraph(G, edgeLengthOffset, edgeLengthMultiplier);
+                G = this.CreateAbridgedGraph(G, edgeLengthOffset, edgeLengthMultiplier);
                 if (G.Nodes.Count == n)
                 {
                     // if the abridged graph is no smaller then pop back the previous one
@@ -42,7 +42,7 @@ namespace Microsoft.Msagl.Prototype.MultiScale
                 }
             }
             // layout most abridged graph
-            SimpleLayout(G, 1.0, edgeLengthMultiplier);
+            this.SimpleLayout(G, 1.0, edgeLengthMultiplier);
             // work back up the stack, expanding each successive graph such that nodes
             // with a single ancestor in the abridged graph are initially placed at the same position
             // as obtained with the previous layout, and nodes which were previously paired
@@ -68,7 +68,7 @@ namespace Microsoft.Msagl.Prototype.MultiScale
                 }
                 toCenter.ForEach(CenterNode);
                 G = GraphStack.Pop();
-                SimpleLayout(G, GraphStack.Count / totalGraphCount, edgeLengthMultiplier);
+                this.SimpleLayout(G, GraphStack.Count / totalGraphCount, edgeLengthMultiplier);
             }
         }
         /// <summary>
@@ -111,8 +111,10 @@ namespace Microsoft.Msagl.Prototype.MultiScale
                     Math.Log(edgeLengthMultiplier * level * 500 + Math.E),
                 InitialStepSize = 0.6
             };
-            foreach (var e in graph.Edges)
+            foreach (var e in graph.Edges) {
                 e.Length *= Math.Log(level * 500 + Math.E);
+            }
+
             settings.InitializeLayout(graph, settings.MinConstraintLevel);
 
             do

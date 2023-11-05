@@ -15,7 +15,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
 
         public override string ToString()
         {
-            return "ZoomLevel: " + ZoomLevel + "\nnodes of ZoomLevel <= " + ZoomLevel + " inside: " + NumberNodesLeqItsLevelInside + "/" + MaxNumberNodesPerTile;
+            return "ZoomLevel: " + this.ZoomLevel + "\nnodes of ZoomLevel <= " + this.ZoomLevel + " inside: " + this.NumberNodesLeqItsLevelInside + "/" + this.MaxNumberNodesPerTile;
         }
     }
 }

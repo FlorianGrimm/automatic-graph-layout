@@ -20,7 +20,7 @@ namespace Microsoft.Msagl.Layout.Layered {
     /// The class responsible for the routing of splines
     /// </summary>
     internal class Routing : AlgorithmBase {
-        readonly SugiyamaLayoutSettings settings;
+        private readonly SugiyamaLayoutSettings settings;
         internal Database Database;
         internal BasicGraph<Node, PolyIntEdge> IntGraph;
 
@@ -35,11 +35,11 @@ namespace Microsoft.Msagl.Layout.Layered {
                          BasicGraph<Node, PolyIntEdge> intGraph
             ) {
             this.settings = settings;
-            OriginalGraph = originalGraph;
-            Database = dbP;
-            ProperLayeredGraph = properLayeredGraph;
-            LayerArrays = yLayerArrays;
-            IntGraph = intGraph;
+            this.OriginalGraph = originalGraph;
+            this.Database = dbP;
+            this.ProperLayeredGraph = properLayeredGraph;
+            this.LayerArrays = yLayerArrays;
+            this.IntGraph = intGraph;
         }
 
         /// <summary>
@@ -53,19 +53,21 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <summary>
         /// The method does the main work.
         /// </summary>
-        void CreateSplines()
+        private void CreateSplines()
         {
-            CreateRegularSplines();
-            CreateSelfSplines();
-            if (IntGraph != null) RouteFlatEdges();
+            this.CreateRegularSplines();
+            this.CreateSelfSplines();
+            if (this.IntGraph != null) {
+                this.RouteFlatEdges();
+            }
         }
 
-        void RouteFlatEdges() {
-            var flatEdgeRouter = new FlatEdgeRouter(settings, this);
+        private void RouteFlatEdges() {
+            var flatEdgeRouter = new FlatEdgeRouter(this.settings, this);
             flatEdgeRouter.Run();
         }
 
-        void CreateRegularSplines() {
+        private void CreateRegularSplines() {
 #if PPC // Parallel -- susanlwo
             var options = new ParallelOptions();
             if (CancelToken != null)
@@ -73,16 +75,20 @@ namespace Microsoft.Msagl.Layout.Layered {
             Parallel.ForEach<List<IntEdge>>(this.Database.RegularMultiedges, options, (intEdgeList) =>
             {
 #else
-foreach (var intEdgeList in Database.RegularMultiedges) {
+foreach (var intEdgeList in this.Database.RegularMultiedges) {
 #endif
                 //Here we try to optimize multi-edge routing
                 int m = intEdgeList.Count;
-                bool optimizeShortEdges = m == 1 && !FanAtSourceOrTarget(intEdgeList[0]);
-                for (int i = m / 2; i < m; i++) CreateSplineForNonSelfEdge(intEdgeList[i], optimizeShortEdges);
+                bool optimizeShortEdges = m == 1 && !this.FanAtSourceOrTarget(intEdgeList[0]);
+                for (int i = m / 2; i < m; i++) {
+                    this.CreateSplineForNonSelfEdge(intEdgeList[i], optimizeShortEdges);
+                }
 #if SHARPKIT // https://github.com/SharpKit/SharpKit/issues/4
                 for (int i = (m / 2) - 1; i >= 0; i--) CreateSplineForNonSelfEdge(intEdgeList[i], optimizeShortEdges);
 #else
-                for (int i = m / 2 - 1; i >= 0; i--) CreateSplineForNonSelfEdge(intEdgeList[i], optimizeShortEdges);
+                for (int i = m / 2 - 1; i >= 0; i--) {
+                    this.CreateSplineForNonSelfEdge(intEdgeList[i], optimizeShortEdges);
+                }
 #endif
             }
 #if PPC
@@ -91,24 +97,24 @@ foreach (var intEdgeList in Database.RegularMultiedges) {
         }
 
         private bool FanAtSourceOrTarget(PolyIntEdge intEdge) {
-            return ProperLayeredGraph.OutDegreeIsMoreThanOne(intEdge.Source) || ProperLayeredGraph.InDegreeIsMoreThanOne(intEdge.Target);
+            return this.ProperLayeredGraph.OutDegreeIsMoreThanOne(intEdge.Source) || this.ProperLayeredGraph.InDegreeIsMoreThanOne(intEdge.Target);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", MessageId = "Microsoft.Msagl.Core.Geometry.Site")]
-        void CreateSelfSplines()
+        private void CreateSelfSplines()
         {
-            foreach (var kv in Database.Multiedges)
+            foreach (var kv in this.Database.Multiedges)
             {
                 this.ProgressStep();
 
                 IntPair ip = kv.Key;
                 if (ip.x == ip.y) {
-                    Anchor anchor = Database.Anchors[ip.x];
+                    Anchor anchor = this.Database.Anchors[ip.x];
                     double offset = anchor.LeftAnchor;
                     foreach (PolyIntEdge intEdge in kv.Value) {
-                        ProgressStep();
+                        this.ProgressStep();
 
-                        double dx = settings.NodeSeparation + settings.MinNodeWidth + offset;
+                        double dx = this.settings.NodeSeparation + this.settings.MinNodeWidth + offset;
                         double dy = anchor.BottomAnchor / 2;
                         Point p0 = anchor.Origin;
                         Point p1 = p0 + new Point(0, dy);
@@ -145,24 +151,25 @@ foreach (var intEdgeList in Database.RegularMultiedges) {
                 }
             }
         }
-        void CreateSplineForNonSelfEdge(PolyIntEdge es, bool optimizeShortEdges) {
+
+        private void CreateSplineForNonSelfEdge(PolyIntEdge es, bool optimizeShortEdges) {
             this.ProgressStep();
 
             if (es.LayerEdges != null) {
-                DrawSplineBySmothingThePolyline(es, optimizeShortEdges);
+                this.DrawSplineBySmothingThePolyline(es, optimizeShortEdges);
                 if (!es.IsVirtualEdge)
                 {
-                    es.UpdateEdgeLabelPosition(Database.Anchors);
+                    es.UpdateEdgeLabelPosition(this.Database.Anchors);
                     Arrowheads.TrimSplineAndCalculateArrowheads(es.Edge.EdgeGeometry, es.Edge.Source.BoundaryCurve,
                                                                      es.Edge.Target.BoundaryCurve, es.Curve, true);
                 }
             }
         }
 
-        void DrawSplineBySmothingThePolyline(PolyIntEdge edgePath, bool optimizeShortEdges) {
-            var smoothedPolyline = new SmoothedPolylineCalculator(edgePath, Database.Anchors, OriginalGraph, settings,
-                                                                  LayerArrays,
-                                                                  ProperLayeredGraph, Database);
+        private void DrawSplineBySmothingThePolyline(PolyIntEdge edgePath, bool optimizeShortEdges) {
+            var smoothedPolyline = new SmoothedPolylineCalculator(edgePath, this.Database.Anchors, this.OriginalGraph, this.settings,
+                                                                  this.LayerArrays,
+                                                                  this.ProperLayeredGraph, this.Database);
             ICurve spline = smoothedPolyline.GetSpline(optimizeShortEdges);
             if (edgePath.Reversed) {
                 edgePath.Curve = spline.Reverse();
@@ -193,8 +200,10 @@ foreach (var intEdgeList in Database.RegularMultiedges) {
                 labelSide = new LineSegment(e.LabelBBox.RightTop, e.LabelBBox.RightBottom);
             }
             ICurve segmentInFrontOfLabel = GetSegmentInFrontOfLabel(e.Curve, e.Label.Center.Y);
-            if (segmentInFrontOfLabel == null)
+            if (segmentInFrontOfLabel == null) {
                 return;
+            }
+
             if (Curve.GetAllIntersections(e.Curve, Curve.PolyFromBox(e.LabelBBox), false).Count == 0){
                 Point curveClosestPoint;
                 Point labelSideClosest;
@@ -220,16 +229,17 @@ foreach (var intEdgeList in Database.RegularMultiedges) {
             }
         }
 
-        static void ShiftLabel(Edge e, ref Point curveClosestPoint, ref Point labelSideClosest) {
+        private static void ShiftLabel(Edge e, ref Point curveClosestPoint, ref Point labelSideClosest) {
             double w = e.LineWidth/2;
             Point shift = curveClosestPoint - labelSideClosest;
             double shiftLength = shift.Length;
             //   SugiyamaLayoutSettings.Show(e.Curve, shiftLength > 0 ? new LineSegment(curveClosestPoint, labelSideClosest) : null, PolyFromBox(e.LabelBBox));
-            if (shiftLength > w)
+            if (shiftLength > w) {
                 e.Label.Center += shift/shiftLength*(shiftLength - w);
+            }
         }
 
-        static bool FindClosestPoints(out Point curveClosestPoint, out Point labelSideClosest,
+        private static bool FindClosestPoints(out Point curveClosestPoint, out Point labelSideClosest,
                                       ICurve segmentInFrontOfLabel, LineSegment labelSide) {
             double u, v;
             return Curve.MinDistWithinIntervals(segmentInFrontOfLabel, labelSide, segmentInFrontOfLabel.ParStart,
@@ -239,14 +249,19 @@ foreach (var intEdgeList in Database.RegularMultiedges) {
                                                 out u, out v, out curveClosestPoint, out labelSideClosest);
         }
 
-        static ICurve GetSegmentInFrontOfLabel(ICurve edgeCurve, double labelY) {
+        private static ICurve GetSegmentInFrontOfLabel(ICurve edgeCurve, double labelY) {
             var curve = edgeCurve as Curve;
             if (curve != null) {
-                foreach (ICurve seg in curve.Segments)
-                    if ((seg.Start.Y - labelY)*(seg.End.Y - labelY) <= 0)
+                foreach (ICurve seg in curve.Segments) {
+                    if ((seg.Start.Y - labelY)*(seg.End.Y - labelY) <= 0) {
                         return seg;
+                    }
+                }
             }
-            else Debug.Assert(false); //not implemented
+            else {
+                Debug.Assert(false); //not implemented
+            }
+
             return null;
         }
 

@@ -2,52 +2,62 @@ using System;
 using System.Collections.Generic;
 
 namespace Microsoft.Msagl.Core.DataStructures {
-    internal class RBTreeEnumerator<T> : IEnumerator<T> {
-        bool initialState;
-        RbTree<T> tree;
-        RBNode<T> c;
+    internal class RBTreeEnumerator<T> : IEnumerator<T>
+        where T : notnull {
+        private readonly RbTree<T> _Tree;
+        private bool _InitialState;
+        private RBNode<T>? _Current;
+                
         public T Current {
-            get { return c.Item; }
+            get {
+                if (_Current == null) {
+                    throw new InvalidOperationException();
+                } else { 
+                    return this._Current.Item;
+                }
+            }
         }
+
         public void Reset() {
-            initialState = true;
+            this._InitialState = true;
         }
 
         public bool MoveNext() {
-            if (tree.IsEmpty())
+            if (this._Tree.IsEmpty()) {
                 return false;
-
-            if (initialState == true) {
-                initialState = false;
-                c = tree.TreeMinimum();
-            } else {
-                c = tree.Next(c);
             }
-            return c != null;
+
+            if (this._InitialState == true) {
+                this._InitialState = false;
+                this._Current = this._Tree.TreeMinimum();
+            } else if (this._Current is not null) {
+                this._Current = this._Tree.Next(this._Current);
+            } else {
+                this._Current = null;
+            }
+            return this._Current != null;
         }
 
         internal RBTreeEnumerator(RbTree<T> tree) {
-            this.tree = tree;
-            Reset();
+            this._Tree = tree;
+            this.Reset();
 
         }
 
-        #region IDisposable Members
 
         public void Dispose() {
             GC.SuppressFinalize(this);
         }
 
-        #endregion
-
-        #region IEnumerator Members
 
         object System.Collections.IEnumerator.Current {
-            get { return c.Item; }
+            get {
+                if (this._Current is null) { 
+                    throw new InvalidOperationException();
+                } else {
+                    return this._Current.Item; 
+                }
+            }
         }
-
-        #endregion
     }
-
-
 }

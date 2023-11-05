@@ -10,23 +10,23 @@ namespace Microsoft.Msagl.Routing {
     internal class MultipleSourceMultipleTargetsShortestPathOnVisibilityGraph {
         //we are not using the A* algorithm since it does not make much sense for muliple targets
         //but we use the upper bound heuristic
-        readonly IEnumerable<VisibilityVertex> sources;
-        readonly Set<VisibilityVertex> targets;
-        VisibilityVertex _current;
-        VisibilityVertex closestTarget;
-        double upperBound = double.PositiveInfinity;
-        VisibilityGraph _visGraph;
+        private readonly IEnumerable<VisibilityVertex> sources;
+        private readonly Set<VisibilityVertex> targets;
+        private VisibilityVertex _current;
+        private VisibilityVertex closestTarget;
+        private double upperBound = double.PositiveInfinity;
+        private VisibilityGraph _visGraph;
         internal MultipleSourceMultipleTargetsShortestPathOnVisibilityGraph(IEnumerable<VisibilityVertex> sourceVisVertices,
                                                                          IEnumerable<VisibilityVertex> targetVisVertices, VisibilityGraph visibilityGraph)
         {
-            _visGraph = visibilityGraph;
+            this._visGraph = visibilityGraph;
             visibilityGraph.ClearPrevEdgesTable();
             foreach (var v in visibilityGraph.Vertices())
             {
                 v.Distance = Double.PositiveInfinity;
             }
-            sources = sourceVisVertices;
-            targets = new Set<VisibilityVertex>(targetVisVertices);
+            this.sources = sourceVisVertices;
+            this.targets = new Set<VisibilityVertex>(targetVisVertices);
 
         }
 
@@ -37,33 +37,36 @@ namespace Microsoft.Msagl.Routing {
         /// <returns>a path or null if the target is not reachable from the source</returns>
         internal IEnumerable<VisibilityVertex> GetPath(){ 
             var pq = new GenericBinaryHeapPriorityQueue<VisibilityVertex>();
-            foreach (var v in sources) {
+            foreach (var v in this.sources) {
                 v.Distance = 0;
                 pq.Enqueue(v, 0);
             }
             while (!pq.IsEmpty()) {
-                _current = pq.Dequeue();
-                if (targets.Contains(_current))
+                this._current = pq.Dequeue();
+                if (this.targets.Contains(this._current)) {
                     break;
+                }
 
-                foreach (var e in _current.OutEdges.Where(PassableOutEdge))
-                    ProcessNeighbor(pq, e, e.Target);
+                foreach (var e in this._current.OutEdges.Where(this.PassableOutEdge)) {
+                    this.ProcessNeighbor(pq, e, e.Target);
+                }
 
-                foreach (var e in _current.InEdges.Where(PassableInEdge))
-                    ProcessNeighbor(pq, e, e.Source);
+                foreach (var e in this._current.InEdges.Where(this.PassableInEdge)) {
+                    this.ProcessNeighbor(pq, e, e.Source);
+                }
             }
 
-            return _visGraph.PreviosVertex(_current) == null ? null : CalculatePath();
+            return this._visGraph.PreviosVertex(this._current) == null ? null : this.CalculatePath();
         }
 
-        bool PassableOutEdge(VisibilityEdge e) {
-            return 
-                targets.Contains(e.Target) || 
+        private bool PassableOutEdge(VisibilityEdge e) {
+            return
+                this.targets.Contains(e.Target) || 
                 !IsForbidden(e);
         }
 
-        bool PassableInEdge(VisibilityEdge e) {
-            return targets.Contains(e.Source)  || !IsForbidden(e);
+        private bool PassableInEdge(VisibilityEdge e) {
+            return this.targets.Contains(e.Source)  || !IsForbidden(e);
         }
 
 
@@ -71,22 +74,24 @@ namespace Microsoft.Msagl.Routing {
             return e.IsPassable != null && !e.IsPassable() || e is TollFreeVisibilityEdge;
         }
 
-        void ProcessNeighbor(GenericBinaryHeapPriorityQueue<VisibilityVertex> pq, VisibilityEdge l,
+        private void ProcessNeighbor(GenericBinaryHeapPriorityQueue<VisibilityVertex> pq, VisibilityEdge l,
                              VisibilityVertex v)
         {
             var len = l.Length;
-            var c = _current.Distance + len;
-            if (c >= upperBound)
+            var c = this._current.Distance + len;
+            if (c >= this.upperBound) {
                 return;
-            if (targets.Contains(v))
-            {
-                upperBound = c;
-                closestTarget = v;
             }
-            if (v != sources && _visGraph.PreviosVertex(v) == null)
+
+            if (this.targets.Contains(v))
+            {
+                this.upperBound = c;
+                this.closestTarget = v;
+            }
+            if (v != this.sources && this._visGraph.PreviosVertex(v) == null)
             {
                 v.Distance = c;
-                _visGraph.SetPreviousEdge(v, l);
+                this._visGraph.SetPreviousEdge(v, l);
                 pq.Enqueue(v, c);
             }
             else if (c < v.Distance)
@@ -98,20 +103,21 @@ namespace Microsoft.Msagl.Routing {
                 //Changing v.Prev is fine since we come up with a path with an insignificantly
                 //smaller distance.
                 v.Distance = c;
-                _visGraph.SetPreviousEdge(v, l);
+                this._visGraph.SetPreviousEdge(v, l);
                 pq.DecreasePriority(v, c);
             }
         }
 
-        
-        IEnumerable<VisibilityVertex> CalculatePath() {
-            if (closestTarget == null)
+        private IEnumerable<VisibilityVertex> CalculatePath() {
+            if (this.closestTarget == null) {
                 return null;
+            }
+
             var ret = new List<VisibilityVertex>();
-            var v = closestTarget;
+            var v = this.closestTarget;
             do {
                 ret.Add(v);
-                v = _visGraph.PreviosVertex(v);
+                v = this._visGraph.PreviosVertex(v);
             } while (v.Distance > 0);
             ret.Add(v);
 

@@ -15,7 +15,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
     /// variableDoneEval is NULL if we are starting an evaluation; if recursive, it's the variable
     /// on that side from the parent call, which was already processed.
     /// </summary>
-    class DfDvNode
+    internal class DfDvNode
     {
         internal DfDvNode Parent { get; private set; }
         internal Constraint ConstraintToEval { get; private set; }
@@ -29,7 +29,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
 
         internal DfDvNode(DfDvNode parent, Constraint constraintToEval, Variable variableToEval, Variable variableDoneEval)
         {
-            Set(parent, constraintToEval, variableToEval, variableDoneEval);
+            this.Set(parent, constraintToEval, variableToEval, variableDoneEval);
         }
 
         // For DummyParentNode only.
@@ -64,8 +64,8 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
 #else
                             "",
 #endif
-                            IsLeftToRight ? "" : "*", this.ConstraintToEval.Left.Name,
-                            IsLeftToRight ? "*" : "", this.ConstraintToEval.Right.Name, Depth);
+                            this.IsLeftToRight ? "" : "*", this.ConstraintToEval.Left.Name,
+                            this.IsLeftToRight ? "*" : "", this.ConstraintToEval.Right.Name, this.Depth);
         }
     }
 }

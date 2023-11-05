@@ -8,35 +8,36 @@ using Microsoft.Msagl.Prototype.Ranking;
 using Microsoft.Msagl.Routing;
 
 namespace Microsoft.Msagl.Layout.LargeGraphLayout {
-    internal class LevelCalculator { 
-
-        static void AssignEdges(LgData lgData, IZoomLevelCalculator nodeZoomLevelCalculator) {
+    internal class LevelCalculator {
+        private static void AssignEdges(LgData lgData, IZoomLevelCalculator nodeZoomLevelCalculator) {
             AssignEdgesToLevels(lgData, nodeZoomLevelCalculator);
             var edgeInfos = SortEdgeInfosByZoomLevel(lgData);
 
             foreach (int nodeCountOnLevel in nodeZoomLevelCalculator.LevelNodeCounts) {
                 bool finished = AddLevel(lgData, nodeZoomLevelCalculator, nodeCountOnLevel, edgeInfos);
-                if (finished)
+                if (finished) {
                     break;
+                }
             }
         }
 
-        static bool AddLevel(LgData lgData, IZoomLevelCalculator nodeZoomLevelCalculator, int nodeCountOnLevel, LgEdgeInfo[] edgeInfos) {
+        private static bool AddLevel(LgData lgData, IZoomLevelCalculator nodeZoomLevelCalculator, int nodeCountOnLevel, LgEdgeInfo[] edgeInfos) {
             var zoomLevel = (int) nodeZoomLevelCalculator.SortedLgNodeInfos[nodeCountOnLevel - 1].ZoomLevel;
             var edgeInfosOfLevel = edgeInfos.TakeWhile(ei => ei.ZoomLevel <= zoomLevel).ToList();
             lgData.AddLevel();
             return edgeInfosOfLevel.Count() == lgData.GeometryEdgesToLgEdgeInfos.Count;
         }
 
-        static LgEdgeInfo[] SortEdgeInfosByZoomLevel(LgData lgData) {
+        private static LgEdgeInfo[] SortEdgeInfosByZoomLevel(LgData lgData) {
             var edgeInfos = lgData.GeometryEdgesToLgEdgeInfos.Values.ToArray();
             Array.Sort(edgeInfos, (a, b) => a.ZoomLevel.CompareTo(b.ZoomLevel));
             return edgeInfos;
         }
 
-        static void AssignEdgesToLevels(LgData lgData, IZoomLevelCalculator nodeZoomLevelCalculator) {
-            foreach (int nodeCountOnLevel in nodeZoomLevelCalculator.LevelNodeCounts)
+        private static void AssignEdgesToLevels(LgData lgData, IZoomLevelCalculator nodeZoomLevelCalculator) {
+            foreach (int nodeCountOnLevel in nodeZoomLevelCalculator.LevelNodeCounts) {
                 EdgePicker.SetEdgeInfosZoomLevelsAndIcreaseRanks(lgData, nodeZoomLevelCalculator, nodeCountOnLevel);
+            }
         }
 
 
@@ -72,26 +73,28 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
 
         internal static void RankGraph(LgData lgData, GeometryGraph mainGeometryGraph) {
 //fromDrawingToEdgeInfo = new Dictionary<ICurve, LgEdgeInfo>();
-            foreach (var connectedGraph in lgData.ConnectedGeometryGraphs)
+            foreach (var connectedGraph in lgData.ConnectedGeometryGraphs) {
                 RankTheGraph(lgData, mainGeometryGraph, connectedGraph);
+            }
 
             UpdateRanksOfClusters(lgData);
         }
 
-        static void UpdateRanksOfClusters(LgData lgData) {
+        private static void UpdateRanksOfClusters(LgData lgData) {
             foreach (var lgInfo in lgData.GeometryNodesToLgNodeInfos.Values) {
                 var cluster = lgInfo.GeometryNode.ClusterParent;
                 if (cluster != null) {
                     LgNodeInfo clusterLgInfo;
-                    if (lgData.GeometryNodesToLgNodeInfos.TryGetValue(cluster, out clusterLgInfo))
-                        if (clusterLgInfo.Rank < lgInfo.Rank)
+                    if (lgData.GeometryNodesToLgNodeInfos.TryGetValue(cluster, out clusterLgInfo)) {
+                        if (clusterLgInfo.Rank < lgInfo.Rank) {
                             clusterLgInfo.Rank = lgInfo.Rank;
+                        }
+                    }
                 }
             }
         }
 
-
-        static void RankTheGraph(LgData lgData,
+        private static void RankTheGraph(LgData lgData,
                                           GeometryGraph mainGeometryGraph, GeometryGraph geomGraph) {
 
             var nodeArray = geomGraph.Nodes.ToArray();

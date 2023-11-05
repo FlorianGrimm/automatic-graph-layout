@@ -54,11 +54,11 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
                 return 0;
             }
             Debug.Assert(v != null);
-            Point pd = PenetrationDepth.PenetrationDepthForPolylines(TranslatedBoundary(), v.TranslatedBoundary());
+            Point pd = PenetrationDepth.PenetrationDepthForPolylines(this.TranslatedBoundary(), v.TranslatedBoundary());
             if (pd.Length > 0) {
-                Point wpd = pd / (Weight + v.Weight);
-                MoveCenter(v.Weight * wpd);
-                v.MoveCenter(-Weight * wpd);
+                Point wpd = pd / (this.Weight + v.Weight);
+                this.MoveCenter(v.Weight * wpd);
+                v.MoveCenter(-this.Weight * wpd);
             }
             return pd.Length;
         }
@@ -70,26 +70,26 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
         internal Node mNode;
         private Polyline boundary;
         private Polyline translatedBoundary;
-        double w2, h2;
+        private double w2, h2;
         /// <summary>
         /// Center of the node
         /// </summary>
         public override Point Center {
-            get { return mNode.Center; }
+            get { return this.mNode.Center; }
         }
         /// <summary>
         /// Move by delta
         /// </summary>
         /// <param name="delta"></param>
         public override void MoveCenter(Point delta) {
-            mNode.Center += delta;
+            this.mNode.Center += delta;
         }
         /// <summary>
         /// RectangleNode is used in region queries
         /// </summary>
         public override RectangleNode<IHull,Point> RectangleNode {
             get {
-                var r = new Rectangle(Center.X - w2, Center.Y - h2, Center.X + w2, Center.Y + h2);
+                var r = new Rectangle(this.Center.X - this.w2, this.Center.Y - this.h2, this.Center.X + this.w2, this.Center.Y + this.h2);
                 return new RectangleNode<IHull,Point>(this, r);
             }
         }
@@ -97,7 +97,7 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
         /// 
         /// </summary>
         public override double Weight {
-            get { return ((FiNode)mNode.AlgorithmData).stayWeight; }
+            get { return ((FiNode)this.mNode.AlgorithmData).stayWeight; }
         }
         /// <summary>
         /// 
@@ -114,15 +114,15 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
             this.h2 = mNode.Height / 2.0 + padding;
             this.Parent = parent;
 
-            boundary = new Polyline(new Point[]{
-                new Point(-w2, -h2),
-                new Point(-w2, h2),
-                new Point(w2, h2),
-                new Point(w2, -h2)
+            this.boundary = new Polyline(new Point[]{
+                new Point(-this.w2, -this.h2),
+                new Point(-this.w2, this.h2),
+                new Point(this.w2, this.h2),
+                new Point(this.w2, -this.h2)
             });
-            boundary.Closed = true;
-            translatedBoundary = new Polyline(boundary);
-            translatedBoundary.Closed = true;
+            this.boundary.Closed = true;
+            this.translatedBoundary = new Polyline(this.boundary);
+            this.translatedBoundary.Closed = true;
             this.mNode = mNode;
         }
         /// <summary>
@@ -130,12 +130,12 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
         /// </summary>
         /// <returns></returns>
         public override Polyline TranslatedBoundary() {
-            PolylinePoint qq = translatedBoundary.StartPoint;
-            for (PolylinePoint pp = boundary.StartPoint; pp != null; pp = pp.Next) {
-                qq.Point = pp.Point + Center;
+            PolylinePoint qq = this.translatedBoundary.StartPoint;
+            for (PolylinePoint pp = this.boundary.StartPoint; pp != null; pp = pp.Next) {
+                qq.Point = pp.Point + this.Center;
                 qq = qq.Next;
             }
-            return translatedBoundary;
+            return this.translatedBoundary;
         }
     }
     /// <summary>
@@ -147,7 +147,7 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
         /// The Barycenter of the cluster
         /// </summary>
         public override Point Center {
-            get { return cluster.SetBarycenter(); }
+            get { return this.cluster.SetBarycenter(); }
         }
         /// <summary>
         /// Move contents by delta
@@ -155,22 +155,23 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
         /// <param name="delta"></param>
         public override void MoveCenter(Point delta)
         {
-            cluster.ForEachNode(v => v.Center += delta);
+            this.cluster.ForEachNode(v => v.Center += delta);
         }
         /// <summary>
         /// 
         /// </summary>
         public override double Weight {
-            get { return cluster.Weight; }
+            get { return this.cluster.Weight; }
         }
         /// <summary>
         /// Bounding box used in region queries
         /// </summary>
         public override RectangleNode<IHull,Point> RectangleNode {
             get {
-                var r = new Rectangle(Center);
-                foreach (var node in cluster.Nodes)
+                var r = new Rectangle(this.Center);
+                foreach (var node in this.cluster.Nodes) {
                     r.Add(node.BoundingBox);
+                }
 
                 return new RectangleNode<IHull,Point>(this, r);
             }
@@ -189,7 +190,7 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
         /// </summary>
         /// <returns></returns>
         public override Polyline TranslatedBoundary() {
-            return ComputeConvexHull();
+            return this.ComputeConvexHull();
         }
 
         /// <summary>
@@ -198,14 +199,15 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
         private Polyline ComputeConvexHull()
         {
             var points = new List<Point>();
-            foreach (Node v in cluster.Nodes) 
+            foreach (Node v in this.cluster.Nodes) 
             {
                 CvxHull r = new RCHull(null, v, 0);
-                foreach (PolylinePoint p in r.TranslatedBoundary().PolylinePoints)
+                foreach (PolylinePoint p in r.TranslatedBoundary().PolylinePoints) {
                     points.Add(p.Point);
+                }
             }
 
-            foreach (Cluster c in cluster.Clusters)
+            foreach (Cluster c in this.cluster.Clusters)
             {
                 points.AddRange(new ClusterConvexHull(c, this).TranslatedBoundary());
             }
@@ -225,22 +227,22 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
             if (child.Parent == this) {
                 return true;
             }
-            return Contains(child.Parent);
+            return this.Contains(child.Parent);
         }
     }
     /// <summary>
     /// Prevents the boundaries of nodes and clusters from overlapping
     /// </summary>
     public class AllPairsNonOverlappingBoundaries : IConstraint {
-        List<IHull> hulls = new List<IHull>();
+        private List<IHull> hulls = new List<IHull>();
         private void traverseClusters(ClusterConvexHull parent, Cluster cluster, double padding) {
             ClusterConvexHull hull = new ClusterConvexHull(cluster, parent);
-            hulls.Add(hull);
+            this.hulls.Add(hull);
             foreach (var v in cluster.nodes) {
-                hulls.Add(new RCHull(hull, v, padding));
+                this.hulls.Add(new RCHull(hull, v, padding));
             }
             foreach (var c in cluster.clusters) {
-                traverseClusters(hull, c, padding);
+                this.traverseClusters(hull, c, padding);
             }
         }
         /// <summary>
@@ -252,10 +254,10 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
         /// <param name="settings">for padding extra space around nodes</param>
         public AllPairsNonOverlappingBoundaries(Cluster cluster, FastIncrementalLayoutSettings settings) {
             foreach (var v in cluster.nodes) {
-                hulls.Add(new RCHull(null,v, settings.NodeSeparation));
+                this.hulls.Add(new RCHull(null,v, settings.NodeSeparation));
             }
             foreach (var c in cluster.clusters) {
-                traverseClusters(null, c, settings.NodeSeparation);
+                this.traverseClusters(null, c, settings.NodeSeparation);
             }
         }
         #region IConstraint Members
@@ -266,16 +268,16 @@ namespace Microsoft.Msagl.Prototype.NonOverlappingBoundaries {
         /// </summary>
         public double Project() {
             double displacement = 0;
-            if (hulls.Count < AllPairsComputationLimit) {
+            if (this.hulls.Count < AllPairsComputationLimit) {
                 // if there are only a few nodes then do it the most straightforward n^2 way
-                for (int i = 0; i < hulls.Count - 1; ++i) {
-                    IHull u = hulls[i];
-                    for (int j = i + 1; j < hulls.Count; ++j) {
-                        displacement += u.Project(hulls[j]);
+                for (int i = 0; i < this.hulls.Count - 1; ++i) {
+                    IHull u = this.hulls[i];
+                    for (int j = i + 1; j < this.hulls.Count; ++j) {
+                        displacement += u.Project(this.hulls[j]);
                     }
                 }
             } else {
-                var pq = new ProximityQuery(hulls);
+                var pq = new ProximityQuery(this.hulls);
                 List<Tuple<IHull, IHull>> closePairs = pq.GetAllIntersections();
                 //shuffle(ref closePairs);
                 foreach (var k in closePairs) {

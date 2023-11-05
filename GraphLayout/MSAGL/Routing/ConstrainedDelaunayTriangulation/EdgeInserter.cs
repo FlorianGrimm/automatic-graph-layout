@@ -7,13 +7,13 @@ using Microsoft.Msagl.Core.Geometry.Curves;
 
 namespace Microsoft.Msagl.Routing.ConstrainedDelaunayTriangulation {
     internal class EdgeInserter {
-        readonly CdtEdge edge;
-        readonly Set<CdtTriangle> triangles;
-        readonly RbTree<CdtFrontElement> front;
-        readonly Func<CdtSite, CdtSite, CdtEdge> createEdgeDelegate;
-        List<CdtSite> rightPolygon = new List<CdtSite>();
-        List<CdtSite> leftPolygon = new List<CdtSite>();
-        List<CdtTriangle> addedTriangles=new List<CdtTriangle>();
+        private readonly CdtEdge edge;
+        private readonly Set<CdtTriangle> triangles;
+        private readonly RbTree<CdtFrontElement> front;
+        private readonly Func<CdtSite, CdtSite, CdtEdge> createEdgeDelegate;
+        private List<CdtSite> rightPolygon = new List<CdtSite>();
+        private List<CdtSite> leftPolygon = new List<CdtSite>();
+        private List<CdtTriangle> addedTriangles=new List<CdtTriangle>();
 
         public EdgeInserter(CdtEdge edge, Set<CdtTriangle> triangles, RbTree<CdtFrontElement> front, Func<CdtSite, CdtSite, CdtEdge> createEdgeDelegate) {
             this.edge = edge;
@@ -23,34 +23,39 @@ namespace Microsoft.Msagl.Routing.ConstrainedDelaunayTriangulation {
         }
 
         public void Run() {
-            TraceEdgeThroughTriangles();
-            TriangulatePolygon(rightPolygon, edge.upperSite, edge.lowerSite, true);
-            TriangulatePolygon(leftPolygon, edge.upperSite, edge.lowerSite, false);
-            UpdateFront();
+            this.TraceEdgeThroughTriangles();
+            this.TriangulatePolygon(this.rightPolygon, this.edge.upperSite, this.edge.lowerSite, true);
+            this.TriangulatePolygon(this.leftPolygon, this.edge.upperSite, this.edge.lowerSite, false);
+            this.UpdateFront();
         }
 
-        void UpdateFront() {
+        private void UpdateFront() {
             var newFrontEdges = new Set<CdtEdge>();
-            foreach (var t in addedTriangles)
-                foreach (var e in t.Edges)
-                    if (e.CwTriangle == null || e.CcwTriangle == null)
+            foreach (var t in this.addedTriangles) {
+                foreach (var e in t.Edges) {
+                    if (e.CwTriangle == null || e.CcwTriangle == null) {
                         newFrontEdges.Insert(e);
+                    }
+                }
+            }
 
-            foreach (var e in newFrontEdges)
-                AddEdgeToFront(e);
+            foreach (var e in newFrontEdges) {
+                this.AddEdgeToFront(e);
+            }
         }
 
-        void AddEdgeToFront(CdtEdge e) {
+        private void AddEdgeToFront(CdtEdge e) {
             var leftSite=e.upperSite.Point.X<e.lowerSite.Point.X?e.upperSite:e.lowerSite;
-            front.Insert(new CdtFrontElement(leftSite, e));
+            this.front.Insert(new CdtFrontElement(leftSite, e));
         }
 
-        void TriangulatePolygon(List<CdtSite> polygon, CdtSite a, CdtSite b, bool reverseTrangleWhenCompare) {
-            if (polygon.Count > 0)
-                TriangulatePolygon(0, polygon.Count - 1, polygon, a, b,reverseTrangleWhenCompare);
+        private void TriangulatePolygon(List<CdtSite> polygon, CdtSite a, CdtSite b, bool reverseTrangleWhenCompare) {
+            if (polygon.Count > 0) {
+                this.TriangulatePolygon(0, polygon.Count - 1, polygon, a, b,reverseTrangleWhenCompare);
+            }
         }
 
-        void TriangulatePolygon(int start, int end, List<CdtSite> polygon, CdtSite a, CdtSite b, bool reverseTrangleWhenCompare) {
+        private void TriangulatePolygon(int start, int end, List<CdtSite> polygon, CdtSite a, CdtSite b, bool reverseTrangleWhenCompare) {
 //            if(CdtSweeper.db)
 //               CdtSweeper.ShowFront(triangles,front, Enumerable.Range(start, end-start+1).Select(i=> new Ellipse(10,10,polygon[i].Point)).ToArray(), new[]{new LineSegment(a.Point,b.Point)});
             var c = polygon[start];
@@ -62,21 +67,24 @@ namespace Microsoft.Msagl.Routing.ConstrainedDelaunayTriangulation {
                     c = v;
                 }
             }
-            var t = new CdtTriangle(a, b, c, createEdgeDelegate);
-            triangles.Insert(t);
-            addedTriangles.Add(t);
-            if (start < cIndex)
-                TriangulatePolygon(start, cIndex - 1, polygon, a, c, reverseTrangleWhenCompare);
-            if (cIndex < end)
-                TriangulatePolygon(cIndex + 1, end, polygon, c, b, reverseTrangleWhenCompare);
+            var t = new CdtTriangle(a, b, c, this.createEdgeDelegate);
+            this.triangles.Insert(t);
+            this.addedTriangles.Add(t);
+            if (start < cIndex) {
+                this.TriangulatePolygon(start, cIndex - 1, polygon, a, c, reverseTrangleWhenCompare);
+            }
+
+            if (cIndex < end) {
+                this.TriangulatePolygon(cIndex + 1, end, polygon, c, b, reverseTrangleWhenCompare);
+            }
         }
 
-        static bool LocalInCircle(CdtSite v, CdtSite a, CdtSite b, CdtSite c, bool reverseTrangleWhenCompare) {
+        private static bool LocalInCircle(CdtSite v, CdtSite a, CdtSite b, CdtSite c, bool reverseTrangleWhenCompare) {
             return reverseTrangleWhenCompare ? CdtSweeper.InCircle(v, a, c, b) : CdtSweeper.InCircle(v, a, b, c);
         }
 
-        void TraceEdgeThroughTriangles() {
-            var edgeTracer = new EdgeTracer(edge, triangles, front, leftPolygon, rightPolygon);
+        private void TraceEdgeThroughTriangles() {
+            var edgeTracer = new EdgeTracer(this.edge, this.triangles, this.front, this.leftPolygon, this.rightPolygon);
             edgeTracer.Run();
 
         }

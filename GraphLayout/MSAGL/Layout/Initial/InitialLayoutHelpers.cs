@@ -14,7 +14,7 @@ using Microsoft.Msagl.Routing.Rectilinear;
 
 namespace Microsoft.Msagl.Layout.Initial
 {
-    static class InitialLayoutHelpers
+    internal static class InitialLayoutHelpers
     {
         internal static void RouteEdges(GeometryGraph component, LayoutAlgorithmSettings settings, CancelToken cancelToken)
         {

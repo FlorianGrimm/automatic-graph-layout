@@ -41,7 +41,7 @@ namespace Microsoft.Msagl.Core.Geometry
             double totalHeight = 0;
 
             // initial widthLowerBound is the width of a perfect packing for the desired aspect ratio
-            foreach (var rtp in rectangles)
+            foreach (var rtp in this.rectangles)
             {
                 Rectangle r = rtp.Rectangle;
                 Debug.Assert(r.Width > 0, "Width must be greater than 0");
@@ -50,7 +50,7 @@ namespace Microsoft.Msagl.Core.Geometry
                 minRectHeight = Math.Min(minRectHeight, r.Height);
                 maxRectHeight = Math.Max(maxRectHeight, r.Height);
             }
-            Pack(maxRectHeight, totalHeight, minRectHeight);
+            this.Pack(maxRectHeight, totalHeight, minRectHeight);
         }
     }
 }

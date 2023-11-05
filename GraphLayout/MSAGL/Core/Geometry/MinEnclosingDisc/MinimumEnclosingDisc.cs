@@ -8,8 +8,8 @@ namespace Microsoft.Msagl.Core.Geometry
     /// Runs in time linear in the number of points.  After Welzl'1991.
     /// </summary>
     public class MoveToFront {
-        LinkedList<int> L;
-        Point[] ps;
+        private LinkedList<int> L;
+        private Point[] ps;
         /// <summary>
         /// minimum enclosing disc
         /// </summary>
@@ -30,16 +30,17 @@ namespace Microsoft.Msagl.Core.Geometry
         {
             ValidateArg.IsNotNull(ps, "ps");
             this.ps = ps;
-            L = new LinkedList<int>();
+            this.L = new LinkedList<int>();
             for (int i = 0; i < ps.Length; ++i)
             {
-                L.AddLast(i);
+                this.L.AddLast(i);
             }
-            MinDisc md = mtf_md(null, new List<int>());
-            disc = md.disc;
-            boundary = md.boundary;
+            MinDisc md = this.mtf_md(null, new List<int>());
+            this.disc = md.disc;
+            this.boundary = md.boundary;
         }
-        class MinDisc
+
+        private class MinDisc
         {
             public Disc disc;
             public List<int> boundary;
@@ -50,61 +51,61 @@ namespace Microsoft.Msagl.Core.Geometry
                 Debug.Assert(b.Count <= 3);
                 switch(b.Count) {
                     case 0:
-                        disc = null;
+                        this.disc = null;
                         break;
                     case 1:
-                        disc = new Disc(ps[b[0]]);
+                        this.disc = new Disc(ps[b[0]]);
                         break;
                     case 2:
-                        disc = new Disc(ps[b[0]], ps[b[1]]);
+                        this.disc = new Disc(ps[b[0]], ps[b[1]]);
                         break;
                     case 3:
-                        disc = new Disc(ps[b[0]], ps[b[1]], ps[b[2]]);
+                        this.disc = new Disc(ps[b[0]], ps[b[1]], ps[b[2]]);
                         break;
                 }
             }
             public bool contains(Point p)
             {
-                if (disc == null)
+                if (this.disc == null)
                 {
                     return false;
                 }
-                return disc.Contains(p);
+                return this.disc.Contains(p);
             }
         }
 #if TEST_MSAGL
-         bool collinear3(List<int> b)
+        private bool collinear3(List<int> b)
         {
             if (b.Count == 3)
             {
-                return Disc.Collinear(ps[b[0]], ps[b[1]], ps[b[2]]);
+                return Disc.Collinear(this.ps[b[0]], this.ps[b[1]], this.ps[b[2]]);
             }
             return false;
         }
 #endif
-         MinDisc mtf_md(LinkedListNode<int> lPtr, List<int> b)
+        private MinDisc mtf_md(LinkedListNode<int> lPtr, List<int> b)
         {
             Debug.Assert(b.Count <= 3);
-            MinDisc md = new MinDisc(ps,b);
+            MinDisc md = new MinDisc(this.ps,b);
             if (b.Count == 3)
             {
                 return md;
             }
-            LinkedListNode<int> lnode = L.First;
+            LinkedListNode<int> lnode = this.L.First;
             while(lnode!=null&&lnode!=lPtr)
             {
                 LinkedListNode<int> lnext = lnode.Next;
                 int p = lnode.Value;
-                if (!md.contains(ps[p]))
+                if (!md.contains(this.ps[p]))
                 {
                     List<int> _b = new List<int>(b);
                     _b.Add(p);
 #if TEST_MSAGL
-                    Debug.Assert(!collinear3(_b),"Collinear points on boundary of minimal enclosing disc");
+                    Debug.Assert(!this.collinear3(_b),"Collinear points on boundary of minimal enclosing disc");
 #endif
-                    md = mtf_md(lnode, _b);
-                    L.Remove(lnode);
-                    L.AddFirst(lnode);
+                    md = this.mtf_md(lnode, _b);
+                    this.L.Remove(lnode);
+                    this.L.AddFirst(lnode);
                 }
                 lnode = lnext;
             }

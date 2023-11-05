@@ -20,13 +20,13 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
 #else
     internal class FreeSpaceFinder : LineSweeperBase, IComparer<AxisEdgesContainer> {
 #endif
-        static double AreaComparisonEpsilon = ApproximateComparer.IntersectionEpsilon;
-        readonly PointProjection xProjection;
+        private static double AreaComparisonEpsilon = ApproximateComparer.IntersectionEpsilon;
+        private readonly PointProjection xProjection;
         
         internal static double X(Point p){return p.X;}
         internal static double MinusY(Point p) { return -p.Y; }
 
-        readonly RbTree<AxisEdgesContainer> edgeContainersTree;
+        private readonly RbTree<AxisEdgesContainer> edgeContainersTree;
         internal Dictionary<AxisEdge, List<PathEdge>> PathOrders { get; set; }
 
         /// <summary>
@@ -39,22 +39,22 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         /// <param name="axisEdges">edges to find the empty space around</param>
         internal FreeSpaceFinder(Direction direction, IEnumerable<Polyline> obstacles, Dictionary<AxisEdge,Polyline> axisEdgesToObstaclesTheyOriginatedFrom, Dictionary<AxisEdge, List<PathEdge>> pathOrders, 
             IEnumerable<AxisEdge> axisEdges): base(obstacles, new CompassVector(direction).ToPoint()) {
-            DirectionPerp = new CompassVector(direction).Right.ToPoint();
-            PathOrders = pathOrders;
-            xProjection = direction == Direction.North ? (PointProjection)X : MinusY;
+            this.DirectionPerp = new CompassVector(direction).Right.ToPoint();
+            this.PathOrders = pathOrders;
+            this.xProjection = direction == Direction.North ? (PointProjection)X : MinusY;
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=301
             edgeContainersTree = new RbTree<AxisEdgesContainer>(new FreeSpaceFinderComparer(this));
 #else
-            edgeContainersTree = new RbTree<AxisEdgesContainer>(this);
+            this.edgeContainersTree = new RbTree<AxisEdgesContainer>(this);
 #endif
-            SweepPole = CompassVector.VectorDirection(SweepDirection);
-            Debug.Assert(CompassVector.IsPureDirection(SweepPole));
-            AxisEdges = axisEdges;
-            AxisEdgesToObstaclesTheyOriginatedFrom = axisEdgesToObstaclesTheyOriginatedFrom;
+            this.SweepPole = CompassVector.VectorDirection(this.SweepDirection);
+            Debug.Assert(CompassVector.IsPureDirection(this.SweepPole));
+            this.AxisEdges = axisEdges;
+            this.AxisEdgesToObstaclesTheyOriginatedFrom = axisEdgesToObstaclesTheyOriginatedFrom;
             
         }
 
-        Dictionary<AxisEdge, Polyline> AxisEdgesToObstaclesTheyOriginatedFrom { get; set; }
+        private Dictionary<AxisEdge, Polyline> AxisEdgesToObstaclesTheyOriginatedFrom { get; set; }
 
         protected Direction SweepPole { get; set; }
 
@@ -66,67 +66,76 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         /// calculates the right offsets
         /// </summary>
         internal void FindFreeSpace() {
-            InitTheQueueOfEvents();
-            ProcessEvents();
+            this.InitTheQueueOfEvents();
+            this.ProcessEvents();
         //    ShowAxisEdges();            
         }
 
-        
-        void ProcessEvents() {
-            while (EventQueue.Count > 0)
-                ProcessEvent(EventQueue.Dequeue());
+        private void ProcessEvents() {
+            while (this.EventQueue.Count > 0) {
+                this.ProcessEvent(this.EventQueue.Dequeue());
+            }
         }
 
-        void ProcessEvent(SweepEvent sweepEvent) {
+        private void ProcessEvent(SweepEvent sweepEvent) {
 //            if (SweepDirection.Y == 1 && (sweepEvent.Site - new Point(75.45611, 15.21524)).Length < 0.1)
                // ShowAtPoint(sweepEvent.Site);
           
             var vertexEvent = sweepEvent as VertexEvent;
-            if (vertexEvent != null)
-                ProcessVertexEvent(vertexEvent);
-            else {
+            if (vertexEvent != null) {
+                this.ProcessVertexEvent(vertexEvent);
+            } else {
                 var lowEdgeEvent = sweepEvent as AxisEdgeLowPointEvent;
-                Z = GetZ(sweepEvent.Site);
-                if (lowEdgeEvent != null)
-                    ProcessLowEdgeEvent(lowEdgeEvent);
-                else
-                    ProcessHighEdgeEvent((AxisEdgeHighPointEvent)sweepEvent);
+                this.Z = this.GetZ(sweepEvent.Site);
+                if (lowEdgeEvent != null) {
+                    this.ProcessLowEdgeEvent(lowEdgeEvent);
+                } else {
+                    this.ProcessHighEdgeEvent((AxisEdgeHighPointEvent)sweepEvent);
+                }
             }
         }
 
-        void ProcessHighEdgeEvent(AxisEdgeHighPointEvent edgeForNudgingHighPointEvent) {
+        private void ProcessHighEdgeEvent(AxisEdgeHighPointEvent edgeForNudgingHighPointEvent) {
             var edge = edgeForNudgingHighPointEvent.AxisEdge;
-            RemoveEdge(edge);
-            ConstraintEdgeWithObstaclesAtZ(edge, edge.Target.Point);
+            this.RemoveEdge(edge);
+            this.ConstraintEdgeWithObstaclesAtZ(edge, edge.Target.Point);
         }
 
-        void ProcessLowEdgeEvent(AxisEdgeLowPointEvent lowEdgeEvent) {
+        private void ProcessLowEdgeEvent(AxisEdgeLowPointEvent lowEdgeEvent) {
             
             var edge = lowEdgeEvent.AxisEdge;
 
-            var containerNode = GetOrCreateAxisEdgesContainer(edge);
+            var containerNode = this.GetOrCreateAxisEdgesContainer(edge);
             containerNode.Item.AddEdge(edge);
-            var prev = edgeContainersTree.Previous(containerNode);
-            if (prev != null)
-                foreach (var prevEdge in prev.Item.Edges)
-                    foreach (var ed in containerNode.Item.Edges)
-                        TryToAddRightNeighbor(prevEdge, ed);
-                        
-            var next = edgeContainersTree.Next(containerNode);
-            if (next != null)
-                foreach (var ed in containerNode.Item.Edges)
-                    foreach (var neEdge in next.Item.Edges)
-                        TryToAddRightNeighbor(ed, neEdge);
-            ConstraintEdgeWithObstaclesAtZ(edge, edge.Source.Point);
+            var prev = this.edgeContainersTree.Previous(containerNode);
+            if (prev != null) {
+                foreach (var prevEdge in prev.Item.Edges) {
+                    foreach (var ed in containerNode.Item.Edges) {
+                        this.TryToAddRightNeighbor(prevEdge, ed);
+                    }
+                }
+            }
+
+            var next = this.edgeContainersTree.Next(containerNode);
+            if (next != null) {
+                foreach (var ed in containerNode.Item.Edges) {
+                    foreach (var neEdge in next.Item.Edges) {
+                        this.TryToAddRightNeighbor(ed, neEdge);
+                    }
+                }
+            }
+
+            this.ConstraintEdgeWithObstaclesAtZ(edge, edge.Source.Point);
         }
 
-        void TryToAddRightNeighbor(AxisEdge leftEdge, AxisEdge rightEdge) {
-            if (ProjectionsOfEdgesOverlap(leftEdge, rightEdge))
+        private void TryToAddRightNeighbor(AxisEdge leftEdge, AxisEdge rightEdge) {
+            if (this.ProjectionsOfEdgesOverlap(leftEdge, rightEdge)) {
                 leftEdge.AddRightNeighbor(rightEdge);
+            }
         }
 
-        bool ProjectionsOfEdgesOverlap(AxisEdge leftEdge, AxisEdge rightEdge) {
-            return SweepPole == Direction.North
+        private bool ProjectionsOfEdgesOverlap(AxisEdge leftEdge, AxisEdge rightEdge) {
+            return this.SweepPole == Direction.North
                        ? !(leftEdge.TargetPoint.Y < rightEdge.SourcePoint.Y - ApproximateComparer.DistanceEpsilon ||
                            rightEdge.TargetPoint.Y < leftEdge.SourcePoint.Y - ApproximateComparer.DistanceEpsilon)
                        : !(leftEdge.TargetPoint.X < rightEdge.SourcePoint.X - ApproximateComparer.DistanceEpsilon ||
@@ -136,19 +145,19 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
 #if TEST_MSAGL
 // ReSharper disable UnusedMember.Local
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void DebShowEdge(AxisEdge edge, Point point){
-// ReSharper restore UnusedMember.Local
-           // if (InterestingEdge(edge))
-                ShowEdge(edge,point);
+        private void DebShowEdge(AxisEdge edge, Point point){
+            // ReSharper restore UnusedMember.Local
+            // if (InterestingEdge(edge))
+            this.ShowEdge(edge,point);
         }
 
 
 // ReSharper disable SuggestBaseTypeForParameter
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void ShowEdge(AxisEdge edge, Point point){
+        private void ShowEdge(AxisEdge edge, Point point){
 // ReSharper restore SuggestBaseTypeForParameter
 
-            var dd = GetObstacleBoundaries("black");
+            var dd = this.GetObstacleBoundaries("black");
             var seg = new DebugCurve( 1, "red", new LineSegment(edge.Source.Point, edge.Target.Point));
             LayoutAlgorithmSettings.ShowDebugCurvesEnumeration(dd.Concat(
                 new[]{seg ,new DebugCurve("blue",CurveFactory.CreateEllipse(3, 3, point))}));
@@ -157,98 +166,110 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        IEnumerable<DebugCurve> GetObstacleBoundaries(string color){
-            return Obstacles.Select(p => new DebugCurve(1, color, p));
+        private IEnumerable<DebugCurve> GetObstacleBoundaries(string color){
+            return this.Obstacles.Select(p => new DebugCurve(1, color, p));
         }
 #endif
-        
+
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="edge"></param>
         /// <param name="point">a point on the edge on Z level</param>
-        void ConstraintEdgeWithObstaclesAtZ(AxisEdge edge, Point point) {
+        private void ConstraintEdgeWithObstaclesAtZ(AxisEdge edge, Point point) {
             Debug.Assert(point==edge.Source.Point || point == edge.Target.Point);
-            ConstraintEdgeWithObstaclesAtZFromLeft(edge, point);
-            ConstraintEdgeWithObstaclesAtZFromRight(edge, point);
+            this.ConstraintEdgeWithObstaclesAtZFromLeft(edge, point);
+            this.ConstraintEdgeWithObstaclesAtZFromRight(edge, point);
         }
 
-        void ConstraintEdgeWithObstaclesAtZFromRight(AxisEdge edge, Point point) {
-            var node = GetActiveSideFromRight(point);
-            if (node == null) return;
-            if (NotRestricting(edge, ((LeftObstacleSide) node.Item).Polyline)) return;
-            var x = ObstacleSideComparer.IntersectionOfSideAndSweepLine(node.Item);
-            edge.BoundFromRight(x*DirectionPerp);
+        private void ConstraintEdgeWithObstaclesAtZFromRight(AxisEdge edge, Point point) {
+            var node = this.GetActiveSideFromRight(point);
+            if (node == null) {
+                return;
+            }
+
+            if (this.NotRestricting(edge, ((LeftObstacleSide) node.Item).Polyline)) {
+                return;
+            }
+
+            var x = this.ObstacleSideComparer.IntersectionOfSideAndSweepLine(node.Item);
+            edge.BoundFromRight(x* this.DirectionPerp);
         }
 
-        RBNode<SegmentBase> GetActiveSideFromRight(Point point){
-            return LeftObstacleSideTree.FindFirst(side =>
+        private RBNode<SegmentBase> GetActiveSideFromRight(Point point){
+            return this.LeftObstacleSideTree.FindFirst(side =>
                                            PointToTheLeftOfLineOrOnLineLocal(point, side.Start, side.End));
         }
 
-        void ConstraintEdgeWithObstaclesAtZFromLeft(AxisEdge edge, Point point){
+        private void ConstraintEdgeWithObstaclesAtZFromLeft(AxisEdge edge, Point point){
             //    ShowNudgedSegAndPoint(point, nudgedSegment);
-            var node = GetActiveSideFromLeft(point);
-            if (node == null) return;
-            if (NotRestricting(edge, ((RightObstacleSide) node.Item).Polyline)) return;
-            var x = ObstacleSideComparer.IntersectionOfSideAndSweepLine(node.Item);
-            edge.BoundFromLeft(x * DirectionPerp);
+            var node = this.GetActiveSideFromLeft(point);
+            if (node == null) {
+                return;
+            }
+
+            if (this.NotRestricting(edge, ((RightObstacleSide) node.Item).Polyline)) {
+                return;
+            }
+
+            var x = this.ObstacleSideComparer.IntersectionOfSideAndSweepLine(node.Item);
+            edge.BoundFromLeft(x * this.DirectionPerp);
         }
-       
-        static bool PointToTheLeftOfLineOrOnLineLocal(Point a, Point linePoint0, Point linePoint1) {
+
+        private static bool PointToTheLeftOfLineOrOnLineLocal(Point a, Point linePoint0, Point linePoint1) {
             return Point.SignedDoubledTriangleArea(a, linePoint0, linePoint1) > -AreaComparisonEpsilon;
         }
 
-        static bool PointToTheRightOfLineOrOnLineLocal(Point a, Point linePoint0, Point linePoint1) {
+        private static bool PointToTheRightOfLineOrOnLineLocal(Point a, Point linePoint0, Point linePoint1) {
             return Point.SignedDoubledTriangleArea(linePoint0, linePoint1, a) < AreaComparisonEpsilon;
         }
 
-        RBNode<SegmentBase> GetActiveSideFromLeft(Point point){
-            return RightObstacleSideTree.FindLast(side =>
+        private RBNode<SegmentBase> GetActiveSideFromLeft(Point point){
+            return this.RightObstacleSideTree.FindLast(side =>
                                                   PointToTheRightOfLineOrOnLineLocal(point, side.Start, side.End));
         }
         #region debug
 #if TEST_MSAGL
         // ReSharper disable UnusedMember.Local
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void ShowPointAndEdge(Point point, AxisEdge edge) {
+        private void ShowPointAndEdge(Point point, AxisEdge edge) {
 // ReSharper restore UnusedMember.Local
-            List<ICurve> curves = GetCurves(point, edge);
+            List<ICurve> curves = this.GetCurves(point, edge);
 
             LayoutAlgorithmSettings.Show(curves.ToArray());
         }
 
 // ReSharper disable UnusedMember.Local
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void ShowPointAndEdgeWithSweepline(Point point, AxisEdge edge) {
+        private void ShowPointAndEdgeWithSweepline(Point point, AxisEdge edge) {
 // ReSharper restore UnusedMember.Local
-            List<ICurve> curves = GetCurves(point, edge);
+            List<ICurve> curves = this.GetCurves(point, edge);
 
-            curves.Add(new LineSegment(SweepDirection * Z + 10 * DirectionPerp, SweepDirection * Z - 10 * DirectionPerp));
+            curves.Add(new LineSegment(this.SweepDirection * this.Z + 10 * this.DirectionPerp, this.SweepDirection * this.Z - 10 * this.DirectionPerp));
 
             LayoutAlgorithmSettings.Show(curves.ToArray());
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        List<ICurve> GetCurves(Point point, AxisEdge edge) {
+        private List<ICurve> GetCurves(Point point, AxisEdge edge) {
             var ellipse = CurveFactory.CreateEllipse(3, 3, point);
-            var curves = new List<ICurve>(Obstacles.Select(o => o as ICurve)){ellipse,
+            var curves = new List<ICurve>(this.Obstacles.Select(o => o as ICurve)){ellipse,
                                                                             new LineSegment(edge.Source.Point, edge.Target.Point
                                                                                 )};
 
             if (edge.RightBound < double.PositiveInfinity) {
                 double rightOffset = edge.RightBound;
-                var del = DirectionPerp * rightOffset;
+                var del = this.DirectionPerp * rightOffset;
                 curves.Add(new LineSegment(edge.Source.Point + del, edge.Target.Point + del));
             }
             if (edge.LeftBound > double.NegativeInfinity) {
                 double leftOffset = edge.LeftBound;
-                var del = DirectionPerp * leftOffset;
+                var del = this.DirectionPerp * leftOffset;
                 curves.Add(new LineSegment(edge.Source.Point + del, edge.Target.Point  + del));
             }
 
-            curves.AddRange((from e in PathOrders.Keys
+            curves.AddRange((from e in this.PathOrders.Keys
                              let a = e.SourcePoint
                              let b = e.TargetPoint
                              select new CubicBezierSegment(a, a*0.8 + b*0.2, a*0.2 + b*0.8, b)).Cast<ICurve>());
@@ -257,24 +278,24 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        List<DebugCurve> GetCurvesTest(Point point){
+        private List<DebugCurve> GetCurvesTest(Point point){
             var ellipse = CurveFactory.CreateEllipse(3, 3, point);
-            var curves = new List<DebugCurve>(Obstacles.Select(o => new DebugCurve(100, 1, "black", o)))
+            var curves = new List<DebugCurve>(this.Obstacles.Select(o => new DebugCurve(100, 1, "black", o)))
                          {new DebugCurve(100, 1, "red", ellipse)};
-            curves.AddRange(from e in edgeContainersTree
+            curves.AddRange(from e in this.edgeContainersTree
                              from axisEdge in e.Edges
                              let a = axisEdge.Source.Point
                              let b = axisEdge.Target.Point
                              select new DebugCurve(100, 1, "green", new LineSegment(a, b)));
 
 
-            curves.AddRange(RightNeighborsCurvesTest(edgeContainersTree));
+            curves.AddRange(RightNeighborsCurvesTest(this.edgeContainersTree));
 
             return curves;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        static IEnumerable<DebugCurve> RightNeighborsCurvesTest(IEnumerable<AxisEdgesContainer> rbTree) {
+        private static IEnumerable<DebugCurve> RightNeighborsCurvesTest(IEnumerable<AxisEdgesContainer> rbTree) {
             foreach (var container in rbTree) {
                 foreach (var edge  in container.Edges) {
                     foreach (var rn in edge.RightNeighbors) {
@@ -284,17 +305,17 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
             }
         }
 
-        static Point EdgeMidPoint(AxisEdge edge) {
+        private static Point EdgeMidPoint(AxisEdge edge) {
             return 0.5*(edge.SourcePoint + edge.TargetPoint);
         }
 
         // ReSharper disable UnusedMember.Local
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void ShowAxisEdges() {
+        private void ShowAxisEdges() {
             // ReSharper restore UnusedMember.Local
-            var dd = new List<DebugCurve>(GetObstacleBoundaries("black"));
+            var dd = new List<DebugCurve>(this.GetObstacleBoundaries("black"));
             int i = 0;
-            foreach (var axisEdge in AxisEdges) {
+            foreach (var axisEdge in this.AxisEdges) {
                 var color = DebugCurve.Colors[i];
                 dd.Add(new DebugCurve(200, 1, color,
                                        new LineSegment(axisEdge.Source.Point, axisEdge.Target.Point)));
@@ -315,154 +336,164 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
 
 // ReSharper disable UnusedMember.Local
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        void ShowAtPoint(Point point) {
+        private void ShowAtPoint(Point point) {
 // ReSharper restore UnusedMember.Local
-            var curves = GetCurvesTest(point);
+            var curves = this.GetCurvesTest(point);
             LayoutAlgorithmSettings.ShowDebugCurves(curves.ToArray());
         }
 #endif
         #endregion
-        RBNode<AxisEdgesContainer> GetOrCreateAxisEdgesContainer(AxisEdge edge) {
+        private RBNode<AxisEdgesContainer> GetOrCreateAxisEdgesContainer(AxisEdge edge) {
             var source = edge.Source.Point;
 
-            var ret = GetAxisEdgesContainerNode(source);
+            var ret = this.GetAxisEdgesContainerNode(source);
       
-            if(ret!=null)
+            if(ret!=null) {
                 return ret;
+            }
 
-            return edgeContainersTree.Insert(new AxisEdgesContainer(source));
+            return this.edgeContainersTree.Insert(new AxisEdgesContainer(source));
         }
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="point">the point has to be on the same line as the container</param>
         /// <returns></returns>
-        RBNode<AxisEdgesContainer> GetAxisEdgesContainerNode(Point point){
-            var prj = xProjection( point);
+        private RBNode<AxisEdgesContainer> GetAxisEdgesContainerNode(Point point){
+            var prj = this.xProjection( point);
             var ret =
-                edgeContainersTree.FindFirst(cont => xProjection(cont.Source) >= prj-ApproximateComparer.DistanceEpsilon/2);
-            if(ret != null)
-                if (xProjection(ret.Item.Source) <= prj+ApproximateComparer.DistanceEpsilon/2) 
+                this.edgeContainersTree.FindFirst(cont => this.xProjection(cont.Source) >= prj-ApproximateComparer.DistanceEpsilon/2);
+            if(ret != null) {
+                if (this.xProjection(ret.Item.Source) <= prj+ApproximateComparer.DistanceEpsilon/2) {
                     return ret;
+                }
+            }
+
             return null;
         }
 
-
-
-        void ProcessVertexEvent(VertexEvent vertexEvent) {
-            Z = GetZ(vertexEvent);
+        private void ProcessVertexEvent(VertexEvent vertexEvent) {
+            this.Z = this.GetZ(vertexEvent);
             var leftVertexEvent = vertexEvent as LeftVertexEvent;
-            if (leftVertexEvent != null)
-                ProcessLeftVertex(leftVertexEvent, vertexEvent.Vertex.NextOnPolyline);
-            else {
+            if (leftVertexEvent != null) {
+                this.ProcessLeftVertex(leftVertexEvent, vertexEvent.Vertex.NextOnPolyline);
+            } else {
                 var rightVertexEvent = vertexEvent as RightVertexEvent;
-                if (rightVertexEvent != null)
-                    ProcessRightVertex(rightVertexEvent, vertexEvent.Vertex.PrevOnPolyline);
-                else {
-                    ProcessLeftVertex(vertexEvent, vertexEvent.Vertex.NextOnPolyline);
-                    ProcessRightVertex(vertexEvent, vertexEvent.Vertex.PrevOnPolyline);
+                if (rightVertexEvent != null) {
+                    this.ProcessRightVertex(rightVertexEvent, vertexEvent.Vertex.PrevOnPolyline);
+                } else {
+                    this.ProcessLeftVertex(vertexEvent, vertexEvent.Vertex.NextOnPolyline);
+                    this.ProcessRightVertex(vertexEvent, vertexEvent.Vertex.PrevOnPolyline);
                 }
             }
         }
 
-        void ProcessRightVertex(VertexEvent rightVertexEvent, PolylinePoint nextVertex){
-            Debug.Assert(Z == rightVertexEvent.Site*SweepDirection);
+        private void ProcessRightVertex(VertexEvent rightVertexEvent, PolylinePoint nextVertex){
+            Debug.Assert(this.Z == rightVertexEvent.Site* this.SweepDirection);
 
             var site = rightVertexEvent.Site;
-            ProcessPrevSegmentForRightVertex(rightVertexEvent, site);
+            this.ProcessPrevSegmentForRightVertex(rightVertexEvent, site);
 
             var delta = nextVertex.Point - rightVertexEvent.Site;
-            var deltaX = delta*DirectionPerp;
-            var deltaZ = delta*SweepDirection;
+            var deltaX = delta* this.DirectionPerp;
+            var deltaZ = delta* this.SweepDirection;
             if (deltaZ <= ApproximateComparer.DistanceEpsilon){
-                if (deltaX > 0 && deltaZ >= 0)
-                    EnqueueEvent(new RightVertexEvent(nextVertex));
-                else
-                    RestrictEdgeContainerToTheRightOfEvent(rightVertexEvent.Vertex);
+                if (deltaX > 0 && deltaZ >= 0) {
+                    this.EnqueueEvent(new RightVertexEvent(nextVertex));
+                } else {
+                    this.RestrictEdgeContainerToTheRightOfEvent(rightVertexEvent.Vertex);
+                }
             }
             else{
                 //deltaZ>epsilon
-                InsertRightSide(new RightObstacleSide(rightVertexEvent.Vertex));
-                EnqueueEvent(new RightVertexEvent(nextVertex));
-                RestrictEdgeContainerToTheRightOfEvent(rightVertexEvent.Vertex);
+                this.InsertRightSide(new RightObstacleSide(rightVertexEvent.Vertex));
+                this.EnqueueEvent(new RightVertexEvent(nextVertex));
+                this.RestrictEdgeContainerToTheRightOfEvent(rightVertexEvent.Vertex);
 
             }
         }
 
         private void RestrictEdgeContainerToTheRightOfEvent(PolylinePoint polylinePoint) {
             var site = polylinePoint.Point;
-            var siteX = xProjection(site);
+            var siteX = this.xProjection(site);
             var containerNode =
-                edgeContainersTree.FindFirst
-                    (container => siteX <= xProjection(container.Source));
+                this.edgeContainersTree.FindFirst
+                    (container => siteX <= this.xProjection(container.Source));
 
-            if (containerNode != null)
-                foreach (var edge in containerNode.Item.Edges)
-                    if (!NotRestricting(edge, polylinePoint.Polyline))
-                        edge.BoundFromLeft(DirectionPerp*site);
+            if (containerNode != null) {
+                foreach (var edge in containerNode.Item.Edges) {
+                    if (!this.NotRestricting(edge, polylinePoint.Polyline)) {
+                        edge.BoundFromLeft(this.DirectionPerp *site);
+                    }
+                }
+            }
         }
 
-        bool NotRestricting(AxisEdge edge, Polyline polyline) {
+        private bool NotRestricting(AxisEdge edge, Polyline polyline) {
             Polyline p;
-            return AxisEdgesToObstaclesTheyOriginatedFrom.TryGetValue(edge, out p) && p == polyline;
+            return this.AxisEdgesToObstaclesTheyOriginatedFrom.TryGetValue(edge, out p) && p == polyline;
         }
 
-
-        void ProcessPrevSegmentForRightVertex(VertexEvent rightVertexEvent, Point site) {
+        private void ProcessPrevSegmentForRightVertex(VertexEvent rightVertexEvent, Point site) {
             var prevSite = rightVertexEvent.Vertex.NextOnPolyline.Point;
             var delta = site - prevSite;
-            double deltaZ = delta * SweepDirection;
-            if (deltaZ > ApproximateComparer.DistanceEpsilon)
-                RemoveRightSide(new RightObstacleSide(rightVertexEvent.Vertex.NextOnPolyline));
+            double deltaZ = delta * this.SweepDirection;
+            if (deltaZ > ApproximateComparer.DistanceEpsilon) {
+                this.RemoveRightSide(new RightObstacleSide(rightVertexEvent.Vertex.NextOnPolyline));
+            }
         }
 
-
-        void RemoveEdge(AxisEdge edge){
-            var containerNode = GetAxisEdgesContainerNode(edge.Source.Point);
+        private void RemoveEdge(AxisEdge edge){
+            var containerNode = this.GetAxisEdgesContainerNode(edge.Source.Point);
             containerNode.Item.RemoveAxis(edge);
-            if(containerNode.Item.IsEmpty())
-                edgeContainersTree.DeleteNodeInternal(containerNode);
+            if(containerNode.Item.IsEmpty()) {
+                this.edgeContainersTree.DeleteNodeInternal(containerNode);
+            }
         }
 
-
-        void ProcessLeftVertex(VertexEvent leftVertexEvent, PolylinePoint nextVertex){
-            Debug.Assert(Z == leftVertexEvent.Site*SweepDirection);
+        private void ProcessLeftVertex(VertexEvent leftVertexEvent, PolylinePoint nextVertex){
+            Debug.Assert(this.Z == leftVertexEvent.Site* this.SweepDirection);
 
             var site = leftVertexEvent.Site;
-            ProcessPrevSegmentForLeftVertex(leftVertexEvent, site);
+            this.ProcessPrevSegmentForLeftVertex(leftVertexEvent, site);
 
             Point delta = nextVertex.Point - leftVertexEvent.Site;
-            double deltaX = delta*DirectionPerp;
-            double deltaZ = delta*SweepDirection;
+            double deltaX = delta* this.DirectionPerp;
+            double deltaZ = delta* this.SweepDirection;
             if (deltaZ <= ApproximateComparer.DistanceEpsilon ){
-                if (deltaX < 0 && deltaZ >= 0)
-                    EnqueueEvent(new LeftVertexEvent(nextVertex));
+                if (deltaX < 0 && deltaZ >= 0) {
+                    this.EnqueueEvent(new LeftVertexEvent(nextVertex));
+                }
             }
             else{
                 //deltaZ>epsilon
-                InsertLeftSide(new LeftObstacleSide(leftVertexEvent.Vertex));
-                EnqueueEvent(new LeftVertexEvent(nextVertex));
+                this.InsertLeftSide(new LeftObstacleSide(leftVertexEvent.Vertex));
+                this.EnqueueEvent(new LeftVertexEvent(nextVertex));
             }
             //ShowAtPoint(leftVertexEvent.Site);
-            RestrictEdgeFromTheLeftOfEvent(leftVertexEvent.Vertex);
+            this.RestrictEdgeFromTheLeftOfEvent(leftVertexEvent.Vertex);
         }
 
         private void RestrictEdgeFromTheLeftOfEvent(PolylinePoint polylinePoint) {
             //ShowAtPoint(site);
             Point site = polylinePoint.Point;
-            RBNode<AxisEdgesContainer> containerNode = GetContainerNodeToTheLeftOfEvent(site);
+            RBNode<AxisEdgesContainer> containerNode = this.GetContainerNodeToTheLeftOfEvent(site);
 
-            if (containerNode != null)
-                foreach (var edge in containerNode.Item.Edges)
-                    if (!NotRestricting(edge, polylinePoint.Polyline))
-                        edge.BoundFromRight(site*DirectionPerp);
+            if (containerNode != null) {
+                foreach (var edge in containerNode.Item.Edges) {
+                    if (!this.NotRestricting(edge, polylinePoint.Polyline)) {
+                        edge.BoundFromRight(site* this.DirectionPerp);
+                    }
+                }
+            }
         }
 
-        RBNode<AxisEdgesContainer> GetContainerNodeToTheLeftOfEvent(Point site) {
-            double siteX = xProjection(site);
+        private RBNode<AxisEdgesContainer> GetContainerNodeToTheLeftOfEvent(Point site) {
+            double siteX = this.xProjection(site);
             return
-                edgeContainersTree.FindLast(
-                    container => xProjection(container.Source)<= siteX);
+                this.edgeContainersTree.FindLast(
+                    container => this.xProjection(container.Source)<= siteX);
             //                Point.PointToTheRightOfLineOrOnLine(site, container.Source,
             //                                                                                                container.UpPoint));
         }
@@ -471,37 +502,37 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         private void ProcessPrevSegmentForLeftVertex(VertexEvent leftVertexEvent, Point site) {
             var prevSite = leftVertexEvent.Vertex.PrevOnPolyline.Point;
             var delta = site - prevSite;
-            double deltaZ = delta * SweepDirection;
-            if (deltaZ > ApproximateComparer.DistanceEpsilon)
-                RemoveLeftSide(new LeftObstacleSide(leftVertexEvent.Vertex.PrevOnPolyline));
+            double deltaZ = delta * this.SweepDirection;
+            if (deltaZ > ApproximateComparer.DistanceEpsilon) {
+                this.RemoveLeftSide(new LeftObstacleSide(leftVertexEvent.Vertex.PrevOnPolyline));
+            }
         }
 
-
-        void InitTheQueueOfEvents() {
-            InitQueueOfEvents();
-            foreach (var axisEdge in AxisEdges)
-                EnqueueEventsForEdge(axisEdge);
+        private void InitTheQueueOfEvents() {
+            this.InitQueueOfEvents();
+            foreach (var axisEdge in this.AxisEdges) {
+                this.EnqueueEventsForEdge(axisEdge);
+            }
         }
 
         protected IEnumerable<AxisEdge> AxisEdges { get; set; }
 
-        void EnqueueEventsForEdge(AxisEdge edge) {
-            if (EdgeIsParallelToSweepDir(edge)) {
-                EnqueueEvent(EdgeLowPointEvent(edge, edge.Source.Point));
-                EnqueueEvent(EdgeHighPointEvent(edge, edge.Target.Point));
+        private void EnqueueEventsForEdge(AxisEdge edge) {
+            if (this.EdgeIsParallelToSweepDir(edge)) {
+                this.EnqueueEvent(EdgeLowPointEvent(edge, edge.Source.Point));
+                this.EnqueueEvent(EdgeHighPointEvent(edge, edge.Target.Point));
             }
         }
 
-        bool EdgeIsParallelToSweepDir(AxisEdge edge) {
-            return edge.Direction == SweepPole || edge.Direction == CompassVector.OppositeDir(SweepPole);
+        private bool EdgeIsParallelToSweepDir(AxisEdge edge) {
+            return edge.Direction == this.SweepPole || edge.Direction == CompassVector.OppositeDir(this.SweepPole);
         }
 
-
-        static SweepEvent EdgeHighPointEvent(AxisEdge edge, Point point) {
+        private static SweepEvent EdgeHighPointEvent(AxisEdge edge, Point point) {
             return new AxisEdgeHighPointEvent(edge, point);
         }
 
-        static SweepEvent EdgeLowPointEvent(AxisEdge edge, Point point) {
+        private static SweepEvent EdgeLowPointEvent(AxisEdge edge, Point point) {
             return new AxisEdgeLowPointEvent(edge, point);
 
         }
@@ -525,7 +556,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         public int Compare(AxisEdgesContainer x, AxisEdgesContainer y) {
             ValidateArg.IsNotNull(x, "x");
             ValidateArg.IsNotNull(y, "y");
-            return (x.Source * DirectionPerp).CompareTo(y.Source * DirectionPerp);
+            return (x.Source * this.DirectionPerp).CompareTo(y.Source * this.DirectionPerp);
         }
 #endif
     }

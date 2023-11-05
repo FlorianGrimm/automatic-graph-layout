@@ -24,7 +24,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
         public Point LeftDerivative(double t) {
-            return Derivative(t);
+            return this.Derivative(t);
         }
 
         /// <summary>
@@ -33,20 +33,20 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
         public Point RightDerivative(double t) {
-            return Derivative(t);
+            return this.Derivative(t);
         }
 
 
         /// <summary>
         /// control points
         /// </summary>
-        Point[] b = new Point[4];
+        private Point[] b = new Point[4];
 
 
         /// <summary>
         /// coefficients
         /// </summary>
-        Point l, e, c;
+        private Point l, e, c;
 
         /// <summary>
         /// get a control point
@@ -55,16 +55,17 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "B")]
         public Point B(int controlPointIndex) {
-            return b[controlPointIndex];
+            return this.b[controlPointIndex];
         }
         /// <summary>
         /// ToString
         /// </summary>
         /// <returns></returns>
         override public string ToString() {
-            return String.Format(CultureInfo.InvariantCulture, "(Bezie{0},{1},{2},{3})", b[0], b[1], b[2], b[3]);
+            return String.Format(CultureInfo.InvariantCulture, "(Bezie{0},{1},{2},{3})", this.b[0], this.b[1], this.b[2], this.b[3]);
         }
-        ParallelogramNodeOverICurve pBoxNode;
+
+        private ParallelogramNodeOverICurve pBoxNode;
         /// <summary>
         /// A tree of ParallelogramNodes covering the curve. 
         /// This tree is used in curve intersections routines.
@@ -75,9 +76,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 #if PPC 
                 lock(this){
 #endif
-                if (pBoxNode != null)
-                    return pBoxNode;
-                return pBoxNode = ParallelogramNodeOverICurve.CreateParallelogramNodeForCurveSegment(this);
+                if (this.pBoxNode != null) {
+                    return this.pBoxNode;
+                }
+
+                return this.pBoxNode = ParallelogramNodeOverICurve.CreateParallelogramNodeForCurveSegment(this);
 #if PPC
                 }
 #endif
@@ -92,15 +95,16 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             get {
                 double t2 = t * t;
                 double t3 = t2 * t;
-                return l * t3 + e * t2 + c * t + b[0];
+                return this.l * t3 + this.e * t2 + this.c * t + this.b[0];
             }
         }
 
-        static void AdjustParamTo01(ref double u) {
-            if (u > 1)
+        private static void AdjustParamTo01(ref double u) {
+            if (u > 1) {
                 u = 1;
-            else if (u < 0)
+            } else if (u < 0) {
                 u = 0;
+            }
         }
         //throw away the segments [0,u] and [v,1] of the segment
 
@@ -115,18 +119,20 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             AdjustParamTo01(ref u);
             AdjustParamTo01(ref v);
 
-            if (u > v)
-                return Trim(v, u);
+            if (u > v) {
+                return this.Trim(v, u);
+            }
 
-            if (u > 1.0 - ApproximateComparer.Tolerance)
-                return new CubicBezierSegment(b[3], b[3], b[3], b[3]);
+            if (u > 1.0 - ApproximateComparer.Tolerance) {
+                return new CubicBezierSegment(this.b[3], this.b[3], this.b[3], this.b[3]);
+            }
 
             Point[] b1 = new Point[3];
             Point[] b2 = new Point[2];
-            Point pv = Casteljau(u, b1, b2);
+            Point pv = this.Casteljau(u, b1, b2);
 
             //this will be the trim to [v,1]
-            CubicBezierSegment trimByU = new CubicBezierSegment(pv, b2[1], b1[2], b[3]);
+            CubicBezierSegment trimByU = new CubicBezierSegment(pv, b2[1], b1[2], this.b[3]);
 
 
             //1-v is not zero here because we have handled already the case v=1
@@ -150,11 +156,13 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         internal Point Casteljau(double t, Point[] b1, Point[] b2) {
 
             double f = 1.0 - t;
-            for (int i = 0; i < 3; i++)
-                b1[i] = b[i] * f + b[i + 1] * t;
+            for (int i = 0; i < 3; i++) {
+                b1[i] = this.b[i] * f + this.b[i + 1] * t;
+            }
 
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < 2; i++) {
                 b2[i] = b1[i] * f + b1[i + 1] * t;
+            }
 
             return b2[0] * f + b2[1] * t;
 
@@ -165,21 +173,21 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         public Point Derivative(double t) {
-            return 3 * l * t * t + 2 * e * t + c;
+            return 3 * this.l * t * t + 2 * this.e * t + this.c;
         }
         /// <summary>
         /// second derivative
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public Point SecondDerivative(double t) { return 6 * l * t + 2 * e; }
+        public Point SecondDerivative(double t) { return 6 * this.l * t + 2 * this.e; }
 
         /// <summary>
         /// third derivative
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public Point ThirdDerivative(double t) { return 6 * l; }
+        public Point ThirdDerivative(double t) { return 6 * this.l; }
         /// <summary>
         /// the constructor
         /// </summary>
@@ -194,44 +202,43 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             this.b[1] = b1;
             this.b[2] = b2;
             this.b[3] = b3;
-            c = 3 * (b[1] - b[0]);
-            e = 3 * (b[2] - b[1]) - c;
-            l = b[3] - b[0] - c - e;
+            this.c = 3 * (this.b[1] - this.b[0]);
+            this.e = 3 * (this.b[2] - this.b[1]) - this.c;
+            this.l = this.b[3] - this.b[0] - this.c - this.e;
         }
 
         /// <summary>
         /// this[ParStart]
         /// </summary>
         public Point Start {
-            get { return b[0]; }
+            get { return this.b[0]; }
         }
 
         /// <summary>
         /// this[ParEnd]
         /// </summary>
         public Point End {
-            get { return b[3]; }
+            get { return this.b[3]; }
         }
 
-
-        double parStart;
+        private double parStart;
 
         /// <summary>
         /// the start of the parameter domain
         /// </summary>
         public double ParStart {
-            get { return parStart; }
-            set { parStart = value; }
+            get { return this.parStart; }
+            set { this.parStart = value; }
         }
 
-        double parEnd = 1;
+        private double parEnd = 1;
 
         /// <summary>
         /// the end of the parameter domain
         /// </summary>
         public double ParEnd {
-            get { return parEnd; }
-            set { parEnd = value; }
+            get { return this.parEnd; }
+            set { this.parEnd = value; }
         }
 
         /// <summary>
@@ -239,7 +246,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <returns></returns>
         public ICurve Reverse() {
-            return new CubicBezierSegment(b[3], b[2], b[1], b[0]);
+            return new CubicBezierSegment(this.b[3], this.b[2], this.b[1], this.b[0]);
         }
 
         /// <summary>
@@ -250,11 +257,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             this.b[1] += delta;
             this.b[2] += delta;
             this.b[3] += delta;
-            c = 3 * (b[1] - b[0]);
-            e = 3 * (b[2] - b[1]) - c;
-            l = b[3] - b[0] - c - e;
+            this.c = 3 * (this.b[1] - this.b[0]);
+            this.e = 3 * (this.b[2] - this.b[1]) - this.c;
+            this.l = this.b[3] - this.b[0] - this.c - this.e;
 
-            pBoxNode = null;
+            this.pBoxNode = null;
         }
 
         /// <summary>
@@ -265,7 +272,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         public ICurve ScaleFromOrigin(double xScale, double yScale)
         {
-            return new CubicBezierSegment(Point.Scale(xScale, yScale, b[0]), Point.Scale(xScale, yScale, b[1]), Point.Scale(xScale, yScale, b[2]), Point.Scale(xScale, yScale, b[3]));
+            return new CubicBezierSegment(Point.Scale(xScale, yScale, this.b[0]), Point.Scale(xScale, yScale, this.b[1]), Point.Scale(xScale, yScale, this.b[2]), Point.Scale(xScale, yScale, this.b[3]));
         }
 
         /// <summary>
@@ -283,13 +290,13 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="end"></param>
         /// <returns></returns>
         public double LengthPartial(double start, double end) {
-            return Trim(start, end).Length;
+            return this.Trim(start, end).Length;
         }
         /// <summary>
         /// Get the length of the curve
         /// </summary>
         public double Length {
-            get { return LengthOnControlPolygon(b[0],b[1],b[2],b[3]); }
+            get { return LengthOnControlPolygon(this.b[0], this.b[1], this.b[2], this.b[3]); }
         }
 
         /// <summary>
@@ -300,7 +307,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="b2"></param>
         /// <param name="b3"></param>
         /// <returns></returns>
-        static double LengthOnControlPolygon(Point b0, Point b1, Point b2, Point b3) {
+        private static double LengthOnControlPolygon(Point b0, Point b1, Point b2, Point b3) {
             var innerCordLength = (b3- b0).Length;
             var controlPointPolygonLength = (b1 - b0).Length + (b2 - b1).Length + (b3 - b2).Length;
             if (controlPointPolygonLength - innerCordLength > Curve.LineSegmentThreshold) {
@@ -323,8 +330,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         public Rectangle BoundingBox {
             get {
                 var ret = new Rectangle(this.b[0], this.b[1]);
-                ret.Add(b[2]);
-                ret.Add(b[3]);
+                ret.Add(this.b[2]);
+                ret.Add(this.b[3]);
                 return ret;
             }
         }
@@ -336,7 +343,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="transformation"></param>
         /// <returns>the transformed curve</returns>
         public ICurve Transform(PlaneTransformation transformation) {
-            return new CubicBezierSegment(transformation * b[0], transformation * b[1], transformation * b[2], transformation * b[3]);
+            return new CubicBezierSegment(transformation * this.b[0], transformation * this.b[1], transformation * this.b[2], transformation * this.b[3]);
         }
 
         /// <summary>
@@ -379,18 +386,17 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         public double Curvature(double t) {
-            System.Diagnostics.Debug.Assert(t >= ParStart && t <= ParEnd);
+            System.Diagnostics.Debug.Assert(t >= this.ParStart && t <= this.ParEnd);
 
-            double den = G(t);
+            double den = this.G(t);
 
             System.Diagnostics.Debug.Assert(Math.Abs(den) > 0.00001);
 
-            return F(t) / den;
+            return this.F(t) / den;
         }
 
-
-        double F(double t) {
-            return Xp(t) * Ypp(t) - Yp(t) * Xpp(t);
+        private double F(double t) {
+            return this.Xp(t) * this.Ypp(t) - this.Yp(t) * this.Xpp(t);
         }
 
         /// <summary>
@@ -398,9 +404,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        double G(double t) {
-            double xp = Xp(t);
-            double yp = Yp(t);
+        private double G(double t) {
+            double xp = this.Xp(t);
+            double yp = this.Yp(t);
             double den = (xp * xp + yp * yp);
             return Math.Sqrt(den * den * den);
         }
@@ -410,8 +416,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        double Xp(double t) {
-            return 3 * l.X * t * t + 2 * e.X * t + c.X;
+        private double Xp(double t) {
+            return 3 * this.l.X * t * t + 2 * this.e.X * t + this.c.X;
         }
 
         /// <summary>
@@ -419,8 +425,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        double Ypp(double t) {
-            return 6 * l.Y * t + 2 * e.Y;
+        private double Ypp(double t) {
+            return 6 * this.l.Y * t + 2 * this.e.Y;
         }
 
         /// <summary>
@@ -428,8 +434,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        double Yp(double t) {
-            return 3 * l.Y * t * t + 2 * e.Y * t + c.Y;
+        private double Yp(double t) {
+            return 3 * this.l.Y * t * t + 2 * this.e.Y * t + this.c.Y;
         }
 
         /// <summary>
@@ -437,8 +443,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        double Xpp(double t) {
-            return 6 * l.X * t + 2 * e.X;
+        private double Xpp(double t) {
+            return 6 * this.l.X * t + 2 * this.e.X;
         }
         /// <summary>
         /// the third derivative of x coordinate
@@ -446,8 +452,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "t")]
-        double Xppp(double t) {
-            return 6 * l.X;
+        private double Xppp(double t) {
+            return 6 * this.l.X;
         }
 
         /// <summary>
@@ -456,8 +462,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "t")]
-        double Yppp(double t) {
-            return 6 * l.Y;
+        private double Yppp(double t) {
+            return 6 * this.l.Y;
         }
 
 
@@ -468,20 +474,17 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         public double CurvatureDerivative(double t) {
             // we need to calculate the derivative of f/g where f=xp* ypp-yp*xpp and g=(xp*xp+yp*yp)^(3/2)
-            double h = G(t);
-            return (Fp(t) * h - Gp(t) * F(t)) / (h * h);
+            double h = this.G(t);
+            return (this.Fp(t) * h - this.Gp(t) * this.F(t)) / (h * h);
         }
 
-
-
-
-        double Fp(double t) {
-            return Xp(t) * Yppp(t) - Yp(t) * Xppp(t);
+        private double Fp(double t) {
+            return this.Xp(t) * this.Yppp(t) - this.Yp(t) * this.Xppp(t);
         }
 
-        double Fpp(double t) {
-            return Xpp(t) * Yppp(t) // + Xp(t) * Ypppp(t)=0
-                - Ypp(t) * Xppp(t);//- Yp(t) * Xpppp(t)=0
+        private double Fpp(double t) {
+            return this.Xpp(t) * this.Yppp(t) // + Xp(t) * Ypppp(t)=0
+                - this.Ypp(t) * this.Xppp(t);//- Yp(t) * Xpppp(t)=0
         }
 
  
@@ -525,12 +528,12 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                     if (RootFinder.TryToFindRoot(new CurvatureDerivative(this, start, end), start, end, (start + end) / 2, out x)) {
                         if (x != prev) {
                             prev = x;
-                            maxCurveCandidates.Add(new Tuple<double, double>(x, Curvature(x)));
+                            maxCurveCandidates.Add(new Tuple<double, double>(x, this.Curvature(x)));
                         }
                     }
                 }
-                maxCurveCandidates.Add(new Tuple<double, double>(ParStart, Curvature(ParStart)));
-                maxCurveCandidates.Add(new Tuple<double, double>(ParEnd, Curvature(ParEnd)));
+                maxCurveCandidates.Add(new Tuple<double, double>(this.ParStart, this.Curvature(this.ParStart)));
+                maxCurveCandidates.Add(new Tuple<double, double>(this.ParEnd, this.Curvature(this.ParEnd)));
 
                 var maxCur = maxCurveCandidates.Max(l => Math.Abs(l.Item2));
 
@@ -547,36 +550,36 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         public double CurvatureSecondDerivative(double t) {
-            double g = G(t);
-            return (Qp(t) * g - 2 * Q(t) * Gp(t)) / (g * g * g);
+            double g = this.G(t);
+            return (this.Qp(t) * g - 2 * this.Q(t) * this.Gp(t)) / (g * g * g);
         }
 
-        double Q(double t) {
-            return Fp(t) * G(t) - Gp(t) * F(t);
+        private double Q(double t) {
+            return this.Fp(t) * this.G(t) - this.Gp(t) * this.F(t);
         }
 
-        double Qp(double t) {
-            return Fpp(t) * G(t) - Gpp(t) * F(t);
+        private double Qp(double t) {
+            return this.Fpp(t) * this.G(t) - this.Gpp(t) * this.F(t);
         }
 
-         double Gpp(double t) {
-            var xp = Xp(t);
-            var yp = Yp(t);
-            var xpp = Xpp(t);
-            var ypp = Ypp(t);
-            var xppp = Xppp(t);
-            var yppp = Yppp(t);
+        private double Gpp(double t) {
+            var xp = this.Xp(t);
+            var yp = this.Yp(t);
+            var xpp = this.Xpp(t);
+            var ypp = this.Ypp(t);
+            var xppp = this.Xppp(t);
+            var yppp = this.Yppp(t);
             var u = Math.Sqrt(xp * xp + yp * yp);
             var v = xp * xpp + yp * ypp;
             return 3 * ((v * v) / u + u * (xpp * xpp + xp * xppp + ypp * ypp + yp * yppp));
 
         }
 
-        double Gp(double t) {
-            var xp = Xp(t);
-            var yp = Yp(t);
-            var xpp = Xpp(t);
-            var ypp = Ypp(t);
+        private double Gp(double t) {
+            var xp = this.Xp(t);
+            var yp = this.Yp(t);
+            var xpp = this.Xpp(t);
+            var ypp = this.Ypp(t);
             return 3 * Math.Sqrt(xp * xp + yp * yp) * (xp * xpp + yp * ypp);
         }
 
@@ -594,35 +597,38 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             double upper = 1;
             while (upper - low > ApproximateComparer.Tolerance) {
                 var middle = (upper + low)/2;
-                int err = EvaluateError(length, middle);
-                if (err > 0)
+                int err = this.EvaluateError(length, middle);
+                if (err > 0) {
                     upper = middle;
-                else if (err < 0)
+                } else if (err < 0) {
                     low = middle;
-                else
+                } else {
                     return middle;
+                }
             }
 
             return (low + upper)/2;
         }
 
-        int EvaluateError(double length, double t) {
+        private int EvaluateError(double length, double t) {
             //todo: this is a slow version!
             var f = 1 - t;
-            var mb0 = f*b[0] + t*b[1];
-            var mb1 = f*b[1] + t*b[2];
-            var mb2 = f*b[2] + t*b[3];
+            var mb0 = f* this.b[0] + t* this.b[1];
+            var mb1 = f* this.b[1] + t* this.b[2];
+            var mb2 = f* this.b[2] + t* this.b[3];
             var mmb0 = f * mb0 + t * mb1;
             var mmb1 = f * mb1 + t * mb2;
             var mmmb0 = f * mmb0 + t * mmb1;
             
-            var lengthAtT = LengthOnControlPolygon(b[0], mb0, mmb0, mmmb0);
+            var lengthAtT = LengthOnControlPolygon(this.b[0], mb0, mmb0, mmmb0);
             
-            if (lengthAtT > length + ApproximateComparer.DistanceEpsilon)
+            if (lengthAtT > length + ApproximateComparer.DistanceEpsilon) {
                 return 1;
+            }
 
-            if (lengthAtT < length - ApproximateComparer.DistanceEpsilon)
+            if (lengthAtT < length - ApproximateComparer.DistanceEpsilon) {
                 return -1;
+            }
 
             return 0;
         }

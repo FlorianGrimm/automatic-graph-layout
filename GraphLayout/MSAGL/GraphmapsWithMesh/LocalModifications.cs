@@ -6,7 +6,7 @@ using Microsoft.Msagl.Layout.LargeGraphLayout;
 
 namespace Microsoft.Msagl.GraphmapsWithMesh
 {
-    class LocalModifications
+    internal class LocalModifications
     {
 
         public static void MsaglShortcutShortEdges(Tiling g, Dictionary<int, Node> idToNodes,
@@ -38,7 +38,9 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                         Vertex neighbor = g.VList[g.EList[w.Id, k].NodeId];
 
                         //if neighbor is a real vertex then continue
-                        if (neighbor.Id < g.N) continue;
+                        if (neighbor.Id < g.N) {
+                            continue;
+                        }
 
                         //else check whether the edge is short
                         double l = g.GetEucledianDist(w.Id, neighbor.Id);
@@ -60,18 +62,26 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                             }
                             //check whether it is safe to modify the graph
                             bool safetomodify = true;
-                            if (g.DegList[w.Id] + modificationList.Count >= g.maxDeg) continue;
-                            foreach (var x in modificationList)
-                                if (g.DegList[x] + 1 >= g.maxDeg)
+                            if (g.DegList[w.Id] + modificationList.Count >= g.maxDeg) {
+                                continue;
+                            }
+
+                            foreach (var x in modificationList) {
+                                if (g.DegList[x] + 1 >= g.maxDeg) {
                                     safetomodify = false;
+                                }
+                            }
 
                             foreach (var x in modificationList)
                             {
-                                if (g.Crossings(w.Id, x))
+                                if (g.Crossings(w.Id, x)) {
                                     safetomodify = false;
+                                }
                             }
 
-                            if (!safetomodify) continue;
+                            if (!safetomodify) {
+                                continue;
+                            }
 
                             //add edges between w and the neighbor's neighbor
                             foreach (var x in modificationList)
@@ -135,7 +145,9 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                         listNeighbors[numNeighbors, 2] = k;
                     }
 
-                    if (numNeighbors <= 1) continue;
+                    if (numNeighbors <= 1) {
+                        continue;
+                    }
 
                     for (int counter = 1; counter <= 9; counter++)
                     {
@@ -238,19 +250,26 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
                     for (int k = 0; k < g.DegList[w.Id]; k++)
                     {
-                        if (g.EList[w.Id, k].Used == 0) continue;
+                        if (g.EList[w.Id, k].Used == 0) {
+                            continue;
+                        }
+
                         numNeighbors++;
                         listNeighbors[numNeighbors, 1] = g.EList[w.Id, k].NodeId;
                         listNeighbors[numNeighbors, 2] = k;
                     }
 
-                    if (numNeighbors <= 1) continue;
+                    if (numNeighbors <= 1) {
+                        continue;
+                    }
 
                     //compute the lowest zoom level among incident rails
                     var lowestZoomLevel = int.MaxValue;
-                    for (int index2 = 1; index2 <= numNeighbors; index2++)
-                        if (g.EList[index, listNeighbors[index2, 2]].Used < lowestZoomLevel)
+                    for (int index2 = 1; index2 <= numNeighbors; index2++) {
+                        if (g.EList[index, listNeighbors[index2, 2]].Used < lowestZoomLevel) {
                             lowestZoomLevel = g.EList[index, listNeighbors[index2, 2]].Used;
+                        }
+                    }
 
                     //for each possible move
                     for (int counter = 1; counter <= 9; counter++)
@@ -260,14 +279,19 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                         for (int k = 1; k <= numNeighbors; k++)
                         {
                             //try to stretch the high priority rails
-                            if (g.EList[index, listNeighbors[k, 2]].Used != lowestZoomLevel) continue;
+                            if (g.EList[index, listNeighbors[k, 2]].Used != lowestZoomLevel) {
+                                continue;
+                            }
+
                             double length = Math.Sqrt((w.XLoc + a[counter] - g.VList[listNeighbors[k, 1]].XLoc) *
                                           (w.XLoc + a[counter] - g.VList[listNeighbors[k, 1]].XLoc)
                                           +
                                           (w.YLoc + b[counter] - g.VList[listNeighbors[k, 1]].YLoc) *
                                           (w.YLoc + b[counter] - g.VList[listNeighbors[k, 1]].YLoc)
                                     );
-                            if (length < .5) length = 1000;
+                            if (length < .5) {
+                                length = 1000;
+                            }
 
                             d[counter] += length;
 
@@ -340,8 +364,9 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             }
             else
             {
-                for (int i = start + 1; i <= end - 1; i++)
+                for (int i = start + 1; i <= end - 1; i++) {
                     PointList[i] = new Core.Geometry.Point(-1, -1);
+                }
             }
         }
     }

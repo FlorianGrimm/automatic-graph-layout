@@ -23,26 +23,26 @@ namespace Microsoft.Msagl.Core.Layout {
 #endif
         #region Fields set by the client
 
-        double padding = 1;
+        private double padding = 1;
         /// <summary>
         /// Padding around the node: splines should not get closer than padding to the node boundary
         /// </summary>
         public double Padding {
-            get { return padding; }
-            set { padding = value; }
+            get { return this.padding; }
+            set { this.padding = value; }
         }
 
-        ICurve boundaryCurve;
+        private ICurve boundaryCurve;
         /// <summary>
         /// The engine assumes that the node boundaryCurve is defined relatively to the point (0,0)
         /// This must be a closed curve.
         /// </summary>
         public virtual ICurve 
             BoundaryCurve {
-            get { return boundaryCurve; }
+            get { return this.boundaryCurve; }
             set {
-                RaiseLayoutChangeEvent(value);
-                boundaryCurve = value;
+                this.RaiseLayoutChangeEvent(value);
+                this.boundaryCurve = value;
             }
         }
 
@@ -56,7 +56,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <param name="curve">node boundaryCurve</param>
         public Node(ICurve curve) {
-            boundaryCurve = curve;
+            this.boundaryCurve = curve;
         }
 
         /// <summary>
@@ -74,8 +74,8 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <returns>The UserData string.</returns>
         public override string ToString() {
 
-            if (UserData != null) {
-                var ret = UserData.ToString();
+            if (this.UserData != null) {
+                var ret = this.UserData.ToString();
 #if TEST_MSAGL
 //            if(DebugId!=null)
 //                ret+= " "+DebugId.ToString();
@@ -95,8 +95,8 @@ namespace Microsoft.Msagl.Core.Layout {
         /// enumeration of the node incoming edges
         /// </summary>
         virtual public IEnumerable<Edge> InEdges {
-            get { return inEdges_; }
-            set { inEdges_ = (Set<Edge>)value; }
+            get { return this.inEdges_; }
+            set { this.inEdges_ = (Set<Edge>)value; }
         }
         /// <summary>
         /// the list of out edges
@@ -107,8 +107,8 @@ namespace Microsoft.Msagl.Core.Layout {
         /// enumeration of the node outcoming edges
         /// </summary>
        virtual public IEnumerable<Edge> OutEdges {
-            get { return outEdges_; }
-            set { outEdges_ = (Set<Edge>)value; }
+            get { return this.outEdges_; }
+            set { this.outEdges_ = (Set<Edge>)value; }
         }
         /// <summary>
         /// the list of self edges
@@ -118,11 +118,11 @@ namespace Microsoft.Msagl.Core.Layout {
         ///enumeration of the node self edges
         /// </summary>
        virtual public IEnumerable<Edge> SelfEdges {
-            get { return selfEdges_; }
-            set { selfEdges_ = (Set<Edge>)value; }
+            get { return this.selfEdges_; }
+            set { this.selfEdges_ = (Set<Edge>)value; }
         }
 
-        Cluster clusterParent = null;
+        private Cluster clusterParent = null;
 
         /// <summary>
         /// Parents (if any) of which this node is a member
@@ -161,7 +161,7 @@ namespace Microsoft.Msagl.Core.Layout {
             Debug.Assert(this.clusterParent == null);
 
             Debug.Assert(parent != this);
-            clusterParent = parent;
+            this.clusterParent = parent;
         }
 
         /// <summary>
@@ -169,7 +169,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <param name="edge"></param>
         public bool RemoveSelfEdge(Edge edge) {
-            return selfEdges_.Remove(edge);
+            return this.selfEdges_.Remove(edge);
         }
 
         /// <summary>
@@ -180,7 +180,7 @@ namespace Microsoft.Msagl.Core.Layout {
             ValidateArg.IsNotNull(edge, "edge");
             Debug.Assert(edge.Source != edge.Target);
             Debug.Assert(edge.Source == this);
-            outEdges_.Insert(edge);
+            this.outEdges_.Insert(edge);
         }
 
         /// <summary>
@@ -191,7 +191,7 @@ namespace Microsoft.Msagl.Core.Layout {
             ValidateArg.IsNotNull(edge, "edge");
             Debug.Assert(edge.Source != edge.Target);
             Debug.Assert(edge.Target == this);
-            inEdges_.Insert(edge);
+            this.inEdges_.Insert(edge);
         }
         /// <summary>
         /// adds a self edge
@@ -200,19 +200,24 @@ namespace Microsoft.Msagl.Core.Layout {
         public void AddSelfEdge(Edge edge) {
             ValidateArg.IsNotNull(edge, "edge");
             Debug.Assert(edge.Target == this && edge.Source == this);
-            selfEdges_.Insert(edge);
+            this.selfEdges_.Insert(edge);
         }
         /// <summary>
         /// enumerates over all edges
         /// </summary>
         public IEnumerable<Edge> Edges {
             get {
-                foreach (Edge e in outEdges_)
+                foreach (Edge e in this.outEdges_) {
                     yield return e;
-                foreach (Edge e in inEdges_)
+                }
+
+                foreach (Edge e in this.inEdges_) {
                     yield return e;
-                foreach (Edge e in selfEdges_)
+                }
+
+                foreach (Edge e in this.selfEdges_) {
                     yield return e;
+                }
             }
         }
 
@@ -222,13 +227,16 @@ namespace Microsoft.Msagl.Core.Layout {
         /// return the center of the curve bounding box
         /// </summary>
         public Point Center {
-            get { return BoundaryCurve.BoundingBox.Center; }
+            get { return this.BoundaryCurve.BoundingBox.Center; }
             set {
-                var del = value - Center;
-                if (del.X==0 && del.Y==0) return;
-                RaiseLayoutChangeEvent(value);
+                var del = value - this.Center;
+                if (del.X==0 && del.Y==0) {
+                    return;
+                }
+
+                this.RaiseLayoutChangeEvent(value);
                 //an optimization can be appied here; move the boundary curve only on demand
-                BoundaryCurve.Translate(del);
+                this.BoundaryCurve.Translate(del);
             }
         }
 
@@ -238,26 +246,26 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <param name="targetBounds"></param>
         protected void FitBoundaryCurveToTarget(Rectangle targetBounds)
         {
-            if (BoundaryCurve != null)
+            if (this.BoundaryCurve != null)
             {
                 // RoundedRect is special, rather than simply scaling the geometry we want to keep the corner radii constant
-                RoundedRect rr = BoundaryCurve as RoundedRect;
+                RoundedRect rr = this.BoundaryCurve as RoundedRect;
                 if (rr == null)
                 {
-                    Debug.Assert(BoundaryCurve.BoundingBox.Width > 0);
-                    Debug.Assert(BoundaryCurve.BoundingBox.Height > 0);
-                    double scaleX = targetBounds.Width / BoundaryCurve.BoundingBox.Width;
-                    double scaleY = targetBounds.Height / BoundaryCurve.BoundingBox.Height;
+                    Debug.Assert(this.BoundaryCurve.BoundingBox.Width > 0);
+                    Debug.Assert(this.BoundaryCurve.BoundingBox.Height > 0);
+                    double scaleX = targetBounds.Width / this.BoundaryCurve.BoundingBox.Width;
+                    double scaleY = targetBounds.Height / this.BoundaryCurve.BoundingBox.Height;
 
-                    BoundaryCurve.Translate(-BoundaryCurve.BoundingBox.LeftBottom);
-                    BoundaryCurve = BoundaryCurve.ScaleFromOrigin(scaleX, scaleY);
-                    BoundaryCurve.Translate(targetBounds.LeftBottom);
+                    this.BoundaryCurve.Translate(-this.BoundaryCurve.BoundingBox.LeftBottom);
+                    this.BoundaryCurve = this.BoundaryCurve.ScaleFromOrigin(scaleX, scaleY);
+                    this.BoundaryCurve.Translate(targetBounds.LeftBottom);
                 }
                 else
                 {
-                    BoundaryCurve = rr.FitTo(targetBounds);
+                    this.BoundaryCurve = rr.FitTo(targetBounds);
                 }
-                Debug.Assert(ApproximateComparer.Close(BoundaryCurve.BoundingBox, targetBounds, ApproximateComparer.UserDefinedTolerance),
+                Debug.Assert(ApproximateComparer.Close(this.BoundaryCurve.BoundingBox, targetBounds, ApproximateComparer.UserDefinedTolerance),
                     "FitToBounds didn't succeed in scaling/translating to target bounds");
             }
         }
@@ -268,13 +276,13 @@ namespace Microsoft.Msagl.Core.Layout {
         override public Rectangle BoundingBox {
             get 
             {
-                    return BoundaryCurve != null ? BoundaryCurve.BoundingBox : Rectangle.CreateAnEmptyBox();
+                    return this.BoundaryCurve != null ? this.BoundaryCurve.BoundingBox : Rectangle.CreateAnEmptyBox();
             }
             set
             {
-                if(Math.Abs(value.Width - Width) < 0.01 && Math.Abs(value.Height - Height) < 0.01)
+                if(Math.Abs(value.Width - this.Width) < 0.01 && Math.Abs(value.Height - this.Height) < 0.01)
                 {
-                    Center = value.Center;
+                    this.Center = value.Center;
                 }
                 else
                 {
@@ -285,18 +293,18 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <summary>
         /// Width of the node does not include the padding
         /// </summary>
-        public double Width { get { return BoundaryCurve.BoundingBox.Width; } }
+        public double Width { get { return this.BoundaryCurve.BoundingBox.Width; } }
 
         /// <summary>
         /// Height of the node does not including the padding
         /// </summary>
-        public double Height { get { return BoundaryCurve.BoundingBox.Height; } }
+        public double Height { get { return this.BoundaryCurve.BoundingBox.Height; } }
 
         /// <summary>
         /// returns the node degree
         /// </summary>
         public int Degree {
-            get {  return OutEdges.Count()+InEdges.Count()+SelfEdges.Count(); }            
+            get {  return this.OutEdges.Count()+ this.InEdges.Count()+ this.SelfEdges.Count(); }            
         }
 
         #endregion
@@ -307,7 +315,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <param name="edge"></param>
         /// <returns>True if the node is adjacent to the edge , and false otherwise.</returns>
         public bool RemoveInEdge(Edge edge) {
-            return inEdges_.Remove(edge);
+            return this.inEdges_.Remove(edge);
         }
         /// <summary>
         /// removes an incoming edge
@@ -316,22 +324,23 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <returns>True if the node is adjacent to the edge , and false otherwise.</returns>
         public bool RemoveOutEdge(Edge edge)
         {
-           return outEdges_.Remove(edge);
+           return this.outEdges_.Remove(edge);
         }
         /// <summary>
         /// remove all edges
         /// </summary>
         public void ClearEdges() {
-            inEdges_.Clear();
-            outEdges_.Clear();
+            this.inEdges_.Clear();
+            this.outEdges_.Clear();
         }
 
         ///<summary>
         ///</summary>
         ///<param name="transformation"></param>
         public void Transform(PlaneTransformation transformation) {
-            if (BoundaryCurve != null)
-                BoundaryCurve = BoundaryCurve.Transform(transformation);
+            if (this.BoundaryCurve != null) {
+                this.BoundaryCurve = this.BoundaryCurve.Transform(transformation);
+            }
         }
 
 
@@ -345,7 +354,7 @@ namespace Microsoft.Msagl.Core.Layout {
         }
 
         internal bool UnderCollapsedCluster() {
-            return ClusterParent != null && ClusterParent.IsCollapsed;
+            return this.ClusterParent != null && this.ClusterParent.IsCollapsed;
         }
     }
 }

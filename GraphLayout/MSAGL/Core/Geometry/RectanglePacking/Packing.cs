@@ -28,7 +28,7 @@ namespace Microsoft.Msagl.Core.Geometry
         {
             get
             {
-                return PackedWidth / PackedHeight;
+                return this.PackedWidth / this.PackedHeight;
             }
         }
     }

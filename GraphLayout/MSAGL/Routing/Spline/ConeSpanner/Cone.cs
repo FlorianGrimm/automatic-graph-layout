@@ -3,14 +3,15 @@ using Microsoft.Msagl.Core.Geometry.Curves;
 
 namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
     internal class Cone {
-        bool removed;
+        private bool removed;
 
         internal bool Removed {
-            get { return removed; }
-            set { removed = value; }
+            get { return this.removed; }
+            set { this.removed = value; }
         }
-        Point apex;
-        readonly IConeSweeper coneSweeper;
+
+        private Point apex;
+        private readonly IConeSweeper coneSweeper;
 
         internal Cone(Point apex, IConeSweeper coneSweeper) {
             this.apex = apex;
@@ -18,16 +19,16 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
         }
 
         internal Point Apex {
-            get { return apex; }
-            set { apex = value; }
+            get { return this.apex; }
+            set { this.apex = value; }
         }
 
         internal Point RightSideDirection {
-            get { return coneSweeper.ConeRightSideDirection; }
+            get { return this.coneSweeper.ConeRightSideDirection; }
         }
 
         internal Point LeftSideDirection {
-            get { return coneSweeper.ConeLeftSideDirection; }
+            get { return this.coneSweeper.ConeLeftSideDirection; }
         }
 
 
@@ -35,18 +36,19 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
         private ConeSide rightSide;
 
         internal ConeSide RightSide {
-            get { return rightSide; }
-            set { rightSide = value;
-            rightSide.Cone = this;
+            get { return this.rightSide; }
+            set {
+                this.rightSide = value;
+                this.rightSide.Cone = this;
             }
         }
         private ConeSide leftSide;
 
         internal ConeSide LeftSide {
-            get { return leftSide; }
-            set { 
-                leftSide = value;
-                leftSide.Cone = this;
+            get { return this.leftSide; }
+            set {
+                this.leftSide = value;
+                this.leftSide.Cone = this;
             }
         }
     }

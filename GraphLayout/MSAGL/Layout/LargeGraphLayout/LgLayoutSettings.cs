@@ -59,8 +59,9 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
         /// </summary>
         public void OnViewerChangeTransformAndInvalidateGraph()
         {
-            if (ViewerChangeTransformAndInvalidateGraph != null)
+            if (ViewerChangeTransformAndInvalidateGraph != null) {
                 ViewerChangeTransformAndInvalidateGraph();
+            }
         }
 
         /// <summary>
@@ -68,7 +69,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
         /// </summary>
         public RailGraph RailGraph
         {
-            get { return Interactor != null ? Interactor.RailGraph : null; }
+            get { return this.Interactor != null ? this.Interactor.RailGraph : null; }
         }
 
         /// <summary>
@@ -77,7 +78,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
         /// <returns></returns>
         public override LayoutAlgorithmSettings Clone()
         {
-            return (LayoutAlgorithmSettings)MemberwiseClone();
+            return (LayoutAlgorithmSettings)this.MemberwiseClone();
         }
 
         /// <summary>
@@ -105,29 +106,28 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
                                 Func<double> maximalArrowheadLength
             )
         {
-            ClientViewportFunc = clientViewportFunc;
-            TransformFromGraphToScreen = transformFromGraphToScreen;
-            DpiX = dpiX;
-            DpiY = dpiY;
-            MaximalArrowheadLength = maximalArrowheadLength;
-            EdgeRoutingSettings.Padding = NodeSeparation / 4;
-            EdgeRoutingSettings.PolylinePadding = NodeSeparation / 6;
-            InitDefaultRailColors();
-            InitDefaultSelectionColors();
+            this.ClientViewportFunc = clientViewportFunc;
+            this.TransformFromGraphToScreen = transformFromGraphToScreen;
+            this.DpiX = dpiX;
+            this.DpiY = dpiY;
+            this.MaximalArrowheadLength = maximalArrowheadLength;
+            this.EdgeRoutingSettings.Padding = this.NodeSeparation / 4;
+            this.EdgeRoutingSettings.PolylinePadding = this.NodeSeparation / 6;
+            this.InitDefaultRailColors();
+            this.InitDefaultSelectionColors();
         }
 
         public Func<Rectangle> ClientViewportMappedToGraph { get; set; }
 
-
-        Dictionary<Node, LgNodeInfo> geometryNodesToLgNodeInfos = new Dictionary<Node, LgNodeInfo>();
+        private Dictionary<Node, LgNodeInfo> geometryNodesToLgNodeInfos = new Dictionary<Node, LgNodeInfo>();
 
         /// <summary>
         /// the mapping from Geometry nodes to LgNodes
         /// </summary>
         public Dictionary<Node, LgNodeInfo> GeometryNodesToLgNodeInfos
         {
-            get { return geometryNodesToLgNodeInfos; }
-            set { geometryNodesToLgNodeInfos = value; }
+            get { return this.geometryNodesToLgNodeInfos; }
+            set { this.geometryNodesToLgNodeInfos = value; }
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
         /// </summary>
         public IDictionary<Edge, LgEdgeInfo> GeometryEdgesToLgEdgeInfos
         {
-            get { return Interactor.GeometryEdgesToLgEdgeInfos; }
+            get { return this.Interactor.GeometryEdgesToLgEdgeInfos; }
         }
 
 
@@ -143,9 +143,9 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
         /// <summary>
         /// 
         /// </summary>
-        Interval _scaleInterval = new Interval(0.00001, 100000000.0);
-        bool needToLayout = true;
-        int maxNumberOfNodesPerTile = 20;
+        private Interval _scaleInterval = new Interval(0.00001, 100000000.0);
+        private bool needToLayout = true;
+        private int maxNumberOfNodesPerTile = 20;
 
 
         /// <summary>
@@ -158,16 +158,16 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
         /// </summary>
         public Interval ScaleInterval
         {
-            get { return _scaleInterval; }
-            set { _scaleInterval = value; }
+            get { return this._scaleInterval; }
+            set { this._scaleInterval = value; }
         }
         /// <summary>
         /// set this property to true if the graph comes with a given layout
         /// </summary>
         public bool NeedToLayout
         {
-            get { return needToLayout; }
-            set { needToLayout = value; }
+            get { return this.needToLayout; }
+            set { this.needToLayout = value; }
         }
 
         /// <summary>
@@ -175,24 +175,24 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
         /// </summary>
         public int MaxNumberOfNodesPerTile
         {
-            get { return maxNumberOfNodesPerTile; }
-            set { maxNumberOfNodesPerTile = value; }
+            get { return this.maxNumberOfNodesPerTile; }
+            set { this.maxNumberOfNodesPerTile = value; }
         }
 
         private double increaseNodeQuota;
 
         public double IncreaseNodeQuota
         {
-            get { return increaseNodeQuota; }
-            set { increaseNodeQuota = value; }
+            get { return this.increaseNodeQuota; }
+            set { this.increaseNodeQuota = value; }
         }
 
-        int maxNumberOfRailsPerTile = 300;
+        private int maxNumberOfRailsPerTile = 300;
 
         public int MaxNumberOfRailsPerTile
         {
-            get { return maxNumberOfRailsPerTile; }
-            set { maxNumberOfRailsPerTile = value; }
+            get { return this.maxNumberOfRailsPerTile; }
+            set { this.maxNumberOfRailsPerTile = value; }
         }
 
         /// <summary>
@@ -201,55 +201,55 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
         /// <returns></returns>
         public double GetMaximalZoomLevel()
         {
-            return Interactor.GetMaximalZoomLevel();
+            return this.Interactor.GetMaximalZoomLevel();
         }
 
-        bool _simplifyRoutes = true;
+        private bool _simplifyRoutes = true;
         private int _numberOfNodeShapeSegs = 12; //16;
 
         public bool SimplifyRoutes
         {
-            get { return _simplifyRoutes; }
-            set { _simplifyRoutes = value; }
+            get { return this._simplifyRoutes; }
+            set { this._simplifyRoutes = value; }
         }
 
         public int NumberOfNodeShapeSegs
         {
-            get { return _numberOfNodeShapeSegs; }
-            set { _numberOfNodeShapeSegs = value; }
+            get { return this._numberOfNodeShapeSegs; }
+            set { this._numberOfNodeShapeSegs = value; }
         }
 
         public bool GenerateTiles
         {
-            get { return _generateTiles; }
-            set { _generateTiles = value; }
+            get { return this._generateTiles; }
+            set { this._generateTiles = value; }
         }
 
-        bool _generateTiles = true;
+        private bool _generateTiles = true;
 
         private String[] _railColors;
 
         public String[] RailColors
         {
-            get { return _railColors; }
-            set { _railColors = value; }
+            get { return this._railColors; }
+            set { this._railColors = value; }
         }
 
         private String[] _selectionColors;
 
         public string[] SelectionColors
         {
-            get { return _selectionColors; }
-            set { _selectionColors = value; }
+            get { return this._selectionColors; }
+            set { this._selectionColors = value; }
         }
 
         private void InitDefaultRailColors()
         {
-            _railColors = new String[3];
+            this._railColors = new String[3];
 
-            _railColors[0] = "#87CEFA";
-            _railColors[1] = "#FAFAD2";
-            _railColors[2] = "#FAFAD2";
+            this._railColors[0] = "#87CEFA";
+            this._railColors[1] = "#FAFAD2";
+            this._railColors[2] = "#FAFAD2";
 
             //jyoti changed colors
             //_railColors[0] = "#87CEFA";
@@ -260,12 +260,12 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
         private void InitDefaultSelectionColors()
         {
             // init red selection
-            _selectionColors = new String[3];
+            this._selectionColors = new String[3];
 
 
-            _selectionColors[0] = "#E60000";
-            _selectionColors[1] = "#E60000";
-            _selectionColors[2] = "#E60000";
+            this._selectionColors[0] = "#E60000";
+            this._selectionColors[1] = "#E60000";
+            this._selectionColors[2] = "#E60000";
 
             //jyoti changed colors
             //_selectionColors[0] = "#FF0000";
@@ -278,22 +278,22 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout
         public String GetColorForZoomLevel(double zoomLevel)
         {
             int logZoomLevel = (int)Math.Log(zoomLevel, 2.0);
-            logZoomLevel = Math.Min(logZoomLevel, RailColors.Count() - 1);
+            logZoomLevel = Math.Min(logZoomLevel, this.RailColors.Count() - 1);
             logZoomLevel = Math.Max(logZoomLevel, 0);
-            return RailColors[logZoomLevel];
+            return this.RailColors[logZoomLevel];
         }
 
         public String GetSelColorForZoomLevel(double zoomLevel)
         {
             int logZoomLevel = (int)Math.Log(zoomLevel, 2.0);
-            logZoomLevel = Math.Min(logZoomLevel, SelectionColors.Count() - 1);
+            logZoomLevel = Math.Min(logZoomLevel, this.SelectionColors.Count() - 1);
             logZoomLevel = Math.Max(logZoomLevel, 0);
-            return SelectionColors[logZoomLevel];
+            return this.SelectionColors[logZoomLevel];
         }
 
         public String GetNodeSelColor()
         {
-            return SelectionColors[0];
+            return this.SelectionColors[0];
         }
 
     }

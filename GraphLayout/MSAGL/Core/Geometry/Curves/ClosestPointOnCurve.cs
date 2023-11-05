@@ -2,7 +2,7 @@ using System;
 
 namespace Microsoft.Msagl.Core.Geometry.Curves {
     internal class ClosestPointOnCurve {
-        ClosestPointOnCurve() { }
+        private ClosestPointOnCurve() { }
         ///// <summary>
         ///// Gets the closest point on the curve to the point
         ///// </summary>
@@ -26,8 +26,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
                 double secondDerivative = ct * ct + (c - a) * ctt;
 
-                if (Math.Abs(secondDerivative) < ApproximateComparer.Tolerance) 
+                if (Math.Abs(secondDerivative) < ApproximateComparer.Tolerance) {
                     return t;
+                }
 
                 dt = (c - a) * ct / secondDerivative;
                
@@ -45,9 +46,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                 (abort = (numberOfIteration >= numberOfIterationsMax || numberOfOvershoots >= numberOfOverShootsMax)));
 
             //may be the initial value was just fine
-            if (abort && (curve[hint] - a).Length < ApproximateComparer.DistanceEpsilon) 
+            if (abort && (curve[hint] - a).Length < ApproximateComparer.DistanceEpsilon) {
                 t = hint;
-            
+            }
+
             return t;
 
            }

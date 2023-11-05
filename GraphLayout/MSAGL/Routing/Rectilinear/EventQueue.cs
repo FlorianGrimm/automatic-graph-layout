@@ -17,31 +17,31 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
     /// Wrap the tree of events.
     /// </summary>
     internal class EventQueue : IComparer<SweepEvent> {
-        ScanDirection scanDirection;
-        readonly BinaryHeapWithComparer<SweepEvent> eventTree;
+        private ScanDirection scanDirection;
+        private readonly BinaryHeapWithComparer<SweepEvent> eventTree;
 
         internal EventQueue() {
-            eventTree = new BinaryHeapWithComparer<SweepEvent>(this);
+            this.eventTree = new BinaryHeapWithComparer<SweepEvent>(this);
         }
         
         internal void Reset(ScanDirection scanDir) {
-            Debug.Assert(0 == eventTree.Count, "Stray events in EventQueue.Reset");
-            scanDirection = scanDir;
+            Debug.Assert(0 == this.eventTree.Count, "Stray events in EventQueue.Reset");
+            this.scanDirection = scanDir;
         }
 
         internal void Enqueue(SweepEvent evt) {
-            DevTraceInfo(1, "Enqueueing {0}", evt);
-            eventTree.Enqueue(evt);
+            this.DevTraceInfo(1, "Enqueueing {0}", evt);
+            this.eventTree.Enqueue(evt);
         }
 
         internal SweepEvent Dequeue() {
-            SweepEvent evt = eventTree.Dequeue();
-            DevTraceInfo(1, "Dequeueing {0}", evt);
+            SweepEvent evt = this.eventTree.Dequeue();
+            this.DevTraceInfo(1, "Dequeueing {0}", evt);
             return evt;
         }
 
         internal int Count {
-            get { return eventTree.Count; }
+            get { return this.eventTree.Count; }
         }
 
         #region IComparer<SweepEvent>
@@ -66,7 +66,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             }
 
             // First see if it's at the same scanline level (perpendicular coordinate).
-            int cmp = scanDirection.ComparePerpCoord(lhs.Site, rhs.Site);
+            int cmp = this.scanDirection.ComparePerpCoord(lhs.Site, rhs.Site);
             if (0 == cmp) {
                 // Event sites are at the same scanline level. Make sure that any reflection events are lowest (come before
                 // any side events, which could remove the side the reflection event was queued for).  We may have two
@@ -78,7 +78,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
                 // If the scanline-parallel coordinate is the same these events are at the same point.
                 if (0 == cmp) {
-                    cmp = scanDirection.CompareScanCoord(lhs.Site, rhs.Site);
+                    cmp = this.scanDirection.CompareScanCoord(lhs.Site, rhs.Site);
                 }
             }   
             return cmp;
@@ -92,7 +92,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         [Conditional("DEVTRACE")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        void DevTraceInfo(int verboseLevel, string format, params object[] args) {
+        private void DevTraceInfo(int verboseLevel, string format, params object[] args) {
 #if DEVTRACE
             eventQueueTrace.WriteLineIf(DevTrace.Level.Info, verboseLevel, format, args);
 #endif // DEVTRACE

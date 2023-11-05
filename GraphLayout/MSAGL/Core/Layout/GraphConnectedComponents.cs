@@ -213,7 +213,7 @@ namespace Microsoft.Msagl.Core.Layout {
             return graphComponents;
         }
 
-        static Node GetCopy(Node node) {
+        private static Node GetCopy(Node node) {
             return ((AlgorithmDataNodeWrap) node.AlgorithmData).node;
         }
 
@@ -223,7 +223,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <param name="top">the source whose copy will become the new top of the cluster hierarchy</param>
         /// <param name="index">node counter index to use and increment as we add new Cluster nodes</param>
         /// <returns>Deep copy of cluster hierarchy</returns>
-        static Cluster CopyCluster(Cluster top, ref int index) {
+        private static Cluster CopyCluster(Cluster top, ref int index) {
             var copy = new Cluster(from v in top.Nodes select GetCopy(v)) {
                                                                               UserData = top,
                                                                               RectangularBoundary =
@@ -232,8 +232,10 @@ namespace Microsoft.Msagl.Core.Layout {
 																			  CollapsedBoundary=top.CollapsedBoundary==null?null:top.CollapsedBoundary.Clone()
                                                                           };
             top.AlgorithmData = new AlgorithmDataNodeWrap(index++, copy);
-            foreach (var c in top.Clusters)
+            foreach (var c in top.Clusters) {
                 copy.AddChild(CopyCluster(c, ref index));
+            }
+
             return copy;
         }
 
@@ -248,7 +250,7 @@ namespace Microsoft.Msagl.Core.Layout {
             }
         }
 
-        class AlgorithmDataEdgeWrap : IEdge {
+        private class AlgorithmDataEdgeWrap : IEdge {
 
             public int Source { get; set; }
 
@@ -299,40 +301,53 @@ namespace Microsoft.Msagl.Core.Layout {
             double avgLength = 0;
             foreach (var e in graph.Edges) {
                 avgLength += e.Length;
-                if (e.Source is Cluster || e.Target is Cluster) continue;
+                if (e.Source is Cluster || e.Target is Cluster) {
+                    continue;
+                }
+
                 flatGraph.Edges.Add(AlgorithmDataEdgeWrap.MakeEdge(e));
             }
-            if (graph.Edges.Count != 0)
+            if (graph.Edges.Count != 0) {
                 avgLength /= graph.Edges.Count;
-            else
+            } else {
                 avgLength = 100;
+            }
 
             Cluster rootCluster = graph.RootCluster;
             // create edges from the children of each parent cluster to the parent cluster node
             foreach (var c in rootCluster.AllClustersDepthFirst()) {
-                if (c == rootCluster) continue;
-                if (c.BoundaryCurve == null)
+                if (c == rootCluster) {
+                    continue;
+                }
+
+                if (c.BoundaryCurve == null) {
                     c.BoundaryCurve = CurveFactory.CreateRectangleWithRoundedCorners(10, 10, 1, 1, new Point());
+                }
+
                 var uOfCluster = new Node(c.BoundaryCurve.Clone()) {UserData = c};
                 var uuOfCluster = new AlgorithmDataNodeWrap(flatGraph.Nodes.Count, uOfCluster);
                 c.AlgorithmData = uuOfCluster;
                 flatGraph.Nodes.Add(uOfCluster);
 
-                foreach (var v in c.Nodes.Concat(from cc in c.Clusters select (Node) cc))
+                foreach (var v in c.Nodes.Concat(from cc in c.Clusters select (Node) cc)) {
                     flatGraph.Edges.Add(
                         AlgorithmDataEdgeWrap.MakeDummyEdgeFromNodeToItsCluster(
                             v.AlgorithmData as AlgorithmDataNodeWrap, uuOfCluster,
                             avgLength));
+                }
             }
 
             // mark top-level nodes and clusters
-            foreach (var v in rootCluster.Nodes.Concat(from cc in rootCluster.Clusters select (Node) cc))
+            foreach (var v in rootCluster.Nodes.Concat(from cc in rootCluster.Clusters select (Node) cc)) {
                 ((AlgorithmDataNodeWrap) v.AlgorithmData).TopLevel = true;
+            }
 
             // create edges between clusters
-            foreach (var e in graph.Edges)
-                if (e.Source is Cluster || e.Target is Cluster)
+            foreach (var e in graph.Edges) {
+                if (e.Source is Cluster || e.Target is Cluster) {
                     flatGraph.Edges.Add(AlgorithmDataEdgeWrap.MakeEdge(e));
+                }
+            }
 
             return flatGraph;
         }

@@ -68,10 +68,10 @@ namespace Microsoft.Msagl.Core.Geometry
     public partial class OverlapRemovalCluster : OverlapRemovalNode
     {
         // Our internal Node list - some of which may be Clusters.
-         readonly List<OverlapRemovalNode> nodeList = new List<OverlapRemovalNode>();
+        private readonly List<OverlapRemovalNode> nodeList = new List<OverlapRemovalNode>();
 
         // Our internal child Cluster list - duplicated from nodeList for iterative recursion perf.
-         readonly List<OverlapRemovalCluster> clusterList = new List<OverlapRemovalCluster>();
+        private readonly List<OverlapRemovalCluster> clusterList = new List<OverlapRemovalCluster>();
 
         /// <summary>
         /// Empty clusters are ignored on positioning.
@@ -101,7 +101,7 @@ namespace Microsoft.Msagl.Core.Geometry
         public OverlapRemovalNode RightBorderNode { get; private set; }
 
         // Indicates if the cluster's GenerateWorker placed anything into the solver.
-         bool IsInSolver { get; set; }
+        private bool IsInSolver { get; set; }
 
         /// <summary>
         /// Opening margin of this cluster (additional space inside the cluster border)
@@ -183,7 +183,8 @@ namespace Microsoft.Msagl.Core.Geometry
         /// in the root, which may be numerous.
         /// </summary>
         public bool IsRootCluster { get { return this.ParentCluster == null; } }
-        OverlapRemovalCluster ParentCluster { get; set; }
+
+        private OverlapRemovalCluster ParentCluster { get; set; }
 
         // Zero cluster margins. This ctor is currently used only by the generator's DefaultClusterHierarchy,
         // which by default is created with non-fixed borders and no margins.
@@ -214,10 +215,10 @@ namespace Microsoft.Msagl.Core.Geometry
             this.OpenBorderInfoP.EnsureWeight();
             this.CloseBorderInfoP = closeBorderInfoP;
             this.CloseBorderInfoP.EnsureWeight();
-            CreateBorderNodes();
+            this.CreateBorderNodes();
         }
 
-         void CreateBorderNodes()
+        private void CreateBorderNodes()
         {
             if (!this.IsRootCluster)
             {
@@ -260,11 +261,11 @@ namespace Microsoft.Msagl.Core.Geometry
         }
 
         // Adds an open/close event pair for the node. paddingP is either cluster or node padding.
-         void AddEvents(OverlapRemovalNode node, List<Event> events)
+        private void AddEvents(OverlapRemovalNode node, List<Event> events)
         {
             // Add/subtract only half the padding so they meet in the middle of the padding.
-            events.Add(new Event(true, node, node.OpenP - (NodePaddingP / 2)));
-            events.Add(new Event(false, node, node.CloseP + (NodePaddingP / 2)));
+            events.Add(new Event(true, node, node.OpenP - (this.NodePaddingP / 2)));
+            events.Add(new Event(false, node, node.CloseP + (this.NodePaddingP / 2)));
         }
 
         // This is internal rather than  so Test_OverlapRemoval can see it.
@@ -279,7 +280,7 @@ namespace Microsoft.Msagl.Core.Geometry
         }
 
         // For iterative recursion (though we do not expect deeply nested clusters).
-         class ClusterItem
+        private class ClusterItem
         {
             internal readonly OverlapRemovalCluster Cluster;
             internal bool ChildrenHaveBeenPushed;
@@ -291,7 +292,7 @@ namespace Microsoft.Msagl.Core.Geometry
 
         internal delegate void ClusterDelegate(OverlapRemovalCluster cluster);
 
-         static void ProcessClusterHierarchy(OverlapRemovalCluster root, ClusterDelegate worker)
+        private static void ProcessClusterHierarchy(OverlapRemovalCluster root, ClusterDelegate worker)
         {
             var stack = new Stack<ClusterItem>();
             stack.Push(new ClusterItem(root));
@@ -331,7 +332,7 @@ namespace Microsoft.Msagl.Core.Geometry
         /// If a border is not fixed swap its position with the opposite border to ensure
         /// cluster is tight to its contents.
         /// </summary>
-         void SqueezeNonFixedBorderPositions()
+        private void SqueezeNonFixedBorderPositions()
         {
             // Here's an example of why this is necessary:  If we base the initial border position
             // on a child cluster's border and that child cluster is initially sparse, then its
@@ -358,7 +359,7 @@ namespace Microsoft.Msagl.Core.Geometry
 
         // Returns false if the cluster is empty; this handles nested clusters of empty clusters.
         // TODOunit: several of the test files cover this but add a specific test for it.
-         bool GenerateWorker(Solver solver, OverlapRemovalParameters parameters,
+        private bool GenerateWorker(Solver solver, OverlapRemovalParameters parameters,
                              bool isHorizontal)
         {
             // @@DCR "Precalculate Cluster Sizes": if we are solving per-cluster to calculate best sizes before
@@ -390,7 +391,7 @@ namespace Microsoft.Msagl.Core.Geometry
                     Top = double.MinValue
                 };
 
-            if (IsEmpty)
+            if (this.IsEmpty)
             {
                 // Nothing to generate.
                 return false;
@@ -401,7 +402,7 @@ namespace Microsoft.Msagl.Core.Geometry
             var events = this.CreateEvents(solver, ref boundaryRect);
 
             // If we added no events, we're either Fixed (so continue) or empty (so return).
-            if (events.Count == 0 && !TranslateChildren)
+            if (events.Count == 0 && !this.TranslateChildren)
             {
                 return false;
             }
@@ -411,14 +412,14 @@ namespace Microsoft.Msagl.Core.Geometry
             double rightBorderWidth = DefaultBorderWidth;
             if (!this.IsRootCluster)
             {
-                CalculateBorderWidths(solver, events, boundaryRect, out leftBorderWidth, out rightBorderWidth);
+                this.CalculateBorderWidths(solver, events, boundaryRect, out leftBorderWidth, out rightBorderWidth);
 #if VERBOSE
                 System.Diagnostics.Debug.WriteLine(" {0} After CalculateBorderWidths: p {1:F5} s {2:F5} pP {3:F5} sP {4:F5}"
                         , this.Name, this.Size, this.Position, this.Size, this.SizeP);
 #endif
             }
 
-            GenerateFromEvents(solver, parameters, events, isHorizontal);
+            this.GenerateFromEvents(solver, parameters, events, isHorizontal);
 
             if (!this.IsRootCluster)
             {
@@ -428,7 +429,7 @@ namespace Microsoft.Msagl.Core.Geometry
             return true;
         }
 
-         List<Event> CreateEvents(Solver solver, ref Rectangle boundaryRect)
+        private List<Event> CreateEvents(Solver solver, ref Rectangle boundaryRect)
         {
             var events = new List<Event>();
             int cNodes = this.nodeList.Count; // cache for perf
@@ -463,13 +464,13 @@ namespace Microsoft.Msagl.Core.Geometry
 
                 // Now add the Node to the ScanLine event list.  Use paddingP because the scan line moves
                 // perpendicularly to the direction we're generating the constraints in.
-                AddEvents(node, events);
+                this.AddEvents(node, events);
 
                 // Update our boundaries if this node goes past any of them.
                 if (!this.IsRootCluster)
                 {
-                    double pad = node.Size / 2 + ClusterPadding;
-                    double padP = node.SizeP / 2 + ClusterPaddingP;
+                    double pad = node.Size / 2 + this.ClusterPadding;
+                    double padP = node.SizeP / 2 + this.ClusterPaddingP;
                     double newLeft = node.Position - pad - leftBorderWidth;
                     double newRight = node.Position + pad + rightBorderWidth;
                     double newBottom = node.PositionP - padP - openBorderWidth;
@@ -512,7 +513,7 @@ namespace Microsoft.Msagl.Core.Geometry
             return events;
         }
 
-         void CalculateBorderWidths(Solver solver, List<Event> events, Rectangle boundaryRect,
+        private void CalculateBorderWidths(Solver solver, List<Event> events, Rectangle boundaryRect,
                                             out double leftBorderWidth, out double rightBorderWidth)
         {
             // Cluster-level padding (the space around the borders) complicates this.  Margin
@@ -556,7 +557,7 @@ namespace Microsoft.Msagl.Core.Geometry
             this.LeftBorderNode.PositionP = this.PositionP;
             this.LeftBorderNode.SizeP = this.SizeP;
             this.LeftBorderNode.CreateVariable(solver);
-            AddEvents(this.LeftBorderNode, events);
+            this.AddEvents(this.LeftBorderNode, events);
 
             // Note:  The Left/Right, Open/Close terminology here is inconsistent with GenerateFromEvents
             //  since here Open is in the primary axis and in GenerateFromEvents it's in the secondary/P axis.
@@ -568,10 +569,10 @@ namespace Microsoft.Msagl.Core.Geometry
             this.RightBorderNode.PositionP = this.PositionP;
             this.RightBorderNode.SizeP = this.SizeP;
             this.RightBorderNode.CreateVariable(solver);
-            AddEvents(this.RightBorderNode, events);
+            this.AddEvents(this.RightBorderNode, events);
         }
 
-         void AdjustFixedBorderPositions(Solver solver, double leftBorderWidth, double rightBorderWidth, bool isHorizontal)
+        private void AdjustFixedBorderPositions(Solver solver, double leftBorderWidth, double rightBorderWidth, bool isHorizontal)
         {
             // Note:  Open == Left, Close == Right.
             if (this.OpenBorderInfo.IsFixedPosition && this.CloseBorderInfo.IsFixedPosition)
@@ -718,7 +719,7 @@ namespace Microsoft.Msagl.Core.Geometry
             return ( cluster != null) ? cluster.LeftBorderNode : node;
         }
 
-         void GenerateFromEvents(Solver solver, OverlapRemovalParameters parameters,
+        private void GenerateFromEvents(Solver solver, OverlapRemovalParameters parameters,
                         List<Event> events, bool isHorizontal)
         {
             // First, sort the events on the perpendicular coordinate of the event
@@ -745,8 +746,8 @@ namespace Microsoft.Msagl.Core.Geometry
                     System.Diagnostics.Debug.WriteLine("ScanAdd: {0}", currentNode);
 #endif // VERBOSE
 
-                    currentNode.LeftNeighbors = GetLeftNeighbours(parameters, scanLine, currentNode, isHorizontal);
-                    currentNode.RightNeighbors = GetRightNeighbours(parameters, scanLine, currentNode, isHorizontal);
+                    currentNode.LeftNeighbors = this.GetLeftNeighbours(parameters, scanLine, currentNode, isHorizontal);
+                    currentNode.RightNeighbors = this.GetRightNeighbours(parameters, scanLine, currentNode, isHorizontal);
 int numLeftNeighbors = currentNode.LeftNeighbors.Count;
                     int numRightNeighbors = currentNode.RightNeighbors.Count;
                     for (int i = 0; i < numLeftNeighbors; ++i)
@@ -798,12 +799,12 @@ int numLeftNeighbors = currentNode.LeftNeighbors.Count;
                         Debug.Assert(leftNeighborNode.OpenP == origLeftNeighborNode.OpenP, "leftNeighborNode.OpenP must == origLeftNeighborNode.OpenP");
 
                         Debug.Assert(isHorizontal
-                                || ((currentNode.CloseP + NodePaddingP - leftNeighborNode.OpenP) > (parameters.SolverParameters.GapTolerance - 1e-6)),
+                                || ((currentNode.CloseP + this.NodePaddingP - leftNeighborNode.OpenP) > (parameters.SolverParameters.GapTolerance - 1e-6)),
                                 "LeftNeighbors: unexpected close/open overlap");
 
-                        double p = leftNeighborNode == LeftBorderNode || currentRightNode == RightBorderNode ? ClusterPadding : NodePadding;
+                        double p = leftNeighborNode == this.LeftBorderNode || currentRightNode == this.RightBorderNode ? this.ClusterPadding : this.NodePadding;
                         double separation = ((leftNeighborNode.Size + currentRightNode.Size) / 2) + p;
-                        if (TranslateChildren)
+                        if (this.TranslateChildren)
                         {
                             separation = Math.Max(separation, currentRightNode.Position - leftNeighborNode.Position);
                         }
@@ -827,12 +828,12 @@ int numLeftNeighbors = currentNode.LeftNeighbors.Count;
                         // This assert verifies we match the Solver.ViolationTolerance check in AddNeighbor.
                         // Allow a little rounding error.
                         Debug.Assert(isHorizontal
-                                || ((currentNode.CloseP + NodePaddingP - rightNeighborNode.OpenP) > (parameters.SolverParameters.GapTolerance - 1e-6)),
+                                || ((currentNode.CloseP + this.NodePaddingP - rightNeighborNode.OpenP) > (parameters.SolverParameters.GapTolerance - 1e-6)),
                                 "RightNeighbors: unexpected close/open overlap");
 
-                        double p = currentLeftNode == LeftBorderNode || rightNeighborNode == RightBorderNode ? ClusterPadding : NodePadding;
+                        double p = currentLeftNode == this.LeftBorderNode || rightNeighborNode == this.RightBorderNode ? this.ClusterPadding : this.NodePadding;
                         double separation = ((currentLeftNode.Size + rightNeighborNode.Size) / 2) + p;
-                        if (TranslateChildren)
+                        if (this.TranslateChildren)
                         {
                             separation = Math.Max(separation, rightNeighborNode.Position - currentLeftNode.Position);
                         }
@@ -858,7 +859,7 @@ int numLeftNeighbors = currentNode.LeftNeighbors.Count;
             } // endforeach Event
         }
 
-         List<OverlapRemovalNode> GetLeftNeighbours(OverlapRemovalParameters parameters, ScanLine scanLine,
+        private List<OverlapRemovalNode> GetLeftNeighbours(OverlapRemovalParameters parameters, ScanLine scanLine,
                                     OverlapRemovalNode currentNode, bool isHorizontal)
         {
             var lstNeighbours = new List<OverlapRemovalNode>();
@@ -866,7 +867,7 @@ int numLeftNeighbors = currentNode.LeftNeighbors.Count;
             for (; nextNode != null; nextNode = scanLine.NextLeft(nextNode))
             {
                 // AddNeighbor returns false if we are done adding them.
-                if (!AddNeighbour(parameters, currentNode, nextNode, lstNeighbours, true /* isLeftNeighbor */
+                if (!this.AddNeighbour(parameters, currentNode, nextNode, lstNeighbours, true /* isLeftNeighbor */
                                 , isHorizontal))
                 {
                     if (!nextNode.DeferredLeftNeighborToV)
@@ -878,7 +879,7 @@ int numLeftNeighbors = currentNode.LeftNeighbors.Count;
             return lstNeighbours;
         } // end GetLeftNeighbours
 
-         List<OverlapRemovalNode> GetRightNeighbours(OverlapRemovalParameters parameters, ScanLine scanLine,
+        private List<OverlapRemovalNode> GetRightNeighbours(OverlapRemovalParameters parameters, ScanLine scanLine,
                                     OverlapRemovalNode currentNode, bool isHorizontal)
         {
             var lstNeighbours = new List<OverlapRemovalNode>();
@@ -886,7 +887,7 @@ int numLeftNeighbors = currentNode.LeftNeighbors.Count;
             for (; nextNode != null; nextNode = scanLine.NextRight(nextNode))
             {
                 // AddNeighbor returns false if we are done adding them.
-                if (!AddNeighbour(parameters, currentNode, nextNode, lstNeighbours, false /* isLeftNeighbor */
+                if (!this.AddNeighbour(parameters, currentNode, nextNode, lstNeighbours, false /* isLeftNeighbor */
                                 , isHorizontal))
                 {
                     if (!nextNode.DeferredRightNeighborToV)
@@ -898,13 +899,13 @@ int numLeftNeighbors = currentNode.LeftNeighbors.Count;
             return lstNeighbours;
         } // end GetRightNeighbours
 
-         bool AddNeighbour(OverlapRemovalParameters parameters, OverlapRemovalNode currentNode, OverlapRemovalNode nextNode,
+        private bool AddNeighbour(OverlapRemovalParameters parameters, OverlapRemovalNode currentNode, OverlapRemovalNode nextNode,
                         List<OverlapRemovalNode> neighbors, bool isLeftNeighbor, bool isHorizontal)
         {
             // Sanity check to be sure that the borders are past all other nodes.
             Debug.Assert(currentNode != (isLeftNeighbor ? this.LeftBorderNode : this.RightBorderNode), "currentNode must != BorderNode");
 
-            double overlap = Overlap(currentNode, nextNode, NodePadding);
+            double overlap = Overlap(currentNode, nextNode, this.NodePadding);
             if (overlap <= 0)
             {
                 // This is the first node encountered on this neighbour-traversal that did not
@@ -913,7 +914,7 @@ int numLeftNeighbors = currentNode.LeftNeighbors.Count;
                 // the horizontal axis; in that case, pretend we never saw it and return true
                 // so the next non-overlapping node will be found.  (See below for more information
                 // on why this is necessary).
-                if (!isHorizontal && (OverlapP(currentNode, nextNode, NodePaddingP) <= parameters.SolverParameters.GapTolerance))
+                if (!isHorizontal && (OverlapP(currentNode, nextNode, this.NodePaddingP) <= parameters.SolverParameters.GapTolerance))
                 {
 #if VERBOSE
                     System.Diagnostics.Debug.WriteLine(" V {0}nbourHTolSkipNO: {1}", isLeftNeighbor ? "L" : "R", nextNode);
@@ -938,7 +939,7 @@ int numLeftNeighbors = currentNode.LeftNeighbors.Count;
                     // each direction.  @@DCR: consider adding weights to the defer-to-vertical calculation;
                     // this would allow two nodes to pop up/down if they're being squeezed, rather than
                     // force apart the borders (which happens regardless of their weight).
-                    double overlapP = OverlapP(currentNode, nextNode, NodePaddingP);
+                    double overlapP = OverlapP(currentNode, nextNode, this.NodePaddingP);
                     bool isOverlapping =
                          parameters.ConsiderProportionalOverlap
                         ? overlap / (currentNode.Size + nextNode.Size) > overlapP / (currentNode.SizeP + nextNode.SizeP)
@@ -987,7 +988,7 @@ int numLeftNeighbors = currentNode.LeftNeighbors.Count;
                 // and possibly huge vertical movement.  There is a corresponding Assert during constraint
                 // generation when the node is Closed. We have to do this here rather than at runtime because
                 // doing it then may skip a Neighbour that replaced other Neighbors by transitivity.
-                if (OverlapP(currentNode, nextNode, NodePaddingP) <= parameters.SolverParameters.GapTolerance)
+                if (OverlapP(currentNode, nextNode, this.NodePaddingP) <= parameters.SolverParameters.GapTolerance)
                 {
 #if VERBOSE
                     System.Diagnostics.Debug.WriteLine(" V {0}nbourHTolSkipO: {1}", isLeftNeighbor ? "L" : "R", nextNode);
@@ -1010,14 +1011,14 @@ int numLeftNeighbors = currentNode.LeftNeighbors.Count;
             ProcessClusterHierarchy(this, cluster => cluster.UpdateFromVariableWorker());
         }
 
-         void UpdateFromVariableWorker()
+        private void UpdateFromVariableWorker()
         {
             // The root cluster has no "position" and thus no border variables.
             if (!this.IsRootCluster)
             {
                 // If empty, we had nothing to do.  We're also empty if we had child clusters
                 // that were empty; in that case we check that we don't have our Variables created.
-                if (IsEmpty || (this.LeftBorderNode.Variable == null))
+                if (this.IsEmpty || (this.LeftBorderNode.Variable == null))
                 {
                     return;
                 }

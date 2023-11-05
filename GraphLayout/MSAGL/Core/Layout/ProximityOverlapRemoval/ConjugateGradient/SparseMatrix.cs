@@ -9,42 +9,43 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
         /// <summary>
         /// Non-Zero matrix values from left-to-right, top-to-bottom
         /// </summary>
-         double[] values;
+        private double[] values;
+
         /// <summary>
         /// Column index of the x-th value in matrix (left-to-right, top-to-bottom)
         /// </summary>
-         int[] col_ind;
+        private int[] col_ind;
+
         /// <summary>
         /// Row pointers, marking the start and end positions in values of the elements of a given row.
         /// </summary>
-         int[] row_ptr; //row_ptr.Length-1 is number of rows
+        private int[] row_ptr; //row_ptr.Length-1 is number of rows
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public double[] Values(){return values;}
+        public double[] Values(){return this.values;}
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public int[] ColInd() {return col_ind;}
+        public int[] ColInd() {return this.col_ind;}
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public int[] RowPtr() {return row_ptr;}
+        public int[] RowPtr() {return this.row_ptr;}
 
-
-         int numRow;
+        private int numRow;
         /// <summary>
         /// Number of rows of the matrix.
         /// </summary>
         public int NumRow {
-            set { numRow = value; }
-            get { return numRow;} }
+            set { this.numRow = value; }
+            get { return this.numRow;} }
         /// <summary>
         /// Number of columns of the matrix.
         /// </summary>
@@ -59,10 +60,10 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
         /// <param name="rowPointers">pointer to starting (and end) index of a row in values</param>
         /// <param name="numberColumns">number of columns of the matrix</param>
         public SparseMatrix(double[] valuesFlat, int[] columnIndices, int[] rowPointers, int numberColumns) {
-            values = valuesFlat;
-            col_ind = columnIndices;
-            row_ptr = rowPointers;
-            NumCol = numberColumns;
+            this.values = valuesFlat;
+            this.col_ind = columnIndices;
+            this.row_ptr = rowPointers;
+            this.NumCol = numberColumns;
         }
 
        /// <summary>
@@ -73,12 +74,12 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
        /// <param name="numCol"></param>
         public SparseMatrix(int numValues, int numRow, int numCol) {
             //create sparse matrix data for weighted Laplacian Lw
-            values = new double[numValues];
-            col_ind = new int[numValues];
-            row_ptr = new int[numRow+1];
+            this.values = new double[numValues];
+            this.col_ind = new int[numValues];
+            this.row_ptr = new int[numRow+1];
 
-            NumRow = numRow;
-            NumCol = numCol;
+            this.NumRow = numRow;
+            this.NumCol = numCol;
         }
 
         /// <summary>
@@ -88,7 +89,10 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
         /// <param name="vec">vector</param>
         /// <returns>vector with same amount of entries as the matrix has rows</returns>
         public static Vector operator *(SparseMatrix m,Vector vec) {
-            if (vec.array.Length < m.NumCol) throw new ArgumentException("vector must have as many entries as the matrix has columns");
+            if (vec.array.Length < m.NumCol) {
+                throw new ArgumentException("vector must have as many entries as the matrix has columns");
+            }
+
             double[] result=new double[m.NumRow];
             for (int row = 0; row < m.NumRow; row++) {//multiply vector with every row
                 int startPos = m.row_ptr[row];
@@ -116,14 +120,14 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
         /// </summary>
         /// <returns></returns>
         public Vector DiagonalPreconditioner() {
-            double[] result = new double[NumRow];
-            for (int row = 0; row < NumRow; row++) {
-                int startPos = row_ptr[row];
-                int endPos = row_ptr[row + 1];
+            double[] result = new double[this.NumRow];
+            for (int row = 0; row < this.NumRow; row++) {
+                int startPos = this.row_ptr[row];
+                int endPos = this.row_ptr[row + 1];
                 for (int i = startPos; i < endPos; i++) {
-                    int columnIndex = col_ind[i];
-                    if (row == columnIndex && values[i] != 0) {//positive value on diagonal of matrix
-                        result[row] = 1/values[i];    
+                    int columnIndex = this.col_ind[i];
+                    if (row == columnIndex && this.values[i] != 0) {//positive value on diagonal of matrix
+                        result[row] = 1/ this.values[i];    
                     }
                     
                 }
@@ -140,13 +144,13 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
             // SharpKit/Colin: multidimensional arrays not supported in JavaScript
             throw new NotSupportedException("Multi-dimensional arrays are not supported");
 #else
-            double[,] result = new double[NumRow,NumCol];
-            for (int row = 0; row < NumRow; row++) {
-                int startPos = row_ptr[row];
-                int endPos = row_ptr[row + 1];
+            double[,] result = new double[this.NumRow, this.NumCol];
+            for (int row = 0; row < this.NumRow; row++) {
+                int startPos = this.row_ptr[row];
+                int endPos = this.row_ptr[row + 1];
                 for (int i = startPos; i < endPos; i++) {
-                    int col = col_ind[i];
-                    result[row,col] += values[i];
+                    int col = this.col_ind[i];
+                    result[row,col] += this.values[i];
                 }
             }
             return result;
@@ -157,7 +161,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
         /// Prints the full matrix.
         /// </summary>
         public void PrintMatrix() {
-            var matrix = GetFullMatrix();
+            var matrix = this.GetFullMatrix();
             int rowLength = matrix.GetLength(0);
             int colLength = matrix.GetLength(1);
             

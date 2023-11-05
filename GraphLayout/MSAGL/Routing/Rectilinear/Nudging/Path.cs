@@ -18,36 +18,37 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         /// <summary>
         /// the path points
         /// </summary>
-        internal IEnumerable<Point> PathPoints { get; set; }
+        internal IEnumerable<Point>? PathPoints { get; set; }
 
-        internal double Width { get { return EdgeGeometry.LineWidth;} }
+        internal double Width { get { return this.EdgeGeometry.LineWidth;} }
 
         /// <summary>
         /// constructor
         /// </summary>
         /// <param name="edgeGeometry"></param>
         internal Path(EdgeGeometry edgeGeometry) {
-            EdgeGeometry = edgeGeometry;
+            this.EdgeGeometry = edgeGeometry;
         }
 
 
         internal Point End {
             get {
-                return LastEdge.Target;
+                return this.LastEdge.Target;
             }
         }
 
         internal Point Start {
             get {
-                return FirstEdge.Source;
+                return this.FirstEdge.Source;
             }
         }
 
         
         internal IEnumerable<PathEdge> PathEdges {
             get {
-                for (var e = FirstEdge; e != null; e = e.Next)
+                for (var e = this.FirstEdge; e != null; e = e.Next) {
                     yield return e;
+                }
             }
         }
 
@@ -58,14 +59,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
 
         internal void AddEdge(PathEdge edge) {
             edge.Path = this;
-            Debug.Assert(edge.Source == LastEdge.Target);
-            LastEdge.Next = edge;
-            edge.Prev = LastEdge;
-            LastEdge = edge;
+            Debug.Assert(edge.Source == this.LastEdge.Target);
+            this.LastEdge.Next = edge;
+            edge.Prev = this.LastEdge;
+            this.LastEdge = edge;
         }
 
         internal void SetFirstEdge(PathEdge edge) {
-            LastEdge = FirstEdge = edge;
+            this.LastEdge = this.FirstEdge = edge;
             edge.Path = this;
         }
     

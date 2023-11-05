@@ -24,16 +24,16 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", MessageId = "GraphWriter")]
     public class GeometryGraphWriter
     {
-        const string FileExtension = ".msagl.geom";
-        Dictionary<Node, string> nodeIds = new Dictionary<Node, string>();
-        Dictionary<Edge, int> edgeIds = new Dictionary<Edge, int>();
+        private const string FileExtension = ".msagl.geom";
+        private Dictionary<Node, string> nodeIds = new Dictionary<Node, string>();
+        private Dictionary<Edge, int> edgeIds = new Dictionary<Edge, int>();
+
         /// <summary>
         /// 
         /// </summary>
-        GeometryGraph graph;
-
-        bool needToCloseXmlWriter = true;
-        Stream stream;
+        private GeometryGraph graph;
+        private bool needToCloseXmlWriter = true;
+        private Stream stream;
 
         /// <summary>
         /// Constructor
@@ -43,12 +43,12 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// <param name="settings">The settings to be written.</param>
         public GeometryGraphWriter(Stream streamPar, GeometryGraph graphP, LayoutAlgorithmSettings settings)
         {
-            stream = streamPar;
-            Graph = graphP;
-            Settings = settings;
+            this.stream = streamPar;
+            this.Graph = graphP;
+            this.Settings = settings;
             var xmlWriterSettings = new XmlWriterSettings { Indent = true };
-            XmlWriter = XmlWriter.Create(stream, xmlWriterSettings);
-            EdgeEnumeration = graphP.Edges;
+            this.XmlWriter = XmlWriter.Create(this.stream, xmlWriterSettings);
+            this.EdgeEnumeration = graphP.Edges;
         }
 
         /// <summary>
@@ -62,8 +62,8 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         [SuppressMessage("Microsoft.Design", "CA1044:PropertiesShouldNotBeWriteOnly")]
         public bool NeedToCloseXmlWriter
         {
-            get { return needToCloseXmlWriter; }
-            set { needToCloseXmlWriter = value; }
+            get { return this.needToCloseXmlWriter; }
+            set { this.needToCloseXmlWriter = value; }
         }
 
         /// <summary>
@@ -71,8 +71,8 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// </summary>
         public Stream Stream
         {
-            get { return stream; }
-            set { stream = value; }
+            get { return this.stream; }
+            set { this.stream = value; }
         }
 
         /// <summary>
@@ -86,8 +86,8 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// </summary>
         public GeometryGraph Graph
         {
-            get { return graph; }
-            set { graph = value; }
+            get { return this.graph; }
+            set { this.graph = value; }
         }
 
         /// <summary>
@@ -112,10 +112,13 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
              MessageId = "System.String.EndsWith(System.String,System.Boolean,System.Globalization.CultureInfo)")]
         public static void Write(GeometryGraph graph, LayoutAlgorithmSettings settings, string fileName)
         {
-            if (fileName == null) return;
+            if (fileName == null) {
+                return;
+            }
 
-            if (!fileName.EndsWith(FileExtension, StringComparison.InvariantCultureIgnoreCase))
+            if (!fileName.EndsWith(FileExtension, StringComparison.InvariantCultureIgnoreCase)) {
                 fileName += FileExtension;
+            }
 
             using (Stream stream = File.Open(fileName, FileMode.Create))
             {
@@ -133,15 +136,15 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             try
             {
-                Open();
-                WriteLayoutSettings();
+                this.Open();
+                this.WriteLayoutSettings();
 
-                InitEdgeIds();
-                WriteNodes();
-                WriteClusters();
-                WriteEdges();
-                WriteLayers();
-                Close();
+                this.InitEdgeIds();
+                this.WriteNodes();
+                this.WriteClusters();
+                this.WriteEdges();
+                this.WriteLayers();
+                this.Close();
             }
             finally
             {
@@ -149,132 +152,139 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             }
         }
 
-        void WriteLayers()
+        private void WriteLayers()
         {
-            if (graph.LgData == null) return;
-            WriteStartElement(GeometryToken.LgLevels);
-            WriteLgEdgeInfos();
-            WriteSortedLgInfos();
-            Dictionary<Rail, int> railIds = CreateRailIds();
-
-            for (int i = 0; i < graph.LgData.Levels.Count; i++)
-            {
-                WriteLevel(graph.LgData.Levels[i], railIds, graph.LgData.LevelNodeCounts[i]);
+            if (this.graph.LgData == null) {
+                return;
             }
-            WriteEndElement();
 
-            WriteStartElement(GeometryToken.LgSkeletonLevels);
-            for (int i = 0; i < graph.LgData.SkeletonLevels.Count; i++)
+            this.WriteStartElement(GeometryToken.LgLevels);
+            this.WriteLgEdgeInfos();
+            this.WriteSortedLgInfos();
+            Dictionary<Rail, int> railIds = this.CreateRailIds();
+
+            for (int i = 0; i < this.graph.LgData.Levels.Count; i++)
             {
-                WriteSkeletonLevel(graph.LgData.SkeletonLevels[i], railIds);
+                this.WriteLevel(this.graph.LgData.Levels[i], railIds, this.graph.LgData.LevelNodeCounts[i]);
             }
-            WriteEndElement();
+            this.WriteEndElement();
+
+            this.WriteStartElement(GeometryToken.LgSkeletonLevels);
+            for (int i = 0; i < this.graph.LgData.SkeletonLevels.Count; i++)
+            {
+                this.WriteSkeletonLevel(this.graph.LgData.SkeletonLevels[i], railIds);
+            }
+            this.WriteEndElement();
 
         }
 
-        void WriteLgEdgeInfos()
+        private void WriteLgEdgeInfos()
         {
-            WriteStartElement(GeometryToken.LgEdgeInfos);
-            foreach (var t in graph.LgData.GeometryEdgesToLgEdgeInfos)
+            this.WriteStartElement(GeometryToken.LgEdgeInfos);
+            foreach (var t in this.graph.LgData.GeometryEdgesToLgEdgeInfos)
             {
                 var edge = t.Key;
                 var ei = t.Value;
-                WriteLgEdgeInfo(edge, ei);
+                this.WriteLgEdgeInfo(edge, ei);
             }
-            WriteEndElement();
+            this.WriteEndElement();
         }
 
-        void WriteLgEdgeInfo(Edge edge, LgEdgeInfo ei)
+        private void WriteLgEdgeInfo(Edge edge, LgEdgeInfo ei)
         {
-            WriteStartElement(GeometryToken.LgEdgeInfo);
-            WriteAttribute(GeometryToken.EdgeId, edgeIds[edge]);
-            WriteAttribute(GeometryToken.Rank, ei.Rank);
-            WriteAttribute(GeometryToken.Zoomlevel, ei.ZoomLevel);
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.LgEdgeInfo);
+            this.WriteAttribute(GeometryToken.EdgeId, this.edgeIds[edge]);
+            this.WriteAttribute(GeometryToken.Rank, ei.Rank);
+            this.WriteAttribute(GeometryToken.Zoomlevel, ei.ZoomLevel);
+            this.WriteEndElement();
         }
 
-        void WriteLevel(LgLevel level, Dictionary<Rail, int> railsToIds, int nodeCountOnLevel)
+        private void WriteLevel(LgLevel level, Dictionary<Rail, int> railsToIds, int nodeCountOnLevel)
         {
-            WriteStartElement(GeometryToken.Level);
-            WriteAttribute(GeometryToken.NodeCountOnLevel, nodeCountOnLevel);
-            WriteAttribute(GeometryToken.Zoomlevel, level.ZoomLevel);
-            WriteLevelRails(level, railsToIds);
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.Level);
+            this.WriteAttribute(GeometryToken.NodeCountOnLevel, nodeCountOnLevel);
+            this.WriteAttribute(GeometryToken.Zoomlevel, level.ZoomLevel);
+            this.WriteLevelRails(level, railsToIds);
+            this.WriteEndElement();
         }
 
-        void WriteSkeletonLevel(LgSkeletonLevel level, Dictionary<Rail, int> railsToIds)
+        private void WriteSkeletonLevel(LgSkeletonLevel level, Dictionary<Rail, int> railsToIds)
         {
-            WriteStartElement(GeometryToken.SkeletonLevel);
+            this.WriteStartElement(GeometryToken.SkeletonLevel);
             //WriteAttribute(GeometryToken.NodeCountOnLevel, nodeCountOnLevel);
-            WriteAttribute(GeometryToken.Zoomlevel, level.ZoomLevel);
-            WriteEndElement();
+            this.WriteAttribute(GeometryToken.Zoomlevel, level.ZoomLevel);
+            this.WriteEndElement();
         }
 
-        void WriteLevelRails(LgLevel level, Dictionary<Rail, int> railIds)
+        private void WriteLevelRails(LgLevel level, Dictionary<Rail, int> railIds)
         {
-            WriteStartElement(GeometryToken.RailsPerEdge);
+            this.WriteStartElement(GeometryToken.RailsPerEdge);
             foreach (var t in level._railsOfEdges)
             {
-                WriteEdgeRails(t.Key, t.Value, railIds);
+                this.WriteEdgeRails(t.Key, t.Value, railIds);
             }
-            WriteEndElement();
-            WriteRailsGeometry(level, railIds);
+            this.WriteEndElement();
+            this.WriteRailsGeometry(level, railIds);
         }
 
-        void WriteRailsGeometry(LgLevel level, Dictionary<Rail, int> railIds)
+        private void WriteRailsGeometry(LgLevel level, Dictionary<Rail, int> railIds)
         {
-            WriteStartElement(GeometryToken.Rails);
-            foreach (var rail in level._railDictionary.Values)
-                WriteRail(rail, railIds[rail]);
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.Rails);
+            foreach (var rail in level._railDictionary.Values) {
+                this.WriteRail(rail, railIds[rail]);
+            }
+
+            this.WriteEndElement();
         }
 
-        void WriteRail(Rail rail, int railId)
+        private void WriteRail(Rail rail, int railId)
         {
-            WriteStartElement(GeometryToken.Rail);
-            WriteAttribute(GeometryToken.Id, railId);
-            WriteAttribute(GeometryToken.Zoomlevel, rail.ZoomLevel);
-            if (rail.MinPassingEdgeZoomLevel != Double.MaxValue)
-                WriteAttribute(GeometryToken.MinPassingEdgeZoomLevel, rail.MinPassingEdgeZoomLevel);
+            this.WriteStartElement(GeometryToken.Rail);
+            this.WriteAttribute(GeometryToken.Id, railId);
+            this.WriteAttribute(GeometryToken.Zoomlevel, rail.ZoomLevel);
+            if (rail.MinPassingEdgeZoomLevel != Double.MaxValue) {
+                this.WriteAttribute(GeometryToken.MinPassingEdgeZoomLevel, rail.MinPassingEdgeZoomLevel);
+            }
+
             Arrowhead ah = rail.Geometry as Arrowhead;
             if (ah != null)
             {
-                WriteStartElement(GeometryToken.Arrowhead);
-                WriteAttribute(GeometryToken.ArrowheadPosition, ah.TipPosition);
-                WriteAttribute(GeometryToken.CurveAttachmentPoint, rail.CurveAttachmentPoint);
-                WriteEndElement();
+                this.WriteStartElement(GeometryToken.Arrowhead);
+                this.WriteAttribute(GeometryToken.ArrowheadPosition, ah.TipPosition);
+                this.WriteAttribute(GeometryToken.CurveAttachmentPoint, rail.CurveAttachmentPoint);
+                this.WriteEndElement();
             }
             else
             {
                 ICurve curve = rail.Geometry as ICurve;
-                if (curve != null)
-                    WriteICurve(curve);
-                else
+                if (curve != null) {
+                    this.WriteICurve(curve);
+                } else {
                     throw new InvalidOperationException();
+                }
             }
-            WriteEndElement();
+            this.WriteEndElement();
         }
 
-        void WriteEdgeRails(Edge edge, Set<Rail> rails, Dictionary<Rail, int> railIds)
+        private void WriteEdgeRails(Edge edge, Set<Rail> rails, Dictionary<Rail, int> railIds)
         {
-            WriteStartElement(GeometryToken.EdgeRails);
-            WriteAttribute(GeometryToken.EdgeId, edgeIds[edge]);
+            this.WriteStartElement(GeometryToken.EdgeRails);
+            this.WriteAttribute(GeometryToken.EdgeId, this.edgeIds[edge]);
             List<string> railIdStrings = new List<string>();
             foreach (var rail in rails)
             {
                 railIdStrings.Add(railIds[rail].ToString());
             }
 
-            WriteAttribute(GeometryToken.EdgeRails, String.Join(" ", railIdStrings));
-            WriteEndElement();
+            this.WriteAttribute(GeometryToken.EdgeRails, String.Join(" ", railIdStrings));
+            this.WriteEndElement();
         }
 
-
-        Dictionary<Rail, int> CreateRailIds()
+        private Dictionary<Rail, int> CreateRailIds()
         {
             var ret = new Dictionary<Rail, int>();
             int id = 0;
-            foreach (var level in graph.LgData.Levels)
+            foreach (var level in this.graph.LgData.Levels)
             {
                 foreach (var rail in level._railDictionary.Values)
                 {
@@ -288,33 +298,34 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             return ret;
         }
 
-        void WriteSortedLgInfos()
+        private void WriteSortedLgInfos()
         {
-            WriteStartElement(GeometryToken.LgNodeInfos);
-            foreach (var lgNodeInfo in graph.LgData.SortedLgNodeInfos)
+            this.WriteStartElement(GeometryToken.LgNodeInfos);
+            foreach (var lgNodeInfo in this.graph.LgData.SortedLgNodeInfos)
             {
-                WriteLgNodeInfo(lgNodeInfo);
+                this.WriteLgNodeInfo(lgNodeInfo);
             }
-            WriteEndElement();
+            this.WriteEndElement();
         }
 
-        void WriteLgNodeInfo(LgNodeInfo lgNodeInfo)
+        private void WriteLgNodeInfo(LgNodeInfo lgNodeInfo)
         {
-            WriteStartElement(GeometryToken.LgNodeInfo);
-            WriteAttribute(GeometryToken.Id, nodeIds[lgNodeInfo.GeometryNode]);
-            WriteAttribute(GeometryToken.Rank, lgNodeInfo.Rank);
-            WriteAttribute(GeometryToken.Zoomlevel, lgNodeInfo.ZoomLevel);
-            WriteAttribute(GeometryToken.LabelVisibleFromScale, lgNodeInfo.LabelVisibleFromScale);
-            WriteAttribute(GeometryToken.LabelOffset, lgNodeInfo.LabelOffset);
-            WriteAttribute(GeometryToken.LabelWidthToHeightRatio, lgNodeInfo.LabelWidthToHeightRatio);
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.LgNodeInfo);
+            this.WriteAttribute(GeometryToken.Id, this.nodeIds[lgNodeInfo.GeometryNode]);
+            this.WriteAttribute(GeometryToken.Rank, lgNodeInfo.Rank);
+            this.WriteAttribute(GeometryToken.Zoomlevel, lgNodeInfo.ZoomLevel);
+            this.WriteAttribute(GeometryToken.LabelVisibleFromScale, lgNodeInfo.LabelVisibleFromScale);
+            this.WriteAttribute(GeometryToken.LabelOffset, lgNodeInfo.LabelOffset);
+            this.WriteAttribute(GeometryToken.LabelWidthToHeightRatio, lgNodeInfo.LabelWidthToHeightRatio);
+            this.WriteEndElement();
         }
 
-        void InitEdgeIds()
+        private void InitEdgeIds()
         {
             int id = 0;
-            foreach (var e in graph.Edges)
-                edgeIds[e] = id++;
+            foreach (var e in this.graph.Edges) {
+                this.edgeIds[e] = id++;
+            }
         }
 
         /// <summary>
@@ -327,9 +338,9 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             try
             {
-                Open();
-                WriteNodesIpe();
-                Close();
+                this.Open();
+                this.WriteNodesIpe();
+                this.Close();
             }
             finally
             {
@@ -337,192 +348,213 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             }
         }
 
-        void WriteClusters()
+        private void WriteClusters()
         {
-            if (graph.RootCluster == null) return;
+            if (this.graph.RootCluster == null) {
+                return;
+            }
 
-            WriteStartElement(GeometryToken.Clusters);
+            this.WriteStartElement(GeometryToken.Clusters);
 
-            MapClustersToIds(graph.RootCluster);
+            this.MapClustersToIds(this.graph.RootCluster);
 
-            foreach (var cluster in graph.RootCluster.AllClustersDepthFirstExcludingSelf())
-                WriteCluster(cluster, nodeIds[cluster]);
-            WriteEndElement();
+            foreach (var cluster in this.graph.RootCluster.AllClustersDepthFirstExcludingSelf()) {
+                this.WriteCluster(cluster, this.nodeIds[cluster]);
+            }
+
+            this.WriteEndElement();
         }
 
-        void WriteCluster(Cluster cluster, string clusterId)
+        private void WriteCluster(Cluster cluster, string clusterId)
         {
-            WriteStartElement(GeometryToken.Cluster);
-            WriteAttribute(GeometryToken.Id, clusterId);
-            WriteAttribute(GeometryToken.Barycenter, cluster.Barycenter);
-            WriteChildClusters(cluster);
-            WriteChildNodes(cluster);
-            if (cluster.BoundaryCurve != null)
-                WriteICurve(cluster.BoundaryCurve);
-            WriteClusterRectBoundary(cluster.RectangularBoundary);
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.Cluster);
+            this.WriteAttribute(GeometryToken.Id, clusterId);
+            this.WriteAttribute(GeometryToken.Barycenter, cluster.Barycenter);
+            this.WriteChildClusters(cluster);
+            this.WriteChildNodes(cluster);
+            if (cluster.BoundaryCurve != null) {
+                this.WriteICurve(cluster.BoundaryCurve);
+            }
+
+            this.WriteClusterRectBoundary(cluster.RectangularBoundary);
+            this.WriteEndElement();
         }
 
-        void WriteClusterRectBoundary(RectangularClusterBoundary recClBnd)
+        private void WriteClusterRectBoundary(RectangularClusterBoundary recClBnd)
         {
-            if (recClBnd == null) return;
-            WriteStartElement(GeometryToken.RectangularClusterBoundary);
+            if (recClBnd == null) {
+                return;
+            }
 
-            WriteAttribute(GeometryToken.LeftMargin, recClBnd.LeftMargin);
-            WriteAttribute(GeometryToken.RightMargin, recClBnd.RightMargin);
-            WriteAttribute(GeometryToken.TopMargin, recClBnd.TopMargin);
-            WriteAttribute(GeometryToken.BottomMargin, recClBnd.BottomMargin);
+            this.WriteStartElement(GeometryToken.RectangularClusterBoundary);
+
+            this.WriteAttribute(GeometryToken.LeftMargin, recClBnd.LeftMargin);
+            this.WriteAttribute(GeometryToken.RightMargin, recClBnd.RightMargin);
+            this.WriteAttribute(GeometryToken.TopMargin, recClBnd.TopMargin);
+            this.WriteAttribute(GeometryToken.BottomMargin, recClBnd.BottomMargin);
             if (recClBnd.DefaultMarginIsSet)
             {
-                WriteAttribute(GeometryToken.DefaultLeftMargin, recClBnd.DefaultLeftMargin);
-                WriteAttribute(GeometryToken.DefaultRightMargin, recClBnd.DefaultRightMargin);
-                WriteAttribute(GeometryToken.DefaultTopMargin, recClBnd.DefaultTopMargin);
-                WriteAttribute(GeometryToken.DefaultBottomMargin, recClBnd.DefaultBottomMargin);
+                this.WriteAttribute(GeometryToken.DefaultLeftMargin, recClBnd.DefaultLeftMargin);
+                this.WriteAttribute(GeometryToken.DefaultRightMargin, recClBnd.DefaultRightMargin);
+                this.WriteAttribute(GeometryToken.DefaultTopMargin, recClBnd.DefaultTopMargin);
+                this.WriteAttribute(GeometryToken.DefaultBottomMargin, recClBnd.DefaultBottomMargin);
             }
-            WriteAttribute(GeometryToken.GenerateFixedConstraints, recClBnd.GenerateFixedConstraints);
-            WriteAttribute(GeometryToken.GenerateFixedConstraintsDefault,
+            this.WriteAttribute(GeometryToken.GenerateFixedConstraints, recClBnd.GenerateFixedConstraints);
+            this.WriteAttribute(GeometryToken.GenerateFixedConstraintsDefault,
                 recClBnd.GenerateFixedConstraintsDefault);
-            WriteAttribute(GeometryToken.MinNodeHeight, recClBnd.MinHeight);
-            WriteAttribute(GeometryToken.MinNodeWidth, recClBnd.MinWidth);
-            WriteRect(recClBnd.Rect.Left, recClBnd.Rect.Bottom, recClBnd.Rect.Width, recClBnd.Rect.Height, recClBnd.RadiusX, recClBnd.RadiusY);
-            WriteBorderInfo(GeometryToken.RightBorderInfo, recClBnd.RightBorderInfo);
-            WriteBorderInfo(GeometryToken.LeftBorderInfo, recClBnd.LeftBorderInfo);
-            WriteBorderInfo(GeometryToken.TopBorderInfo, recClBnd.TopBorderInfo);
-            WriteBorderInfo(GeometryToken.BottomBorderInfo, recClBnd.BottomBorderInfo);
-            WriteEndElement();
+            this.WriteAttribute(GeometryToken.MinNodeHeight, recClBnd.MinHeight);
+            this.WriteAttribute(GeometryToken.MinNodeWidth, recClBnd.MinWidth);
+            this.WriteRect(recClBnd.Rect.Left, recClBnd.Rect.Bottom, recClBnd.Rect.Width, recClBnd.Rect.Height, recClBnd.RadiusX, recClBnd.RadiusY);
+            this.WriteBorderInfo(GeometryToken.RightBorderInfo, recClBnd.RightBorderInfo);
+            this.WriteBorderInfo(GeometryToken.LeftBorderInfo, recClBnd.LeftBorderInfo);
+            this.WriteBorderInfo(GeometryToken.TopBorderInfo, recClBnd.TopBorderInfo);
+            this.WriteBorderInfo(GeometryToken.BottomBorderInfo, recClBnd.BottomBorderInfo);
+            this.WriteEndElement();
         }
 
-        void WriteBorderInfo(GeometryToken token, BorderInfo borderInfo)
+        private void WriteBorderInfo(GeometryToken token, BorderInfo borderInfo)
         {
-            WriteStartElement(token);
-            WriteAttribute(GeometryToken.InnerMargin, borderInfo.InnerMargin);
-            WriteAttribute(GeometryToken.FixedPosition, borderInfo.FixedPosition);
-            WriteAttribute(GeometryToken.Weight, borderInfo.Weight);
-            WriteEndElement();
+            this.WriteStartElement(token);
+            this.WriteAttribute(GeometryToken.InnerMargin, borderInfo.InnerMargin);
+            this.WriteAttribute(GeometryToken.FixedPosition, borderInfo.FixedPosition);
+            this.WriteAttribute(GeometryToken.Weight, borderInfo.Weight);
+            this.WriteEndElement();
         }
 
-        void WriteChildNodes(Cluster cluster)
+        private void WriteChildNodes(Cluster cluster)
         {
-            WriteAttribute(GeometryToken.ChildNodes,
+            this.WriteAttribute(GeometryToken.ChildNodes,
                 string.Join(" ",
-                cluster.nodes.Select(child => nodeIds[child].ToString(CultureInfo.InvariantCulture))));
+                cluster.nodes.Select(child => this.nodeIds[child].ToString(CultureInfo.InvariantCulture))));
         }
 
-        void WriteChildClusters(Cluster cluster)
+        private void WriteChildClusters(Cluster cluster)
         {
-            WriteAttribute(GeometryToken.ChildClusters,
-            String.Join(" ", cluster.Clusters.Select(child => NodeToIds[child])));
+            this.WriteAttribute(GeometryToken.ChildClusters,
+            String.Join(" ", cluster.Clusters.Select(child => this.NodeToIds[child])));
         }
 
         [SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider", MessageId = "System.Int32.ToString"
             )]
-        void MapClustersToIds(Cluster cluster)
+        private void MapClustersToIds(Cluster cluster)
         {
             string id;
-            var setOfIds = new Set<string>(nodeIds.Values);
+            var setOfIds = new Set<string>(this.nodeIds.Values);
             foreach (Cluster child in cluster.AllClustersDepthFirst())
             {
-                if (!nodeIds.TryGetValue(child, out id))
+                if (!this.nodeIds.TryGetValue(child, out id))
                 {
-                    id = FindNewId(setOfIds);
-                    nodeIds[child] = id;
+                    id = this.FindNewId(setOfIds);
+                    this.nodeIds[child] = id;
                     setOfIds.Insert(id);
                 }
             }
         }
 
-
-
-        string FindNewId(Set<string> setOfIds)
+        private string FindNewId(Set<string> setOfIds)
         {
-            int i = nodeIds.Count;
+            int i = this.nodeIds.Count;
             do
             {
                 var s = i.ToString();
-                if (!setOfIds.Contains(s))
+                if (!setOfIds.Contains(s)) {
                     return s;
+                }
+
                 i++;
             } while (true);
         }
 
 
         [SuppressMessage("Microsoft.Globalization", "CA1304:SpecifyCultureInfo", MessageId = "System.String.ToLower")]
-        void Open()
+        private void Open()
         {
-            XmlWriter.WriteStartElement(GeometryToken.Graph.ToString().ToLower());
-            WriteAttribute(GeometryToken.Margins, this.graph.Margins);
+            this.XmlWriter.WriteStartElement(GeometryToken.Graph.ToString().ToLower());
+            this.WriteAttribute(GeometryToken.Margins, this.graph.Margins);
         }
 
-        void Close()
+        private void Close()
         {
-            XmlWriter.WriteEndElement();
-            if (NeedToCloseXmlWriter)
+            this.XmlWriter.WriteEndElement();
+            if (this.NeedToCloseXmlWriter)
             {
-                XmlWriter.WriteEndDocument();
-                XmlWriter.Flush();
-                XmlWriter.Close();
+                this.XmlWriter.WriteEndDocument();
+                this.XmlWriter.Flush();
+                this.XmlWriter.Close();
             }
         }
 
-        void WriteEdges()
+        private void WriteEdges()
         {
-            WriteStartElement(GeometryToken.Edges);
-            foreach (Edge edge in EdgeEnumeration)
-                WriteEdge(edge);
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.Edges);
+            foreach (Edge edge in this.EdgeEnumeration) {
+                this.WriteEdge(edge);
+            }
+
+            this.WriteEndElement();
         }
 
-        string NodeOrClusterId(Node node)
+        private string NodeOrClusterId(Node node)
         {
-            return nodeIds[node];
+            return this.nodeIds[node];
         }
 
-        void WriteEdge(Edge edge)
+        private void WriteEdge(Edge edge)
         {
-            WriteStartElement(GeometryToken.Edge);
-            WriteAttribute(GeometryToken.Id, edgeIds[edge]);
-            WriteAttribute(GeometryToken.S, NodeOrClusterId(edge.Source).ToString(CultureInfo.InvariantCulture));
-            WriteAttribute(GeometryToken.T, NodeOrClusterId(edge.Target).ToString(CultureInfo.InvariantCulture));
-            if (edge.LineWidth != 1)
-                WriteAttribute(GeometryToken.LineWidth, edge.LineWidth);
+            this.WriteStartElement(GeometryToken.Edge);
+            this.WriteAttribute(GeometryToken.Id, this.edgeIds[edge]);
+            this.WriteAttribute(GeometryToken.S, this.NodeOrClusterId(edge.Source).ToString(CultureInfo.InvariantCulture));
+            this.WriteAttribute(GeometryToken.T, this.NodeOrClusterId(edge.Target).ToString(CultureInfo.InvariantCulture));
+            if (edge.LineWidth != 1) {
+                this.WriteAttribute(GeometryToken.LineWidth, edge.LineWidth);
+            }
+
             if (edge.ArrowheadAtSource)
             {
-                WriteAttribute(GeometryToken.As, edge.EdgeGeometry.SourceArrowhead.TipPosition);
-                WriteDefaultDouble(GeometryToken.Asl, edge.EdgeGeometry.SourceArrowhead.Length,
+                this.WriteAttribute(GeometryToken.As, edge.EdgeGeometry.SourceArrowhead.TipPosition);
+                this.WriteDefaultDouble(GeometryToken.Asl, edge.EdgeGeometry.SourceArrowhead.Length,
                                    Arrowhead.DefaultArrowheadLength);
             }
             if (edge.ArrowheadAtTarget)
             {
-                WriteAttribute(GeometryToken.At, edge.EdgeGeometry.TargetArrowhead.TipPosition);
-                WriteDefaultDouble(GeometryToken.Atl, edge.EdgeGeometry.TargetArrowhead.Length,
+                this.WriteAttribute(GeometryToken.At, edge.EdgeGeometry.TargetArrowhead.TipPosition);
+                this.WriteDefaultDouble(GeometryToken.Atl, edge.EdgeGeometry.TargetArrowhead.Length,
                                    Arrowhead.DefaultArrowheadLength);
             }
 
-            if (edge.Weight != 1)
-                WriteAttribute(GeometryToken.Weight, edge.Weight);
-            if (edge.Separation != 1)
-                WriteAttribute(GeometryToken.Separation, edge.Separation);
-            if (edge.Label != null)
-                WriteLabel(edge.Label);
-            WriteICurve(edge.Curve);
-            WriteEndElement();
+            if (edge.Weight != 1) {
+                this.WriteAttribute(GeometryToken.Weight, edge.Weight);
+            }
+
+            if (edge.Separation != 1) {
+                this.WriteAttribute(GeometryToken.Separation, edge.Separation);
+            }
+
+            if (edge.Label != null) {
+                this.WriteLabel(edge.Label);
+            }
+
+            this.WriteICurve(edge.Curve);
+            this.WriteEndElement();
         }
 
-        void WriteDefaultDouble(GeometryToken geometryToken, double val, double defaultValue)
+        private void WriteDefaultDouble(GeometryToken geometryToken, double val, double defaultValue)
         {
-            if (val != defaultValue)
-                WriteAttribute(geometryToken, DoubleToString(val));
+            if (val != defaultValue) {
+                this.WriteAttribute(geometryToken, this.DoubleToString(val));
+            }
         }
 
-        void WriteAttribute(GeometryToken attrKind, object val)
+        private void WriteAttribute(GeometryToken attrKind, object val)
         {
             var attrString = FirstCharToLower(attrKind);
-            if (val is Point)
-                XmlWriter.WriteAttributeString(attrString, PointToString((Point)val));
-            else if (val is Double)
-                XmlWriter.WriteAttributeString(attrString, DoubleToString((double)val));
-            else
-                XmlWriter.WriteAttributeString(attrString, val.ToString());
+            if (val is Point) {
+                this.XmlWriter.WriteAttributeString(attrString, this.PointToString((Point)val));
+            } else if (val is Double) {
+                this.XmlWriter.WriteAttributeString(attrString, this.DoubleToString((double)val));
+            } else {
+                this.XmlWriter.WriteAttributeString(attrString, val.ToString());
+            }
         }
 
         [SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase")]
@@ -533,30 +565,31 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             return attrString;
         }
 
-        string PointToString(Point start)
+        private string PointToString(Point start)
         {
-            return DoubleToString(start.X) + " " + DoubleToString(start.Y);
+            return this.DoubleToString(start.X) + " " + this.DoubleToString(start.Y);
         }
 
-        string formatForDoubleString = "#.###########";
-
-        int precision = 11;
-        IEnumerable<Edge> edgeEnumeration;
+        private string formatForDoubleString = "#.###########";
+        private int precision = 11;
+        private IEnumerable<Edge> edgeEnumeration;
 
         ///<summary>
         ///</summary>
         public int Precision
         {
-            get { return precision; }
+            get { return this.precision; }
             set
             {
-                precision = Math.Max(1, value);
-                var s = new char[precision + 2];
+                this.precision = Math.Max(1, value);
+                var s = new char[this.precision + 2];
                 s[0] = '#';
                 s[1] = '.';
-                for (int i = 0; i < precision; i++)
+                for (int i = 0; i < this.precision; i++) {
                     s[2 + i] = '#';
-                formatForDoubleString = new string(s);
+                }
+
+                this.formatForDoubleString = new string(s);
             }
 
         }
@@ -568,8 +601,8 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
 
         public Dictionary<Node, string> NodeToIds
         {
-            get { return nodeIds; }
-            set { nodeIds = value; }
+            get { return this.nodeIds; }
+            set { this.nodeIds = value; }
         }
 
         /// <summary>
@@ -577,113 +610,125 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// </summary>
         public IEnumerable<Edge> EdgeEnumeration
         {
-            get { return edgeEnumeration; }
-            set { edgeEnumeration = value; }
+            get { return this.edgeEnumeration; }
+            set { this.edgeEnumeration = value; }
         }
 
-        string DoubleToString(double d)
+        private string DoubleToString(double d)
         {
-            return (Math.Abs(d) < 1e-11) ? "0" : d.ToString(formatForDoubleString, CultureInfo.InvariantCulture);
+            return (Math.Abs(d) < 1e-11) ? "0" : d.ToString(this.formatForDoubleString, CultureInfo.InvariantCulture);
         }
 
-        void WriteLabel(Label label)
+        private void WriteLabel(Label label)
         {
-            WriteAttribute(GeometryToken.Label, LabelToString(label));
+            this.WriteAttribute(GeometryToken.Label, this.LabelToString(label));
         }
 
         [SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider", MessageId = "System.String.Format(System.String,System.Object,System.Object,System.Object)")]
-        string LabelToString(Label label)
+        private string LabelToString(Label label)
         {
-            return String.Format("{0} {1} {2}", PointToString(label.Center), DoubleToString(label.Width), DoubleToString(label.Height));
+            return String.Format("{0} {1} {2}", this.PointToString(label.Center), this.DoubleToString(label.Width), this.DoubleToString(label.Height));
         }
 
-        void WriteNodes()
+        private void WriteNodes()
         {
-            WriteStartElement(GeometryToken.Nodes);
-            foreach (Node node in Graph.Nodes)
-                WriteNode(node);
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.Nodes);
+            foreach (Node node in this.Graph.Nodes) {
+                this.WriteNode(node);
+            }
+
+            this.WriteEndElement();
         }
 
-        void WriteNodesIpe()
+        private void WriteNodesIpe()
         {
-            foreach (Node node in Graph.Nodes)
-                WriteNodeIpe(node);
-        }
-
-        [SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider", MessageId = "System.Int32.ToString")]
-        void WriteNode(Node node)
-        {
-            string id;
-            if (!nodeIds.TryGetValue(node, out id))
-                nodeIds[node] = id = nodeIds.Count.ToString();
-            WriteStartElement(GeometryToken.Node);
-            WriteAttribute(GeometryToken.Id, id);
-            if (node.Padding != GeometryGraphReader.NodeDefaultPadding)
-                WriteAttribute(GeometryToken.Padding, node.Padding);
-            WriteICurve(node.BoundaryCurve);
-            WriteEndElement();
-        }
-
-        void WriteNodeIpe(Node node)
-        {
-            string id;
-            if (!nodeIds.TryGetValue(node, out id))
-                nodeIds[node] = id = nodeIds.Count.ToString();
-            // todo: add Id as text
-            if (node.BoundaryCurve != null)
-            {
-                WriteICurveIpe(node.BoundaryCurve);
-                WriteLabelIpe(node.BoundaryCurve.BoundingBox.Center, "" + id);
+            foreach (Node node in this.Graph.Nodes) {
+                this.WriteNodeIpe(node);
             }
         }
 
-        void WriteLabelIpe(Point p, string label)
+        [SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider", MessageId = "System.Int32.ToString")]
+        private void WriteNode(Node node)
         {
-            XmlWriter.WriteStartElement("text");
-            XmlWriter.WriteAttributeString("pos", p.X + " " + p.Y);
-            XmlWriter.WriteAttributeString("halign", "center");
-            XmlWriter.WriteAttributeString("valign", "center");
-            XmlWriter.WriteString(label);
-            XmlWriter.WriteEndElement();
+            string id;
+            if (!this.nodeIds.TryGetValue(node, out id)) {
+                this.nodeIds[node] = id = this.nodeIds.Count.ToString();
+            }
+
+            this.WriteStartElement(GeometryToken.Node);
+            this.WriteAttribute(GeometryToken.Id, id);
+            if (node.Padding != GeometryGraphReader.NodeDefaultPadding) {
+                this.WriteAttribute(GeometryToken.Padding, node.Padding);
+            }
+
+            this.WriteICurve(node.BoundaryCurve);
+            this.WriteEndElement();
         }
 
-        void WriteICurve(ICurve iCurve)
+        private void WriteNodeIpe(Node node)
         {
-            if (iCurve == null) return;
+            string id;
+            if (!this.nodeIds.TryGetValue(node, out id)) {
+                this.nodeIds[node] = id = this.nodeIds.Count.ToString();
+            }
+            // todo: add Id as text
+            if (node.BoundaryCurve != null)
+            {
+                this.WriteICurveIpe(node.BoundaryCurve);
+                this.WriteLabelIpe(node.BoundaryCurve.BoundingBox.Center, "" + id);
+            }
+        }
+
+        private void WriteLabelIpe(Point p, string label)
+        {
+            this.XmlWriter.WriteStartElement("text");
+            this.XmlWriter.WriteAttributeString("pos", p.X + " " + p.Y);
+            this.XmlWriter.WriteAttributeString("halign", "center");
+            this.XmlWriter.WriteAttributeString("valign", "center");
+            this.XmlWriter.WriteString(label);
+            this.XmlWriter.WriteEndElement();
+        }
+
+        private void WriteICurve(ICurve iCurve)
+        {
+            if (iCurve == null) {
+                return;
+            }
+
             var rect = iCurve as RoundedRect;
-            if (rect != null)
-                WriteRect(rect.BoundingBox.Left, rect.BoundingBox.Bottom, rect.BoundingBox.Width,
+            if (rect != null) {
+                this.WriteRect(rect.BoundingBox.Left, rect.BoundingBox.Bottom, rect.BoundingBox.Width,
                           rect.BoundingBox.Height, rect.RadiusX, rect.RadiusY);
-            else
+            } else
             {
                 var c = iCurve as Curve;
-                if (c != null)
-                    WriteCurveInSvgStyle(c);
-                else
+                if (c != null) {
+                    this.WriteCurveInSvgStyle(c);
+                } else
                 {
                     var ellipse = iCurve as Ellipse;
-                    if (ellipse != null)
-                        WriteEllipseInSvgStyle(ellipse);
-                    else
+                    if (ellipse != null) {
+                        this.WriteEllipseInSvgStyle(ellipse);
+                    } else
                     {
                         var poly = iCurve as Polyline;
-                        if (poly != null)
-                            WritePolylineInSvgStyle(poly);
-                        else
+                        if (poly != null) {
+                            this.WritePolylineInSvgStyle(poly);
+                        } else
                         {
                             var ls = iCurve as LineSegment;
-                            if (ls != null)
-                                WriteLineSeg(ls);
-                            else
+                            if (ls != null) {
+                                this.WriteLineSeg(ls);
+                            } else
                             {
                                 var bs = iCurve as CubicBezierSegment;
                                 if (bs != null)
                                 {
-                                    WriteBezierSegment(bs);
+                                    this.WriteBezierSegment(bs);
                                 }
-                                else
+                                else {
                                     throw new InvalidOperationException();
+                                }
                             }
                         }
 
@@ -692,130 +737,140 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             }
         }
 
-        void WriteBezierSegment(CubicBezierSegment bs)
+        private void WriteBezierSegment(CubicBezierSegment bs)
         {
-            WriteStartElement(GeometryToken.CubicBezierSegment);
-            WriteAttribute(GeometryToken.Points, PointsToString(bs.B(0), bs.B(1), bs.B(2), bs.B(3)));
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.CubicBezierSegment);
+            this.WriteAttribute(GeometryToken.Points, this.PointsToString(bs.B(0), bs.B(1), bs.B(2), bs.B(3)));
+            this.WriteEndElement();
         }
 
-        void WriteICurveIpe(ICurve iCurve)
+        private void WriteICurveIpe(ICurve iCurve)
         {
-            if (iCurve == null) return;
+            if (iCurve == null) {
+                return;
+            }
+
             var rect = iCurve as RoundedRect;
-            if (rect != null)
-                WriteRectIpe(rect.BoundingBox.Left, rect.BoundingBox.Bottom, rect.BoundingBox.Width,
+            if (rect != null) {
+                this.WriteRectIpe(rect.BoundingBox.Left, rect.BoundingBox.Bottom, rect.BoundingBox.Width,
                           rect.BoundingBox.Height, rect.RadiusX, rect.RadiusY);
+            }
+
             return;
         }
 
-
-        void WriteRect(double x, double y, double width, double height, double rx, double ry)
+        private void WriteRect(double x, double y, double width, double height, double rx, double ry)
         {
-            WriteStartElement(GeometryToken.Rect);
-            WriteAttribute(GeometryToken.X, x);
-            WriteAttribute(GeometryToken.Y, y);
-            WriteAttribute(GeometryToken.Width, width);
-            WriteAttribute(GeometryToken.Height, height);
-            if (rx > 0)
-                WriteAttribute(GeometryToken.Rx, rx);
-            if (ry > 0)
-                WriteAttribute(GeometryToken.Ry, ry);
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.Rect);
+            this.WriteAttribute(GeometryToken.X, x);
+            this.WriteAttribute(GeometryToken.Y, y);
+            this.WriteAttribute(GeometryToken.Width, width);
+            this.WriteAttribute(GeometryToken.Height, height);
+            if (rx > 0) {
+                this.WriteAttribute(GeometryToken.Rx, rx);
+            }
+
+            if (ry > 0) {
+                this.WriteAttribute(GeometryToken.Ry, ry);
+            }
+
+            this.WriteEndElement();
         }
 
-        void WriteRectIpe(double x, double y, double width, double height, double rx, double ry)
+        private void WriteRectIpe(double x, double y, double width, double height, double rx, double ry)
         {
-            XmlWriter.WriteStartElement("path");
-            XmlWriter.WriteString("\n" + x + " " + y + " m\n");
-            XmlWriter.WriteString((x + width) + " " + y + " l\n");
-            XmlWriter.WriteString((x + width) + " " + (y + height) + " l\n");
-            XmlWriter.WriteString(x + " " + (y + height) + " l\nh\n");
-            XmlWriter.WriteEndElement();
+            this.XmlWriter.WriteStartElement("path");
+            this.XmlWriter.WriteString("\n" + x + " " + y + " m\n");
+            this.XmlWriter.WriteString((x + width) + " " + y + " l\n");
+            this.XmlWriter.WriteString((x + width) + " " + (y + height) + " l\n");
+            this.XmlWriter.WriteString(x + " " + (y + height) + " l\nh\n");
+            this.XmlWriter.WriteEndElement();
         }
 
-
-        void WritePolylineInSvgStyle(Polyline poly)
+        private void WritePolylineInSvgStyle(Polyline poly)
         {
-            WriteStartElement(poly.Closed ? GeometryToken.Polygon : GeometryToken.Polyline);
-            WriteAttribute(GeometryToken.Points, PointsToString(poly.ToArray()));
-            WriteEndElement();
+            this.WriteStartElement(poly.Closed ? GeometryToken.Polygon : GeometryToken.Polyline);
+            this.WriteAttribute(GeometryToken.Points, this.PointsToString(poly.ToArray()));
+            this.WriteEndElement();
         }
 
-
-        void WriteEllipseInSvgStyle(Ellipse ellipse)
+        private void WriteEllipseInSvgStyle(Ellipse ellipse)
         {
-            if (ApproximateComparer.Close(ellipse.ParStart, 0) && ApproximateComparer.Close(ellipse.ParEnd, 2 * Math.PI)) { WriteFullEllipse(ellipse); }
+            if (ApproximateComparer.Close(ellipse.ParStart, 0) && ApproximateComparer.Close(ellipse.ParEnd, 2 * Math.PI)) { this.WriteFullEllipse(ellipse); }
             else
             {
                 WriteEllepticalArc(ellipse);
             }
         }
 
-        void WriteFullEllipse(Ellipse ellipse)
+        private void WriteFullEllipse(Ellipse ellipse)
         {
-            WriteStartElement(GeometryToken.Ellipse);
-            WriteAttribute(GeometryToken.Cx, ellipse.Center.X);
-            WriteAttribute(GeometryToken.Cy, ellipse.Center.Y);
-            WriteAttribute(GeometryToken.Rx, ellipse.AxisA.Length);
-            WriteAttribute(GeometryToken.Ry, ellipse.AxisB.Length);
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.Ellipse);
+            this.WriteAttribute(GeometryToken.Cx, ellipse.Center.X);
+            this.WriteAttribute(GeometryToken.Cy, ellipse.Center.Y);
+            this.WriteAttribute(GeometryToken.Rx, ellipse.AxisA.Length);
+            this.WriteAttribute(GeometryToken.Ry, ellipse.AxisB.Length);
+            this.WriteEndElement();
         }
 
 
         // ReSharper disable UnusedParameter.Local
         [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "ellipse")]
-        static void WriteEllepticalArc(Ellipse ellipse)
+        private static void WriteEllepticalArc(Ellipse ellipse)
         {
             // ReSharper restore UnusedParameter.Local
             throw new NotImplementedException();
         }
 
-        void WriteCurveInSvgStyle(Curve curve)
+        private void WriteCurveInSvgStyle(Curve curve)
         {
-            WriteStartElement(GeometryToken.Curve);
-            WriteAttribute(GeometryToken.CurveData, CurveString(curve));
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.Curve);
+            this.WriteAttribute(GeometryToken.CurveData, this.CurveString(curve));
+            this.WriteEndElement();
         }
-        string CurveString(ICurve iCurve)
+
+        private string CurveString(ICurve iCurve)
         {
-            return String.Join(" ", CurveStringTokens(iCurve));
+            return String.Join(" ", this.CurveStringTokens(iCurve));
         }
-        IEnumerable<string> CurveStringTokens(ICurve iCurve)
+
+        private IEnumerable<string> CurveStringTokens(ICurve iCurve)
         {
             yield return "M";
-            yield return PointToString(iCurve.Start);
+            yield return this.PointToString(iCurve.Start);
             var curve = iCurve as Curve;
             var previousInstruction = 'w'; //a character that is not used by the SVG curve
-            if (curve != null)
+            if (curve != null) {
                 for (int i = 0; i < curve.Segments.Count; i++)
                 {
                     var segment = curve.Segments[i];
-                    if (i != curve.Segments.Count - 1)
-                        yield return SegmentString(segment, ref previousInstruction);
-                    else
+                    if (i != curve.Segments.Count - 1) {
+                        yield return this.SegmentString(segment, ref previousInstruction);
+                    } else
                     { //it is the last seg
-                        if (segment is LineSegment && ApproximateComparer.Close(segment.End, iCurve.Start))
+                        if (segment is LineSegment && ApproximateComparer.Close(segment.End, iCurve.Start)) {
                             yield return "Z";
-                        else
-                            yield return SegmentString(segment, ref previousInstruction);
+                        } else {
+                            yield return this.SegmentString(segment, ref previousInstruction);
+                        }
                     }
                 }
+            }
         }
 
-        string SegmentString(ICurve segment, ref char previousInstruction)
+        private string SegmentString(ICurve segment, ref char previousInstruction)
         {
             var ls = segment as LineSegment;
             if (ls != null)
             {
-                var str = LineSegmentString(ls, previousInstruction);
+                var str = this.LineSegmentString(ls, previousInstruction);
                 previousInstruction = 'L';
                 return str;
             }
             var cubic = segment as CubicBezierSegment;
             if (cubic != null)
             {
-                var str = CubicBezierSegmentToString(cubic, previousInstruction);
+                var str = this.CubicBezierSegmentToString(cubic, previousInstruction);
                 previousInstruction = 'C';
                 return str;
             }
@@ -823,77 +878,79 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             if (ellipseArc != null)
             {
                 previousInstruction = 'A';
-                return EllipticalArcToString(ellipseArc);
+                return this.EllipticalArcToString(ellipseArc);
 
             }
             throw new NotImplementedException();
         }
 
         [SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider", MessageId = "System.Int32.ToString")]
-        string EllipticalArcToString(Ellipse ellipse)
+        private string EllipticalArcToString(Ellipse ellipse)
         {
             /*
              * rx ry x-axis-rotation large-arc-flag sweep-flag x y
              * */
             //In general in an Msagl ellipse the axes don't have to be orthogonal: we have a possible bug here
-            var rx = "A" + DoubleToString(ellipse.AxisA.Length);
-            var ry = DoubleToString(ellipse.AxisB.Length);
-            var xAxisRotation = DoubleToString(180 * Point.Angle(new Point(1, 0), ellipse.AxisA) / Math.PI);
+            var rx = "A" + this.DoubleToString(ellipse.AxisA.Length);
+            var ry = this.DoubleToString(ellipse.AxisB.Length);
+            var xAxisRotation = this.DoubleToString(180 * Point.Angle(new Point(1, 0), ellipse.AxisA) / Math.PI);
             var largeArcFlag = Math.Abs(ellipse.ParEnd - ellipse.ParStart) >= Math.PI ? "1" : "0";
             var sweepFlagInt = ellipse.ParEnd > ellipse.ParStart ? 1 : 0; //it happens because of the y-axis orientation down in SVG
             if (AxesSwapped(ellipse.AxisA, ellipse.AxisB))
             {
                 sweepFlagInt = sweepFlagInt == 1 ? 0 : 1;
             }
-            var endPoint = PointToString(ellipse.End);
+            var endPoint = this.PointToString(ellipse.End);
             return string.Join(" ", new[] { rx, ry, xAxisRotation, largeArcFlag, sweepFlagInt.ToString(), endPoint });
         }
 
-        static bool AxesSwapped(Point axisA, Point axisB)
+        private static bool AxesSwapped(Point axisA, Point axisB)
         {
             return axisA.X * axisB.Y - axisB.X * axisA.Y < 0;
         }
 
-        string CubicBezierSegmentToString(CubicBezierSegment cubic, char previousInstruction)
+        private string CubicBezierSegmentToString(CubicBezierSegment cubic, char previousInstruction)
         {
-            var str = PointsToString(cubic.B(1), cubic.B(2), cubic.B(3));
+            var str = this.PointsToString(cubic.B(1), cubic.B(2), cubic.B(3));
             return previousInstruction == 'C' ? str : "C" + str;
         }
 
-
-        string PointsToString(params Point[] points)
+        private string PointsToString(params Point[] points)
         {
-            return String.Join(" ", points.Select(PointToString));
+            return String.Join(" ", points.Select(this.PointToString));
         }
 
-        string LineSegmentString(LineSegment ls, char previousInstruction)
+        private string LineSegmentString(LineSegment ls, char previousInstruction)
         {
-            var str = PointToString(ls.End);
+            var str = this.PointToString(ls.End);
             return previousInstruction == 'L' ? str : "L" + str;
         }
 
-        void WriteLineSeg(LineSegment ls)
+        private void WriteLineSeg(LineSegment ls)
         {
-            WriteStartElement(GeometryToken.LineSegment);
-            WriteAttribute(GeometryToken.Points, PointsToString(ls.Start, ls.End));
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.LineSegment);
+            this.WriteAttribute(GeometryToken.Points, this.PointsToString(ls.Start, ls.End));
+            this.WriteEndElement();
         }
 
         [SuppressMessage("Microsoft.Globalization", "CA1303:DoNotPassLiteralsAsLocalizedParameters",
             MessageId = "System.Xml.XmlWriter.WriteComment(System.String)")]
-        void WriteTransformation(PlaneTransformation transformation)
+        private void WriteTransformation(PlaneTransformation transformation)
         {
-            WriteStartElement(GeometryToken.Transform);
-            XmlWriter.WriteComment("the order of elements is [0,0],[0,1],[0,2],[1,0],[1,1],[1,2]");
-            for (int i = 0; i < 2; i++)
-                for (int j = 0; j < 3; j++)
-                    WriteTransformationElement(transformation[i, j]);
-            WriteEndElement();
+            this.WriteStartElement(GeometryToken.Transform);
+            this.XmlWriter.WriteComment("the order of elements is [0,0],[0,1],[0,2],[1,0],[1,1],[1,2]");
+            for (int i = 0; i < 2; i++) {
+                for (int j = 0; j < 3; j++) {
+                    this.WriteTransformationElement(transformation[i, j]);
+                }
+            }
+
+            this.WriteEndElement();
         }
 
-        void WriteTransformationElement(double t)
+        private void WriteTransformationElement(double t)
         {
-            WriteStringElement(GeometryToken.TransformElement, t);
+            this.WriteStringElement(GeometryToken.TransformElement, t);
         }
 
 
@@ -901,9 +958,9 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// writes the starte element with the token
         /// </summary>
         /// <param name="token"></param>
-        void WriteStartElement(GeometryToken token)
+        private void WriteStartElement(GeometryToken token)
         {
-            XmlWriter.WriteStartElement(FirstCharToLower(token));
+            this.XmlWriter.WriteStartElement(FirstCharToLower(token));
         }
 
         //static  void WriteStartElement(XmlWriter writer, Tokens token) {
@@ -915,77 +972,78 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// </summary>
         /// <param name="tokens"></param>
         /// <param name="element"></param>
-        void WriteStringElement(GeometryToken tokens, double element)
+        private void WriteStringElement(GeometryToken tokens, double element)
         {
-            XmlWriter.WriteElementString(tokens.ToString(), XmlConvert.ToString(element));
+            this.XmlWriter.WriteElementString(tokens.ToString(), XmlConvert.ToString(element));
         }
 
         /// <summary>
         /// writes the end element
         /// </summary>
-        void WriteEndElement()
+        private void WriteEndElement()
         {
-            XmlWriter.WriteEndElement();
+            this.XmlWriter.WriteEndElement();
         }
 
         /// <summary>
         /// 
         /// </summary>
-        void WriteLayoutSettings()
+        private void WriteLayoutSettings()
         {
-            if (Settings != null)
+            if (this.Settings != null)
             {
-                LayoutAlgorithmSettings settings = Settings;
+                LayoutAlgorithmSettings settings = this.Settings;
                 EdgeRoutingSettings routingSettings = settings.EdgeRoutingSettings;
 
-                WriteStartElement(GeometryToken.LayoutAlgorithmSettings);
-                WriteAttribute(GeometryToken.EdgeRoutingMode, (int)routingSettings.EdgeRoutingMode);
+                this.WriteStartElement(GeometryToken.LayoutAlgorithmSettings);
+                this.WriteAttribute(GeometryToken.EdgeRoutingMode, (int)routingSettings.EdgeRoutingMode);
 
                 var sugiyama = settings as SugiyamaLayoutSettings;
-                if (sugiyama != null) WriteSugiyamaSettings(sugiyama);
-                else
+                if (sugiyama != null) {
+                    this.WriteSugiyamaSettings(sugiyama);
+                } else
                 {
                     var mds = settings as MdsLayoutSettings;
                     if (mds != null)
                     {
-                        WriteAttribute(GeometryToken.LayoutAlgorithmType, GeometryToken.MdsLayoutSettings);
+                        this.WriteAttribute(GeometryToken.LayoutAlgorithmType, GeometryToken.MdsLayoutSettings);
 #if TEST_MSAGL
-                        WriteAttribute(GeometryToken.Reporting, mds.Reporting);
+                        this.WriteAttribute(GeometryToken.Reporting, mds.Reporting);
 #endif
-                        WriteAttribute(GeometryToken.Exponent, mds.Exponent);
-                        WriteAttribute(GeometryToken.IterationsWithMajorization, mds.IterationsWithMajorization);
-                        WriteAttribute(GeometryToken.PivotNumber, mds.PivotNumber);
-                        WriteAttribute(GeometryToken.RotationAngle, mds.RotationAngle);
-                        WriteAttribute(GeometryToken.ScaleX, mds.ScaleX);
-                        WriteAttribute(GeometryToken.ScaleY, mds.ScaleY);
+                        this.WriteAttribute(GeometryToken.Exponent, mds.Exponent);
+                        this.WriteAttribute(GeometryToken.IterationsWithMajorization, mds.IterationsWithMajorization);
+                        this.WriteAttribute(GeometryToken.PivotNumber, mds.PivotNumber);
+                        this.WriteAttribute(GeometryToken.RotationAngle, mds.RotationAngle);
+                        this.WriteAttribute(GeometryToken.ScaleX, mds.ScaleX);
+                        this.WriteAttribute(GeometryToken.ScaleY, mds.ScaleY);
                     }
                 }
 
-                XmlWriter.WriteEndElement();
+                this.XmlWriter.WriteEndElement();
             }
         }
 
-        void WriteSugiyamaSettings(SugiyamaLayoutSettings sugiyama)
+        private void WriteSugiyamaSettings(SugiyamaLayoutSettings sugiyama)
         {
-            WriteAttribute(GeometryToken.LayoutAlgorithmType, GeometryToken.SugiyamaLayoutSettings);
-            WriteAttribute(GeometryToken.MinNodeWidth, sugiyama.MinNodeWidth);
-            WriteAttribute(GeometryToken.MinNodeHeight, sugiyama.MinNodeHeight);
-            WriteAttribute(GeometryToken.AspectRatio, sugiyama.AspectRatio);
-            WriteAttribute(GeometryToken.NodeSeparation, sugiyama.NodeSeparation);
+            this.WriteAttribute(GeometryToken.LayoutAlgorithmType, GeometryToken.SugiyamaLayoutSettings);
+            this.WriteAttribute(GeometryToken.MinNodeWidth, sugiyama.MinNodeWidth);
+            this.WriteAttribute(GeometryToken.MinNodeHeight, sugiyama.MinNodeHeight);
+            this.WriteAttribute(GeometryToken.AspectRatio, sugiyama.AspectRatio);
+            this.WriteAttribute(GeometryToken.NodeSeparation, sugiyama.NodeSeparation);
 #if TEST_MSAGL
-            WriteAttribute(GeometryToken.Reporting, sugiyama.Reporting);
+            this.WriteAttribute(GeometryToken.Reporting, sugiyama.Reporting);
 #endif
-            WriteAttribute(GeometryToken.RandomSeedForOrdering, sugiyama.RandomSeedForOrdering);
-            WriteAttribute(GeometryToken.NoGainStepsBound, sugiyama.NoGainAdjacentSwapStepsBound);
-            WriteAttribute(GeometryToken.MaxNumberOfPassesInOrdering, sugiyama.MaxNumberOfPassesInOrdering);
-            WriteAttribute(GeometryToken.RepetitionCoefficientForOrdering,
+            this.WriteAttribute(GeometryToken.RandomSeedForOrdering, sugiyama.RandomSeedForOrdering);
+            this.WriteAttribute(GeometryToken.NoGainStepsBound, sugiyama.NoGainAdjacentSwapStepsBound);
+            this.WriteAttribute(GeometryToken.MaxNumberOfPassesInOrdering, sugiyama.MaxNumberOfPassesInOrdering);
+            this.WriteAttribute(GeometryToken.RepetitionCoefficientForOrdering,
                                sugiyama.RepetitionCoefficientForOrdering);
-            WriteAttribute(GeometryToken.GroupSplit, sugiyama.GroupSplit);
-            WriteAttribute(GeometryToken.LabelCornersPreserveCoefficient,
+            this.WriteAttribute(GeometryToken.GroupSplit, sugiyama.GroupSplit);
+            this.WriteAttribute(GeometryToken.LabelCornersPreserveCoefficient,
                                sugiyama.LabelCornersPreserveCoefficient);
-            WriteAttribute(GeometryToken.BrandesThreshold, sugiyama.BrandesThreshold);
-            WriteAttribute(GeometryToken.LayerSeparation, sugiyama.LayerSeparation);
-            WriteTransformation(sugiyama.Transformation);
+            this.WriteAttribute(GeometryToken.BrandesThreshold, sugiyama.BrandesThreshold);
+            this.WriteAttribute(GeometryToken.LayerSeparation, sugiyama.LayerSeparation);
+            this.WriteTransformation(sugiyama.Transformation);
         }
     }
 }

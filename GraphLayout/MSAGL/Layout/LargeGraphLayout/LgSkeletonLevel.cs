@@ -17,91 +17,95 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         //internal Dictionary<SymmetricSegment, Rail> RailDictionary =
         //    new Dictionary<SymmetricSegment, Rail>();
 
-        readonly RTree<Point,Point> _visGraphVertices = new RTree<Point,Point>();
+        private readonly RTree<Point,Point> _visGraphVertices = new RTree<Point,Point>();
 
         internal int ZoomLevel;
 
         //VisibilityGraph VisGraph = new VisibilityGraph();
         internal LgPathRouter PathRouter = new LgPathRouter();
-
-        readonly Dictionary<SymmetricTuple<LgNodeInfo>, List<Point>> _edgeTrajectories =
+        private readonly Dictionary<SymmetricTuple<LgNodeInfo>, List<Point>> _edgeTrajectories =
             new Dictionary<SymmetricTuple<LgNodeInfo>, List<Point>>();
 
         internal Dictionary<SymmetricTuple<LgNodeInfo>, List<Point>> EdgeTrajectories {
-            get { return _edgeTrajectories; }
+            get { return this._edgeTrajectories; }
         }
 
 
         internal void AddGraphEdgesFromCentersToPointsOnBorders(IEnumerable<LgNodeInfo> nodeInfos) {
-            foreach (var nodeInfo in nodeInfos)
-                PathRouter.AddVisGraphEdgesFromNodeCenterToNodeBorder(nodeInfo);
+            foreach (var nodeInfo in nodeInfos) {
+                this.PathRouter.AddVisGraphEdgesFromNodeCenterToNodeBorder(nodeInfo);
+            }
         }
 
 
         internal void Clear() {
-            _visGraphVertices.Clear();
-            PathRouter = new LgPathRouter();
+            this._visGraphVertices.Clear();
+            this.PathRouter = new LgPathRouter();
         }
 
         internal void SetTrajectoryAndAddEdgesToUsed(LgNodeInfo s, LgNodeInfo t, List<Point> path) {
             var t1 = new SymmetricTuple<LgNodeInfo>(s, t);
-            if (_edgeTrajectories.ContainsKey(t1)) return;
-            _edgeTrajectories[t1] = path;
-            PathRouter.MarkEdgesUsedAlongPath(path);
+            if (this._edgeTrajectories.ContainsKey(t1)) {
+                return;
+            }
+
+            this._edgeTrajectories[t1] = path;
+            this.PathRouter.MarkEdgesUsedAlongPath(path);
         }
 
 
         internal bool HasSavedTrajectory(LgNodeInfo s, LgNodeInfo t) {
             var t1 = new SymmetricTuple<LgNodeInfo>(s, t);
-            return EdgeTrajectories.ContainsKey(t1);
+            return this.EdgeTrajectories.ContainsKey(t1);
         }
 
         internal List<Point> GetTrajectory(LgNodeInfo s, LgNodeInfo t) {
             List<Point> path;
             var tuple = new SymmetricTuple<LgNodeInfo>(s, t);
-            EdgeTrajectories.TryGetValue(tuple, out path);
+            this.EdgeTrajectories.TryGetValue(tuple, out path);
             return path;
         }
 
 
         internal void ClearSavedTrajectoriesAndUsedEdges() {
-            _edgeTrajectories.Clear();
-            PathRouter.ClearUsedEdges();
+            this._edgeTrajectories.Clear();
+            this.PathRouter.ClearUsedEdges();
         }
 
         internal Set<Point> GetPointsOnSavedTrajectories() {
             var points = new Set<Point>();
-            foreach (var edgeTrajectory in _edgeTrajectories.Values) {
+            foreach (var edgeTrajectory in this._edgeTrajectories.Values) {
                 points.InsertRange(edgeTrajectory);
             }
             return points;
         }
 
         internal void RemoveUnusedGraphEdgesAndNodes() {
-            List<VisibilityEdge> unusedEdges = GetUnusedGraphEdges();
-            PathRouter.RemoveVisibilityEdges(unusedEdges);
+            List<VisibilityEdge> unusedEdges = this.GetUnusedGraphEdges();
+            this.PathRouter.RemoveVisibilityEdges(unusedEdges);
         }
 
         internal List<VisibilityEdge> GetUnusedGraphEdges() {
-            return PathRouter.GetAllEdgesVisibilityEdges().Where(e => !PathRouter.IsEdgeUsed(e)).ToList();
+            return this.PathRouter.GetAllEdgesVisibilityEdges().Where(e => !this.PathRouter.IsEdgeUsed(e)).ToList();
         }
 
-        IEnumerable<SymmetricSegment> SymSegsOfPointList(List<Point> ps) {
-            for (int i = 0; i < ps.Count - 1; i++)
+        private IEnumerable<SymmetricSegment> SymSegsOfPointList(List<Point> ps) {
+            for (int i = 0; i < ps.Count - 1; i++) {
                 yield return new SymmetricSegment(ps[i], ps[i + 1]);
+            }
         }
 
         internal bool RoutesAreConsistent() {
-            var usedEdges=new Set<SymmetricSegment>(PathRouter.UsedEdges());
+            var usedEdges=new Set<SymmetricSegment>(this.PathRouter.UsedEdges());
             var routesDump =
-                new Set<SymmetricSegment>(_edgeTrajectories.Select(p => p.Value).SelectMany(SymSegsOfPointList));
+                new Set<SymmetricSegment>(this._edgeTrajectories.Select(p => p.Value).SelectMany(this.SymSegsOfPointList));
             var visEdgeDump =
                 new Set<SymmetricSegment>(
-                    PathRouter.VisGraph.Edges.Select(e => new SymmetricSegment(e.SourcePoint, e.TargetPoint)));
+                    this.PathRouter.VisGraph.Edges.Select(e => new SymmetricSegment(e.SourcePoint, e.TargetPoint)));
 #if TEST_MSAGL && !SHARPKIT
             var routesOutOfVisGraph = routesDump - visEdgeDump;
             if (routesOutOfVisGraph.Count > 0) {
-                SplineRouter.ShowVisGraph(PathRouter.VisGraph, null,null, Ttt(routesOutOfVisGraph));
+                SplineRouter.ShowVisGraph(this.PathRouter.VisGraph, null,null, this.Ttt(routesOutOfVisGraph));
             }
 
 #endif
@@ -109,7 +113,7 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
         }
 
 #if TEST_MSAGL
-        IEnumerable<ICurve> Ttt(Set<SymmetricSegment> routesOutOfVisGraph) {
+        private IEnumerable<ICurve> Ttt(Set<SymmetricSegment> routesOutOfVisGraph) {
             foreach (var symmetricTuple in routesOutOfVisGraph) {
                 yield return new LineSegment(symmetricTuple.A,symmetricTuple.B);
             }
@@ -117,28 +121,30 @@ namespace Microsoft.Msagl.Layout.LargeGraphLayout {
 #endif
 
         internal void RemoveSomeEdgeTrajectories(List<SymmetricTuple<LgNodeInfo>> removeList) {
-            foreach (var symmetricTuple in removeList)
-                RemoveEdgeTrajectory(symmetricTuple);
-            RemoveUnusedGraphEdgesAndNodes();
+            foreach (var symmetricTuple in removeList) {
+                this.RemoveEdgeTrajectory(symmetricTuple);
+            }
+
+            this.RemoveUnusedGraphEdgesAndNodes();
         }
 
-        void RemoveEdgeTrajectory(SymmetricTuple<LgNodeInfo> symmetricTuple) {
+        private void RemoveEdgeTrajectory(SymmetricTuple<LgNodeInfo> symmetricTuple) {
             List<Point> trajectory;
-            if (_edgeTrajectories.TryGetValue(symmetricTuple, out trajectory)) {
+            if (this._edgeTrajectories.TryGetValue(symmetricTuple, out trajectory)) {
                 for (int i = 0; i < trajectory.Count - 1; i++) {
-                    DiminishUsed(trajectory[i], trajectory[i + 1]);
+                    this.DiminishUsed(trajectory[i], trajectory[i + 1]);
                 }
-                _edgeTrajectories.Remove(symmetricTuple);
+                this._edgeTrajectories.Remove(symmetricTuple);
             }
         }
 
-        void DiminishUsed(Point a, Point b) {
-            PathRouter.DiminishUsed(a, b);
+        private void DiminishUsed(Point a, Point b) {
+            this.PathRouter.DiminishUsed(a, b);
         }
 
         public void MarkEdgesAlongPathAsEdgesOnOldTrajectories(List<Point> trajectory)
         {
-            PathRouter.MarkEdgesAlongPathAsEdgesOnOldTrajectories(trajectory);
+            this.PathRouter.MarkEdgesAlongPathAsEdgesOnOldTrajectories(trajectory);
         }
     }
 }

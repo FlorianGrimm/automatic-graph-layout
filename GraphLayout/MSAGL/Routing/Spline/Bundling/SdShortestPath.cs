@@ -19,75 +19,75 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         internal EdgeGeometry[] EdgeGeometries { get; set; }
         internal RectangleNode<Polyline, Point> ObstacleHierarchy { get; set; }
 
-        SdVertex[] vertexArray;
+        private SdVertex[] vertexArray;
         internal Cdt CdtProperty { get; set; }
-        Set<CdtEdge> Gates { get; set; }
+        private Set<CdtEdge> Gates { get; set; }
 
-        readonly Dictionary<EdgeGeometry, List<SdBoneEdge>> EdgesToRoutes = new Dictionary<EdgeGeometry, List<SdBoneEdge>>();
-        readonly Dictionary<EdgeGeometry, SdVertex> EdgesToRouteSources = new Dictionary<EdgeGeometry, SdVertex>();
-
-        EdgeGeometry CurrentEdgeGeometry;
-        Dictionary<VisibilityVertex, SdVertex> VisibilityVerticesToSdVerts;
-        double LengthCoefficient;
-        GenericBinaryHeapPriorityQueue<SdVertex> Queue;
-        double LowestCostToTarget;
-        SdVertex ClosestTargetVertex;
-        double capacityOverlowPenaltyMultiplier;
-        Polyline sourceLoosePoly;
-        Polyline targetLoosePoly;
+        private readonly Dictionary<EdgeGeometry, List<SdBoneEdge>> EdgesToRoutes = new Dictionary<EdgeGeometry, List<SdBoneEdge>>();
+        private readonly Dictionary<EdgeGeometry, SdVertex> EdgesToRouteSources = new Dictionary<EdgeGeometry, SdVertex>();
+        private EdgeGeometry CurrentEdgeGeometry;
+        private Dictionary<VisibilityVertex, SdVertex> VisibilityVerticesToSdVerts;
+        private double LengthCoefficient;
+        private GenericBinaryHeapPriorityQueue<SdVertex> Queue;
+        private double LowestCostToTarget;
+        private SdVertex ClosestTargetVertex;
+        private double capacityOverlowPenaltyMultiplier;
+        private Polyline sourceLoosePoly;
+        private Polyline targetLoosePoly;
 
         internal SdShortestPath(Func<EdgeGeometry, List<Shape>> makeTransparentShapesOfEdgeGeometryAndGetTheShapes, Cdt cdt, Set<CdtEdge> gates) {
-            MakeTransparentShapesOfEdgeGeometry = makeTransparentShapesOfEdgeGeometryAndGetTheShapes;
-            CdtProperty = cdt;
-            Gates = gates;
+            this.MakeTransparentShapesOfEdgeGeometry = makeTransparentShapesOfEdgeGeometryAndGetTheShapes;
+            this.CdtProperty = cdt;
+            this.Gates = gates;
         }
 
-        void CreateGraphElements() {
-            foreach (var sdVertex in vertexArray) {
+        private void CreateGraphElements() {
+            foreach (var sdVertex in this.vertexArray) {
                 var vv = sdVertex.VisibilityVertex;
                 foreach (var vEdge in vv.InEdges) {
-                    var boneEdge = new SdBoneEdge(vEdge, VisibilityVerticesToSdVerts[vEdge.Source], VisibilityVerticesToSdVerts[vEdge.Target]);
-                    var otherSdVertex = VisibilityVerticesToSdVerts[vEdge.Source];
+                    var boneEdge = new SdBoneEdge(vEdge, this.VisibilityVerticesToSdVerts[vEdge.Source], this.VisibilityVerticesToSdVerts[vEdge.Target]);
+                    var otherSdVertex = this.VisibilityVerticesToSdVerts[vEdge.Source];
                     sdVertex.InBoneEdges.Add(boneEdge);
                     otherSdVertex.OutBoneEdges.Add(boneEdge);
                 }
             }
         }
 
-        void CreateRoutingGraph() {
-            vertexArray = new SdVertex[VisibilityGraph.VertexCount];
+        private void CreateRoutingGraph() {
+            this.vertexArray = new SdVertex[this.VisibilityGraph.VertexCount];
             int i = 0;
-            VisibilityVerticesToSdVerts = new Dictionary<VisibilityVertex, SdVertex>();
-            foreach (var v in VisibilityGraph.Vertices()) {
+            this.VisibilityVerticesToSdVerts = new Dictionary<VisibilityVertex, SdVertex>();
+            foreach (var v in this.VisibilityGraph.Vertices()) {
                 var sdVert = new SdVertex(v);
-                vertexArray[i++] = sdVert;
-                VisibilityVerticesToSdVerts[v] = sdVert;
+                this.vertexArray[i++] = sdVert;
+                this.VisibilityVerticesToSdVerts[v] = sdVert;
             }
 
-            CreateGraphElements();
+            this.CreateGraphElements();
         }
 
         /// <summary>
         /// routing of the edges minimizing (ink+path length+capacity penalty)
         /// </summary>
         internal void RouteEdges() {
-            Initialize();
-            RestoreCapacities();
-            foreach (var edgeGeometry in EdgeGeometries) {
-                EdgesToRoutes[edgeGeometry] = RouteEdge(edgeGeometry);
+            this.Initialize();
+            this.RestoreCapacities();
+            foreach (var edgeGeometry in this.EdgeGeometries) {
+                this.EdgesToRoutes[edgeGeometry] = this.RouteEdge(edgeGeometry);
             }
 
-            RerouteEdges();
+            this.RerouteEdges();
 
-            foreach (var edgeGeometry in EdgeGeometries)
-                SetEdgeGeometryCurve(edgeGeometry);
+            foreach (var edgeGeometry in this.EdgeGeometries) {
+                this.SetEdgeGeometryCurve(edgeGeometry);
+            }
         }
 
-        void SetEdgeGeometryCurve(EdgeGeometry edgeGeometry) {
+        private void SetEdgeGeometryCurve(EdgeGeometry edgeGeometry) {
             Polyline poly = new Polyline();
-            SdVertex curV = EdgesToRouteSources[edgeGeometry];
+            SdVertex curV = this.EdgesToRouteSources[edgeGeometry];
             poly.AddPoint(curV.Point);
-            foreach (var edge in EdgesToRoutes[edgeGeometry]) {
+            foreach (var edge in this.EdgesToRoutes[edgeGeometry]) {
                 if (edge.SourcePoint == curV.Point) {
                     poly.AddPoint(edge.TargetPoint);
                     curV = edge.Target;
@@ -100,62 +100,67 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
             edgeGeometry.Curve = poly;
             var clusterSourcePort = edgeGeometry.SourcePort as ClusterBoundaryPort;
-            if (clusterSourcePort != null)
+            if (clusterSourcePort != null) {
                 ExtendPolylineStartToClusterBoundary(poly, clusterSourcePort.Curve);
+            }
 
             var clusterTargetPort = edgeGeometry.TargetPort as ClusterBoundaryPort;
-            if (clusterTargetPort != null)
+            if (clusterTargetPort != null) {
                 ExtendPolylineEndToClusterBoundary(poly, clusterTargetPort.Curve);
+            }
         }
 
-        static void ExtendPolylineEndToClusterBoundary(Polyline poly, ICurve curve) {
+        private static void ExtendPolylineEndToClusterBoundary(Polyline poly, ICurve curve) {
             var par = curve.ClosestParameter(poly.End);
             poly.AddPoint(curve[par]);
         }
 
-        static void ExtendPolylineStartToClusterBoundary(Polyline poly, ICurve curve) {
+        private static void ExtendPolylineStartToClusterBoundary(Polyline poly, ICurve curve) {
             var par = curve.ClosestParameter(poly.Start);
             poly.PrependPoint(curve[par]);
         }
 
-        void RerouteEdges() {
-            RestoreCapacities();
-            foreach (var edgeGeometry in EdgeGeometries) {
-                var newRoute = RerouteEdge(edgeGeometry);
-                EdgesToRoutes[edgeGeometry] = newRoute;
+        private void RerouteEdges() {
+            this.RestoreCapacities();
+            foreach (var edgeGeometry in this.EdgeGeometries) {
+                var newRoute = this.RerouteEdge(edgeGeometry);
+                this.EdgesToRoutes[edgeGeometry] = newRoute;
             }
         }
 
-        void RestoreCapacities() {
-            if (CdtProperty != null)
-                CdtProperty.RestoreEdgeCapacities();
+        private void RestoreCapacities() {
+            if (this.CdtProperty != null) {
+                this.CdtProperty.RestoreEdgeCapacities();
+            }
         }
 
         /// <summary>
         /// Reroute edge
         /// </summary>
-        List<SdBoneEdge> RerouteEdge(EdgeGeometry edgeGeometry) {
-            var route = EdgesToRoutes[edgeGeometry];
+        private List<SdBoneEdge> RerouteEdge(EdgeGeometry edgeGeometry) {
+            var route = this.EdgesToRoutes[edgeGeometry];
 
-            foreach (var edge in route)
+            foreach (var edge in route) {
                 edge.RemoveOccupiedEdge();
+            }
 
-            return RouteEdge(edgeGeometry);
+            return this.RouteEdge(edgeGeometry);
         }
 
-        List<SdBoneEdge> RouteEdge(EdgeGeometry edgeGeometry) {
-            CurrentEdgeGeometry = edgeGeometry;
-            for (int i = 0; i < vertexArray.Length; i++) {
-                var sdv = vertexArray[i];
+        private List<SdBoneEdge> RouteEdge(EdgeGeometry edgeGeometry) {
+            this.CurrentEdgeGeometry = edgeGeometry;
+            for (int i = 0; i < this.vertexArray.Length; i++) {
+                var sdv = this.vertexArray[i];
                 sdv.SetPreviousToNull();
                 sdv.IsSourceOfRouting = sdv.IsTargetOfRouting = false;
             }
 
-            var transparentShapes = MakeTransparentShapesOfEdgeGeometry(edgeGeometry);
-            var ret = RouteEdgeWithGroups();
+            var transparentShapes = this.MakeTransparentShapesOfEdgeGeometry(edgeGeometry);
+            var ret = this.RouteEdgeWithGroups();
 
-            foreach (var shape in transparentShapes)
+            foreach (var shape in transparentShapes) {
                 shape.IsTransparent = false;
+            }
 
             /*List<LineSegment> ls = new List<LineSegment>();
             foreach (var e in ret)
@@ -165,17 +170,19 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return ret;
         }
 
-        List<SdBoneEdge> RouteEdgeWithGroups() {
+        private List<SdBoneEdge> RouteEdgeWithGroups() {
             for (int i = 0; i < 2; i++) {
-                SetLengthCoefficient();
-                Queue = new GenericBinaryHeapPriorityQueue<SdVertex>();
-                SetPortVerticesAndObstacles(CurrentEdgeGeometry.SourcePort, true, out sourceLoosePoly);
-                SetPortVerticesAndObstacles(CurrentEdgeGeometry.TargetPort, false, out targetLoosePoly);
-                List<SdBoneEdge> ret = RouteOnKnownSourceTargetVertices((CurrentEdgeGeometry.TargetPort.Location - CurrentEdgeGeometry.SourcePort.Location).Normalize(), i == 0);
-                if (ret != null)
+                this.SetLengthCoefficient();
+                this.Queue = new GenericBinaryHeapPriorityQueue<SdVertex>();
+                this.SetPortVerticesAndObstacles(this.CurrentEdgeGeometry.SourcePort, true, out this.sourceLoosePoly);
+                this.SetPortVerticesAndObstacles(this.CurrentEdgeGeometry.TargetPort, false, out this.targetLoosePoly);
+                List<SdBoneEdge> ret = this.RouteOnKnownSourceTargetVertices((this.CurrentEdgeGeometry.TargetPort.Location - this.CurrentEdgeGeometry.SourcePort.Location).Normalize(), i == 0);
+                if (ret != null) {
                     return ret;
-                for (int j = 0; j < vertexArray.Length; j++) {
-                    vertexArray[j].SetPreviousToNull();
+                }
+
+                for (int j = 0; j < this.vertexArray.Length; j++) {
+                    this.vertexArray[j].SetPreviousToNull();
                 }
             }
             //SplineRouter.ShowVisGraph(this.VisibilityGraph, ObstacleHierarchy.GetAllLeaves(), null, new[] { new LineSegment(
@@ -183,66 +190,76 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             throw new InvalidOperationException(); //cannot find a path
         }
 
-
-        List<SdBoneEdge> RouteOnKnownSourceTargetVertices(Point pathDirection, bool lookingForMonotonePath) {
-            LowestCostToTarget = Double.PositiveInfinity;
-            ClosestTargetVertex = null;
-            while (Queue.Count > 0) {
+        private List<SdBoneEdge> RouteOnKnownSourceTargetVertices(Point pathDirection, bool lookingForMonotonePath) {
+            this.LowestCostToTarget = Double.PositiveInfinity;
+            this.ClosestTargetVertex = null;
+            while (this.Queue.Count > 0) {
                 double hu;
-                SdVertex bestNode = Queue.Dequeue(out hu);
-                if (hu >= LowestCostToTarget)
+                SdVertex bestNode = this.Queue.Dequeue(out hu);
+                if (hu >= this.LowestCostToTarget) {
                     continue;
+                }
                 //update the rest
                 for (int i = 0; i < bestNode.OutBoneEdges.Count; i++) {
                     var outBoneEdge = bestNode.OutBoneEdges[i];
-                    if (outBoneEdge.IsPassable)
-                        ProcessOutcomingBoneEdge(bestNode, outBoneEdge, pathDirection, lookingForMonotonePath);
+                    if (outBoneEdge.IsPassable) {
+                        this.ProcessOutcomingBoneEdge(bestNode, outBoneEdge, pathDirection, lookingForMonotonePath);
+                    }
                 }
 
                 for (int i = 0; i < bestNode.InBoneEdges.Count; i++) {
                     var inBoneEdge = bestNode.InBoneEdges[i];
-                    if (inBoneEdge.IsPassable)
-                        ProcessIncomingBoneEdge(bestNode, inBoneEdge, pathDirection, lookingForMonotonePath);
+                    if (inBoneEdge.IsPassable) {
+                        this.ProcessIncomingBoneEdge(bestNode, inBoneEdge, pathDirection, lookingForMonotonePath);
+                    }
                 }
             }
 
-            return GetPathAndUpdateRelatedCosts();
+            return this.GetPathAndUpdateRelatedCosts();
         }
 
-        void ProcessOutcomingBoneEdge(SdVertex v, SdBoneEdge outBoneEdge, Point pathDirection, bool lookingForMonotonePath) {
+        private void ProcessOutcomingBoneEdge(SdVertex v, SdBoneEdge outBoneEdge, Point pathDirection, bool lookingForMonotonePath) {
             Debug.Assert(v == outBoneEdge.Source);
-            if (lookingForMonotonePath && pathDirection * (outBoneEdge.TargetPoint - outBoneEdge.SourcePoint) < 0) return;
+            if (lookingForMonotonePath && pathDirection * (outBoneEdge.TargetPoint - outBoneEdge.SourcePoint) < 0) {
+                return;
+            }
 
-            ProcessBoneEdge(v, outBoneEdge.Target, outBoneEdge);
+            this.ProcessBoneEdge(v, outBoneEdge.Target, outBoneEdge);
         }
 
-        void ProcessIncomingBoneEdge(SdVertex v, SdBoneEdge inBoneEdge, Point pathDirection, bool lookingForMonotonePath) {
+        private void ProcessIncomingBoneEdge(SdVertex v, SdBoneEdge inBoneEdge, Point pathDirection, bool lookingForMonotonePath) {
             Debug.Assert(v == inBoneEdge.Target);
-            if (lookingForMonotonePath && pathDirection * (inBoneEdge.SourcePoint - inBoneEdge.TargetPoint) < 0) return;
+            if (lookingForMonotonePath && pathDirection * (inBoneEdge.SourcePoint - inBoneEdge.TargetPoint) < 0) {
+                return;
+            }
 
-            ProcessBoneEdge(v, inBoneEdge.Source, inBoneEdge);
+            this.ProcessBoneEdge(v, inBoneEdge.Source, inBoneEdge);
         }
 
-        void ProcessBoneEdge(SdVertex v, SdVertex queueCandidate, SdBoneEdge boneEdge) {
-            double newCost = GetEdgeAdditionalCost(boneEdge, v.Cost);
-            if (queueCandidate.Cost <= newCost) return;
+        private void ProcessBoneEdge(SdVertex v, SdVertex queueCandidate, SdBoneEdge boneEdge) {
+            double newCost = this.GetEdgeAdditionalCost(boneEdge, v.Cost);
+            if (queueCandidate.Cost <= newCost) {
+                return;
+            }
+
             queueCandidate.Cost = newCost;
             queueCandidate.PrevEdge = boneEdge;
-            if (Queue.ContainsElement(queueCandidate))
-                Queue.DecreasePriority(queueCandidate, newCost);
-            else {
+            if (this.Queue.ContainsElement(queueCandidate)) {
+                this.Queue.DecreasePriority(queueCandidate, newCost);
+            } else {
                 if (queueCandidate.IsTargetOfRouting) {
                     double costToTarget = 0;
-                    if (CurrentEdgeGeometry.TargetPort is ClusterBoundaryPort)
-                        costToTarget = LengthCoefficient * (queueCandidate.Point - CurrentEdgeGeometry.TargetPort.Location).Length;
+                    if (this.CurrentEdgeGeometry.TargetPort is ClusterBoundaryPort) {
+                        costToTarget = this.LengthCoefficient * (queueCandidate.Point - this.CurrentEdgeGeometry.TargetPort.Location).Length;
+                    }
 
-                    if (newCost + costToTarget < LowestCostToTarget) {
-                        LowestCostToTarget = newCost + costToTarget;
-                        ClosestTargetVertex = queueCandidate;
+                    if (newCost + costToTarget < this.LowestCostToTarget) {
+                        this.LowestCostToTarget = newCost + costToTarget;
+                        this.ClosestTargetVertex = queueCandidate;
                     }
                     return; //do not enqueue the target vertices
                 }
-                Enqueue(queueCandidate);
+                this.Enqueue(queueCandidate);
             }
         }
 
@@ -266,20 +283,22 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         //        }
 #endif
 
-        List<SdBoneEdge> GetPathAndUpdateRelatedCosts() {
+        private List<SdBoneEdge> GetPathAndUpdateRelatedCosts() {
             //restore the path by moving backwards
-            var current = ClosestTargetVertex;
-            if (current == null)
+            var current = this.ClosestTargetVertex;
+            if (current == null) {
                 return null;
+            }
+
             var result = new List<SdBoneEdge>();
 
             while (current.PrevEdge != null) {
                 result.Add(current.PrevEdge);
-                RegisterPathInBoneEdge(current.PrevEdge);
+                this.RegisterPathInBoneEdge(current.PrevEdge);
                 current = current.Prev;
             }
 
-            EdgesToRouteSources[CurrentEdgeGeometry] = current;
+            this.EdgesToRouteSources[this.CurrentEdgeGeometry] = current;
 
             result.Reverse();
 
@@ -287,71 +306,80 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return result;
         }
 
-        void RegisterPathInBoneEdge(SdBoneEdge boneEdge) {
+        private void RegisterPathInBoneEdge(SdBoneEdge boneEdge) {
             boneEdge.AddOccupiedEdge();
-            if (CdtProperty != null && BundlingSettings.CapacityOverflowCoefficient != 0)
-                UpdateResidualCostsOfCrossedCdtEdges(boneEdge);
+            if (this.CdtProperty != null && this.BundlingSettings.CapacityOverflowCoefficient != 0) {
+                this.UpdateResidualCostsOfCrossedCdtEdges(boneEdge);
+            }
         }
 
-        void UpdateResidualCostsOfCrossedCdtEdges(SdBoneEdge boneEdge) {
+        private void UpdateResidualCostsOfCrossedCdtEdges(SdBoneEdge boneEdge) {
             foreach (var cdtEdge in boneEdge.CrossedCdtEdges) {
-                if (AdjacentToSourceOrTarget(cdtEdge))
+                if (this.AdjacentToSourceOrTarget(cdtEdge)) {
                     continue;
-                if (cdtEdge.ResidualCapacity == cdtEdge.Capacity)
-                    cdtEdge.ResidualCapacity -= CurrentEdgeGeometry.LineWidth;
-                else
-                    cdtEdge.ResidualCapacity -= (CurrentEdgeGeometry.LineWidth + BundlingSettings.EdgeSeparation);
+                }
+
+                if (cdtEdge.ResidualCapacity == cdtEdge.Capacity) {
+                    cdtEdge.ResidualCapacity -= this.CurrentEdgeGeometry.LineWidth;
+                } else {
+                    cdtEdge.ResidualCapacity -= (this.CurrentEdgeGeometry.LineWidth + this.BundlingSettings.EdgeSeparation);
+                }
                 //TODO: can we have negative here?
                 //Debug.Assert(cdtEdge.ResidualCapacity >= 0);
             }
         }
 
-        double H(SdVertex v) {
-            return v.Cost + LengthCoefficient * (v.Point - CurrentEdgeGeometry.TargetPort.Location).Length;
+        private double H(SdVertex v) {
+            return v.Cost + this.LengthCoefficient * (v.Point - this.CurrentEdgeGeometry.TargetPort.Location).Length;
         }
 
-        double GetEdgeAdditionalCost(SdBoneEdge boneEdge, double previousCost) {
+        private double GetEdgeAdditionalCost(SdBoneEdge boneEdge, double previousCost) {
             var len = (boneEdge.TargetPoint - boneEdge.SourcePoint).Length;
-            return LengthCoefficient * len + previousCost +
-                (boneEdge.IsOccupied ? 0 : BundlingSettings.InkImportance * len) + CapacityOverflowCost(boneEdge);
+            return this.LengthCoefficient * len + previousCost +
+                (boneEdge.IsOccupied ? 0 : this.BundlingSettings.InkImportance * len) + this.CapacityOverflowCost(boneEdge);
         }
 
-        double CapacityOverflowCost(SdBoneEdge boneEdge) {
-            if (CdtProperty == null || BundlingSettings.CapacityOverflowCoefficient == 0)
+        private double CapacityOverflowCost(SdBoneEdge boneEdge) {
+            if (this.CdtProperty == null || this.BundlingSettings.CapacityOverflowCoefficient == 0) {
                 return 0;
+            }
+
             double ret = 0;
-            foreach (var cdtEdge in CrossedCdtEdgesOfBoneEdge(boneEdge)) {
-                ret += CostOfCrossingCdtEdgeLocal(capacityOverlowPenaltyMultiplier, BundlingSettings, CurrentEdgeGeometry, cdtEdge);
+            foreach (var cdtEdge in this.CrossedCdtEdgesOfBoneEdge(boneEdge)) {
+                ret += this.CostOfCrossingCdtEdgeLocal(this.capacityOverlowPenaltyMultiplier, this.BundlingSettings, this.CurrentEdgeGeometry, cdtEdge);
             }
             return ret;
         }
 
-        IEnumerable<CdtEdge> CrossedCdtEdgesOfBoneEdge(SdBoneEdge boneEdge) {
-            if (boneEdge.CrossedCdtEdges != null)
+        private IEnumerable<CdtEdge> CrossedCdtEdgesOfBoneEdge(SdBoneEdge boneEdge) {
+            if (boneEdge.CrossedCdtEdges != null) {
                 return boneEdge.CrossedCdtEdges;
+            }
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=368
             boneEdge.CrossedCdtEdges = ThreadBoneEdgeThroughCdt(boneEdge);
             return boneEdge.CrossedCdtEdges;
 #else
-            return boneEdge.CrossedCdtEdges = ThreadBoneEdgeThroughCdt(boneEdge);
+            return boneEdge.CrossedCdtEdges = this.ThreadBoneEdgeThroughCdt(boneEdge);
 #endif
         }
 
-        Set<CdtEdge> ThreadBoneEdgeThroughCdt(SdBoneEdge boneEdge) {
+        private Set<CdtEdge> ThreadBoneEdgeThroughCdt(SdBoneEdge boneEdge) {
             var start = boneEdge.SourcePoint;
             var currentTriangle = boneEdge.Source.Triangle;
             Debug.Assert(Cdt.PointIsInsideOfTriangle(start, currentTriangle));
             var crossedEdges = new Set<CdtEdge>();
             var end = boneEdge.TargetPoint;
-            if (Cdt.PointIsInsideOfTriangle(end, currentTriangle))
+            if (Cdt.PointIsInsideOfTriangle(end, currentTriangle)) {
                 return crossedEdges;
+            }
 
             var threader = new CdtThreader(currentTriangle, start, end);
             while (threader.MoveNext()) {
                 CdtEdge piercedEdge = threader.CurrentPiercedEdge;
                 Debug.Assert(piercedEdge != null);
-                if (Gates.Contains(piercedEdge))
+                if (this.Gates.Contains(piercedEdge)) {
                     crossedEdges.Insert(piercedEdge);
+                }
             }
 
             /*
@@ -373,34 +401,40 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         //TODO: method incorrect since id doesn't check AdjacentToSourceOrTarget condition
         internal static double CostOfCrossingCdtEdge(double capacityOverflMult, BundlingSettings bundlingSettings, EdgeGeometry currentEdgeGeometry, CdtEdge e) {
             var w = currentEdgeGeometry.LineWidth;
-            if (e.Capacity != e.ResidualCapacity)
+            if (e.Capacity != e.ResidualCapacity) {
                 w += bundlingSettings.EdgeSeparation;
+            }
 
             var del = e.ResidualCapacity - w;
-            if (del >= 0) return 0;
+            if (del >= 0) {
+                return 0;
+            }
+
             return -del * capacityOverflMult;
         }
 
-        double CostOfCrossingCdtEdgeLocal(double capacityOverflMult, BundlingSettings bundlingSettings, EdgeGeometry currentEdgeGeometry, CdtEdge e) {
-            if (AdjacentToSourceOrTarget(e))
+        private double CostOfCrossingCdtEdgeLocal(double capacityOverflMult, BundlingSettings bundlingSettings, EdgeGeometry currentEdgeGeometry, CdtEdge e) {
+            if (this.AdjacentToSourceOrTarget(e)) {
                 return 0;
+            }
+
             return CostOfCrossingCdtEdge(capacityOverflMult, bundlingSettings, currentEdgeGeometry, e);
         }
 
-        bool AdjacentToSourceOrTarget(CdtEdge e) {
-            return e.upperSite.Owner == sourceLoosePoly || e.lowerSite.Owner == sourceLoosePoly || e.upperSite.Owner == targetLoosePoly || e.lowerSite.Owner == targetLoosePoly;
+        private bool AdjacentToSourceOrTarget(CdtEdge e) {
+            return e.upperSite.Owner == this.sourceLoosePoly || e.lowerSite.Owner == this.sourceLoosePoly || e.upperSite.Owner == this.targetLoosePoly || e.lowerSite.Owner == this.targetLoosePoly;
         }
 
-        void SetLengthCoefficient() {
-            double idealEdgeLength = GetIdealDistanceBetweenSourceAndTarget(CurrentEdgeGeometry);
-            LengthCoefficient = BundlingSettings.PathLengthImportance / idealEdgeLength;
+        private void SetLengthCoefficient() {
+            double idealEdgeLength = this.GetIdealDistanceBetweenSourceAndTarget(this.CurrentEdgeGeometry);
+            this.LengthCoefficient = this.BundlingSettings.PathLengthImportance / idealEdgeLength;
         }
 
-        double GetIdealDistanceBetweenSourceAndTarget(EdgeGeometry edgeGeometry) {
+        private double GetIdealDistanceBetweenSourceAndTarget(EdgeGeometry edgeGeometry) {
             return (edgeGeometry.SourcePort.Location - edgeGeometry.TargetPort.Location).Length;
         }
 
-        void SetPortVerticesAndObstacles(Port port, bool sources, out Polyline poly) {
+        private void SetPortVerticesAndObstacles(Port port, bool sources, out Polyline poly) {
             var cbport = port as ClusterBoundaryPort;
             if (cbport != null) {
                 //SplineRouter.ShowVisGraph(this.VisibilityGraph, this.ObstacleHierarchy.GetAllLeaves(), null, new[]{cbport.LoosePolyline});
@@ -409,20 +443,21 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
                     double initialCost = 0;
                     if (sources) {
                         //we prefer paths starting from the center of the group
-                        initialCost = LengthCoefficient * (point - CurrentEdgeGeometry.SourcePort.Location).Length;
+                        initialCost = this.LengthCoefficient * (point - this.CurrentEdgeGeometry.SourcePort.Location).Length;
                     }
-                    AddAndEnqueueVertexToEnds(point, sources, initialCost);
+                    this.AddAndEnqueueVertexToEnds(point, sources, initialCost);
                 }
             }
             else {
                 var anywherePort = port as HookUpAnywhereFromInsidePort;
                 if (anywherePort != null) {
                     poly = anywherePort.LoosePolyline;
-                    foreach (var point in poly)
-                        AddAndEnqueueVertexToEnds(point, sources, 0);
+                    foreach (var point in poly) {
+                        this.AddAndEnqueueVertexToEnds(point, sources, 0);
+                    }
                 }
                 else {
-                    AddAndEnqueueVertexToEnds(port.Location, sources, 0);
+                    this.AddAndEnqueueVertexToEnds(port.Location, sources, 0);
                     var polys = this.ObstacleHierarchy.GetNodeItemsIntersectingRectangle(port.Curve.BoundingBox).ToArray();
                     double mindiag = polys[0].BoundingBox.Diagonal;
                     poly = polys[0];
@@ -439,25 +474,25 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             }
         }
 
-        void Enqueue(SdVertex simpleSdVertex) {
-            Queue.Enqueue(simpleSdVertex, H(simpleSdVertex));
+        private void Enqueue(SdVertex simpleSdVertex) {
+            this.Queue.Enqueue(simpleSdVertex, this.H(simpleSdVertex));
         }
 
-        void AddAndEnqueueVertexToEnds(Point point, bool isSource, double initialCost) {
-            var v = FindVertex(point);
-            var sdVert = VisibilityVerticesToSdVerts[v];
+        private void AddAndEnqueueVertexToEnds(Point point, bool isSource, double initialCost) {
+            var v = this.FindVertex(point);
+            var sdVert = this.VisibilityVerticesToSdVerts[v];
             if (isSource) {
                 sdVert.IsSourceOfRouting = true;
                 sdVert.Cost = initialCost;
-                Enqueue(sdVert);
+                this.Enqueue(sdVert);
             }
             else {
                 sdVert.IsTargetOfRouting = true;
             }
         }
 
-        VisibilityVertex FindVertex(Point p) {
-            return VisibilityGraph.FindVertex(p) ?? VisibilityGraph.FindVertex(ApproximateComparer.Round(p));
+        private VisibilityVertex FindVertex(Point p) {
+            return this.VisibilityGraph.FindVertex(p) ?? this.VisibilityGraph.FindVertex(ApproximateComparer.Round(p));
             /*  if (r == null) {
                   SplineRouter.ShowVisGraph(this.VisibilityGraph, this.ObstacleHierarchy.GetAllLeaves(), null,
                   new[] { new Ellipse(5, 5, p) });               
@@ -465,23 +500,26 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
               return r;*/
         }
 
-        void Initialize() {
-            CreateRoutingGraph();
-            if (CdtProperty != null) {
-                capacityOverlowPenaltyMultiplier = CapacityOverflowPenaltyMultiplier(BundlingSettings);
-                SetVertexTriangles();
-                CalculateCapacitiesOfTrianglulation();
+        private void Initialize() {
+            this.CreateRoutingGraph();
+            if (this.CdtProperty != null) {
+                this.capacityOverlowPenaltyMultiplier = CapacityOverflowPenaltyMultiplier(this.BundlingSettings);
+                this.SetVertexTriangles();
+                this.CalculateCapacitiesOfTrianglulation();
             }
         }
 
-        void CalculateCapacitiesOfTrianglulation() {
-            foreach (var e in Gates)
+        private void CalculateCapacitiesOfTrianglulation() {
+            foreach (var e in this.Gates) {
                 CalculateCdtEdgeCapacityForEdge(e);
+            }
         }
 
-        static void CalculateCdtEdgeCapacityForEdge(CdtEdge e) {
-            if (e.Constrained || e.CwTriangle == null || e.CcwTriangle == null)
+        private static void CalculateCdtEdgeCapacityForEdge(CdtEdge e) {
+            if (e.Constrained || e.CwTriangle == null || e.CcwTriangle == null) {
                 return; //this is a convex hull edge or an obstacle edge
+            }
+
             var startPoly = e.upperSite.Owner as Polyline;
             var endPoly = e.lowerSite.Owner as Polyline;
             if (startPoly != endPoly) {
@@ -494,26 +532,28 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             //else - it is a diagonal of an obstacle, do not care
         }
 
-        void SetVertexTriangles() {
+        private void SetVertexTriangles() {
             var triangleTree =
                 RectangleNode<CdtTriangle,Point>.CreateRectangleNodeOnEnumeration(
-                    CdtProperty.GetTriangles().Select(t => new RectangleNode<CdtTriangle,Point>(t, t.BoundingBox())));
+                    this.CdtProperty.GetTriangles().Select(t => new RectangleNode<CdtTriangle,Point>(t, t.BoundingBox())));
             var vertexTree =
                 RectangleNode<SdVertex,Point>.CreateRectangleNodeOnEnumeration(
-                    vertexArray.Select(v => new RectangleNode<SdVertex,Point>(v, new Rectangle(v.Point))));
+                    this.vertexArray.Select(v => new RectangleNode<SdVertex,Point>(v, new Rectangle(v.Point))));
 
-            RectangleNodeUtils.CrossRectangleNodes(triangleTree, vertexTree, TryToAssigenTriangleToVertex);
+            RectangleNodeUtils.CrossRectangleNodes(triangleTree, vertexTree, this.TryToAssigenTriangleToVertex);
 //            foreach (var v in vertexArray) {
   //              Debug.Assert(v.Triangle != null);
     //        }
         }
 
-        void TryToAssigenTriangleToVertex(CdtTriangle triangle, SdVertex vertex) {
-            if (vertex.Triangle != null)
+        private void TryToAssigenTriangleToVertex(CdtTriangle triangle, SdVertex vertex) {
+            if (vertex.Triangle != null) {
                 return;
+            }
 
-            if (Cdt.PointIsInsideOfTriangle(vertex.Point, triangle))
+            if (Cdt.PointIsInsideOfTriangle(vertex.Point, triangle)) {
                 vertex.Triangle = triangle;
+            }
         }
 
         internal static double CapacityOverflowPenaltyMultiplier(BundlingSettings bundlingSettings) {
@@ -524,15 +564,17 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// compute cdt edges crossed by paths
         /// </summary>
         internal void FillCrossedCdtEdges(Dictionary<EdgeGeometry, Set<CdtEdge>> crossedCdtEdges) {
-            foreach (var geometryEdge in EdgeGeometries) {
-                SetPortVerticesAndObstacles(geometryEdge.SourcePort, true, out sourceLoosePoly);
-                SetPortVerticesAndObstacles(geometryEdge.TargetPort, false, out targetLoosePoly);
+            foreach (var geometryEdge in this.EdgeGeometries) {
+                this.SetPortVerticesAndObstacles(geometryEdge.SourcePort, true, out this.sourceLoosePoly);
+                this.SetPortVerticesAndObstacles(geometryEdge.TargetPort, false, out this.targetLoosePoly);
 
                 //crossedCdtEdges.Add(geometryEdge, new Set<CdtEdge>());
-                foreach (var boneEdge in EdgesToRoutes[geometryEdge]) {
-                    foreach (var cdtEdge in CrossedCdtEdgesOfBoneEdge(boneEdge)) {
-                        if (AdjacentToSourceOrTarget(cdtEdge))
+                foreach (var boneEdge in this.EdgesToRoutes[geometryEdge]) {
+                    foreach (var cdtEdge in this.CrossedCdtEdgesOfBoneEdge(boneEdge)) {
+                        if (this.AdjacentToSourceOrTarget(cdtEdge)) {
                             continue;
+                        }
+
                         CollectionUtilities.AddToMap(crossedCdtEdges, geometryEdge, cdtEdge);
                     }
                 }

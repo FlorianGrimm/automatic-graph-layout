@@ -9,10 +9,10 @@ namespace Microsoft.Msagl.Layout.Layered {
     /// Enumerator of the vertex successors
     /// </summary>
     internal class SuccEnumerator : IEnumerator<int> {
-        IEnumerator edges;
+        private IEnumerator edges;
 
         public void Reset() {
-            edges.Reset();
+            this.edges.Reset();
         }
 
         public void Dispose() {
@@ -21,7 +21,7 @@ namespace Microsoft.Msagl.Layout.Layered {
 
 
         public bool MoveNext() {
-            return edges.MoveNext();
+            return this.edges.MoveNext();
         }
 
         internal SuccEnumerator(IEnumerator edges) {
@@ -32,7 +32,7 @@ namespace Microsoft.Msagl.Layout.Layered {
 
         public int Current {
             get {
-                return((PolyIntEdge)edges.Current).Target;
+                return((PolyIntEdge)this.edges.Current).Target;
             }
 
         }
@@ -54,12 +54,12 @@ namespace Microsoft.Msagl.Layout.Layered {
     /// Enumeration of the vertex predecessors
     /// </summary>
     internal class PredEnumerator : IEnumerator<int> {
-        IEnumerator edges;
+        private IEnumerator edges;
 
         public void Dispose() { GC.SuppressFinalize(this); }
 
         public void Reset() {
-            edges.Reset();
+            this.edges.Reset();
         }
 
 #if SHARPKIT //http://code.google.com/p/sharpkit/issues/detail?id=203
@@ -68,19 +68,19 @@ namespace Microsoft.Msagl.Layout.Layered {
         int IEnumerator<int>.Current {
 #endif
             get {
-                return ((PolyIntEdge)edges.Current).Source;
+                return ((PolyIntEdge)this.edges.Current).Source;
             }
         }
 
         object IEnumerator.Current {
             get {
-                PolyIntEdge l = edges.Current as PolyIntEdge;
+                PolyIntEdge l = this.edges.Current as PolyIntEdge;
                 return l.Source;
             }
         }
 
         public bool MoveNext() {
-            return edges.MoveNext();
+            return this.edges.MoveNext();
         }
 
         internal PredEnumerator(IEnumerator edges) {
@@ -108,30 +108,29 @@ namespace Microsoft.Msagl.Layout.Layered {
     internal class Pred : IEnumerable<int> {
         #region IEnumerable Members
 
-        BasicGraphOnEdges<PolyIntEdge> graph;
-
-        int vert;
+        private BasicGraphOnEdges<PolyIntEdge> graph;
+        private int vert;
 
 #if SHARPKIT //http://code.google.com/p/sharpkit/issues/detail?id=203
         public IEnumerator<int> GetEnumerator() {
 #else
         IEnumerator<int> IEnumerable<int>.GetEnumerator() {
 #endif
-        IEnumerable e = graph.InEdges(vert);
+        IEnumerable e = this.graph.InEdges(this.vert);
             if (e == null) {
                 return new EmptyEnumerator();
-            } else
+            } else {
                 return new PredEnumerator(e.GetEnumerator());
-
+            }
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
-            IEnumerable e = graph.InEdges(vert);
+            IEnumerable e = this.graph.InEdges(this.vert);
             if (e == null) {
                 return new EmptyEnumerator();
-            } else
+            } else {
                 return new PredEnumerator(e.GetEnumerator());
-
+            }
         }
 
         internal Pred(BasicGraphOnEdges<PolyIntEdge> g, int v) {
@@ -148,12 +147,11 @@ namespace Microsoft.Msagl.Layout.Layered {
     internal class Succ {
         #region IEnumerable Members
 
-        BasicGraphOnEdges<PolyIntEdge> graph;
-
-        int vert;
+        private BasicGraphOnEdges<PolyIntEdge> graph;
+        private int vert;
 
         public IEnumerator<int> GetEnumerator() {
-            return new SuccEnumerator(graph.OutEdges(vert).GetEnumerator());
+            return new SuccEnumerator(this.graph.OutEdges(this.vert).GetEnumerator());
         }
 
         internal Succ(BasicGraphOnEdges<PolyIntEdge> g, int v) {

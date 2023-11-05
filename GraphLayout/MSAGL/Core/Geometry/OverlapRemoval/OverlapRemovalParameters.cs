@@ -55,7 +55,7 @@ namespace Microsoft.Msagl.Core.Geometry
         public OverlapRemovalParameters(Parameters solverParameters)
         {
             this.SolverParameters = solverParameters;
-            AllowDeferToVertical = true;
+            this.AllowDeferToVertical = true;
         }
 
         /// <summary>

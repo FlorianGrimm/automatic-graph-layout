@@ -24,7 +24,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// <param name="targets">One or more target vertices</param>
         /// <returns>A single enumeration of path points.</returns>
         internal IEnumerable<Point> GetPath(IEnumerable<VisibilityVertex> sources, IEnumerable<VisibilityVertex> targets) {
-            var entry = GetPathStage(null, sources, null, targets);
+            var entry = this.GetPathStage(null, sources, null, targets);
             return SsstRectilinearPath.RestorePath(entry);
         }
 

@@ -19,15 +19,14 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
     ///  Proximity Stress Model as suggested by Gansner et. al, Fast Node Overlap Removal.
     /// </summary>
     public class ProximityOverlapRemoval :IOverlapRemoval {
-        Node[] _nodes;
+        private Node[] _nodes;
 #if TEST_MSAGL
         /// <summary>
         /// 
         /// </summary>
         public static bool DebugMode { get; set; }
 
-
-         List<Polyline> trajectories;
+        private List<Polyline> trajectories;
 
         /// <summary>
         /// 
@@ -35,17 +34,18 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         public List<int> crossingsOverTime = new List<int>();
 #endif
 
-         OverlapRemovalSettings settings;
+        private OverlapRemovalSettings settings;
 
         /// <summary>
         ///     Overlap Removal Parameters
         /// </summary>
         public OverlapRemovalSettings Settings {
-            get { return settings; }
+            get { return this.settings; }
             set {
-                settings = value;
-                if (StressSolver != null && value != null)
-                    StressSolver.Settings = value.StressSettings;
+                this.settings = value;
+                if (this.StressSolver != null && value != null) {
+                    this.StressSolver.Settings = value.StressSettings;
+                }
             }
         }
 
@@ -54,36 +54,37 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// </summary>
         public int LastRunIterations { get; set; }
 
-         TimeSpan lastCpuTime;
+        private TimeSpan lastCpuTime;
 
         /// <summary>
         /// Bounding boxes of nodes.
         /// </summary>
-         Size[] nodeSizes;
+        private Size[] nodeSizes;
 
         /// <summary>
         /// Node positions.
         /// </summary>
-         Point[] nodePositions;
+        private Point[] nodePositions;
         
         /// <summary>
         /// Current Node Boxes
         /// </summary>
         public Size[] NodeSizes {
-            get { return nodeSizes; }
+            get { return this.nodeSizes; }
         }
 
-         StressMajorization stressSolver;
+        private StressMajorization stressSolver;
 
         /// <summary>
         ///     Solver for Stress Majorization
         /// </summary>
         public StressMajorization StressSolver {
-            get { return stressSolver; }
+            get { return this.stressSolver; }
             set {
-                stressSolver = value;
-                if (Settings != null && stressSolver != null)
-                    stressSolver.Settings = Settings.StressSettings;
+                this.stressSolver = value;
+                if (this.Settings != null && this.stressSolver != null) {
+                    this.stressSolver.Settings = this.Settings.StressSettings;
+                }
             }
         }
 
@@ -93,13 +94,13 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// </summary>
         public GeometryGraph Graph {
             set {
-                _nodes = value.Nodes.ToArray();
-                InitWithGraph();
+                this._nodes = value.Nodes.ToArray();
+                this.InitWithGraph();
             }
         }
 
-         void InitializeSettings() {
-            Settings = new OverlapRemovalSettings();
+        private void InitializeSettings() {
+            this.Settings = new OverlapRemovalSettings();
         }
 
 
@@ -107,15 +108,15 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// Constructor
         /// </summary>
         public ProximityOverlapRemoval(OverlapRemovalSettings settings, GeometryGraph graph) {
-            Graph = graph;
-            Settings = settings;
+            this.Graph = graph;
+            this.Settings = settings;
         }
 
         /// <summary>
         ///     Constructor
         /// </summary>
         public ProximityOverlapRemoval() {
-            InitializeSettings();
+            this.InitializeSettings();
         }
 
         /// <summary>
@@ -123,8 +124,8 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// </summary>
         /// <param name="graph"></param>
         public ProximityOverlapRemoval(GeometryGraph graph) {
-            Graph = graph;
-            InitializeSettings();
+            this.Graph = graph;
+            this.InitializeSettings();
         }
 
         /// <summary>
@@ -133,7 +134,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// <param name="majorizer"></param>
         /// <param name="nodes"></param>
         /// <param name="nodePositions"></param>
-         static void InitStressWithGraph(StressMajorization majorizer, Node[] nodes, Point[] nodePositions) {
+        private static void InitStressWithGraph(StressMajorization majorizer, Node[] nodes, Point[] nodePositions) {
             majorizer.Positions = new List<Point>(nodePositions);
             majorizer.NodeVotings = new List<NodeVoting>(nodes.Length);
 
@@ -151,16 +152,19 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         ///     Inits some structures.
         /// </summary>
         protected virtual void InitWithGraph() {
-            if (StressSolver != null) {
+            if (this.StressSolver != null) {
                 //possibly call destructor to free memory...
             }
 
-            if (_nodes == null || _nodes.Length == 0) return;
+            if (this._nodes == null || this._nodes.Length == 0) {
+                return;
+            }
 
-            if (StressSolver == null) {
-                StressSolver = new StressMajorization();
-                if (Settings != null)
-                    StressSolver.Settings = Settings.StressSettings;
+            if (this.StressSolver == null) {
+                this.StressSolver = new StressMajorization();
+                if (this.Settings != null) {
+                    this.StressSolver.Settings = this.Settings.StressSettings;
+                }
             }
         }
 
@@ -209,7 +213,10 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
                     CdtSite site2 = triangleEdge.lowerSite;
                     var nodeId1 = (int) site1.Owner;
                     var nodeId2 = (int) site2.Owner;
-                    if (edgeSet.Contains(triangleEdge)) continue; //edge already included 
+                    if (edgeSet.Contains(triangleEdge)) {
+                        continue; //edge already included 
+                    }
+
                     edgeSet.Add(triangleEdge);
 
                     Point point1 = site1.Point;
@@ -218,8 +225,10 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
                     double t;
                     double distance = GetIdealDistanceBetweenNodes(nodeId1, nodeId2, point1, point2, targetSizes,
                                                                    out t);
-                    if (t > 1)
+                    if (t > 1) {
                         numberOverlappingPairs++;
+                    }
+
                     int nodeIdSmall = nodeId1;
                     int nodeIdBig = nodeId2;
                     if (nodeId1 > nodeId2) {
@@ -261,10 +270,18 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// <returns></returns>
         public static double GetIdealDistanceBetweenNodes(int nodeId1, int nodeId2, Point point1, Point point2,
                                                           Size[] nodeBoxes, out double tRes) {
-            if (nodeBoxes == null) throw new ArgumentNullException("nodeBoxes");
+            if (nodeBoxes == null) {
+                throw new ArgumentNullException("nodeBoxes");
+            }
+
             tRes = -1;
-            if (nodeBoxes.Length <= nodeId1) return 0;
-            if (nodeBoxes.Length <= nodeId2) return 0;
+            if (nodeBoxes.Length <= nodeId1) {
+                return 0;
+            }
+
+            if (nodeBoxes.Length <= nodeId2) {
+                return 0;
+            }
 
             const double expandMax = 1.5;
             const double expandMin = 1;
@@ -290,9 +307,11 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
                 t = Math.Min(wx/dx, wy/dy);
             }
 
-            if (t > 1) t = Math.Max(t, 1.001); // must be done, otherwise the convergence is very slow
-//            tmax = Math.Max(tmax, t);
-//            tmin = Math.Min(tmin, t);
+            if (t > 1) {
+                t = Math.Max(t, 1.001); // must be done, otherwise the convergence is very slow
+            }
+            //            tmax = Math.Max(tmax, t);
+            //            tmin = Math.Min(tmin, t);
             t = Math.Min(expandMax, t);
             t = Math.Max(expandMin, t);
             tRes = t;
@@ -305,18 +324,20 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// </summary>
         /// <returns></returns>
         public void RemoveOverlaps() {
-            if (_nodes == null || _nodes.Length == 0) return;
+            if (this._nodes == null || this._nodes.Length == 0) {
+                return;
+            }
             // init some things
-            InitNodePositionsAndBoxes(Settings, _nodes, out nodePositions, out nodeSizes);
-            InitStressWithGraph(StressSolver, _nodes, nodePositions);
+            InitNodePositionsAndBoxes(this.Settings, this._nodes, out this.nodePositions, out this.nodeSizes);
+            InitStressWithGraph(this.StressSolver, this._nodes, this.nodePositions);
 #if TEST_MSAGL
             //debugging the node movements
-            trajectories = new List<Polyline>(_nodes.Length);
+            this.trajectories = new List<Polyline>(this._nodes.Length);
             //add starting positions
-            for (int i = 0; i < nodePositions.Length; i++) {
+            for (int i = 0; i < this.nodePositions.Length; i++) {
                 var poly = new Polyline();
-                poly.AddPoint(nodePositions[i]);
-                trajectories.Add(poly);
+                poly.AddPoint(this.nodePositions[i]);
+                this.trajectories.Add(poly);
             }
 #endif
 
@@ -327,28 +348,28 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
             bool scanlinePhase = false;
             int iter = 0;
             bool finished = false;
-            while (!finished && ((iter++) < Settings.IterationsMax || !Settings.StopOnMaxIterat)) {
-                finished = DoSingleIteration(iter, ref scanlinePhase);
+            while (!finished && ((iter++) < this.Settings.IterationsMax || !this.Settings.StopOnMaxIterat)) {
+                finished = this.DoSingleIteration(iter, ref scanlinePhase);
             }
 #if !SHARPKIT
             stopWatch.Stop();
 #endif
-            LastRunIterations = iter;
+            this.LastRunIterations = iter;
 #if TEST_MSAGL && !SHARPKIT
             if (DebugMode) {
-                ShowTrajectoriesOfNodes(trajectories);
+                this.ShowTrajectoriesOfNodes(this.trajectories);
 
                 //LayoutAlgorithmSettings.ShowGraph(Graph);
             }
 #endif
 
 
-            SetPositionsToGraph();
+            this.SetPositionsToGraph();
 #if !SHARPKIT
             PrintTimeSpan(stopWatch);
 #endif
-            double nodeBoxArea = nodeSizes.Sum(r => r.Width*r.Height);
-            var boundingBox = GetCommonRectangle(nodeSizes, nodePositions);
+            double nodeBoxArea = this.nodeSizes.Sum(r => r.Width*r.Height);
+            var boundingBox = this.GetCommonRectangle(this.nodeSizes, this.nodePositions);
             double boundingBoxArea = boundingBox.Width*boundingBox.Height;
 //            nodePositions = null;
 //            nodeBoxes = null;
@@ -359,79 +380,86 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
 #endif
 
 #if !SHARPKIT
-            lastCpuTime = stopWatch.Elapsed;
+            this.lastCpuTime = stopWatch.Elapsed;
             return;
 #else
             return;// new TimeSpan(0);
 #endif
         }
 
-        Rectangle GetCommonRectangle(Size[] sizes, Point[] points) {
+        private Rectangle GetCommonRectangle(Size[] sizes, Point[] points) {
             var rect = Rectangle.CreateAnEmptyBox();
             Debug.Assert(sizes.Length==points.Length);
-            for (int i = 0; i < sizes.Length; i++)
+            for (int i = 0; i < sizes.Length; i++) {
                 rect.Add(sizes[i], points[i]);
+            }
+
             return rect;
         }
 
-        bool DoSingleIteration(int currentIteration, ref bool scanlinePhase) {
+        private bool DoSingleIteration(int currentIteration, ref bool scanlinePhase) {
             List<Tuple<Point, object>> sites =
-                nodePositions.Select((p, index) => new Tuple<Point, object>(p, index)).ToList();
+                this.nodePositions.Select((p, index) => new Tuple<Point, object>(p, index)).ToList();
             var triangulation = new Cdt(sites);
             triangulation.Run();
 
             List<Tuple<int, int, double, double>> proximityEdgesWithDistance;
-            int numCrossings = GetProximityEdgesWithDistance(_nodes, triangulation, nodeSizes,
+            int numCrossings = GetProximityEdgesWithDistance(this._nodes, triangulation, this.nodeSizes,
                                                              out proximityEdgesWithDistance);
 
             if (scanlinePhase || numCrossings == 0) {
                 scanlinePhase = true;
-                numCrossings = CompleteProximityGraphWithRTree(ref numCrossings, proximityEdgesWithDistance);
+                numCrossings = this.CompleteProximityGraphWithRTree(ref numCrossings, proximityEdgesWithDistance);
             }
 #if TEST_MSAGL
-            int realCrossings = CountCrossingsWithRTree(nodeSizes);
-            crossingsOverTime.Add(realCrossings);
-            if (currentIteration%10 == 0)
+            int realCrossings = this.CountCrossingsWithRTree(this.nodeSizes);
+            this.crossingsOverTime.Add(realCrossings);
+            if (currentIteration%10 == 0) {
                 System.Diagnostics.Debug.WriteLine("Scanline: {0}, Crossings: {1}", scanlinePhase, numCrossings);
+            }
 #endif
 
-            if (numCrossings == 0) return true;
+            if (numCrossings == 0) {
+                return true;
+            }
 
-            AddStressFromProximityEdges(StressSolver, proximityEdgesWithDistance);
-            List<Point> newPositions = StressSolver.IterateAll();
+            AddStressFromProximityEdges(this.StressSolver, proximityEdgesWithDistance);
+            List<Point> newPositions = this.StressSolver.IterateAll();
 
-            ShowCurrentMovementVectors(currentIteration, nodeSizes, nodePositions, newPositions,
+            ShowCurrentMovementVectors(currentIteration, this.nodeSizes, this.nodePositions, newPositions,
                                        proximityEdgesWithDistance,
                                        null);
 
-            UpdatePointsAndBoxes(newPositions);
+            this.UpdatePointsAndBoxes(newPositions);
             //clear the data structures
-            StressSolver.ClearVotings();
+            this.StressSolver.ClearVotings();
 #if TEST_MSAGL
-            for (int i = 0; i < nodePositions.Length; i++) {
-                trajectories[i].AddPoint(newPositions[i]);
+            for (int i = 0; i < this.nodePositions.Length; i++) {
+                this.trajectories[i].AddPoint(newPositions[i]);
             }
 #endif
             return false;
         }
 
-         void UpdatePointsAndBoxes(List<Point> newPositions) {
-             for (int i = 0; i < nodePositions.Length; i++)
-                 nodePositions[i] = newPositions[i];
-         }
+        private void UpdatePointsAndBoxes(List<Point> newPositions) {
+             for (int i = 0; i < this.nodePositions.Length; i++) {
+                this.nodePositions[i] = newPositions[i];
+            }
+        }
 
-         void SetPositionsToGraph() {
-            for (int i = 0; i < _nodes.Length; i++) {
-                if (Settings.WorkInInches)
-                    _nodes[i].Center = nodePositions[i]*72;
-                else
-                    _nodes[i].Center = nodePositions[i];
+        private void SetPositionsToGraph() {
+            for (int i = 0; i < this._nodes.Length; i++) {
+                if (this.Settings.WorkInInches) {
+                    this._nodes[i].Center = this.nodePositions[i]*72;
+                } else {
+                    this._nodes[i].Center = this.nodePositions[i];
+                }
             }
         }
 
 
 #if TEST_MSAGL
-         void ShowTrajectoriesOfNodes(List<Polyline> trajectories) {
+        private void ShowTrajectoriesOfNodes(List<Polyline> trajectories) {
 //            if (trajectories.Count < 1 || trajectories[0].Count < 3) return;
 //
 //            double[] values = new double[trajectories.Count];
@@ -447,39 +475,39 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         }
 #endif
 
-//         double GetAverageOverlap(List<Tuple<int, int, double, double>> proximityEdgesWithDistance,
-//                                         Point[] positions, Rectangle[] rectangles) {
-//            double overlap = 0;
-//            int counter = 0;
-//            foreach (Tuple<int, int, double, double> tuple in proximityEdgesWithDistance) {
-//                int nodeId1 = tuple.Item1;
-//                int nodeId2 = tuple.Item2;
-//                Point point1 = positions[nodeId1];
-//                Point point2 = positions[nodeId2];
-//
-//                if (nodeBoxes == null) throw new ArgumentNullException("nodeBoxes");
-//                if (nodeBoxes.Length <= nodeId1) return 0;
-//                if (nodeBoxes.Length <= nodeId2) return 0;
-//                double box1Width = nodeBoxes[nodeId1].Width;
-//                double box1Height = nodeBoxes[nodeId1].Height;
-//                double box2Width = nodeBoxes[nodeId2].Width;
-//                double box2Height = nodeBoxes[nodeId2].Height;
-//
-//                //Gansner et. al Scaling factor of distance
-//                double tw = (box1Width/2 + box2Width/2)/Math.Abs(point1.X - point2.X);
-//                double th = (box1Height/2 + box2Height/2)/Math.Abs(point1.Y - point2.Y);
-//                double t = Math.Max(Math.Min(tw, th), 1);
-//
-//                if (t == 1) continue; // no overlap between the bounding boxes
-//
-//                double distance = (t - 1)*(point1 - point2).Length;
-//                overlap += distance;
-//                counter++;
-//            }
-//
-//            overlap /= counter;
-//            return overlap;
-//        }
+        //         double GetAverageOverlap(List<Tuple<int, int, double, double>> proximityEdgesWithDistance,
+        //                                         Point[] positions, Rectangle[] rectangles) {
+        //            double overlap = 0;
+        //            int counter = 0;
+        //            foreach (Tuple<int, int, double, double> tuple in proximityEdgesWithDistance) {
+        //                int nodeId1 = tuple.Item1;
+        //                int nodeId2 = tuple.Item2;
+        //                Point point1 = positions[nodeId1];
+        //                Point point2 = positions[nodeId2];
+        //
+        //                if (nodeBoxes == null) throw new ArgumentNullException("nodeBoxes");
+        //                if (nodeBoxes.Length <= nodeId1) return 0;
+        //                if (nodeBoxes.Length <= nodeId2) return 0;
+        //                double box1Width = nodeBoxes[nodeId1].Width;
+        //                double box1Height = nodeBoxes[nodeId1].Height;
+        //                double box2Width = nodeBoxes[nodeId2].Width;
+        //                double box2Height = nodeBoxes[nodeId2].Height;
+        //
+        //                //Gansner et. al Scaling factor of distance
+        //                double tw = (box1Width/2 + box2Width/2)/Math.Abs(point1.X - point2.X);
+        //                double th = (box1Height/2 + box2Height/2)/Math.Abs(point1.Y - point2.Y);
+        //                double t = Math.Max(Math.Min(tw, th), 1);
+        //
+        //                if (t == 1) continue; // no overlap between the bounding boxes
+        //
+        //                double distance = (t - 1)*(point1 - point2).Length;
+        //                overlap += distance;
+        //                counter++;
+        //            }
+        //
+        //            overlap /= counter;
+        //            return overlap;
+        //        }
 
         /// <summary>
         /// For debugging only
@@ -490,7 +518,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// <param name="newPositions"></param>
         /// <param name="proximityEdgesWithDistance"></param>
         /// <param name="finalGridVectors"></param>
-         static void ShowCurrentMovementVectors(int currentIteration, Size[] nodeSizes,
+        private static void ShowCurrentMovementVectors(int currentIteration, Size[] nodeSizes,
                                                        Point[] nodePositions, List<Point> newPositions,
                                                        List<Tuple<int, int, double, double>> proximityEdgesWithDistance,
                                                        Point[] finalGridVectors) {
@@ -498,8 +526,10 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
             if (DebugMode && currentIteration%1 == 0) {
                 List<DebugCurve> curveList = new List<DebugCurve>();
                 var nodeBoxes = new Rectangle[nodeSizes.Length];
-                for(int i=0;i<nodeBoxes.Length;i++)
+                for(int i=0;i<nodeBoxes.Length;i++) {
                     nodeBoxes[i]=new Rectangle(nodeSizes[i], nodePositions[i]);
+                }
+
                 var nodeCurves =
                     nodeBoxes.Select(
                         v =>
@@ -530,16 +560,16 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
 #endif
         }
 
-        int CompleteProximityGraphWithRTree(ref int currentCrossings,
+        private int CompleteProximityGraphWithRTree(ref int currentCrossings,
             List<Tuple<int, int, double, double>> proximityEdgesWithDistance) {
             // if no crossings detected, use RTree to be sure there are no crossings 
-            int newCrossings = CreateProximityEdgesWithRTree(proximityEdgesWithDistance);
+            int newCrossings = this.CreateProximityEdgesWithRTree(proximityEdgesWithDistance);
             return currentCrossings + newCrossings;
         }
 
 
 #if !SHARPKIT
-         static void PrintTimeSpan(Stopwatch stopWatch) {
+        private static void PrintTimeSpan(Stopwatch stopWatch) {
             // Get the elapsed time as a TimeSpan value.
             TimeSpan ts = stopWatch.Elapsed;
             // Format and display the TimeSpan value.
@@ -563,7 +593,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
             return nodePositions;
         }
 
-         int CreateProximityEdgesWithRTree(List<Tuple<int, int, double, double>> proximityEdges) {
+        private int CreateProximityEdgesWithRTree(List<Tuple<int, int, double, double>> proximityEdges) {
             var edgeSet = new HashSet<Tuple<int, int>>();
 
             foreach (var proximityEdge in proximityEdges) {
@@ -571,20 +601,23 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
             }
             RectangleNode<int,Point> rootNode =
                 RectangleNode<int,Point>.CreateRectangleNodeOnEnumeration(
-                    nodeSizes.Select((size, index) => new RectangleNode<int,Point>(index, new Rectangle(size, nodePositions[index]))));
+                    this.nodeSizes.Select((size, index) => new RectangleNode<int,Point>(index, new Rectangle(size, this.nodePositions[index]))));
             int numCrossings = 0;
              RectangleNodeUtils.CrossRectangleNodes<int, int, Point>(rootNode, rootNode,
                  (a, b) => {
-                     if (a == b) return;
+                     if (a == b) {
+                         return;
+                     }
+
                      double t;
                      double dist = GetOverlapFactorBetweenNodes
                          (
                              a, b,
-                             nodePositions[a
+                             this.nodePositions[a
                                  ],
-                             nodePositions[b
+                             this.nodePositions[b
                                  ],
-                             nodeSizes, out t);
+                             this.nodeSizes, out t);
                      int smallId = a;
                      int bigId = b;
                      if (smallId > bigId) {
@@ -592,8 +625,10 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
                          bigId = a;
                      }
                      if (!(t > 1) ||
-                         edgeSet.Contains(new Tuple<int, int>(smallId, bigId)))
+                         edgeSet.Contains(new Tuple<int, int>(smallId, bigId))) {
                          return;
+                     }
+
                      proximityEdges.Add(Tuple.Create(smallId, bigId,
                          dist, t));
                      edgeSet.Add(new Tuple<int, int>(smallId, bigId));
@@ -604,14 +639,17 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         }
 
 #if TEST_MSAGL
-         int CountCrossingsWithRTree(Size[] nodeSizes) {
+        private int CountCrossingsWithRTree(Size[] nodeSizes) {
             RectangleNode<int,Point> rootNode =
                 RectangleNode<int,Point>.CreateRectangleNodeOnEnumeration(
-                    nodeSizes.Select((r, index) => new RectangleNode<int,Point>(index, new Rectangle(r,nodePositions[index]))));
+                    nodeSizes.Select((r, index) => new RectangleNode<int,Point>(index, new Rectangle(r, this.nodePositions[index]))));
             int numCrossings = 0;
             RectangleNodeUtils.CrossRectangleNodes<int, int, Point>(rootNode, rootNode,
                                                              (a, b) => {
-                                                                 if (a == b) return;
+                                                                 if (a == b) {
+                                                                     return;
+                                                                 }
+
                                                                  numCrossings++;
                                                              });
 
@@ -619,8 +657,11 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         }
 #endif
 
-         static Size[] GetNodeSizesByPaddingWithHalfSeparation(Node[] nodes, double nodeSeparation) {
-            if (nodes == null) return null;
+        private static Size[] GetNodeSizesByPaddingWithHalfSeparation(Node[] nodes, double nodeSeparation) {
+            if (nodes == null) {
+                return null;
+            }
+
             var nodeSizes = new Size[nodes.Length];
              var halfSep = nodeSeparation/2;
              for (int i = 0; i < nodes.Length; i++) {
@@ -630,8 +671,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
              return nodeSizes;
         }
 
-        
-         static void AddStressFromProximityEdges(StressMajorization stressSolver,
+        private static void AddStressFromProximityEdges(StressMajorization stressSolver,
                                                         List<Tuple<int, int, double, double>> proximityEdgesWithDistance) {
             //set to check whether we already added forces between two nodes
             var nodePairs = new HashSet<Tuple<int, int>>();
@@ -645,8 +685,10 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
                     nodeId2 = tuple.Item1;
                 }
                 var tup = new Tuple<int, int>(nodeId1, nodeId2);
-                if (nodePairs.Contains(tup))
+                if (nodePairs.Contains(tup)) {
                     continue;
+                }
+
                 nodePairs.Add(tup);
 
                 double distance = tuple.Item3;
@@ -685,7 +727,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
 
 
         void IOverlapRemoval.Settings(OverlapRemovalSettings settingsPar) {
-            Settings = settingsPar;
+            this.Settings = settingsPar;
         }
 
         /// <summary>
@@ -693,8 +735,8 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// </summary>
         /// <param name="graph"></param>
         public void RemoveOverlaps(GeometryGraph graph) {
-            Graph = graph;
-            RemoveOverlaps();
+            this.Graph = graph;
+            this.RemoveOverlaps();
         }
 
         /// <summary>
@@ -702,7 +744,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// </summary>
         /// <returns></returns>
         public int GetLastRunIterations() {
-            return LastRunIterations;
+            return this.LastRunIterations;
         }
 
         /// <summary>
@@ -710,7 +752,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         /// </summary>
         /// <returns></returns>
         public TimeSpan GetLastRunCpuTime() {
-            return lastCpuTime;
+            return this.lastCpuTime;
         }
     }
 }

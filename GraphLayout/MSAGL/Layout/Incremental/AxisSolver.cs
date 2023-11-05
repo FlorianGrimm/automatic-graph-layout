@@ -10,7 +10,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
     /// Solver for structural separation constraints or non-overlap constraints in a single axis.
     /// Wrapper round all the ProjectionSolver stuff.
     /// </summary>
-    class AxisSolver {
+    internal class AxisSolver {
         internal List<IConstraint> structuralConstraints = new List<IConstraint>();
         internal int ConstraintLevel;
         /// <summary>
@@ -35,7 +35,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         internal bool NeedSolve {
             get {
-                return avoidOverlaps && ConstraintLevel >= 2 || structuralConstraints.Count > 0 && ConstraintLevel >= 1;
+                return this.avoidOverlaps && this.ConstraintLevel >= 2 || this.structuralConstraints.Count > 0 && this.ConstraintLevel >= 1;
             }
         }
         /// <summary>
@@ -61,10 +61,11 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         /// <param name="c"></param>
         internal void AddStructuralConstraint(IConstraint c) {
-            structuralConstraints.Add(c);
+            this.structuralConstraints.Add(c);
         }
-        Solver solver;
-        ConstraintGenerator cg;
+
+        private Solver solver;
+        private ConstraintGenerator cg;
         /// <summary>
         /// Create variables, generate non-overlap constraints.
         /// </summary>
@@ -75,33 +76,33 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// <param name="nodeCenter"></param>
         internal void Initialize(double hPad, double vPad, double cHPad, double cVPad, InitialCenterDelegateType nodeCenter) {
             // For the Vertical ConstraintGenerator, Padding is vPad and PadddingP(erpendicular) is hPad.
-            cg = new ConstraintGenerator(IsHorizontal
-                                            , IsHorizontal ? hPad : vPad
-                                            , IsHorizontal ? vPad : hPad
-                                            , IsHorizontal ? cHPad : cVPad
-                                            , IsHorizontal ? cVPad : cHPad);
-            solver = new Solver();
+            this.cg = new ConstraintGenerator(this.IsHorizontal
+                                            , this.IsHorizontal ? hPad : vPad
+                                            , this.IsHorizontal ? vPad : hPad
+                                            , this.IsHorizontal ? cHPad : cVPad
+                                            , this.IsHorizontal ? cVPad : cHPad);
+            this.solver = new Solver();
 
-            foreach (var filNode in nodes) {
-                filNode.SetOlapNode(IsHorizontal,null);
+            foreach (var filNode in this.nodes) {
+                filNode.SetOlapNode(this.IsHorizontal,null);
             }
             // Calculate horizontal non-Overlap constraints.  
-            if (avoidOverlaps && clusterHierarchies != null) {
-                foreach (var c in clusterHierarchies) {
-                    AddOlapClusters(cg, null /* OlapParentCluster */, c, nodeCenter);
+            if (this.avoidOverlaps && this.clusterHierarchies != null) {
+                foreach (var c in this.clusterHierarchies) {
+                    this.AddOlapClusters(this.cg, null /* OlapParentCluster */, c, nodeCenter);
                 }
             }
 
-            foreach (var filNode in nodes) {
-                if (filNode.getOlapNode(IsHorizontal) == null) {
-                    AddOlapNode(cg, cg.DefaultClusterHierarchy /* olapParentCluster */, filNode, nodeCenter);
+            foreach (var filNode in this.nodes) {
+                if (filNode.getOlapNode(this.IsHorizontal) == null) {
+                    this.AddOlapNode(this.cg, this.cg.DefaultClusterHierarchy /* olapParentCluster */, filNode, nodeCenter);
                 }
-                filNode.getOlapNode(IsHorizontal).CreateVariable(solver);
+                filNode.getOlapNode(this.IsHorizontal).CreateVariable(this.solver);
             }
-            if (avoidOverlaps && this.ConstraintLevel >= 2) {
-                cg.Generate(solver, OverlapRemovalParameters);
+            if (this.avoidOverlaps && this.ConstraintLevel >= 2) {
+                this.cg.Generate(this.solver, this.OverlapRemovalParameters);
             }
-            AddStructuralConstraints();
+            this.AddStructuralConstraints();
         }
 
         /// <summary>
@@ -112,18 +113,18 @@ namespace Microsoft.Msagl.Layout.Incremental {
             // This updates the mOlapNode and clears the mOlapNode.Variable property.
             // We do just one solve over all the cluster constraints for the whole hierarchy.
             // It returns a list of lists of unsatisfiable constraints, or NULL.
-            Solution solution = cg.Solve(solver, null /*parameters*/, false /* doGenerate */);
+            Solution solution = this.cg.Solve(this.solver, null /*parameters*/, false /* doGenerate */);
 
             // Update the positions.
-            if (avoidOverlaps && clusterHierarchies != null) {
-                foreach (var c in clusterHierarchies) {
+            if (this.avoidOverlaps && this.clusterHierarchies != null) {
+                foreach (var c in this.clusterHierarchies) {
                     // Don't update the root cluster of the hierarachy as it doesn't have borders.
-                    UpdateOlapClusters(c.Clusters);
+                    this.UpdateOlapClusters(c.Clusters);
                 }
             }
-            foreach (FiNode v in nodes) {
+            foreach (FiNode v in this.nodes) {
                 // Set the position from the constraint solution on this axis.
-                v.UpdatePos(IsHorizontal);
+                v.UpdatePos(this.IsHorizontal);
             }
             this.DebugVerifyClusterHierarchy(solution);
             return solution;
@@ -132,27 +133,27 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// Must be called before Solve if the caller has updated Variable Initial Positions
         /// </summary>
         internal void SetDesiredPositions() {
-            foreach (var v in nodes) {
-                v.SetVariableDesiredPos(IsHorizontal);
+            foreach (var v in this.nodes) {
+                v.SetVariableDesiredPos(this.IsHorizontal);
             }
-            solver.UpdateVariables();
+            this.solver.UpdateVariables();
         }
 
         private void AddStructuralConstraints() {
             // Add the vertical structural constraints to the auto-generated ones. 
-            foreach (var c in structuralConstraints) {
-                if (ConstraintLevel >= c.Level) {
+            foreach (var c in this.structuralConstraints) {
+                if (this.ConstraintLevel >= c.Level) {
                     var hc = c as HorizontalSeparationConstraint;
-                    if (hc != null && IsHorizontal) {
+                    if (hc != null && this.IsHorizontal) {
                         FiNode u = (FiNode)(hc.LeftNode.AlgorithmData);
                         FiNode v = (FiNode)(hc.RightNode.AlgorithmData);
-                        solver.AddConstraint(u.getOlapNode(IsHorizontal).Variable, v.getOlapNode(IsHorizontal).Variable, hc.Separation, hc.IsEquality);
+                        this.solver.AddConstraint(u.getOlapNode(this.IsHorizontal).Variable, v.getOlapNode(this.IsHorizontal).Variable, hc.Separation, hc.IsEquality);
                     }
                     var vc = c as VerticalSeparationConstraint;
-                    if (vc != null && !IsHorizontal) {
+                    if (vc != null && !this.IsHorizontal) {
                         FiNode u = (FiNode)(vc.TopNode.AlgorithmData);
                         FiNode v = (FiNode)(vc.BottomNode.AlgorithmData);
-                        solver.AddConstraint(u.getOlapNode(IsHorizontal).Variable, v.getOlapNode(IsHorizontal).Variable, vc.Separation, vc.IsEquality);
+                        this.solver.AddConstraint(u.getOlapNode(this.IsHorizontal).Variable, v.getOlapNode(this.IsHorizontal).Variable, vc.Separation, vc.IsEquality);
                     }
                 }
             }
@@ -160,7 +161,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
 
         private void AddOlapClusters(ConstraintGenerator generator, OverlapRemovalCluster olapParentCluster, Cluster incClus, InitialCenterDelegateType nodeCenter)
         {
-            LayoutAlgorithmSettings settings = clusterSettings(incClus);
+            LayoutAlgorithmSettings settings = this.clusterSettings(incClus);
             double nodeSeparationH = settings.NodeSeparation;
             double nodeSeparationV = settings.NodeSeparation + 1e-4;
             double innerPaddingH = settings.ClusterMargin;
@@ -172,7 +173,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
             // First create the olapCluster for the current incCluster.  If olapParentCluster is null, then
             // incCluster is the root of a new hierarchy.
             RectangularClusterBoundary rb = incClus.RectangularBoundary;
-            if (IsHorizontal)
+            if (this.IsHorizontal)
             {
                 rb.olapCluster = generator.AddCluster(
                     olapParentCluster,
@@ -211,27 +212,27 @@ namespace Microsoft.Msagl.Layout.Incremental {
             // Add our child nodes.
             foreach (var filNode in incClus.Nodes)
             {
-                AddOlapNode(generator, rb.olapCluster, (FiNode)filNode.AlgorithmData, nodeCenter);
+                this.AddOlapNode(generator, rb.olapCluster, (FiNode)filNode.AlgorithmData, nodeCenter);
             }
 
             // Now recurse through all child clusters.
             foreach (var incChildClus in incClus.Clusters)
             {
-                AddOlapClusters(generator, rb.olapCluster, incChildClus, nodeCenter);
+                this.AddOlapClusters(generator, rb.olapCluster, incChildClus, nodeCenter);
             }
         }
 
         private void AddOlapNode(ConstraintGenerator generator, OverlapRemovalCluster olapParentCluster, FiNode filNode, InitialCenterDelegateType nodeCenter) {
             // If the node already has an mOlapNode, it's already in a cluster (in a different
             // hierarchy); we just add it to the new cluster.
-            if (null != filNode.getOlapNode(IsHorizontal)) {
-                generator.AddNodeToCluster(olapParentCluster, filNode.getOlapNode(IsHorizontal));
+            if (null != filNode.getOlapNode(this.IsHorizontal)) {
+                generator.AddNodeToCluster(olapParentCluster, filNode.getOlapNode(this.IsHorizontal));
                 return;
             }
 
             var center = nodeCenter(filNode);
             // We need to create a new Node in the Generator.
-            if (IsHorizontal) {
+            if (this.IsHorizontal) {
                 // Add the Generator node with the X-axis coords primary, Y-axis secondary.
                 filNode.mOlapNodeX = generator.AddNode(olapParentCluster, filNode /* userData */
                                     , center.X, center.Y
@@ -250,7 +251,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
                 // Because two heavily-weighted nodes can force each other to move, we have to update
                 // any BorderInfos that are IsFixedPosition to reflect this possible movement; for example,
                 // a fixed border and a node being dragged will both have heavy weights.
-                if (IsHorizontal) {
+                if (this.IsHorizontal) {
                     rb.rectangle.Left = rb.olapCluster.Position - (rb.olapCluster.Size / 2);
                     rb.rectangle.Right = rb.olapCluster.Position + (rb.olapCluster.Size / 2);
                     if (rb.LeftBorderInfo.IsFixedPosition) {
@@ -279,17 +280,18 @@ namespace Microsoft.Msagl.Layout.Incremental {
                 rb.olapCluster = null;
 
                 // Recurse.
-                UpdateOlapClusters(incClus.Clusters);
+                this.UpdateOlapClusters(incClus.Clusters);
             }
         }
 
         [Conditional("VERIFY")]
         private void DebugVerifyClusterHierarchy(Solution solution)
         {
-            if (avoidOverlaps && (null != clusterHierarchies) && (0 != solution.NumberOfUnsatisfiableConstraints ))
+            if (this.avoidOverlaps && (null != this.clusterHierarchies) && (0 != solution.NumberOfUnsatisfiableConstraints ))
             {
-                foreach (var c in clusterHierarchies)
-                    DebugVerifyClusters(cg, c, c);
+                foreach (var c in this.clusterHierarchies) {
+                    this.DebugVerifyClusters(this.cg, c, c);
+                }
             }
         }
 
@@ -306,7 +308,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
                 FiNode iiFilNode = (FiNode)v.AlgorithmData;
                 Rectangle iiNodeRect = iiFilNode.mNode.BoundaryCurve.BoundingBox;
 
-                if (IsHorizontal) {
+                if (this.IsHorizontal) {
                     // Don't check containment for the root ClusterHierarchy as there is no border for it.
                     if (incCluster != root) {
                         // This is horizontal so we've not yet calculated the Y-axis stuff.  The only thing we
@@ -326,7 +328,10 @@ namespace Microsoft.Msagl.Layout.Incremental {
                     }
                     // Make sure the node doesn't intersect any following nodes, or any clusters.
                     foreach (var u in incCluster.Nodes) {
-                        if (u == v) continue;
+                        if (u == v) {
+                            continue;
+                        }
+
                         FiNode jjFilNode = (FiNode)u.AlgorithmData;
                         Rectangle jjNodeRect = jjFilNode.mNode.BoundaryCurve.BoundingBox;
 
@@ -346,7 +351,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
             foreach (var iiIncClus in incCluster.Clusters) {
                 Rectangle iiClusRect = iiIncClus.RectangularBoundary.rectangle;
 
-                if (IsHorizontal) {
+                if (this.IsHorizontal) {
                     // Don't check containment for the root ClusterHierarchy as there is no border for it.
                     if (incCluster != root) {
                         // This is horizontal so we've not yet calculated the Y-axis stuff.  The only thing we
@@ -366,7 +371,10 @@ namespace Microsoft.Msagl.Layout.Incremental {
                     }
                     // Make sure the cluster doesn't intersect any following clusters.
                     foreach (var jjIncClus in incCluster.Clusters) {
-                        if (jjIncClus == iiIncClus) continue;
+                        if (jjIncClus == iiIncClus) {
+                            continue;
+                        }
+
                         Rectangle jjClusRect = jjIncClus.RectangularBoundary.rectangle;
                         DebugVerifyRectsDisjoint(iiClusRect, jjClusRect
                                                 , generator.PaddingP, generator.Padding, dblEpsilon);
@@ -374,12 +382,12 @@ namespace Microsoft.Msagl.Layout.Incremental {
                 } // endif isHorizontal
 
                 // Now recurse.
-                DebugVerifyClusters(generator, iiIncClus, root);
+                this.DebugVerifyClusters(generator, iiIncClus, root);
             } // endfor iiCluster
         }
 
         [Conditional("VERIFY")]
-        static void DebugVerifyRectContains(Rectangle rectOuter, Rectangle rectInner, double dblPaddingX, double dblPaddingY, double dblEpsilon)
+        private static void DebugVerifyRectContains(Rectangle rectOuter, Rectangle rectInner, double dblPaddingX, double dblPaddingY, double dblEpsilon)
         {
             rectInner.PadWidth(dblPaddingX/2.0 - dblEpsilon);
             rectInner.PadHeight(dblPaddingY/2.0 - dblEpsilon);
@@ -389,7 +397,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         }
 
         [Conditional("VERIFY")]
-        static void DebugVerifyRectsDisjoint(Rectangle rect1, Rectangle rect2, double dblPaddingX, double dblPaddingY, double dblEpsilon)
+        private static void DebugVerifyRectsDisjoint(Rectangle rect1, Rectangle rect2, double dblPaddingX, double dblPaddingY, double dblEpsilon)
         {
             rect1.PadWidth(dblPaddingX/2.0 - dblEpsilon);
             rect1.PadHeight(dblPaddingY/2.0 - dblEpsilon);

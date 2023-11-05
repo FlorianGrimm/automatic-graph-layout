@@ -32,23 +32,20 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// the list of edges, needed to match it with GraphReader edges
         /// </summary>
         public IList<Edge> EdgeList = new List<Edge>();
-
-        readonly Dictionary<string, Edge> idToEdges = new Dictionary<string, Edge>();
-        readonly Dictionary<string, Rail> idToRails = new Dictionary<string, Rail>();
-        readonly Dictionary<string, LgEdgeInfo> railIdsToTopRankedEdgeInfo = new Dictionary<string, LgEdgeInfo>();
-
-        readonly GeometryGraph _graph = new GeometryGraph();
+        private readonly Dictionary<string, Edge> idToEdges = new Dictionary<string, Edge>();
+        private readonly Dictionary<string, Rail> idToRails = new Dictionary<string, Rail>();
+        private readonly Dictionary<string, LgEdgeInfo> railIdsToTopRankedEdgeInfo = new Dictionary<string, LgEdgeInfo>();
+        private readonly GeometryGraph _graph = new GeometryGraph();
 
         /// <summary>
         /// The deserialized settings.
         /// </summary>
         public LayoutAlgorithmSettings Settings { get; set; }
 
-        readonly Dictionary<string, ClusterWithChildLists> stringToClusters =
+        private readonly Dictionary<string, ClusterWithChildLists> stringToClusters =
             new Dictionary<string, ClusterWithChildLists>();
-
-        readonly Dictionary<string, Node> nodeIdToNodes = new Dictionary<string, Node>();
-        readonly XmlTextReader xmlTextReader;
+        private readonly Dictionary<string, Node> nodeIdToNodes = new Dictionary<string, Node>();
+        private readonly XmlTextReader xmlTextReader;
 
         /// <summary>
         /// an empty constructor
@@ -64,8 +61,8 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         public GeometryGraphReader(Stream streamP)
         {
             var settings = new XmlReaderSettings { IgnoreComments = false, IgnoreWhitespace = true };
-            xmlTextReader = new XmlTextReader(streamP);
-            XmlReader = XmlReader.Create(xmlTextReader, settings);
+            this.xmlTextReader = new XmlTextReader(streamP);
+            this.XmlReader = XmlReader.Create(this.xmlTextReader, settings);
         }
 
         /// <summary>
@@ -76,8 +73,10 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         public Cluster FindClusterById(string id)
         {
             ClusterWithChildLists cwl;
-            if (stringToClusters.TryGetValue(id, out cwl))
+            if (this.stringToClusters.TryGetValue(id, out cwl)) {
                 return cwl.Cluster;
+            }
+
             return null;
         }
 
@@ -89,8 +88,10 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         public Node FindNodeById(string id)
         {
             Node node;
-            if (nodeIdToNodes.TryGetValue(id, out node))
+            if (this.nodeIdToNodes.TryGetValue(id, out node)) {
                 return node;
+            }
+
             return null;
         }
 
@@ -127,7 +128,7 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         }
 
 #if TEST_MSAGL
-        static char FirstCharacter(string fileName) {
+        private static char FirstCharacter(string fileName) {
             using (TextReader reader = File.OpenText(fileName))
             {
                 var first = (char)reader.Peek();
@@ -146,8 +147,8 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             try
             {
-                ReadGraph();
-                return _graph;
+                this.ReadGraph();
+                return this._graph;
             }
             finally
             {
@@ -158,10 +159,10 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// <summary>
         /// reads the layout algorithm settings
         /// </summary>
-        LayoutAlgorithmSettings ReadLayoutAlgorithmSettings(XmlReader reader)
+        private LayoutAlgorithmSettings ReadLayoutAlgorithmSettings(XmlReader reader)
         {
             LayoutAlgorithmSettings layoutSettings = null;
-            CheckToken(GeometryToken.LayoutAlgorithmSettings);
+            this.CheckToken(GeometryToken.LayoutAlgorithmSettings);
             if (reader.IsEmptyElement)
             {
                 reader.Read();
@@ -170,9 +171,9 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             //reader.Read();
 
             var edgeRoutingMode =
-                (EdgeRoutingMode)GetIntAttributeOrDefault(GeometryToken.EdgeRoutingMode, (int)EdgeRoutingMode.Spline);
-            var str = GetAttribute(GeometryToken.LayoutAlgorithmType);
-            if (XmlReader.NodeType == XmlNodeType.EndElement)
+                (EdgeRoutingMode)this.GetIntAttributeOrDefault(GeometryToken.EdgeRoutingMode, (int)EdgeRoutingMode.Spline);
+            var str = this.GetAttribute(GeometryToken.LayoutAlgorithmType);
+            if (this.XmlReader.NodeType == XmlNodeType.EndElement)
             {
                 //todo - support fastincremental settings
                 layoutSettings = new FastIncrementalLayoutSettings();
@@ -187,7 +188,7 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
                         (GeometryToken)Enum.Parse(typeof(GeometryToken), str, false);
                     if (token == GeometryToken.SugiyamaLayoutSettings)
                     {
-                        layoutSettings = ReadSugiyamaLayoutSettings(edgeRoutingMode);
+                        layoutSettings = this.ReadSugiyamaLayoutSettings(edgeRoutingMode);
                     }
                     else if (token == GeometryToken.MdsLayoutSettings)
                     {
@@ -196,22 +197,24 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
                         routingSettings.EdgeRoutingMode = edgeRoutingMode;
 
                         layoutSettings = mds;
-                        if (XmlReader.IsStartElement(GeometryToken.Reporting.ToString()))
+                        if (this.XmlReader.IsStartElement(GeometryToken.Reporting.ToString()))
                         {
 #if TEST_MSAGL
                             mds.Reporting =
 #endif
- ReadBooleanElement(GeometryToken.Reporting);
+ this.ReadBooleanElement(GeometryToken.Reporting);
                         }
                         mds.Exponent = ReadDoubleElement(reader);
-                        mds.IterationsWithMajorization = ReadIntElement(GeometryToken.IterationsWithMajorization);
-                        mds.PivotNumber = ReadIntElement(GeometryToken.PivotNumber);
+                        mds.IterationsWithMajorization = this.ReadIntElement(GeometryToken.IterationsWithMajorization);
+                        mds.PivotNumber = this.ReadIntElement(GeometryToken.PivotNumber);
                         mds.RotationAngle = ReadDoubleElement(reader);
                         mds.ScaleX = ReadDoubleElement(reader);
                         mds.ScaleY = ReadDoubleElement(reader);
                     }
                     else //todo - write a reader and a writer for FastIncrementalLayoutSettings 
+{
                         throw new NotImplementedException();
+                    }
                 }
             }
             reader.ReadEndElement();
@@ -219,7 +222,7 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             return layoutSettings;
         }
 
-        LayoutAlgorithmSettings ReadSugiyamaLayoutSettings(EdgeRoutingMode edgeRoutingMode)
+        private LayoutAlgorithmSettings ReadSugiyamaLayoutSettings(EdgeRoutingMode edgeRoutingMode)
         {
             var sugiyama = new SugiyamaLayoutSettings();
             EdgeRoutingSettings routingSettings = sugiyama.EdgeRoutingSettings;
@@ -227,50 +230,51 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
 
             LayoutAlgorithmSettings layoutSettings = sugiyama;
 
-            sugiyama.MinNodeWidth = GetDoubleAttributeOrDefault(GeometryToken.MinNodeWidth, sugiyama.MinNodeWidth);
-            sugiyama.MinNodeHeight = GetDoubleAttributeOrDefault(GeometryToken.MinNodeHeight, sugiyama.MinimalHeight);
-            sugiyama.AspectRatio = GetDoubleAttributeOrDefault(GeometryToken.AspectRatio, sugiyama.AspectRatio);
-            sugiyama.NodeSeparation = GetDoubleAttributeOrDefault(GeometryToken.NodeSeparation, sugiyama.NodeSeparation);
+            sugiyama.MinNodeWidth = this.GetDoubleAttributeOrDefault(GeometryToken.MinNodeWidth, sugiyama.MinNodeWidth);
+            sugiyama.MinNodeHeight = this.GetDoubleAttributeOrDefault(GeometryToken.MinNodeHeight, sugiyama.MinimalHeight);
+            sugiyama.AspectRatio = this.GetDoubleAttributeOrDefault(GeometryToken.AspectRatio, sugiyama.AspectRatio);
+            sugiyama.NodeSeparation = this.GetDoubleAttributeOrDefault(GeometryToken.NodeSeparation, sugiyama.NodeSeparation);
             sugiyama.ClusterMargin = sugiyama.NodeSeparation;
 
 #if TEST_MSAGL
-            sugiyama.Reporting = GetBoolAttributeOrDefault(GeometryToken.Reporting, false);
+            sugiyama.Reporting = this.GetBoolAttributeOrDefault(GeometryToken.Reporting, false);
 #endif
 
-            sugiyama.RandomSeedForOrdering = GetIntAttributeOrDefault(GeometryToken.RandomSeedForOrdering,
+            sugiyama.RandomSeedForOrdering = this.GetIntAttributeOrDefault(GeometryToken.RandomSeedForOrdering,
                 sugiyama.RandomSeedForOrdering);
-            sugiyama.NoGainAdjacentSwapStepsBound = GetIntAttributeOrDefault(GeometryToken.NoGainStepsBound,
+            sugiyama.NoGainAdjacentSwapStepsBound = this.GetIntAttributeOrDefault(GeometryToken.NoGainStepsBound,
                 sugiyama.NoGainAdjacentSwapStepsBound);
-            sugiyama.MaxNumberOfPassesInOrdering = GetIntAttributeOrDefault(GeometryToken.MaxNumberOfPassesInOrdering,
+            sugiyama.MaxNumberOfPassesInOrdering = this.GetIntAttributeOrDefault(GeometryToken.MaxNumberOfPassesInOrdering,
                 sugiyama.MaxNumberOfPassesInOrdering);
-            sugiyama.RepetitionCoefficientForOrdering = GetIntAttributeOrDefault(GeometryToken.
+            sugiyama.RepetitionCoefficientForOrdering = this.GetIntAttributeOrDefault(GeometryToken.
                 RepetitionCoefficientForOrdering, sugiyama.RepetitionCoefficientForOrdering);
-            sugiyama.GroupSplit = GetIntAttributeOrDefault(GeometryToken.GroupSplit, sugiyama.GroupSplit);
-            sugiyama.LabelCornersPreserveCoefficient = GetDoubleAttribute(GeometryToken.LabelCornersPreserveCoefficient);
-            sugiyama.BrandesThreshold = GetIntAttributeOrDefault(GeometryToken.BrandesThreshold,
+            sugiyama.GroupSplit = this.GetIntAttributeOrDefault(GeometryToken.GroupSplit, sugiyama.GroupSplit);
+            sugiyama.LabelCornersPreserveCoefficient = this.GetDoubleAttribute(GeometryToken.LabelCornersPreserveCoefficient);
+            sugiyama.BrandesThreshold = this.GetIntAttributeOrDefault(GeometryToken.BrandesThreshold,
                 sugiyama.BrandesThreshold);
-            sugiyama.LayerSeparation = GetDoubleAttributeOrDefault(GeometryToken.LayerSeparation,
+            sugiyama.LayerSeparation = this.GetDoubleAttributeOrDefault(GeometryToken.LayerSeparation,
                 sugiyama.LayerSeparation);
             var transform = new PlaneTransformation();
-            ReadTransform(transform);
+            this.ReadTransform(transform);
             return layoutSettings;
         }
 
-
-        void ReadTransform(PlaneTransformation transform)
+        private void ReadTransform(PlaneTransformation transform)
         {
-            XmlRead();
-            if (TokenIs(GeometryToken.Transform))
+            this.XmlRead();
+            if (this.TokenIs(GeometryToken.Transform))
             {
-                XmlRead();
-                for (int i = 0; i < 2; i++)
+                this.XmlRead();
+                for (int i = 0; i < 2; i++) {
                     for (int j = 0; j < 3; j++)
                     {
-                        CheckToken(GeometryToken.TransformElement);
-                        MoveToContent();
-                        transform[i, j] = ReadElementContentAsDouble();
+                        this.CheckToken(GeometryToken.TransformElement);
+                        this.MoveToContent();
+                        transform[i, j] = this.ReadElementContentAsDouble();
                     }
-                XmlRead();
+                }
+
+                this.XmlRead();
             }
             else
             {
@@ -290,83 +294,84 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// <param name="tokens"></param>
         /// <returns></returns>
         [SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "token")]
-        bool ReadBooleanElement(GeometryToken tokens)
+        private bool ReadBooleanElement(GeometryToken tokens)
         {
-            CheckToken(tokens);
-            return ReadElementContentAsBoolean();
+            this.CheckToken(tokens);
+            return this.ReadElementContentAsBoolean();
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        bool ReadElementContentAsBoolean()
+        private bool ReadElementContentAsBoolean()
         {
-            return XmlReader.ReadElementContentAsBoolean();
+            return this.XmlReader.ReadElementContentAsBoolean();
         }
 
-        int ReadIntElement(GeometryToken token)
+        private int ReadIntElement(GeometryToken token)
         {
-            CheckToken(token);
-            return ReadElementContentAsInt();
+            this.CheckToken(token);
+            return this.ReadElementContentAsInt();
         }
 
-
-        static double ReadDoubleElement(XmlReader r)
+        private static double ReadDoubleElement(XmlReader r)
         {
             return r.ReadElementContentAsDouble();
         }
 
         [SuppressMessage("Microsoft.Globalization", "CA1304:SpecifyCultureInfo", MessageId = "System.String.ToLower"),
          SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase")]
-        void ReadGraph()
+        private void ReadGraph()
         {
-            MoveToContent();
-            _graph.Margins = GetDoubleAttributeOrDefault(GeometryToken.Margins, 10);
-            if (XmlReader.Name.ToLower() != GeometryToken.Graph.ToString().ToLower())
-                Error("expecting element \"graph\"");
+            this.MoveToContent();
+            this._graph.Margins = this.GetDoubleAttributeOrDefault(GeometryToken.Margins, 10);
+            if (this.XmlReader.Name.ToLower() != GeometryToken.Graph.ToString().ToLower()) {
+                this.Error("expecting element \"graph\"");
+            }
+
             bool done = false;
             do
             {
-                switch (GetElementTag())
+                switch (this.GetElementTag())
                 {
                     case GeometryToken.Nodes:
-                        ReadNodes();
+                        this.ReadNodes();
                         break;
                     case GeometryToken.Edges:
-                        ReadEdges();
+                        this.ReadEdges();
                         break;
                     case GeometryToken.Clusters:
-                        ReadClusters();
+                        this.ReadClusters();
                         break;
                     case GeometryToken.LayoutAlgorithmSettings:
-                        Settings = ReadLayoutAlgorithmSettings(XmlReader); //todo . not tested
+                        this.Settings = this.ReadLayoutAlgorithmSettings(this.XmlReader); //todo . not tested
                         break;
                     case GeometryToken.LgLevels:
-                        ReadLgLevels();
+                        this.ReadLgLevels();
                         break;
                     case GeometryToken.LgSkeletonLevels:
-                        ReadLgSkeletonLevels();
+                        this.ReadLgSkeletonLevels();
                         break;
                     case GeometryToken.End:
                     case GeometryToken.Graph:
-                        if (XmlReader.NodeType == XmlNodeType.EndElement)
+                        if (this.XmlReader.NodeType == XmlNodeType.EndElement)
                         {
                             done = true;
-                            ReadEndElement();
+                            this.ReadEndElement();
                             break;
                         }
 
                         //jyoti - added this if block for reloading msagl
-                        if (XmlReader.NodeType == XmlNodeType.None)
+                        if (this.XmlReader.NodeType == XmlNodeType.None)
                         {
                             done = true;
                             break;
                         }
-                        XmlRead();
+                        this.XmlRead();
                         break;
                     default: //ignore this element
-                        XmlReader.Skip();
+                        this.XmlReader.Skip();
                         break;
 
                     //                        XmlReader.Skip();
@@ -378,268 +383,275 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
                     //                        ReadEdges();
                 }
             } while (!done);
-            _graph.BoundingBox = _graph.PumpTheBoxToTheGraphWithMargins();
+            this._graph.BoundingBox = this._graph.PumpTheBoxToTheGraphWithMargins();
         }
 
-        void ReadLgLevels()
+        private void ReadLgLevels()
         {
-            LgData lgData = new LgData(_graph);
-            _graph.LgData = lgData;
-            FillLgData(lgData);
-            ReadEndElement();
+            LgData lgData = new LgData(this._graph);
+            this._graph.LgData = lgData;
+            this.FillLgData(lgData);
+            this.ReadEndElement();
         }
 
-        void ReadLgSkeletonLevels()
+        private void ReadLgSkeletonLevels()
         {
-            XmlRead();
-            ReadSkeletonLevels(_graph.LgData);
-            ReadEndElement();
+            this.XmlRead();
+            this.ReadSkeletonLevels(this._graph.LgData);
+            this.ReadEndElement();
         }
 
-        void FillLgData(LgData lgData)
+        private void FillLgData(LgData lgData)
         {
 
-            XmlRead();
-            if (TokenIs(GeometryToken.LgEdgeInfos))
-                ReadLgEdgeInfos(lgData);
-            if (TokenIs(GeometryToken.LgNodeInfos))
-            {
-                ReadLgNodeInfos(lgData);
+            this.XmlRead();
+            if (this.TokenIs(GeometryToken.LgEdgeInfos)) {
+                this.ReadLgEdgeInfos(lgData);
             }
-            ReadLevels(lgData);
+
+            if (this.TokenIs(GeometryToken.LgNodeInfos))
+            {
+                this.ReadLgNodeInfos(lgData);
+            }
+            this.ReadLevels(lgData);
         }
 
-        void ReadLgEdgeInfos(LgData lgData)
+        private void ReadLgEdgeInfos(LgData lgData)
         {
-            if (XmlReader.IsEmptyElement)
+            if (this.XmlReader.IsEmptyElement)
             {
-                XmlRead();
+                this.XmlRead();
                 return;
             }
 
-            XmlRead();
-            while (TokenIs(GeometryToken.LgEdgeInfo))
-                ReadLgEdgeInfo(lgData);
-            ReadEndElement();
+            this.XmlRead();
+            while (this.TokenIs(GeometryToken.LgEdgeInfo)) {
+                this.ReadLgEdgeInfo(lgData);
+            }
+
+            this.ReadEndElement();
         }
 
-        void ReadLgEdgeInfo(LgData lgData)
+        private void ReadLgEdgeInfo(LgData lgData)
         {
-            string edgeId = GetAttribute(GeometryToken.EdgeId);
-            Edge edge = idToEdges[edgeId];
+            string edgeId = this.GetAttribute(GeometryToken.EdgeId);
+            Edge edge = this.idToEdges[edgeId];
             lgData.GeometryEdgesToLgEdgeInfos[edge] = new LgEdgeInfo(edge)
             {
-                Rank = GetDoubleAttribute(GeometryToken.Rank),
-                ZoomLevel = GetDoubleAttribute(GeometryToken.Zoomlevel)
+                Rank = this.GetDoubleAttribute(GeometryToken.Rank),
+                ZoomLevel = this.GetDoubleAttribute(GeometryToken.Zoomlevel)
             };
-            XmlRead();
+            this.XmlRead();
         }
 
-        void ReadLevels(LgData lgData)
+        private void ReadLevels(LgData lgData)
         {
             int zoomLevel = 1;
-            while (GetElementTag() == GeometryToken.Level)
+            while (this.GetElementTag() == GeometryToken.Level)
             {
-                var dZoomLevel = GetDoubleAttributeOrDefault(GeometryToken.Zoomlevel, zoomLevel);
-                ReadLevel(lgData, (int)dZoomLevel);
+                var dZoomLevel = this.GetDoubleAttributeOrDefault(GeometryToken.Zoomlevel, zoomLevel);
+                this.ReadLevel(lgData, (int)dZoomLevel);
                 zoomLevel = 2 * (int)dZoomLevel;
 
             }
         }
 
-        void ReadSkeletonLevels(LgData lgData)
+        private void ReadSkeletonLevels(LgData lgData)
         {
             int zoomLevel = 1;
-            while (GetElementTag() == GeometryToken.SkeletonLevel)
+            while (this.GetElementTag() == GeometryToken.SkeletonLevel)
             {
-                var dZoomLevel = GetDoubleAttributeOrDefault(GeometryToken.Zoomlevel, zoomLevel);
-                ReadSkeletonLevel(lgData, (int)dZoomLevel);
+                var dZoomLevel = this.GetDoubleAttributeOrDefault(GeometryToken.Zoomlevel, zoomLevel);
+                this.ReadSkeletonLevel(lgData, (int)dZoomLevel);
                 zoomLevel = 2 * (int)dZoomLevel;
             }
         }
 
-        void ReadLevel(LgData lgData, int zoomLevel)
+        private void ReadLevel(LgData lgData, int zoomLevel)
         {
-            int levelNodeCount = GetIntAttribute(GeometryToken.NodeCountOnLevel);
+            int levelNodeCount = this.GetIntAttribute(GeometryToken.NodeCountOnLevel);
             if (lgData.LevelNodeCounts == null)
             {
                 lgData.LevelNodeCounts = new List<int>();
             }
             lgData.LevelNodeCounts.Add(levelNodeCount);
-            LgLevel level = new LgLevel(zoomLevel, _graph);
+            LgLevel level = new LgLevel(zoomLevel, this._graph);
             lgData.Levels.Add(level);
-            XmlRead();
+            this.XmlRead();
             Dictionary<string, Set<string>> edgeIdToEdgeRailsSet = new Dictionary<string, Set<string>>();
-            ReadRailIdsPerEdgeIds(lgData, edgeIdToEdgeRailsSet);
-            ReadRails(level);
-            ReadEndElement();
-            FillRailsOfEdges(level, edgeIdToEdgeRailsSet);
+            this.ReadRailIdsPerEdgeIds(lgData, edgeIdToEdgeRailsSet);
+            this.ReadRails(level);
+            this.ReadEndElement();
+            this.FillRailsOfEdges(level, edgeIdToEdgeRailsSet);
         }
 
-        void ReadSkeletonLevel(LgData lgData, int zoomLevel)
+        private void ReadSkeletonLevel(LgData lgData, int zoomLevel)
         {
             LgSkeletonLevel level = new LgSkeletonLevel() { ZoomLevel = zoomLevel };
             lgData.SkeletonLevels.Add(level);
 
-            if (XmlReader.IsEmptyElement)
+            if (this.XmlReader.IsEmptyElement)
             {
-                XmlRead();
+                this.XmlRead();
                 return;
             }
 
-            XmlRead();
+            this.XmlRead();
             //ReadSkeletonRails(level);            
-            ReadEndElement();
+            this.ReadEndElement();
             //level.CreateRailTree();
         }
 
-        void FillRailsOfEdges(LgLevel level, Dictionary<string, Set<string>> edgeIdToEdgeRailsSet)
+        private void FillRailsOfEdges(LgLevel level, Dictionary<string, Set<string>> edgeIdToEdgeRailsSet)
         {
             foreach (var edgeRails in edgeIdToEdgeRailsSet)
             {
-                var edge = idToEdges[edgeRails.Key];
-                var railSet = new Set<Rail>(edgeRails.Value.Where(s => s != "").Select(r => idToRails[r]));
+                var edge = this.idToEdges[edgeRails.Key];
+                var railSet = new Set<Rail>(edgeRails.Value.Where(s => s != "").Select(r => this.idToRails[r]));
                 level._railsOfEdges[edge] = railSet;
             }
         }
 
-
-        void ReadRailIdsPerEdgeIds(LgData lgData, Dictionary<string, Set<string>> edgeIdToEdgeRailsSet)
+        private void ReadRailIdsPerEdgeIds(LgData lgData, Dictionary<string, Set<string>> edgeIdToEdgeRailsSet)
         {
-            if (XmlReader.IsEmptyElement)
+            if (this.XmlReader.IsEmptyElement)
             {
-                XmlRead();
+                this.XmlRead();
                 return;
             }
 
-            XmlRead();
-            while (TokenIs(GeometryToken.EdgeRails))
-                ReadEdgeRailIds(lgData, edgeIdToEdgeRailsSet);
-            ReadEndElement();
+            this.XmlRead();
+            while (this.TokenIs(GeometryToken.EdgeRails)) {
+                this.ReadEdgeRailIds(lgData, edgeIdToEdgeRailsSet);
+            }
+
+            this.ReadEndElement();
         }
 
-        void ReadEdgeRailIds(LgData lgData, Dictionary<string, Set<string>> edgeIdToEdgeRailsSet)
+        private void ReadEdgeRailIds(LgData lgData, Dictionary<string, Set<string>> edgeIdToEdgeRailsSet)
         {
-            string edgeId = GetAttribute(GeometryToken.EdgeId);
+            string edgeId = this.GetAttribute(GeometryToken.EdgeId);
             Set<string> railIdSet;
             edgeIdToEdgeRailsSet[edgeId] = railIdSet = new Set<string>();
-            string edgeRailsString = GetAttribute(GeometryToken.EdgeRails);
-            LgEdgeInfo edgeInfo = lgData.GeometryEdgesToLgEdgeInfos[idToEdges[edgeId]];
+            string edgeRailsString = this.GetAttribute(GeometryToken.EdgeRails);
+            LgEdgeInfo edgeInfo = lgData.GeometryEdgesToLgEdgeInfos[this.idToEdges[edgeId]];
             foreach (var railId in edgeRailsString.Split(' '))
             {
-                UpdateToRankedEdgeInfoForRail(railId, edgeInfo);
+                this.UpdateToRankedEdgeInfoForRail(railId, edgeInfo);
                 railIdSet.Insert(railId);
             }
-            XmlRead();
+            this.XmlRead();
         }
 
-        void UpdateToRankedEdgeInfoForRail(string railId, LgEdgeInfo edgeInfo)
+        private void UpdateToRankedEdgeInfoForRail(string railId, LgEdgeInfo edgeInfo)
         {
             LgEdgeInfo topRankeEdgeInfo;
-            if (railIdsToTopRankedEdgeInfo.TryGetValue(railId, out topRankeEdgeInfo))
+            if (this.railIdsToTopRankedEdgeInfo.TryGetValue(railId, out topRankeEdgeInfo))
             {
-                if (topRankeEdgeInfo.Rank < edgeInfo.Rank)
-                    railIdsToTopRankedEdgeInfo[railId] = edgeInfo;
+                if (topRankeEdgeInfo.Rank < edgeInfo.Rank) {
+                    this.railIdsToTopRankedEdgeInfo[railId] = edgeInfo;
+                }
             }
-            else
-                railIdsToTopRankedEdgeInfo[railId] = edgeInfo;
+            else {
+                this.railIdsToTopRankedEdgeInfo[railId] = edgeInfo;
+            }
         }
 
-        void ReadRails(LgLevel level)
+        private void ReadRails(LgLevel level)
         {
 
-            CheckToken(GeometryToken.Rails);
-            if (XmlReader.IsEmptyElement)
+            this.CheckToken(GeometryToken.Rails);
+            if (this.XmlReader.IsEmptyElement)
             {
-                XmlRead();
+                this.XmlRead();
                 return;
             }
-            XmlRead();
-            while (TokenIs(GeometryToken.Rail))
+            this.XmlRead();
+            while (this.TokenIs(GeometryToken.Rail))
             {
-                ReadRail(level);
+                this.ReadRail(level);
             }
-            ReadEndElement();
+            this.ReadEndElement();
         }
 
-        void ReadSkeletonRails(LgSkeletonLevel level)
+        private void ReadSkeletonRails(LgSkeletonLevel level)
         {
-            CheckToken(GeometryToken.Rails);
-            if (XmlReader.IsEmptyElement)
+            this.CheckToken(GeometryToken.Rails);
+            if (this.XmlReader.IsEmptyElement)
             {
-                XmlRead();
+                this.XmlRead();
                 return;
             }
-            XmlRead();
-            while (TokenIs(GeometryToken.Rail))
+            this.XmlRead();
+            while (this.TokenIs(GeometryToken.Rail))
             {
-                ReadSkeletonRail(level);
+                this.ReadSkeletonRail(level);
             }
-            ReadEndElement();
+            this.ReadEndElement();
         }
 
-        void ReadRail(LgLevel level)
+        private void ReadRail(LgLevel level)
         {
-            string railId = GetAttribute(GeometryToken.Id);
-            int zoomLevel = (int)GetDoubleAttribute(GeometryToken.Zoomlevel);
+            string railId = this.GetAttribute(GeometryToken.Id);
+            int zoomLevel = (int)this.GetDoubleAttribute(GeometryToken.Zoomlevel);
             double minPassigEdgeZoomLevel =
-                (double)GetDoubleAttributeOrDefault(GeometryToken.MinPassingEdgeZoomLevel, zoomLevel);
-            var topRankedEdgoInfo = GetTopRankedEdgeInfoOfRail(railId);
-            Rail rail = ContinueReadingRail(topRankedEdgoInfo, zoomLevel, level);
+                (double)this.GetDoubleAttributeOrDefault(GeometryToken.MinPassingEdgeZoomLevel, zoomLevel);
+            var topRankedEdgoInfo = this.GetTopRankedEdgeInfoOfRail(railId);
+            Rail rail = this.ContinueReadingRail(topRankedEdgoInfo, zoomLevel, level);
             rail.MinPassingEdgeZoomLevel = minPassigEdgeZoomLevel;
-            idToRails[railId] = rail;
+            this.idToRails[railId] = rail;
 
         }
 
-        void ReadSkeletonRail(LgSkeletonLevel level)
+        private void ReadSkeletonRail(LgSkeletonLevel level)
         {
             // do not save rails in skeleton level;
             return;
         }
 
-        Rail ContinueReadingRail(LgEdgeInfo topRankedEdgoInfo, int zoomLevel, LgLevel level)
+        private Rail ContinueReadingRail(LgEdgeInfo topRankedEdgoInfo, int zoomLevel, LgLevel level)
         {
-            XmlRead();
+            this.XmlRead();
             string pointString;
-            if (TokenIs(GeometryToken.Arrowhead))
+            if (this.TokenIs(GeometryToken.Arrowhead))
             {
-                Point arrowheadPosition = TryGetPointAttribute(GeometryToken.ArrowheadPosition);
-                Point attachmentPoint = TryGetPointAttribute(GeometryToken.CurveAttachmentPoint);
+                Point arrowheadPosition = this.TryGetPointAttribute(GeometryToken.ArrowheadPosition);
+                Point attachmentPoint = this.TryGetPointAttribute(GeometryToken.CurveAttachmentPoint);
                 Arrowhead ah = new Arrowhead
                 {
                     TipPosition = arrowheadPosition,
                     Length = (attachmentPoint - arrowheadPosition).Length
                 };
-                XmlRead();
-                ReadEndElement();
+                this.XmlRead();
+                this.ReadEndElement();
                 var rail = new Rail(ah, attachmentPoint, topRankedEdgoInfo, zoomLevel);
                 var tuple = new SymmetricSegment(arrowheadPosition, attachmentPoint);
                 level._railDictionary[tuple] = rail;
                 return rail;
             }
 
-            if (TokenIs(GeometryToken.LineSegment))
+            if (this.TokenIs(GeometryToken.LineSegment))
             {
-                pointString = GetAttribute(GeometryToken.Points);
-                var linePoints = ParsePoints(pointString);
+                pointString = this.GetAttribute(GeometryToken.Points);
+                var linePoints = this.ParsePoints(pointString);
                 Debug.Assert(linePoints.Length == 2);
                 LineSegment ls = new LineSegment(linePoints[0], linePoints[1]);
-                XmlRead();
-                ReadEndElement();
+                this.XmlRead();
+                this.ReadEndElement();
                 var rail = new Rail(ls, topRankedEdgoInfo, zoomLevel);
                 var tuple = new SymmetricSegment(ls.Start, ls.End);
                 level._railDictionary[tuple] = rail;
                 level._railTree.Add(ls.BoundingBox, rail);
                 return rail;
             }
-            if (TokenIs(GeometryToken.CubicBezierSegment))
+            if (this.TokenIs(GeometryToken.CubicBezierSegment))
             {
-                pointString = GetAttribute(GeometryToken.Points);
-                var controlPoints = ParsePoints(pointString);
+                pointString = this.GetAttribute(GeometryToken.Points);
+                var controlPoints = this.ParsePoints(pointString);
                 Debug.Assert(controlPoints.Length == 4);
                 var bs = new CubicBezierSegment(controlPoints[0], controlPoints[1], controlPoints[2], controlPoints[3]);
-                XmlRead();
-                ReadEndElement();
+                this.XmlRead();
+                this.ReadEndElement();
                 var rail = new Rail(bs, topRankedEdgoInfo, zoomLevel);
                 var tuple = new SymmetricSegment(bs.Start, bs.End);
                 level._railDictionary[tuple] = rail;
@@ -648,152 +660,175 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             throw new Exception();
         }
 
-        LgEdgeInfo GetTopRankedEdgeInfoOfRail(string railId)
+        private LgEdgeInfo GetTopRankedEdgeInfoOfRail(string railId)
         {
-            if (!railIdsToTopRankedEdgeInfo.ContainsKey(railId))
+            if (!this.railIdsToTopRankedEdgeInfo.ContainsKey(railId)) {
                 return null;
-            return railIdsToTopRankedEdgeInfo[railId];
+            }
+
+            return this.railIdsToTopRankedEdgeInfo[railId];
         }
 
-        LgEdgeInfo GetTopRankedEdgeInfoOfSkeletonRail(string railId)
+        private LgEdgeInfo GetTopRankedEdgeInfoOfSkeletonRail(string railId)
         {
-            if (railIdsToTopRankedEdgeInfo.ContainsKey(railId))
-                return railIdsToTopRankedEdgeInfo[railId];
+            if (this.railIdsToTopRankedEdgeInfo.ContainsKey(railId)) {
+                return this.railIdsToTopRankedEdgeInfo[railId];
+            }
+
             return null;
         }
 
-        void ReadLgNodeInfos(LgData lgData)
+        private void ReadLgNodeInfos(LgData lgData)
         {
-            if (XmlReader.IsEmptyElement) return;
+            if (this.XmlReader.IsEmptyElement) {
+                return;
+            }
+
             lgData.GeometryNodesToLgNodeInfos = new Dictionary<Node, LgNodeInfo>();
             lgData.SortedLgNodeInfos = new List<LgNodeInfo>();
-            XmlRead();
-            while (TokenIs(GeometryToken.LgNodeInfo))
-                ReadLgNodeInfo(lgData);
-            ReadEndElement();
+            this.XmlRead();
+            while (this.TokenIs(GeometryToken.LgNodeInfo)) {
+                this.ReadLgNodeInfo(lgData);
+            }
+
+            this.ReadEndElement();
         }
 
-        void ReadLgNodeInfo(LgData lgData)
+        private void ReadLgNodeInfo(LgData lgData)
         {
-            var nodeId = GetAttribute(GeometryToken.Id);
-            var nodeInfo = new LgNodeInfo(nodeIdToNodes[nodeId])
+            var nodeId = this.GetAttribute(GeometryToken.Id);
+            var nodeInfo = new LgNodeInfo(this.nodeIdToNodes[nodeId])
             {
-                Rank = GetDoubleAttribute(GeometryToken.Rank),
-                ZoomLevel = GetDoubleAttribute(GeometryToken.Zoomlevel),
-                LabelVisibleFromScale = GetDoubleAttributeOrDefault(GeometryToken.LabelVisibleFromScale, 1.0),
-                LabelWidthToHeightRatio = GetDoubleAttributeOrDefault(GeometryToken.LabelWidthToHeightRatio, 1.0),
-                LabelOffset = TryGetPointAttribute(GeometryToken.LabelOffset)
+                Rank = this.GetDoubleAttribute(GeometryToken.Rank),
+                ZoomLevel = this.GetDoubleAttribute(GeometryToken.Zoomlevel),
+                LabelVisibleFromScale = this.GetDoubleAttributeOrDefault(GeometryToken.LabelVisibleFromScale, 1.0),
+                LabelWidthToHeightRatio = this.GetDoubleAttributeOrDefault(GeometryToken.LabelWidthToHeightRatio, 1.0),
+                LabelOffset = this.TryGetPointAttribute(GeometryToken.LabelOffset)
             };
             lgData.SortedLgNodeInfos.Add(nodeInfo);
-            lgData.GeometryNodesToLgNodeInfos[nodeIdToNodes[nodeId]] = nodeInfo;
-            XmlRead();
+            lgData.GeometryNodesToLgNodeInfos[this.nodeIdToNodes[nodeId]] = nodeInfo;
+            this.XmlRead();
         }
 
-        GeometryToken GetElementTag()
+        private GeometryToken GetElementTag()
         {
-            if (XmlReader.NodeType == XmlNodeType.EndElement &&
-                XmlReader.Name == "graph")
+            if (this.XmlReader.NodeType == XmlNodeType.EndElement &&
+                this.XmlReader.Name == "graph") {
                 return GeometryToken.End;
+            }
+
             GeometryToken token;
-            if (XmlReader.ReadState == ReadState.EndOfFile)
+            if (this.XmlReader.ReadState == ReadState.EndOfFile) {
                 return GeometryToken.Graph;
-            if (Enum.TryParse(XmlReader.Name, true, out token))
+            }
+
+            if (Enum.TryParse(this.XmlReader.Name, true, out token)) {
                 return token;
+            }
+
             return GeometryToken.Unknown;
         }
 
-        void ReadClusters()
+        private void ReadClusters()
         {
-            XmlRead();
-            while (TokenIs(GeometryToken.Cluster))
-                ReadCluster();
-
-            FleshOutClusters();
-            var rootClusterSet = new Set<Cluster>();
-            foreach (var cluster in stringToClusters.Values.Select(c => c.Cluster))
-                if (cluster.ClusterParent == null)
-                    rootClusterSet.Insert(cluster);
-
-            if (rootClusterSet.Count == 1)
-                _graph.RootCluster = rootClusterSet.First();
-            else
-            {
-                _graph.RootCluster.AddRangeOfCluster(rootClusterSet);
+            this.XmlRead();
+            while (this.TokenIs(GeometryToken.Cluster)) {
+                this.ReadCluster();
             }
 
-            if (!XmlReader.IsStartElement())
-                ReadEndElement();
+            this.FleshOutClusters();
+            var rootClusterSet = new Set<Cluster>();
+            foreach (var cluster in this.stringToClusters.Values.Select(c => c.Cluster)) {
+                if (cluster.ClusterParent == null) {
+                    rootClusterSet.Insert(cluster);
+                }
+            }
+
+            if (rootClusterSet.Count == 1) {
+                this._graph.RootCluster = rootClusterSet.First();
+            } else
+            {
+                this._graph.RootCluster.AddRangeOfCluster(rootClusterSet);
+            }
+
+            if (!this.XmlReader.IsStartElement()) {
+                this.ReadEndElement();
+            }
         }
 
-        void FleshOutClusters()
+        private void FleshOutClusters()
         {
-            foreach (var clusterWithLists in stringToClusters.Values)
+            foreach (var clusterWithLists in this.stringToClusters.Values)
             {
                 var cl = clusterWithLists.Cluster;
-                foreach (var i in clusterWithLists.ChildClusters)
-                    cl.AddCluster(stringToClusters[i].Cluster);
-                foreach (var i in clusterWithLists.ChildNodes)
-                    cl.AddNode(nodeIdToNodes[i]);
+                foreach (var i in clusterWithLists.ChildClusters) {
+                    cl.AddCluster(this.stringToClusters[i].Cluster);
+                }
+
+                foreach (var i in clusterWithLists.ChildNodes) {
+                    cl.AddNode(this.nodeIdToNodes[i]);
+                }
             }
         }
 
         [SuppressMessage("Microsoft.Globalization", "CA1304:SpecifyCultureInfo", MessageId = "System.String.ToLower")]
-        void ReadCluster()
+        private void ReadCluster()
         {
             var cluster = new Cluster { RectangularBoundary = new RectangularClusterBoundary() };
             var clusterWithChildLists = new ClusterWithChildLists(cluster);
-            cluster.Barycenter = TryGetPointAttribute(GeometryToken.Barycenter);
-            var clusterId = GetAttribute(GeometryToken.Id);
-            stringToClusters[clusterId] = clusterWithChildLists;
-            ReadChildClusters(clusterWithChildLists.ChildClusters);
-            ReadChildNodes(clusterWithChildLists.ChildNodes);
-            XmlRead();
-            switch (NameToToken())
+            cluster.Barycenter = this.TryGetPointAttribute(GeometryToken.Barycenter);
+            var clusterId = this.GetAttribute(GeometryToken.Id);
+            this.stringToClusters[clusterId] = clusterWithChildLists;
+            this.ReadChildClusters(clusterWithChildLists.ChildClusters);
+            this.ReadChildNodes(clusterWithChildLists.ChildNodes);
+            this.XmlRead();
+            switch (this.NameToToken())
             {
                 case GeometryToken.ICurve:
-                    cluster.BoundaryCurve = ReadICurve();
+                    cluster.BoundaryCurve = this.ReadICurve();
                     break;
                 case GeometryToken.Curve:
-                    cluster.BoundaryCurve = ReadCurve();
-                    XmlRead();
+                    cluster.BoundaryCurve = this.ReadCurve();
+                    this.XmlRead();
                     break;
                 case GeometryToken.Rect:
-                    cluster.BoundaryCurve = ReadRect();
-                    XmlRead();
+                    cluster.BoundaryCurve = this.ReadRect();
+                    this.XmlRead();
                     break;
             }
 
-            if (XmlReader.NodeType != XmlNodeType.EndElement)
-                cluster.RectangularBoundary = ReadClusterRectBoundary();
+            if (this.XmlReader.NodeType != XmlNodeType.EndElement) {
+                cluster.RectangularBoundary = this.ReadClusterRectBoundary();
+            }
 
-            ReadEndElement();
+            this.ReadEndElement();
         }
 
-        RectangularClusterBoundary ReadClusterRectBoundary()
+        private RectangularClusterBoundary ReadClusterRectBoundary()
         {
             RectangularClusterBoundary recClBnd = new RectangularClusterBoundary
             {
-                LeftMargin = GetDoubleAttribute(GeometryToken.LeftMargin),
-                RightMargin = GetDoubleAttribute(GeometryToken.RightMargin),
-                TopMargin = GetDoubleAttribute(GeometryToken.TopMargin),
-                BottomMargin = GetDoubleAttribute(GeometryToken.BottomMargin)
+                LeftMargin = this.GetDoubleAttribute(GeometryToken.LeftMargin),
+                RightMargin = this.GetDoubleAttribute(GeometryToken.RightMargin),
+                TopMargin = this.GetDoubleAttribute(GeometryToken.TopMargin),
+                BottomMargin = this.GetDoubleAttribute(GeometryToken.BottomMargin)
             };
 
-            if (GetAttribute(GeometryToken.DefaultLeftMargin) != null)
+            if (this.GetAttribute(GeometryToken.DefaultLeftMargin) != null)
             {
-                var defaultLeftMargin = GetDoubleAttribute(GeometryToken.DefaultLeftMargin);
-                var defaultRightMargin = GetDoubleAttribute(GeometryToken.DefaultRightMargin);
-                var defaultTopMargin = GetDoubleAttribute(GeometryToken.DefaultBottomMargin);
-                var defaultBottomMargin = GetDoubleAttribute(GeometryToken.DefaultBottomMargin);
+                var defaultLeftMargin = this.GetDoubleAttribute(GeometryToken.DefaultLeftMargin);
+                var defaultRightMargin = this.GetDoubleAttribute(GeometryToken.DefaultRightMargin);
+                var defaultTopMargin = this.GetDoubleAttribute(GeometryToken.DefaultBottomMargin);
+                var defaultBottomMargin = this.GetDoubleAttribute(GeometryToken.DefaultBottomMargin);
                 recClBnd.StoreDefaultMargin(defaultLeftMargin, defaultRightMargin, defaultBottomMargin, defaultTopMargin);
             }
 
-            recClBnd.GenerateFixedConstraints = GetBoolAttributeOrDefault(GeometryToken.GenerateFixedConstraints, false);
+            recClBnd.GenerateFixedConstraints = this.GetBoolAttributeOrDefault(GeometryToken.GenerateFixedConstraints, false);
             recClBnd.GenerateFixedConstraintsDefault =
-                GetBoolAttributeOrDefault(GeometryToken.GenerateFixedConstraintsDefault, false);
+                this.GetBoolAttributeOrDefault(GeometryToken.GenerateFixedConstraintsDefault, false);
 
-            recClBnd.MinHeight = GetDoubleAttribute(GeometryToken.MinNodeHeight);
-            recClBnd.MinWidth = GetDoubleAttribute(GeometryToken.MinNodeWidth);
+            recClBnd.MinHeight = this.GetDoubleAttribute(GeometryToken.MinNodeHeight);
+            recClBnd.MinWidth = this.GetDoubleAttribute(GeometryToken.MinNodeWidth);
 
             double ry;
             double left;
@@ -802,118 +837,126 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             double h;
             double rx;
 
-            XmlRead();
-            ReadRectParams(out left, out bottom, out w, out h, out rx, out ry);
+            this.XmlRead();
+            this.ReadRectParams(out left, out bottom, out w, out h, out rx, out ry);
             recClBnd.Rect = new Rectangle(left, bottom, new Point(w, h));
             recClBnd.RadiusX = rx;
             recClBnd.RadiusY = ry;
 
 
-            recClBnd.RightBorderInfo = ReadBorderInfo(GeometryToken.RightBorderInfo);
-            recClBnd.LeftBorderInfo = ReadBorderInfo(GeometryToken.LeftBorderInfo);
-            recClBnd.TopBorderInfo = ReadBorderInfo(GeometryToken.TopBorderInfo);
-            recClBnd.BottomBorderInfo = ReadBorderInfo(GeometryToken.BottomBorderInfo);
-            XmlRead();
-            ReadEndElement();
+            recClBnd.RightBorderInfo = this.ReadBorderInfo(GeometryToken.RightBorderInfo);
+            recClBnd.LeftBorderInfo = this.ReadBorderInfo(GeometryToken.LeftBorderInfo);
+            recClBnd.TopBorderInfo = this.ReadBorderInfo(GeometryToken.TopBorderInfo);
+            recClBnd.BottomBorderInfo = this.ReadBorderInfo(GeometryToken.BottomBorderInfo);
+            this.XmlRead();
+            this.ReadEndElement();
             return recClBnd;
         }
 
-        BorderInfo ReadBorderInfo(GeometryToken token)
+        private BorderInfo ReadBorderInfo(GeometryToken token)
         {
-            XmlRead();
-            CheckToken(token);
+            this.XmlRead();
+            this.CheckToken(token);
             var bi = new BorderInfo
             {
-                InnerMargin = GetDoubleAttribute(GeometryToken.InnerMargin),
-                FixedPosition = GetDoubleAttribute(GeometryToken.FixedPosition),
-                Weight = GetDoubleAttribute(GeometryToken.Weight)
+                InnerMargin = this.GetDoubleAttribute(GeometryToken.InnerMargin),
+                FixedPosition = this.GetDoubleAttribute(GeometryToken.FixedPosition),
+                Weight = this.GetDoubleAttribute(GeometryToken.Weight)
             };
             return bi;
         }
 
-        void ReadChildClusters(List<string> childClusters)
+        private void ReadChildClusters(List<string> childClusters)
         {
-            var clusterIds = GetAttribute(GeometryToken.ChildClusters);
-            if (string.IsNullOrEmpty(clusterIds)) return;
+            var clusterIds = this.GetAttribute(GeometryToken.ChildClusters);
+            if (string.IsNullOrEmpty(clusterIds)) {
+                return;
+            }
+
             childClusters.AddRange(clusterIds.Split(' '));
         }
 
-        void ReadChildNodes(List<string> childNodes)
+        private void ReadChildNodes(List<string> childNodes)
         {
-            var nodeIds = GetAttribute(GeometryToken.ChildNodes);
-            if (string.IsNullOrEmpty(nodeIds)) return;
+            var nodeIds = this.GetAttribute(GeometryToken.ChildNodes);
+            if (string.IsNullOrEmpty(nodeIds)) {
+                return;
+            }
+
             childNodes.AddRange(nodeIds.Split(' '));
         }
 
-        void ReadEdges()
+        private void ReadEdges()
         {
-            CheckToken(GeometryToken.Edges);
+            this.CheckToken(GeometryToken.Edges);
 
-            if (XmlReader.IsEmptyElement)
+            if (this.XmlReader.IsEmptyElement)
             {
-                XmlRead();
+                this.XmlRead();
                 return;
             }
 
-            XmlRead();
-            while (TokenIs(GeometryToken.Edge))
-                ReadEdge();
-            ReadEndElement();
+            this.XmlRead();
+            while (this.TokenIs(GeometryToken.Edge)) {
+                this.ReadEdge();
+            }
+
+            this.ReadEndElement();
         }
 
-        void ReadEdge()
+        private void ReadEdge()
         {
-            CheckToken(GeometryToken.Edge);
-            Node s = ReadSourceNode();
-            Node t = ReadTargetNode();
+            this.CheckToken(GeometryToken.Edge);
+            Node s = this.ReadSourceNode();
+            Node t = this.ReadTargetNode();
             var edge = new Edge(s, t)
             {
-                Separation = (int)GetDoubleAttributeOrDefault(GeometryToken.Separation, 1),
-                LineWidth = GetDoubleAttributeOrDefault(GeometryToken.LineWidth, 1),
-                Weight = (int)GetDoubleAttributeOrDefault(GeometryToken.Weight, 1),
+                Separation = (int)this.GetDoubleAttributeOrDefault(GeometryToken.Separation, 1),
+                LineWidth = this.GetDoubleAttributeOrDefault(GeometryToken.LineWidth, 1),
+                Weight = (int)this.GetDoubleAttributeOrDefault(GeometryToken.Weight, 1),
 
             };
-            string id = GetAttribute(GeometryToken.Id);
+            string id = this.GetAttribute(GeometryToken.Id);
             if (id != null)
             {
-                Debug.Assert(idToEdges.ContainsKey(id) == false);
-                idToEdges[id] = edge;
+                Debug.Assert(this.idToEdges.ContainsKey(id) == false);
+                this.idToEdges[id] = edge;
             }
             else
             {
-                Debug.Assert(idToEdges.Count == 0); // we consistently should have no ids or unique id per edge
+                Debug.Assert(this.idToEdges.Count == 0); // we consistently should have no ids or unique id per edge
             }
 
-            EdgeList.Add(edge);
-            ReadArrowheadAtSource(edge);
-            ReadArrowheadAtTarget(edge);
-            ReadLabelFromAttribute(edge);
+            this.EdgeList.Add(edge);
+            this.ReadArrowheadAtSource(edge);
+            this.ReadArrowheadAtTarget(edge);
+            this.ReadLabelFromAttribute(edge);
             bool breakTheLoop = false;
             //edge.UnderlyingPolyline = ReadUnderlyingPolyline();
-            _graph.Edges.Add(edge);
-            if (XmlReader.IsEmptyElement)
+            this._graph.Edges.Add(edge);
+            if (this.XmlReader.IsEmptyElement)
             {
-                XmlReader.Skip();
+                this.XmlReader.Skip();
                 return;
             }
-            XmlRead();
+            this.XmlRead();
             do
             {
-                GeometryToken token = GetElementTag();
+                GeometryToken token = this.GetElementTag();
                 switch (token)
                 {
                     case GeometryToken.Curve:
-                        edge.Curve = ReadICurve();
+                        edge.Curve = this.ReadICurve();
                         break;
                     case GeometryToken.LineSegment:
-                        edge.Curve = ReadLineSeg();
+                        edge.Curve = this.ReadLineSeg();
                         break;
                     case GeometryToken.Edge:
-                        ReadEndElement();
+                        this.ReadEndElement();
                         breakTheLoop = true;
                         break;
                     case GeometryToken.CubicBezierSegment:
-                        edge.Curve = ReadCubucBezierSegment();
+                        edge.Curve = this.ReadCubucBezierSegment();
                         break;
                     case GeometryToken.Polyline:
 
@@ -922,52 +965,56 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
                         breakTheLoop = true;
                         break;
                 }
-                if (!breakTheLoop)
-                    XmlRead();
+                if (!breakTheLoop) {
+                    this.XmlRead();
+                }
             } while (!breakTheLoop);
             //XmlReader.Skip();
         }
 
-        CubicBezierSegment ReadCubucBezierSegment() {
-            var str = GetAttribute(GeometryToken.Points);
+        private CubicBezierSegment ReadCubucBezierSegment() {
+            var str = this.GetAttribute(GeometryToken.Points);
             var ss = str.Split(' ');
 
             var nonEmptySs = ss.Where(s => !string.IsNullOrEmpty(s)).ToList();
-            if (nonEmptySs.Count != 8)
-                Error("wrong number of points in LineSegment");
+            if (nonEmptySs.Count != 8) {
+                this.Error("wrong number of points in LineSegment");
+            }
 
-            var ds = nonEmptySs.Select(ParseDouble).ToArray();
+            var ds = nonEmptySs.Select(this.ParseDouble).ToArray();
             return new CubicBezierSegment(new Point(ds[0], ds[1]), new Point(ds[2], ds[3]), new Point(ds[4], ds[5]), new Point(ds[6], ds[7]) );
         }
 
-
-        void ReadArrowheadAtSource(Edge edge)
+        private void ReadArrowheadAtSource(Edge edge)
         {
-            var str = GetAttribute(GeometryToken.As);
+            var str = this.GetAttribute(GeometryToken.As);
             var arrowhead =
-                edge.EdgeGeometry.SourceArrowhead = str != null ? new Arrowhead { TipPosition = ParsePoint(str) } : null;
-            if (arrowhead != null)
-                arrowhead.Length = GetDoubleAttributeOrDefault(GeometryToken.Asl, Arrowhead.DefaultArrowheadLength);
-            else
+                edge.EdgeGeometry.SourceArrowhead = str != null ? new Arrowhead { TipPosition = this.ParsePoint(str) } : null;
+            if (arrowhead != null) {
+                arrowhead.Length = this.GetDoubleAttributeOrDefault(GeometryToken.Asl, Arrowhead.DefaultArrowheadLength);
+            } else
             {
-                str = GetAttribute(GeometryToken.Asl);
-                if (str != null)
-                    edge.EdgeGeometry.SourceArrowhead = new Arrowhead { Length = ParseDouble(str) };
+                str = this.GetAttribute(GeometryToken.Asl);
+                if (str != null) {
+                    edge.EdgeGeometry.SourceArrowhead = new Arrowhead { Length = this.ParseDouble(str) };
+                }
             }
         }
 
-        Point ParsePoint(string str)
+        private Point ParsePoint(string str)
         {
             var xy = str.Split(' ').ToArray();
             Debug.Assert(xy.Length == 2);
             double x, y;
-            if (double.TryParse(xy[0], out x) && double.TryParse(xy[1], out y))
+            if (double.TryParse(xy[0], out x) && double.TryParse(xy[1], out y)) {
                 return new Point(x, y);
-            Error("invalid point format" + str);
+            }
+
+            this.Error("invalid point format" + str);
             return new Point();
         }
 
-        Point[] ParsePoints(string str)
+        private Point[] ParsePoints(string str)
         {
             var tokens = str.Split(' ');
             Debug.Assert(tokens.Length % 2 == 0);
@@ -975,37 +1022,42 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             for (int i = 0; i < tokens.Length - 1; i += 2)
             {
                 double x, y;
-                if (double.TryParse(tokens[i], out x) && double.TryParse(tokens[i + 1], out y))
+                if (double.TryParse(tokens[i], out x) && double.TryParse(tokens[i + 1], out y)) {
                     ret[i / 2] = new Point(x, y);
-                else
-                    Error("invalid point format" + str);
+                } else {
+                    this.Error("invalid point format" + str);
+                }
             }
             return ret;
         }
 
-        void ReadArrowheadAtTarget(Edge edge)
+        private void ReadArrowheadAtTarget(Edge edge)
         {
-            var str = GetAttribute(GeometryToken.At);
+            var str = this.GetAttribute(GeometryToken.At);
             var arrowhead =
-                edge.EdgeGeometry.TargetArrowhead = str != null ? new Arrowhead { TipPosition = ParsePoint(str) } : null;
-            if (arrowhead != null)
-                arrowhead.Length = GetDoubleAttributeOrDefault(GeometryToken.Atl, Arrowhead.DefaultArrowheadLength);
-            else
+                edge.EdgeGeometry.TargetArrowhead = str != null ? new Arrowhead { TipPosition = this.ParsePoint(str) } : null;
+            if (arrowhead != null) {
+                arrowhead.Length = this.GetDoubleAttributeOrDefault(GeometryToken.Atl, Arrowhead.DefaultArrowheadLength);
+            } else
             {
-                str = GetAttribute(GeometryToken.Atl);
-                if (str != null)
-                    edge.EdgeGeometry.TargetArrowhead = new Arrowhead { Length = ParseDouble(str) };
+                str = this.GetAttribute(GeometryToken.Atl);
+                if (str != null) {
+                    edge.EdgeGeometry.TargetArrowhead = new Arrowhead { Length = this.ParseDouble(str) };
+                }
             }
         }
 
-        void ReadLabelFromAttribute(GeometryObject geomObj)
+        private void ReadLabelFromAttribute(GeometryObject geomObj)
         {
             string str;
-            if (!TryGetAttribute(GeometryToken.Label, out str)) return;
+            if (!this.TryGetAttribute(GeometryToken.Label, out str)) {
+                return;
+            }
+
             var label = new Label(geomObj);
             Point center;
             double width, height;
-            ParseLabel(str, out center, out width, out height);
+            this.ParseLabel(str, out center, out width, out height);
             label.Center = center;
             label.Width = width;
             label.Height = height;
@@ -1017,181 +1069,211 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             }
         }
 
-
-        void ParseLabel(string str, out Point center, out double width, out double height)
+        private void ParseLabel(string str, out Point center, out double width, out double height)
         {
             var ss = str.Split(' ');
             Debug.Assert(ss.Length == 4);
 
-            center = new Point(ParseDouble(ss[0]), ParseDouble(ss[1]));
-            width = ParseDouble(ss[2]);
-            height = ParseDouble(ss[3]);
+            center = new Point(this.ParseDouble(ss[0]), this.ParseDouble(ss[1]));
+            width = this.ParseDouble(ss[2]);
+            height = this.ParseDouble(ss[3]);
         }
 
-        double ParseDouble(string s)
+        private double ParseDouble(string s)
         {
             double ret;
-            if (double.TryParse(s, out ret))
+            if (double.TryParse(s, out ret)) {
                 return ret;
-            Error(" cannot parse double " + s);
+            }
+
+            this.Error(" cannot parse double " + s);
             return 0;
         }
 
-        Node ReadTargetNode()
+        private Node ReadTargetNode()
         {
-            var targetId = GetMustAttribute(GeometryToken.T);
-            return GetNodeOrClusterById(targetId);
+            var targetId = this.GetMustAttribute(GeometryToken.T);
+            return this.GetNodeOrClusterById(targetId);
         }
 
-        Node ReadSourceNode()
+        private Node ReadSourceNode()
         {
-            var id = GetMustAttribute(GeometryToken.S);
-            return GetNodeOrClusterById(id);
+            var id = this.GetMustAttribute(GeometryToken.S);
+            return this.GetNodeOrClusterById(id);
         }
 
-        Node GetNodeOrClusterById(string id)
+        private Node GetNodeOrClusterById(string id)
         {
             Node ret;
-            if (nodeIdToNodes.TryGetValue(id, out ret))
+            if (this.nodeIdToNodes.TryGetValue(id, out ret)) {
                 return ret;
+            }
 
-            return stringToClusters[id].Cluster;
+            return this.stringToClusters[id].Cluster;
 
         }
 
-        void ReadNodes()
+        private void ReadNodes()
         {
-            if (XmlReader.IsEmptyElement) return;
-            XmlRead();
-            while (TokenIs(GeometryToken.Node))
-                ReadNode();
-            ReadEndElement();
+            if (this.XmlReader.IsEmptyElement) {
+                return;
+            }
+
+            this.XmlRead();
+            while (this.TokenIs(GeometryToken.Node)) {
+                this.ReadNode();
+            }
+
+            this.ReadEndElement();
         }
 
         internal const double NodeDefaultPadding = 1;
 
-        void ReadNode()
+        private void ReadNode()
         {
-            string nodeId = GetMustAttribute(GeometryToken.Id);
-            double nodePadding = GetDoubleAttributeOrDefault(GeometryToken.Padding, NodeDefaultPadding);
-            XmlRead();
-            var node = new Node(ReadICurve()) { Padding = nodePadding, UserData = nodeId };
-            if (node.BoundaryCurve == null)
+            string nodeId = this.GetMustAttribute(GeometryToken.Id);
+            double nodePadding = this.GetDoubleAttributeOrDefault(GeometryToken.Padding, NodeDefaultPadding);
+            this.XmlRead();
+            var node = new Node(this.ReadICurve()) { Padding = nodePadding, UserData = nodeId };
+            if (node.BoundaryCurve == null) {
                 throw new InvalidOperationException();
-            _graph.Nodes.Add(node);
-            XmlReader.Skip();
-            ReadEndElement();
-            nodeIdToNodes[nodeId] = node;
+            }
+
+            this._graph.Nodes.Add(node);
+            this.XmlReader.Skip();
+            this.ReadEndElement();
+            this.nodeIdToNodes[nodeId] = node;
         }
 
-        string GetAttribute(GeometryToken token)
+        private string GetAttribute(GeometryToken token)
         {
-            return XmlReader.GetAttribute(GeometryGraphWriter.FirstCharToLower(token));
+            return this.XmlReader.GetAttribute(GeometryGraphWriter.FirstCharToLower(token));
         }
 
-        bool TryGetAttribute(GeometryToken token, out string val)
+        private bool TryGetAttribute(GeometryToken token, out string val)
         {
-            return (val = GetAttribute(token)) != null;
+            return (val = this.GetAttribute(token)) != null;
         }
 
-        string GetMustAttribute(GeometryToken token)
+        private string GetMustAttribute(GeometryToken token)
         {
             var s = GeometryGraphWriter.FirstCharToLower(token);
-            var ret = XmlReader.GetAttribute(GeometryGraphWriter.FirstCharToLower(token));
-            if (ret != null)
+            var ret = this.XmlReader.GetAttribute(GeometryGraphWriter.FirstCharToLower(token));
+            if (ret != null) {
                 return ret;
-            Error("attribute " + s + " not found");
+            }
+
+            this.Error("attribute " + s + " not found");
             return null;
         }
 
         [SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider",
             MessageId = "System.String.Format(System.String,System.Object)")]
-        int GetIntAttribute(GeometryToken token)
+        private int GetIntAttribute(GeometryToken token)
         {
-            var val = GetAttribute(token);
-            if (val == null)
-                Error(String.Format("attribute {0} not found", token));
+            var val = this.GetAttribute(token);
+            if (val == null) {
+                this.Error(String.Format("attribute {0} not found", token));
+            }
+
             int ret;
-            if (int.TryParse(val, out ret))
+            if (int.TryParse(val, out ret)) {
                 return ret;
-            Error("cannot parse an int value " + val);
+            }
+
+            this.Error("cannot parse an int value " + val);
             return 0;
         }
 
         [SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider",
             MessageId = "System.String.Format(System.String,System.Object)")]
-        double GetDoubleAttribute(GeometryToken token)
+        private double GetDoubleAttribute(GeometryToken token)
         {
-            var val = GetAttribute(token);
-            if (val == null)
-                Error(String.Format("attribute {0} not found", token));
+            var val = this.GetAttribute(token);
+            if (val == null) {
+                this.Error(String.Format("attribute {0} not found", token));
+            }
+
             double ret;
-            if (double.TryParse(val, out ret))
+            if (double.TryParse(val, out ret)) {
                 return ret;
-            Error("cannot parse an int value " + val);
+            }
+
+            this.Error("cannot parse an int value " + val);
             return 0;
         }
 
-        double GetDoubleAttributeOrDefault(GeometryToken token, double defaultVal)
+        private double GetDoubleAttributeOrDefault(GeometryToken token, double defaultVal)
         {
-            string val = GetAttribute(token);
-            if (val == null)
+            string val = this.GetAttribute(token);
+            if (val == null) {
                 return defaultVal;
+            }
+
             double ret;
-            if (double.TryParse(val, out ret))
+            if (double.TryParse(val, out ret)) {
                 return ret;
-            Error("cannot parse a double value " + val);
+            }
+
+            this.Error("cannot parse a double value " + val);
             return 0;
         }
 
-        bool GetBoolAttributeOrDefault(GeometryToken token, bool defaultVal)
+        private bool GetBoolAttributeOrDefault(GeometryToken token, bool defaultVal)
         {
-            string val = GetAttribute(token);
-            if (val == null)
+            string val = this.GetAttribute(token);
+            if (val == null) {
                 return defaultVal;
+            }
+
             bool ret;
-            if (bool.TryParse(val, out ret))
+            if (bool.TryParse(val, out ret)) {
                 return ret;
-            Error("cannot parse a bool value " + val);
+            }
+
+            this.Error("cannot parse a bool value " + val);
             return false;
         }
 
-        int GetIntAttributeOrDefault(GeometryToken token, int defaultVal)
+        private int GetIntAttributeOrDefault(GeometryToken token, int defaultVal)
         {
-            string val = GetAttribute(token);
-            if (val == null)
+            string val = this.GetAttribute(token);
+            if (val == null) {
                 return defaultVal;
+            }
+
             int ret;
-            if (int.TryParse(val, out ret))
+            if (int.TryParse(val, out ret)) {
                 return ret;
-            Error("cannot parse a bool value " + val);
+            }
+
+            this.Error("cannot parse a bool value " + val);
             return 0;
         }
 
-
-        Point TryGetPointAttribute(GeometryToken token)
+        private Point TryGetPointAttribute(GeometryToken token)
         {
-            string val = GetAttribute(token);
-            return val == null ? new Point() : ParsePoint(val);
+            string val = this.GetAttribute(token);
+            return val == null ? new Point() : this.ParsePoint(val);
         }
 
-        void Error(string msg)
+        private void Error(string msg)
         {
-            throw new InvalidOperationException(msg + ";" + GetPositionInfo());
+            throw new InvalidOperationException(msg + ";" + this.GetPositionInfo());
         }
 
-        ICurve ReadICurve()
+        private ICurve ReadICurve()
         {
-            switch (NameToToken())
+            switch (this.NameToToken())
             {
                 case GeometryToken.Curve:
-                    return ReadCurve();
+                    return this.ReadCurve();
                 case GeometryToken.Ellipse:
-                    return ReadEllipse();
+                    return this.ReadEllipse();
                 case GeometryToken.Rect:
-                    return ReadRect();
+                    return this.ReadRect();
                 case GeometryToken.Polygon:
-                    return ReadPolygon();
+                    return this.ReadPolygon();
                 //            if (hasCurve) {
                 //                XmlRead();
                 //                ICurve ret = null;
@@ -1209,19 +1291,23 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             return null;
         }
 
-        ICurve ReadPolygon()
+        private ICurve ReadPolygon()
         {
-            var pointString = GetMustAttribute(GeometryToken.Points);
+            var pointString = this.GetMustAttribute(GeometryToken.Points);
             var t = pointString.Split(' ');
-            if (t.Length == 0 || t.Length % 2 != 0)
-                Error("invalid input for the polygon");
+            if (t.Length == 0 || t.Length % 2 != 0) {
+                this.Error("invalid input for the polygon");
+            }
+
             var poly = new Polyline { Closed = true };
-            for (int i = 0; i < t.Length; i += 2)
-                poly.AddPoint(new Point(ParseDouble(t[i]), ParseDouble(t[i + 1])));
+            for (int i = 0; i < t.Length; i += 2) {
+                poly.AddPoint(new Point(this.ParseDouble(t[i]), this.ParseDouble(t[i + 1])));
+            }
+
             return poly;
         }
 
-        ICurve ReadRect()
+        private ICurve ReadRect()
         {
             double y;
             double width;
@@ -1229,48 +1315,50 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             double rx;
             double ry;
             double x;
-            ReadRectParams(out x, out y, out width, out height, out rx, out ry);
+            this.ReadRectParams(out x, out y, out width, out height, out rx, out ry);
             var box = new Rectangle(x, y, x + width, y + height);
             return new RoundedRect(box, rx, ry);
         }
 
-        void ReadRectParams(out double x, out double y, out double width, out double height, out double rx,
+        private void ReadRectParams(out double x, out double y, out double width, out double height, out double rx,
             out double ry)
         {
-            x = GetDoubleAttributeOrDefault(GeometryToken.X, 0);
-            y = GetDoubleAttributeOrDefault(GeometryToken.Y, 0);
-            width = ParseDouble(GetMustAttribute(GeometryToken.Width));
-            height = ParseDouble(GetMustAttribute(GeometryToken.Height));
-            rx = GetDoubleAttributeOrDefault(GeometryToken.Rx, 0);
-            ry = GetDoubleAttributeOrDefault(GeometryToken.Ry, 0);
+            x = this.GetDoubleAttributeOrDefault(GeometryToken.X, 0);
+            y = this.GetDoubleAttributeOrDefault(GeometryToken.Y, 0);
+            width = this.ParseDouble(this.GetMustAttribute(GeometryToken.Width));
+            height = this.ParseDouble(this.GetMustAttribute(GeometryToken.Height));
+            rx = this.GetDoubleAttributeOrDefault(GeometryToken.Rx, 0);
+            ry = this.GetDoubleAttributeOrDefault(GeometryToken.Ry, 0);
         }
 
-        ICurve ReadCurve()
+        private ICurve ReadCurve()
         {
-            if (XmlReader.MoveToFirstAttribute())
+            if (this.XmlReader.MoveToFirstAttribute())
             {
-                var token = NameToToken();
+                var token = this.NameToToken();
                 switch (token)
                 {
                     case GeometryToken.CurveData:
-                        return ParseCurve(XmlReader.Value);
+                        return this.ParseCurve(this.XmlReader.Value);
                 }
                 throw new InvalidOperationException();
             }
-            Error("No boundary curve is defined");
+            this.Error("No boundary curve is defined");
             return null;
         }
 
-        GeometryToken NameToToken()
+        private GeometryToken NameToToken()
         {
             GeometryToken token;
-            if (Enum.TryParse(XmlReader.Name, true, out token))
+            if (Enum.TryParse(this.XmlReader.Name, true, out token)) {
                 return token;
-            Error("cannot parse " + XmlReader.Name);
+            }
+
+            this.Error("cannot parse " + this.XmlReader.Name);
             return GeometryToken.Error;
         }
 
-        ICurve ParseCurve(string curveData)
+        private ICurve ParseCurve(string curveData)
         {
             var curve = new Curve();
             var curveStream = new CurveStream(curveData);
@@ -1278,36 +1366,40 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             do
             {
                 var curveStreamElement = curveStream.GetNextCurveStreamElement();
-                if (curveStreamElement == null)
+                if (curveStreamElement == null) {
                     return curve;
+                }
+
                 var charStreamElement = curveStreamElement as CharStreamElement;
                 if (charStreamElement == null)
                 {
-                    Error("wrong formatted curve string " + curveStreamElement);
+                    this.Error("wrong formatted curve string " + curveStreamElement);
                     return null;
                 }
-                AddCurveSegment(curveStream, charStreamElement.Char, curve, ref currentPoint);
+                this.AddCurveSegment(curveStream, charStreamElement.Char, curve, ref currentPoint);
             } while (true);
         }
 
         [SuppressMessage("Microsoft.Maintainability", "CA1502:AvoidExcessiveComplexity")]
-        void AddCurveSegment(CurveStream curveStream, char c, Curve curve, ref Point currentPoint)
+        private void AddCurveSegment(CurveStream curveStream, char c, Curve curve, ref Point currentPoint)
         {
             switch (c)
             {
                 case 'M': //moveto
-                    currentPoint = GetNextPointFromCurveData(curveStream);
+                    currentPoint = this.GetNextPointFromCurveData(curveStream);
                     break;
                 case 'm': //relative moveto
                     throw new NotImplementedException();
                 case 'Z':
                 case 'z': //closepath
-                    if (curve.Segments.Count == 0)
-                        Error("the curve is too short");
+                    if (curve.Segments.Count == 0) {
+                        this.Error("the curve is too short");
+                    }
+
                     curve.AddSegment(new LineSegment(currentPoint, currentPoint = curve.Start));
                     break;
                 case 'L': //lineto
-                    ProceedWithLines(curve, curveStream, ref currentPoint);
+                    this.ProceedWithLines(curve, curveStream, ref currentPoint);
                     break;
                 case 'l': //lineto relative
                     throw new NotImplementedException();
@@ -1320,7 +1412,7 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
                 case 'v': //lineto vertical relative
                     throw new NotImplementedException();
                 case 'C': //cubic Bezier
-                    ProceedWithCubicBeziers(curve, curveStream, ref currentPoint);
+                    this.ProceedWithCubicBeziers(curve, curveStream, ref currentPoint);
                     break;
                 case 'c': //cubic Bezier relative
                     throw new NotImplementedException();
@@ -1337,42 +1429,44 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
                 case 't': //quadratic Bezier relative shorthand
                     throw new NotImplementedException();
                 case 'A': //elleptical arc
-                    ReadEllepticalArc(curve, curveStream, ref currentPoint);
+                    this.ReadEllepticalArc(curve, curveStream, ref currentPoint);
                     break;
                 case 'a': //eleptical arc relative
                     throw new NotImplementedException();
                 default:
-                    Error("unknown character " + c);
+                    this.Error("unknown character " + c);
                     break;
             }
         }
 
-        void ProceedWithCubicBeziers(Curve curve, CurveStream curveStream, ref Point currentPoint)
+        private void ProceedWithCubicBeziers(Curve curve, CurveStream curveStream, ref Point currentPoint)
         {
             do
             {
-                curve.AddSegment(new CubicBezierSegment(currentPoint, GetNextPointFromCurveData(curveStream),
-                    GetNextPointFromCurveData(curveStream), currentPoint = GetNextPointFromCurveData(curveStream)));
+                curve.AddSegment(new CubicBezierSegment(currentPoint, this.GetNextPointFromCurveData(curveStream),
+                    this.GetNextPointFromCurveData(curveStream), currentPoint = this.GetNextPointFromCurveData(curveStream)));
             } while (curveStream.PickNextCurveStreamElement() is DoubleStreamElement);
         }
 
-        void ReadEllepticalArc(Curve curve, CurveStream curveStream, ref Point currentPoint)
+        private void ReadEllepticalArc(Curve curve, CurveStream curveStream, ref Point currentPoint)
         {
-            curve.AddSegment(ReadEllepticalArc(curveStream, ref currentPoint));
+            curve.AddSegment(this.ReadEllepticalArc(curveStream, ref currentPoint));
         }
 
-        ICurve ReadEllepticalArc(CurveStream curveStream, ref Point currentPoint)
+        private ICurve ReadEllepticalArc(CurveStream curveStream, ref Point currentPoint)
         {
-            var rx = GetNextDoubleFromCurveData(curveStream);
-            var ry = GetNextDoubleFromCurveData(curveStream);
-            var xAxisRotation = GetNextDoubleFromCurveData(curveStream) / 180 * Math.PI;
-            var largeArcFlag = (int)GetNextDoubleFromCurveData(curveStream);
-            var sweepFlag = (int)GetNextDoubleFromCurveData(curveStream);
-            var endPoint = GetNextPointFromCurveData(curveStream);
+            var rx = this.GetNextDoubleFromCurveData(curveStream);
+            var ry = this.GetNextDoubleFromCurveData(curveStream);
+            var xAxisRotation = this.GetNextDoubleFromCurveData(curveStream) / 180 * Math.PI;
+            var largeArcFlag = (int)this.GetNextDoubleFromCurveData(curveStream);
+            var sweepFlag = (int)this.GetNextDoubleFromCurveData(curveStream);
+            var endPoint = this.GetNextPointFromCurveData(curveStream);
             //figure out the transform to the circle
             //then solve this problem on the circle
-            if (ApproximateComparer.Close(rx, 0) || ApproximateComparer.Close(ry, 0))
-                Error("ellipseArc radius is too small");
+            if (ApproximateComparer.Close(rx, 0) || ApproximateComparer.Close(ry, 0)) {
+                this.Error("ellipseArc radius is too small");
+            }
+
             var yScale = rx / ry;
             var rotationMatrix = PlaneTransformation.Rotation(-xAxisRotation);
             var scaleMatrix = new PlaneTransformation(1, 0, 0, 0, yScale, 0);
@@ -1384,7 +1478,7 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             double startAngle;
             double endAngle;
             Point axisY;
-            GetArcCenterAndAngles(rx, largeArcFlag, sweepFlag, start, end, out center, out startAngle, out endAngle,
+            this.GetArcCenterAndAngles(rx, largeArcFlag, sweepFlag, start, end, out center, out startAngle, out endAngle,
                 out axisY);
             var inverted = transform.Inverse;
             center = inverted * center;
@@ -1397,7 +1491,7 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             return ret;
         }
 
-        void GetArcCenterAndAngles(double r, int largeArcFlag, int sweepFlag, Point start, Point end, out Point center,
+        private void GetArcCenterAndAngles(double r, int largeArcFlag, int sweepFlag, Point start, Point end, out Point center,
             out double startAngle, out double endAngle, out Point axisY)
         {
             var d = end - start;
@@ -1417,81 +1511,88 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
             var axisX = new Point(r, 0);
             axisY = sweepFlag == 1 ? new Point(0, r) : new Point(0, -r);
             startAngle = Point.Angle(axisX, start - center);
-            if (sweepFlag == 0)
+            if (sweepFlag == 0) {
                 startAngle = 2 * Math.PI - startAngle;
+            }
 
             endAngle = Point.Angle(axisX, end - center);
-            if (sweepFlag == 0)
+            if (sweepFlag == 0) {
                 endAngle = 2 * Math.PI - endAngle;
-            if (ApproximateComparer.Close(endAngle, startAngle) && largeArcFlag == 1)
+            }
+
+            if (ApproximateComparer.Close(endAngle, startAngle) && largeArcFlag == 1) {
                 endAngle += 2 * Math.PI;
-            else if (endAngle < startAngle)
+            } else if (endAngle < startAngle) {
                 endAngle += 2 * Math.PI;
+            }
         }
 
-        void ProceedWithLines(Curve curve, CurveStream curveStream, ref Point currentPoint)
+        private void ProceedWithLines(Curve curve, CurveStream curveStream, ref Point currentPoint)
         {
             do
             {
-                curve.AddSegment(new LineSegment(currentPoint, currentPoint = GetNextPointFromCurveData(curveStream)));
+                curve.AddSegment(new LineSegment(currentPoint, currentPoint = this.GetNextPointFromCurveData(curveStream)));
             } while (curveStream.PickNextCurveStreamElement() is DoubleStreamElement);
         }
 
-        Point GetNextPointFromCurveData(CurveStream curveStream)
+        private Point GetNextPointFromCurveData(CurveStream curveStream)
         {
-            return new Point(GetNextDoubleFromCurveData(curveStream), GetNextDoubleFromCurveData(curveStream));
+            return new Point(this.GetNextDoubleFromCurveData(curveStream), this.GetNextDoubleFromCurveData(curveStream));
         }
 
-        double GetNextDoubleFromCurveData(CurveStream curveStream)
+        private double GetNextDoubleFromCurveData(CurveStream curveStream)
         {
             var a = curveStream.GetNextCurveStreamElement();
-            if (a == null)
-                Error("cannot parse curveData");
+            if (a == null) {
+                this.Error("cannot parse curveData");
+            }
 
             var d = a as DoubleStreamElement;
-            if (d == null)
-                Error("cannot parse curveData");
+            if (d == null) {
+                this.Error("cannot parse curveData");
+            }
             // ReSharper disable PossibleNullReferenceException
             return d.Double;
             // ReSharper restore PossibleNullReferenceException
         }
 
-        ICurve ReadLineSeg()
+        private ICurve ReadLineSeg()
         {
-            CheckToken(GeometryToken.LineSegment);
-            var str = GetAttribute(GeometryToken.Points);
+            this.CheckToken(GeometryToken.LineSegment);
+            var str = this.GetAttribute(GeometryToken.Points);
             var ss = str.Split(' ');
-            if (ss.Length != 4)
-                Error("wrong number of points in LineSegment");
-            var ds = ss.Select(ParseDouble).ToArray();
+            if (ss.Length != 4) {
+                this.Error("wrong number of points in LineSegment");
+            }
+
+            var ds = ss.Select(this.ParseDouble).ToArray();
             return new LineSegment(new Point(ds[0], ds[1]), new Point(ds[2], ds[3]));
         }
 
-        ICurve ReadEllipse()
+        private ICurve ReadEllipse()
         {
-            var cx = ParseDouble(GetMustAttribute(GeometryToken.Cx));
-            var cy = ParseDouble(GetMustAttribute(GeometryToken.Cy));
-            var rx = ParseDouble(GetMustAttribute(GeometryToken.Rx));
-            var ry = ParseDouble(GetMustAttribute(GeometryToken.Ry));
+            var cx = this.ParseDouble(this.GetMustAttribute(GeometryToken.Cx));
+            var cy = this.ParseDouble(this.GetMustAttribute(GeometryToken.Cy));
+            var rx = this.ParseDouble(this.GetMustAttribute(GeometryToken.Rx));
+            var ry = this.ParseDouble(this.GetMustAttribute(GeometryToken.Ry));
             return new Ellipse(rx, ry, new Point(cx, cy));
         }
 
-
-        bool TokenIs(GeometryToken t)
+        private bool TokenIs(GeometryToken t)
         {
-            return XmlReader.IsStartElement(GeometryGraphWriter.FirstCharToLower(t)) ||
-                   XmlReader.IsStartElement(t.ToString());
+            return this.XmlReader.IsStartElement(GeometryGraphWriter.FirstCharToLower(t)) ||
+                   this.XmlReader.IsStartElement(t.ToString());
         }
 
-        void MoveToContent()
+        private void MoveToContent()
         {
-            XmlReader.MoveToContent();
+            this.XmlReader.MoveToContent();
         }
 
         /// <summary>
         /// the xml reader
         ///</summary>
-        XmlReader XmlReader { get; set; }
+        private XmlReader XmlReader { get; set; }
 
         /// <summary>
         /// the xml reader
@@ -1499,56 +1600,58 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// </summary>
         public void SetXmlReader(XmlReader reader)
         {
-            XmlReader = reader;
+            this.XmlReader = reader;
         }
 
         ///<summary>
         ///used only in Debug configuration
         ///<param name="token">the token that should be here</param>
         ///</summary>
-        void CheckToken(GeometryToken token)
+        private void CheckToken(GeometryToken token)
         {
-            if (!XmlReader.IsStartElement(GeometryGraphWriter.FirstCharToLower(token)) &&
-                !XmlReader.IsStartElement(token.ToString()))
+            if (!this.XmlReader.IsStartElement(GeometryGraphWriter.FirstCharToLower(token)) &&
+                !this.XmlReader.IsStartElement(token.ToString()))
             {
-                string positionInfo = GetPositionInfo();
+                string positionInfo = this.GetPositionInfo();
                 throw new InvalidDataException(
                     String.Format(CultureInfo.InvariantCulture,
                         "expected {0}, {1}", token, positionInfo));
             }
         }
 
-        string GetPositionInfo()
+        private string GetPositionInfo()
         {
-            if (xmlTextReader != null)
-                return String.Format(CultureInfo.InvariantCulture, "line {0} col {1}", xmlTextReader.LineNumber,
-                    xmlTextReader.LinePosition);
+            if (this.xmlTextReader != null) {
+                return String.Format(CultureInfo.InvariantCulture, "line {0} col {1}", this.xmlTextReader.LineNumber,
+                    this.xmlTextReader.LinePosition);
+            }
+
             return String.Empty;
         }
 
         ///<summary>
         ///reads the end element
         ///</summary>
-        void ReadEndElement()
+        private void ReadEndElement()
         {
-            XmlReader.ReadEndElement();
+            this.XmlReader.ReadEndElement();
         }
 
 
         ///<summary>
         /// reads a double
         ///</summary>        
-        double ReadElementContentAsDouble()
+        private double ReadElementContentAsDouble()
         {
-            return XmlReader.ReadElementContentAsDouble();
+            return this.XmlReader.ReadElementContentAsDouble();
         }
 
         ///<summary>
         ///reads the line?
         ///</summary>
-        void XmlRead()
+        private void XmlRead()
         {
-            XmlReader.Read();
+            this.XmlReader.Read();
         }
 
 
@@ -1556,9 +1659,9 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// 
         /// </summary>
         /// <returns></returns>
-        int ReadElementContentAsInt()
+        private int ReadElementContentAsInt()
         {
-            return XmlReader.ReadElementContentAsInt();
+            return this.XmlReader.ReadElementContentAsInt();
         }
 
         /// <summary>
@@ -1567,8 +1670,9 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing)
-                xmlTextReader.Close();
+            if (disposing) {
+                this.xmlTextReader.Close();
+            }
         }
 
         /// <summary>
@@ -1576,7 +1680,7 @@ namespace Microsoft.Msagl.DebugHelpers.Persistence
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
     }

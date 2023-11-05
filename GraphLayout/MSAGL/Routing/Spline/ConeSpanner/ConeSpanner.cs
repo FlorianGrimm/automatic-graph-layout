@@ -10,14 +10,15 @@ using Microsoft.Msagl.Routing.Visibility;
 
 namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
     internal class ConeSpanner : AlgorithmBase {
-        readonly IEnumerable<Polyline> _obstacles;
+        private readonly IEnumerable<Polyline> _obstacles;
+
         // double coneAngle = Math.PI / 18;// ten degrees
         //double coneAngle = Math.PI / 9;// twenty degrees
 
 
-        readonly VisibilityGraph _visibilityGraph;
-        double coneAngle = Math.PI/6; // thirty degrees
-        bool _bidirectional;
+        private readonly VisibilityGraph _visibilityGraph;
+        private double coneAngle = Math.PI/6; // thirty degrees
+        private bool _bidirectional;
 
 
 
@@ -38,18 +39,18 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
             //when dragging
             Debug.Assert(coneAngle > Math.PI/180*2 && coneAngle <= Math.PI/2);
 
-            Ports = ports;
-            BorderPolyline = borderPolyline;
-            ConeAngle = coneAngle;
+            this.Ports = ports;
+            this.BorderPolyline = borderPolyline;
+            this.ConeAngle = coneAngle;
         }
 
         internal double ConeAngle {
-            get { return coneAngle; }
-            set { coneAngle = value; }
+            get { return this.coneAngle; }
+            set { this.coneAngle = value; }
         }
 
-        Set<Point> Ports { get; set; }
-        Polyline BorderPolyline { get; set; }
+        private Set<Point> Ports { get; set; }
+        private Polyline BorderPolyline { get; set; }
 
         /// <summary>
         /// If set to true then a smaller visibility graph is created.
@@ -57,8 +58,8 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
         /// once sweeping with a direction d and the second time with -d
         /// </summary>
         internal bool Bidirectional {
-            get { return _bidirectional; }
-            set { _bidirectional = value; }
+            get { return this._bidirectional; }
+            set { this._bidirectional = value; }
         }
 
         internal static int GetTotalSteps(double coneAngle) {
@@ -70,41 +71,44 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
         }
 
         protected override void RunInternal() {
-            double offset =  2*Math.PI - coneAngle/2;
-            if (!Bidirectional) {
+            double offset =  2*Math.PI - this.coneAngle /2;
+            if (!this.Bidirectional) {
                 double angle;
-                for (int i = 0; (angle = coneAngle*i) <= offset; i++) {
-                    ProgressStep();
-                    AddDirection(new Point(Math.Cos(angle), Math.Sin(angle)), BorderPolyline, _visibilityGraph);
+                for (int i = 0; (angle = this.coneAngle *i) <= offset; i++) {
+                    this.ProgressStep();
+                    this.AddDirection(new Point(Math.Cos(angle), Math.Sin(angle)), this.BorderPolyline, this._visibilityGraph);
                 }
             }
-            else
-                HandleBideractionalCase();
+            else {
+                this.HandleBideractionalCase();
+            }
         }
 
-        void HandleBideractionalCase() {
-            int k = (int)(Math.PI/coneAngle);
+        private void HandleBideractionalCase() {
+            int k = (int)(Math.PI/ this.coneAngle);
             for (int i = 0; i < k; i++) {
-                var angle = i*coneAngle;
+                var angle = i* this.coneAngle;
                 var vg0 = new VisibilityGraph();
-                AddDirection(new Point(Math.Cos(angle), Math.Sin(angle)), BorderPolyline, vg0);
+                this.AddDirection(new Point(Math.Cos(angle), Math.Sin(angle)), this.BorderPolyline, vg0);
                 var vg1 = new VisibilityGraph();
-                AddDirection(new Point(-Math.Cos(angle), -Math.Sin(angle)), BorderPolyline, vg1);
-                AddIntersectionOfBothDirectionSweepsToTheResult(vg0, vg1);                
+                this.AddDirection(new Point(-Math.Cos(angle), -Math.Sin(angle)), this.BorderPolyline, vg1);
+                this.AddIntersectionOfBothDirectionSweepsToTheResult(vg0, vg1);                
             }
 
           
 
         }
 
-        void AddIntersectionOfBothDirectionSweepsToTheResult(VisibilityGraph vg0, VisibilityGraph vg1) {
-            foreach (var edge in vg0.Edges)
-                if (vg1.FindEdge(edge.SourcePoint, edge.TargetPoint) != null)
-                    _visibilityGraph.AddEdge(edge.SourcePoint, edge.TargetPoint);
+        private void AddIntersectionOfBothDirectionSweepsToTheResult(VisibilityGraph vg0, VisibilityGraph vg1) {
+            foreach (var edge in vg0.Edges) {
+                if (vg1.FindEdge(edge.SourcePoint, edge.TargetPoint) != null) {
+                    this._visibilityGraph.AddEdge(edge.SourcePoint, edge.TargetPoint);
+                }
+            }
         }
 
-        void AddDirection(Point direction, Polyline borderPolyline, VisibilityGraph visibilityGraph) {
-            LineSweeper.Sweep(_obstacles, direction, coneAngle, visibilityGraph, Ports, borderPolyline);
+        private void AddDirection(Point direction, Polyline borderPolyline, VisibilityGraph visibilityGraph) {
+            LineSweeper.Sweep(this._obstacles, direction, this.coneAngle, visibilityGraph, this.Ports, borderPolyline);
         }
     }
 }

@@ -19,37 +19,41 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
         public ComponentCollection(Vertex[] w, int numOfv, Component givenComponent, int givenLevel)
         {   //initially every vertex is a single component
             int k = 0;
-            C = new Component[numOfv + 1];
+            this.C = new Component[numOfv + 1];
             for (int index = 1; index <= numOfv; index++)
             {
 
                 w[index].CId = 0;
-                if (w[index].Weight == 0 || w[index].ZoomLevel != givenLevel) continue;
+                if (w[index].Weight == 0 || w[index].ZoomLevel != givenLevel) {
+                    continue;
+                }
 
                 //NODE OVARLAPS WITH THE RAILS// SO IGNORE THE NODE
-                if (givenComponent != null && givenComponent.V.Contains(w[index])) continue;
+                if (givenComponent != null && givenComponent.V.Contains(w[index])) {
+                    continue;
+                }
 
                 k++;
-                C[k] = new Component { CId = k };
-                C[k].V.Add(w[index]);
-                C[k].Dead = false;
-                w[index].CId = C[k].CId;
-                NumOfComponents++;
+                this.C[k] = new Component { CId = k };
+                this.C[k].V.Add(w[index]);
+                this.C[k].Dead = false;
+                w[index].CId = this.C[k].CId;
+                this.NumOfComponents++;
             }
             if (givenComponent != null)
             {
                 k++;
-                C[k] = givenComponent;
-                C[k].CId = k;
-                C[k].Dist = 0;
-                C[k].Dead = false;
-                foreach (Vertex x in C[k].V)
+                this.C[k] = givenComponent;
+                this.C[k].CId = k;
+                this.C[k].Dist = 0;
+                this.C[k].Dead = false;
+                foreach (Vertex x in this.C[k].V)
                 {
-                    x.CId = C[k].CId;
+                    x.CId = this.C[k].CId;
                 }
-                NumOfComponents++;
+                this.NumOfComponents++;
             }
-            NumOfAliveComponents = NumOfComponents;
+            this.NumOfAliveComponents = this.NumOfComponents;
 
         }
 

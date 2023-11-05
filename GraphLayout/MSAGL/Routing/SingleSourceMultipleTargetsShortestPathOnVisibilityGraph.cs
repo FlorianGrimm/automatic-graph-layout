@@ -10,24 +10,26 @@ namespace Microsoft.Msagl.Routing {
     internal class SingleSourceMultipleTargetsShortestPathOnVisibilityGraph {
         //we are not using the A* algorithm since it does not make much sense for muliple targets
         //but we use the upper bound heuristic
-        readonly VisibilityVertex source;
-        readonly Set<VisibilityVertex> targets;
-        VisibilityVertex current;
-        VisibilityVertex closestTarget;
-        double upperBound = double.PositiveInfinity;
+        private readonly VisibilityVertex source;
+        private readonly Set<VisibilityVertex> targets;
+        private VisibilityVertex current;
+        private VisibilityVertex closestTarget;
+        private double upperBound = double.PositiveInfinity;
         internal delegate void ddType(params ICurve[] curves);
-        VisibilityGraph _visGraph;
+
+        private VisibilityGraph _visGraph;
 
         internal SingleSourceMultipleTargetsShortestPathOnVisibilityGraph(VisibilityVertex sourceVisVertex,
                                                                          IEnumerable<VisibilityVertex> targetVisVertices, VisibilityGraph visibilityGraph) {
-            _visGraph = visibilityGraph;
-            _visGraph.ClearPrevEdgesTable();
-            foreach (var v in visibilityGraph.Vertices())
+            this._visGraph = visibilityGraph;
+            this._visGraph.ClearPrevEdgesTable();
+            foreach (var v in visibilityGraph.Vertices()) {
                 v.Distance = Double.PositiveInfinity;
+            }
 
-            source = sourceVisVertex;
-            targets = new Set<VisibilityVertex>(targetVisVertices);
-            source.Distance = 0;
+            this.source = sourceVisVertex;
+            this.targets = new Set<VisibilityVertex>(targetVisVertices);
+            this.source.Distance = 0;
         }
 
 
@@ -37,31 +39,34 @@ namespace Microsoft.Msagl.Routing {
         /// <returns>a path or null if the target is not reachable from the source</returns>
         internal IEnumerable<VisibilityVertex> GetPath() {
             var pq = new GenericBinaryHeapPriorityQueue<VisibilityVertex>();
-            source.Distance = 0;
-            pq.Enqueue(source, 0);
+            this.source.Distance = 0;
+            pq.Enqueue(this.source, 0);
             while (!pq.IsEmpty()) {
-                current = pq.Dequeue();
-                if (targets.Contains(current))
+                this.current = pq.Dequeue();
+                if (this.targets.Contains(this.current)) {
                     break;
+                }
 
-                foreach (var e in current.OutEdges.Where(PassableOutEdge))
-                    ProcessNeighbor(pq, e, e.Target);
+                foreach (var e in this.current.OutEdges.Where(this.PassableOutEdge)) {
+                    this.ProcessNeighbor(pq, e, e.Target);
+                }
 
-                foreach (var e in current.InEdges.Where(PassableInEdge))
-                    ProcessNeighbor(pq, e, e.Source);
+                foreach (var e in this.current.InEdges.Where(this.PassableInEdge)) {
+                    this.ProcessNeighbor(pq, e, e.Source);
+                }
             }
 
-            return _visGraph.PreviosVertex(current) == null ? null : CalculatePath();
+            return this._visGraph.PreviosVertex(this.current) == null ? null : this.CalculatePath();
         }
 
-        bool PassableOutEdge(VisibilityEdge e) {
-            return e.Source == source || 
-                targets.Contains(e.Target) || 
+        private bool PassableOutEdge(VisibilityEdge e) {
+            return e.Source == this.source ||
+                this.targets.Contains(e.Target) || 
                 !IsForbidden(e);
         }
 
-        bool PassableInEdge(VisibilityEdge e) {
-            return targets.Contains(e.Source) || e.Target == source || !IsForbidden(e);
+        private bool PassableInEdge(VisibilityEdge e) {
+            return this.targets.Contains(e.Source) || e.Target == this.source || !IsForbidden(e);
         }
 
 
@@ -69,19 +74,21 @@ namespace Microsoft.Msagl.Routing {
             return e.IsPassable != null && !e.IsPassable() || e is TollFreeVisibilityEdge;
         }
 
-        void ProcessNeighbor(GenericBinaryHeapPriorityQueue<VisibilityVertex> pq, VisibilityEdge l,
+        private void ProcessNeighbor(GenericBinaryHeapPriorityQueue<VisibilityVertex> pq, VisibilityEdge l,
                              VisibilityVertex v) {
             var len = l.Length;
-            var c = current.Distance + len;
-            if (c >= upperBound)
+            var c = this.current.Distance + len;
+            if (c >= this.upperBound) {
                 return;
-            if (targets.Contains(v)) {
-                upperBound = c;
-                closestTarget = v;
             }
-            if (v != source && _visGraph.PreviosVertex(v) == null) {
+
+            if (this.targets.Contains(v)) {
+                this.upperBound = c;
+                this.closestTarget = v;
+            }
+            if (v != this.source && this._visGraph.PreviosVertex(v) == null) {
                 v.Distance = c;
-                _visGraph.SetPreviousEdge(v, l);
+                this._visGraph.SetPreviousEdge(v, l);
                 pq.Enqueue(v, c);
             } else if (c < v.Distance) {
                 //This condition should never hold for the dequeued nodes.
@@ -91,22 +98,23 @@ namespace Microsoft.Msagl.Routing {
                 //Changing v.Prev is fine since we come up with a path with an insignificantly
                 //smaller distance.
                 v.Distance = c;
-                _visGraph.SetPreviousEdge(v, l);
+                this._visGraph.SetPreviousEdge(v, l);
                 pq.DecreasePriority(v, c);
             }
         }
 
-        
-        IEnumerable<VisibilityVertex> CalculatePath() {
-            if (closestTarget == null)
+        private IEnumerable<VisibilityVertex> CalculatePath() {
+            if (this.closestTarget == null) {
                 return null;
+            }
+
             var ret = new List<VisibilityVertex>();
-            var v = closestTarget;
+            var v = this.closestTarget;
             do {
                 ret.Add(v);
-                v = _visGraph.PreviosVertex(v);
-            } while (v != source);
-            ret.Add(source);
+                v = this._visGraph.PreviosVertex(v);
+            } while (v != this.source);
+            ret.Add(this.source);
 
             ret.Reverse();
             return ret; 

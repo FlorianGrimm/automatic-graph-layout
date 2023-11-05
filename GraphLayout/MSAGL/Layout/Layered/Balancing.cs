@@ -12,20 +12,16 @@ namespace Microsoft.Msagl.Layout.Layered {
     /// the same number of input-output edges to feasible layers with fewer nodes
     /// </summary>
     internal class Balancing : AlgorithmBase{
+        private Set<int> jumpers = new Set<int>();
+        private Dictionary<int, IntPair> possibleJumperFeasibleIntervals;
 
-        Set<int> jumpers = new Set<int>();
-
-        Dictionary<int, IntPair> possibleJumperFeasibleIntervals;
         /// <summary>
         /// numbers of vertices in layers 
         /// </summary>
-        int[] vertsCounts;
-
-        Graph dag;
-
-        int[] layering;
-
-        int[] nodeCount;
+        private int[] vertsCounts;
+        private Graph dag;
+        private int[] layering;
+        private int[] nodeCount;
 
         /// <summary>
         /// balances the layers by moving vertices with
@@ -39,41 +35,42 @@ namespace Microsoft.Msagl.Layout.Layered {
             b.Run(cancelObj);
         }
 
-        Balancing(Graph dag, int[] layering, int[]nodeCount) {
+        private Balancing(Graph dag, int[] layering, int[]nodeCount) {
             this.nodeCount = nodeCount;
             this.dag = dag;
             this.layering = layering;
-            Init();
+            this.Init();
         }
 
         protected override void RunInternal() {
-            while (jumpers.Count > 0)
-                Jump(ChooseJumper());
+            while (this.jumpers.Count > 0) {
+                this.Jump(this.ChooseJumper());
+            }
         }
 
-        void Init() {
-            CalculateLayerCounts();
-            InitJumpers();
+        private void Init() {
+            this.CalculateLayerCounts();
+            this.InitJumpers();
         }
 
-        void Jump(int jumper) {
-            ProgressStep();
+        private void Jump(int jumper) {
+            this.ProgressStep();
             this.jumpers.Delete(jumper);
             IntPair upLow = this.possibleJumperFeasibleIntervals[jumper];
             int jumperLayer, layerToJumpTo;
             if (this.CalcJumpInfo(upLow.x, upLow.y, jumper, out jumperLayer, out layerToJumpTo)) {
                 this.layering[jumper] = layerToJumpTo;
-                int jumperCount = nodeCount[jumper];
+                int jumperCount = this.nodeCount[jumper];
                 this.vertsCounts[jumperLayer] -= jumperCount;
                 this.vertsCounts[layerToJumpTo] += jumperCount;
-                UpdateRegionsForPossibleJumpersAndInsertJumpers(jumperLayer, jumper);
+                this.UpdateRegionsForPossibleJumpersAndInsertJumpers(jumperLayer, jumper);
             }
         }
-    
 
-        bool IsJumper(int v) {
-            return possibleJumperFeasibleIntervals.ContainsKey(v);
+        private bool IsJumper(int v) {
+            return this.possibleJumperFeasibleIntervals.ContainsKey(v);
         }
+
         /// <summary>
         /// some other jumpers may stop being ones if the jump 
         /// was just in to their destination layer, so before the actual 
@@ -82,59 +79,67 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// </summary>
         /// <param name="jumperLayer">old layer of jumper</param>
         /// <param name="jumper"></param>
-        void UpdateRegionsForPossibleJumpersAndInsertJumpers(int jumperLayer, int jumper) {
+        private void UpdateRegionsForPossibleJumpersAndInsertJumpers(int jumperLayer, int jumper) {
             Set<int> neighborPossibleJumpers = new Set<int>();
             //update possible jumpers neighbors
-            foreach (int v in new Pred(dag, jumper))
-                if (IsJumper(v)) {
+            foreach (int v in new Pred(this.dag, jumper)) {
+                if (this.IsJumper(v)) {
                     this.CalculateRegionAndInsertJumper(v);
                     neighborPossibleJumpers.Insert(v);
                 }
+            }
 
-            foreach (int v in new Succ(dag, jumper))
-                if (IsJumper(v)) {
+            foreach (int v in new Succ(this.dag, jumper)) {
+                if (this.IsJumper(v)) {
                     this.CalculateRegionAndInsertJumper(v);
                     neighborPossibleJumpers.Insert(v);
                 }
+            }
 
             List<int> possibleJumpersToUpdate = new List<int>();
 
             foreach (KeyValuePair<int, IntPair> kv in this.possibleJumperFeasibleIntervals) {
-                if (!neighborPossibleJumpers.Contains(kv.Key))
-                    if (kv.Value.x > jumperLayer && kv.Value.y < jumperLayer)
+                if (!neighborPossibleJumpers.Contains(kv.Key)) {
+                    if (kv.Value.x > jumperLayer && kv.Value.y < jumperLayer) {
                         possibleJumpersToUpdate.Add(kv.Key);
+                    }
+                }
             }
 
-            foreach (int v in possibleJumpersToUpdate)
+            foreach (int v in possibleJumpersToUpdate) {
                 this.CalculateRegionAndInsertJumper(v);
+            }
         }
 
-        void InitJumpers() {
+        private void InitJumpers() {
             int[] deltas = new int[this.dag.NodeCount];
-            foreach (PolyIntEdge ie in dag.Edges) {
+            foreach (PolyIntEdge ie in this.dag.Edges) {
                 deltas[ie.Source] -= ie.Weight;
                 deltas[ie.Target] += ie.Weight;
             }
 
             this.possibleJumperFeasibleIntervals = new Dictionary<int, IntPair>();
 
-            for (int i = 0; i < dag.NodeCount; i++)
-                if (deltas[i] == 0)
-                    CalculateRegionAndInsertJumper(i);
+            for (int i = 0; i < this.dag.NodeCount; i++) {
+                if (deltas[i] == 0) {
+                    this.CalculateRegionAndInsertJumper(i);
+                }
+            }
         }
 
-        void CalculateRegionAndInsertJumper(int i) {
-            IntPair ip = new IntPair(Up(i), Down(i));
+        private void CalculateRegionAndInsertJumper(int i) {
+            IntPair ip = new IntPair(this.Up(i), this.Down(i));
             this.possibleJumperFeasibleIntervals[i] = ip;
 
-            InsertJumper(ip.x, ip.y, i);
+            this.InsertJumper(ip.x, ip.y, i);
         }
 
-        void InsertJumper(int upLayer, int lowLayer, int jumper) {
+        private void InsertJumper(int upLayer, int lowLayer, int jumper) {
             int jumperLayer;
             int layerToJumpTo;
-            if (CalcJumpInfo(upLayer, lowLayer, jumper, out jumperLayer, out layerToJumpTo))
+            if (this.CalcJumpInfo(upLayer, lowLayer, jumper, out jumperLayer, out layerToJumpTo)) {
                 this.jumpers.Insert(jumper);
+            }
         }
 
         
@@ -148,72 +153,83 @@ namespace Microsoft.Msagl.Layout.Layered {
         /// <param name="jumperLayer"></param>
         /// <param name="layerToJumpTo"></param>
         private bool CalcJumpInfo(int upLayer, int lowLayer, int jumper, out int jumperLayer, out int layerToJumpTo) {
-            jumperLayer = layering[jumper];
+            jumperLayer = this.layering[jumper];
             layerToJumpTo = -1;
-            int min = this.vertsCounts[jumperLayer] - 2*nodeCount[jumper];
+            int min = this.vertsCounts[jumperLayer] - 2* this.nodeCount[jumper];
             // jump makes sense if some layer has less than min vertices
-            for (int i = upLayer - 1; i > jumperLayer; i--) 
-                if (vertsCounts[i] < min) {
-                    min = vertsCounts[i];
+            for (int i = upLayer - 1; i > jumperLayer; i--) {
+                if (this.vertsCounts[i] < min) {
+                    min = this.vertsCounts[i];
                     layerToJumpTo = i;
                 }
- 
-            for (int i = jumperLayer - 1; i > lowLayer; i--)
-                if (vertsCounts[i] < min) {
-                    min = vertsCounts[i];
+            }
+
+            for (int i = jumperLayer - 1; i > lowLayer; i--) {
+                if (this.vertsCounts[i] < min) {
+                    min = this.vertsCounts[i];
                     layerToJumpTo = i;
                 }
+            }
+
             return layerToJumpTo != -1;
         }
+
         /// <summary>
         /// Up returns the first infeasible layer up from i that i cannot jump to
         /// </summary>
         /// <param name="i"></param>
         /// <returns></returns>
-        int Up(int i) {
+        private int Up(int i) {
             int ret = Int32.MaxValue;
             //minimum of incoming edge sources layeres
-            foreach (PolyIntEdge ie in dag.InEdges(i)) {
-                int r = layering[ie.Source] - ie.Separation + 1;
-                if (r < ret)
+            foreach (PolyIntEdge ie in this.dag.InEdges(i)) {
+                int r = this.layering[ie.Source] - ie.Separation + 1;
+                if (r < ret) {
                     ret = r;
+                }
             }
 
-            if (ret == Int32.MaxValue)
-                ret = layering[i] + 1;//
+            if (ret == Int32.MaxValue) {
+                ret = this.layering[i] + 1;//
+            }
 
             return ret;
         }
+
         /// <summary>
         /// Returns the first infeasible layer down from i that i cannot jump to
         /// </summary>
         /// <param name="i"></param>
         /// <returns></returns>
-        int Down(int i) {
+        private int Down(int i) {
             int ret = -Int32.MaxValue;
 
-            foreach (PolyIntEdge ie in dag.OutEdges(i)) {
-                int r = layering[ie.Target] + ie.Separation - 1;
-                if (r > ret)
+            foreach (PolyIntEdge ie in this.dag.OutEdges(i)) {
+                int r = this.layering[ie.Target] + ie.Separation - 1;
+                if (r > ret) {
                     ret = r;
+                }
             }
 
-            if (ret == -Int32.MaxValue)
-                ret = layering[i] - 1;
+            if (ret == -Int32.MaxValue) {
+                ret = this.layering[i] - 1;
+            }
 
             return ret;
         }
 
-        void CalculateLayerCounts() {
-            this.vertsCounts = new int[layering.Max() + 1];
-            foreach (int r in layering)
-                vertsCounts[r] += nodeCount[r];
+        private void CalculateLayerCounts() {
+            this.vertsCounts = new int[this.layering.Max() + 1];
+            foreach (int r in this.layering) {
+                this.vertsCounts[r] += this.nodeCount[r];
+            }
         }
 
-        int ChooseJumper() {
+        private int ChooseJumper() {
             //just return the first available
-            foreach (int jumper in this.jumpers)
+            foreach (int jumper in this.jumpers) {
                 return jumper;
+            }
 
             System.Diagnostics.Debug.Assert(false,"there are no jumpers to choose");
             return 0;

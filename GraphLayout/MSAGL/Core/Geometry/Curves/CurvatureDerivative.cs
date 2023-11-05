@@ -5,9 +5,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     /// 
     /// </summary>
     public class CurvatureDerivative : IFunction {
-        ICurve curve;
-        double start;
-        double end;
+        private ICurve curve;
+        private double start;
+        private double end;
         /// <summary>
         /// 
         /// </summary>
@@ -26,7 +26,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         public double this[double t] {
-            get { return curve.CurvatureDerivative(t); }
+            get { return this.curve.CurvatureDerivative(t); }
         }
         /// <summary>
         /// 
@@ -34,7 +34,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         public double Derivative(double t) {
-            return curve.CurvatureSecondDerivative(t);
+            return this.curve.CurvatureSecondDerivative(t);
         }
         /// <summary>
         /// 
@@ -56,13 +56,13 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// 
         /// </summary>
         public double ParStart {
-            get {return start; }
+            get {return this.start; }
         }
 /// <summary>
 /// 
 /// </summary>
         public double ParEnd {
-            get { return end; }
+            get { return this.end; }
         }
 
     }

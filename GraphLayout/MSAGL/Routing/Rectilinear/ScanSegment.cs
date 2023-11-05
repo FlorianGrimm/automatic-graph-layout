@@ -31,25 +31,25 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         internal ScanSegment(Point start, Point end, double weight, PointAndCrossingsList gbcList) {
-            Update(start, end);
-            Weight = weight;
-            GroupBoundaryPointAndCrossingsList = gbcList;
+            this.Update(start, end);
+            this.Weight = weight;
+            this.GroupBoundaryPointAndCrossingsList = gbcList;
         }
 
         internal override Point Start {
-            get { return startPoint; }
+            get { return this.startPoint; }
         }
 
         internal override Point End {
-            get { return endPoint; }
+            get { return this.endPoint; }
         }
 
         internal bool IsVertical {
-            get { return IsVerticalSegment(Start, End); }
+            get { return IsVerticalSegment(this.Start, this.End); }
         }
 
         internal ScanDirection ScanDirection {
-            get { return IsVertical ? ScanDirection.VerticalInstance : ScanDirection.HorizontalInstance; }
+            get { return this.IsVertical ? ScanDirection.VerticalInstance : ScanDirection.HorizontalInstance; }
         }
 
         // For fast intersection calculation and ScanSegment splicing.
@@ -76,16 +76,16 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         internal void MergeGroupBoundaryCrossingList(PointAndCrossingsList other) {
             if (null != other) {
-                if (null == GroupBoundaryPointAndCrossingsList) {
-                    GroupBoundaryPointAndCrossingsList = new PointAndCrossingsList();
+                if (null == this.GroupBoundaryPointAndCrossingsList) {
+                    this.GroupBoundaryPointAndCrossingsList = new PointAndCrossingsList();
                 }
-                GroupBoundaryPointAndCrossingsList.MergeFrom(other);
+                this.GroupBoundaryPointAndCrossingsList.MergeFrom(other);
             }
         }
 
         internal void TrimGroupBoundaryCrossingList() {
-            if (null != GroupBoundaryPointAndCrossingsList) {
-                GroupBoundaryPointAndCrossingsList.Trim(Start, End);
+            if (null != this.GroupBoundaryPointAndCrossingsList) {
+                this.GroupBoundaryPointAndCrossingsList.Trim(this.Start, this.End);
             }
         }
 
@@ -95,37 +95,37 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             Debug.Assert(PointComparer.Equal(start, end)
                     || StaticGraphUtility.IsAscending(PointComparer.GetPureDirection(start, end))
                     , "non-ascending segment");
-            startPoint = start;
-            endPoint = end;
+            this.startPoint = start;
+            this.endPoint = end;
         }
 
         private void SetInitialVisibilityVertex(VisibilityVertex newVertex) {
-            LowestVisibilityVertex = newVertex;
-            HighestVisibilityVertex = newVertex;
+            this.LowestVisibilityVertex = newVertex;
+            this.HighestVisibilityVertex = newVertex;
         }
 
         // Append a vertex before LowestVisibilityVertex or after HighestVisibilityVertex.
         internal void AppendVisibilityVertex(VisibilityGraph vg, VisibilityVertex newVertex) {
             Debug.Assert(null != newVertex, "newVertex must not be null");
-            Debug.Assert((null == LowestVisibilityVertex) == (null == HighestVisibilityVertex), "Mismatched null Lowest/HighestVisibilityVertex");
+            Debug.Assert((null == this.LowestVisibilityVertex) == (null == this.HighestVisibilityVertex), "Mismatched null Lowest/HighestVisibilityVertex");
             Debug.Assert(StaticGraphUtility.PointIsOnSegment(this, newVertex.Point), "newVertex is out of segment range");
-            if (null == HighestVisibilityVertex) {
-                if (!AddGroupCrossingsBeforeHighestVisibilityVertex(vg, newVertex)) {
-                    SetInitialVisibilityVertex(newVertex);
+            if (null == this.HighestVisibilityVertex) {
+                if (!this.AddGroupCrossingsBeforeHighestVisibilityVertex(vg, newVertex)) {
+                    this.SetInitialVisibilityVertex(newVertex);
                 }
             } else {
                 // In the event of overlaps where ScanSegments share a Start/End at a border, SegmentIntersector
                 // may be appending the same Vertex twice.  If that point is on the border of a group,
                 // then we may have just added the border-crossing edge as well.
-                if (PointComparer.IsPureLower(newVertex.Point, HighestVisibilityVertex.Point)) {
-                    Debug.Assert(null != vg.FindEdge(newVertex.Point, HighestVisibilityVertex.Point)
+                if (PointComparer.IsPureLower(newVertex.Point, this.HighestVisibilityVertex.Point)) {
+                    Debug.Assert(null != vg.FindEdge(newVertex.Point, this.HighestVisibilityVertex.Point)
                             , "unexpected low/middle insertion to ScanSegment");
                     return;
                 }
 
                 // Add the new edge.  This will always be in the ascending direction.
-                if (!AddGroupCrossingsBeforeHighestVisibilityVertex(vg, newVertex)) {
-                    AppendHighestVisibilityVertex(newVertex);
+                if (!this.AddGroupCrossingsBeforeHighestVisibilityVertex(vg, newVertex)) {
+                    this.AppendHighestVisibilityVertex(newVertex);
                 }
             }
         }
@@ -145,9 +145,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         private void AppendHighestVisibilityVertex( VisibilityVertex newVertex) {
-            if (!PointComparer.Equal(HighestVisibilityVertex.Point, newVertex.Point)) {
-                AddVisibilityEdge( HighestVisibilityVertex, newVertex);
-                HighestVisibilityVertex = newVertex;
+            if (!PointComparer.Equal(this.HighestVisibilityVertex.Point, newVertex.Point)) {
+                this.AddVisibilityEdge(this.HighestVisibilityVertex, newVertex);
+                this.HighestVisibilityVertex = newVertex;
             }
         }
 
@@ -155,32 +155,32 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // For adjacent segments with different IsOverlapped, we need a vertex that
             // joins the two so a path may be run.  This is paired with the other segment's
             // LoadEndOverlapVertexIfNeeded.
-            if (NeedStartOverlapVertex) {
-                VisibilityVertex vertex = vg.FindVertex(Start);
-                AppendVisibilityVertex(vg, vertex ?? vg.AddVertex(Start));
+            if (this.NeedStartOverlapVertex) {
+                VisibilityVertex vertex = vg.FindVertex(this.Start);
+                this.AppendVisibilityVertex(vg, vertex ?? vg.AddVertex(this.Start));
             }
         }
 
         private void LoadEndOverlapVertexIfNeeded(VisibilityGraph vg) {
             // See comments in LoadStartOverlapVertexIfNeeded.
-            if (NeedEndOverlapVertex) {
-                VisibilityVertex vertex = vg.FindVertex(End);
-                AppendVisibilityVertex(vg, vertex ?? vg.AddVertex(End));
+            if (this.NeedEndOverlapVertex) {
+                VisibilityVertex vertex = vg.FindVertex(this.End);
+                this.AppendVisibilityVertex(vg, vertex ?? vg.AddVertex(this.End));
             }
         }
 
         internal void OnSegmentIntersectorBegin(VisibilityGraph vg) {
             // If we process any group crossings, they'll have created the first point.
-            if (!AppendGroupCrossingsThroughPoint(vg, Start)) {
-                LoadStartOverlapVertexIfNeeded(vg);
+            if (!this.AppendGroupCrossingsThroughPoint(vg, this.Start)) {
+                this.LoadStartOverlapVertexIfNeeded(vg);
             }
         }
 
         internal void OnSegmentIntersectorEnd(VisibilityGraph vg) {
-            AppendGroupCrossingsThroughPoint(vg, End);
-            GroupBoundaryPointAndCrossingsList = null;
-            if ((null == HighestVisibilityVertex) || (PointComparer.IsPureLower(HighestVisibilityVertex.Point, End))) {
-                LoadEndOverlapVertexIfNeeded(vg);
+            this.AppendGroupCrossingsThroughPoint(vg, this.End);
+            this.GroupBoundaryPointAndCrossingsList = null;
+            if ((null == this.HighestVisibilityVertex) || (PointComparer.IsPureLower(this.HighestVisibilityVertex.Point, this.End))) {
+                this.LoadEndOverlapVertexIfNeeded(vg);
             }
         }
 
@@ -261,7 +261,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return "[" + Start + " -> " + End + (IsOverlapped ? " olap" : " free") + "]";
+            return "[" + this.Start + " -> " + this.End + (this.IsOverlapped ? " olap" : " free") + "]";
         }
 
         #region SparseVisibilityGraphGenerator utilities
@@ -307,14 +307,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 return;
             }
 
-            AppendGroupCrossingsThroughPoint(vg, Start);
+            this.AppendGroupCrossingsThroughPoint(vg, this.Start);
             foreach (var perpCoord in this.sparsePerpendicularCoords.OrderBy(d => d)) {
                 var vertexLocation = this.CreatePointFromPerpCoord(perpCoord);
                 Debug.Assert(this.ContainsPoint(vertexLocation), "vertexLocation is not on Segment");
                 this.AppendVisibilityVertex(vg, vg.FindVertex(vertexLocation) ?? vg.AddVertex(vertexLocation));
             }
-            AppendGroupCrossingsThroughPoint(vg, End);
-            GroupBoundaryPointAndCrossingsList = null;
+            this.AppendGroupCrossingsThroughPoint(vg, this.End);
+            this.GroupBoundaryPointAndCrossingsList = null;
 
             this.sparsePerpendicularCoords.Clear();
             this.sparsePerpendicularCoords = null;
@@ -330,11 +330,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         #region Group utilities
 
         private bool AddGroupCrossingsBeforeHighestVisibilityVertex(VisibilityGraph vg, VisibilityVertex newVertex) {
-            if (AppendGroupCrossingsThroughPoint(vg, newVertex.Point)) {
+            if (this.AppendGroupCrossingsThroughPoint(vg, newVertex.Point)) {
                 // We may have added an interior vertex that is just higher than newVertex.
-                if (PointComparer.IsPureLower(HighestVisibilityVertex.Point, newVertex.Point)) {
-                    AddVisibilityEdge(HighestVisibilityVertex, newVertex);
-                    HighestVisibilityVertex = newVertex;
+                if (PointComparer.IsPureLower(this.HighestVisibilityVertex.Point, newVertex.Point)) {
+                    this.AddVisibilityEdge(this.HighestVisibilityVertex, newVertex);
+                    this.HighestVisibilityVertex = newVertex;
                 }
                 return true;
             }
@@ -342,40 +342,40 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         private bool AppendGroupCrossingsThroughPoint(VisibilityGraph vg, Point lastPoint) {
-            if (null == GroupBoundaryPointAndCrossingsList) {
+            if (null == this.GroupBoundaryPointAndCrossingsList) {
                 return false;
             }
 
             bool found = false;
-            while (GroupBoundaryPointAndCrossingsList.CurrentIsBeforeOrAt(lastPoint)) {
+            while (this.GroupBoundaryPointAndCrossingsList.CurrentIsBeforeOrAt(lastPoint)) {
                 // We will only create crossing Edges that the segment actually crosses, not those it ends before crossing.
                 // For those terminal crossings, the adjacent segment creates the interior vertex and crossing edge.
-                PointAndCrossings pac = GroupBoundaryPointAndCrossingsList.Pop();
+                PointAndCrossings pac = this.GroupBoundaryPointAndCrossingsList.Pop();
                 GroupBoundaryCrossing[] lowDirCrossings = null;
                 GroupBoundaryCrossing[] highDirCrossings = null;
-                if (PointComparer.Compare(pac.Location, Start) > 0) {
+                if (PointComparer.Compare(pac.Location, this.Start) > 0) {
                     lowDirCrossings = PointAndCrossingsList.ToCrossingArray(pac.Crossings,
-                            ScanDirection.OppositeDirection);
+                            this.ScanDirection.OppositeDirection);
                 }
-                if (PointComparer.Compare(pac.Location, End) < 0) {
-                    highDirCrossings = PointAndCrossingsList.ToCrossingArray(pac.Crossings, ScanDirection.Direction);
+                if (PointComparer.Compare(pac.Location, this.End) < 0) {
+                    highDirCrossings = PointAndCrossingsList.ToCrossingArray(pac.Crossings, this.ScanDirection.Direction);
                 }
 
                 found = true;
                 VisibilityVertex crossingVertex = vg.FindVertex(pac.Location) ?? vg.AddVertex(pac.Location);
 
                 if ((null != lowDirCrossings) || (null != highDirCrossings)) {
-                    AddLowCrossings(vg, crossingVertex, lowDirCrossings);
-                    AddHighCrossings(vg, crossingVertex, highDirCrossings);
+                    this.AddLowCrossings(vg, crossingVertex, lowDirCrossings);
+                    this.AddHighCrossings(vg, crossingVertex, highDirCrossings);
                 } else {
                     // This is at this.Start with only lower-direction toward group interior(s), or at this.End with only 
                     // higher-direction toward group interior(s).  Therefore an adjacent ScanSegment will create the crossing
                     // edge, so create the crossing vertex here and we'll link to it.
-                    if (null == LowestVisibilityVertex) {
-                        SetInitialVisibilityVertex(crossingVertex);
+                    if (null == this.LowestVisibilityVertex) {
+                        this.SetInitialVisibilityVertex(crossingVertex);
                     } else {
-                        Debug.Assert(PointComparer.Equal(End, crossingVertex.Point), "Expected this.End crossingVertex");
-                        AppendHighestVisibilityVertex(crossingVertex);
+                        Debug.Assert(PointComparer.Equal(this.End, crossingVertex.Point), "Expected this.End crossingVertex");
+                        this.AppendHighestVisibilityVertex(crossingVertex);
                     }
                 }
             }
@@ -390,7 +390,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         private void AddCrossingEdge(VisibilityGraph vg, VisibilityVertex lowVertex, VisibilityVertex highVertex, GroupBoundaryCrossing[] crossings) {
             VisibilityEdge edge = null;
-            if (null != HighestVisibilityVertex) {
+            if (null != this.HighestVisibilityVertex) {
                 // We may have a case where point xx.xxxxx8 has added an ascending-direction crossing, and now we're on
                 // xx.xxxxx9 adding a descending-direction crossing.  In that case there should already be a VisibilityEdge 
                 // in the direction we want.
@@ -398,11 +398,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                     edge = vg.FindEdge(lowVertex.Point, highVertex.Point);
                     Debug.Assert(edge != null, "Inconsistent forward-backward sequencing in HighVisibilityVertex");
                 } else {
-                    AppendHighestVisibilityVertex(lowVertex);
+                    this.AppendHighestVisibilityVertex(lowVertex);
                 }
             }
             if (edge == null) {
-                edge = AddVisibilityEdge(lowVertex, highVertex);
+                edge = this.AddVisibilityEdge(lowVertex, highVertex);
             }
 
             var crossingsArray = crossings.Select(c => c.Group.InputShape).ToArray();
@@ -414,10 +414,10 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 // will never be more than two deep.  File Test: Groups_Forward_Backward_Between_Same_Vertices.
                 edge.IsPassable = delegate { return crossingsArray.Any(s => s.IsTransparent) || prevIsPassable(); };
             }
-            if (null == LowestVisibilityVertex) {
-                SetInitialVisibilityVertex(lowVertex);
+            if (null == this.LowestVisibilityVertex) {
+                this.SetInitialVisibilityVertex(lowVertex);
             }
-            HighestVisibilityVertex = highVertex;
+            this.HighestVisibilityVertex = highVertex;
         }
 
         private void AddLowCrossings(VisibilityGraph vg, VisibilityVertex crossingVertex, GroupBoundaryCrossing[] crossings) {

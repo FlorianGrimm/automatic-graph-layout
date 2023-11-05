@@ -8,15 +8,15 @@ namespace Microsoft.Msagl.Core.Layout {
     /// connect to the curve
     /// </summary>
     public class HookUpAnywhereFromInsidePort : Port {
-        Func<ICurve> curve;
-        double adjustmentAngle = Math.PI / 10;
+        private Func<ICurve> curve;
+        private double adjustmentAngle = Math.PI / 10;
         /// <summary>
         /// </summary>
         /// <param name="boundaryCurve"></param>
         /// <param name="hookSize"></param>
         public HookUpAnywhereFromInsidePort(Func<ICurve> boundaryCurve, double hookSize) {
-            curve = boundaryCurve;
-            HookSize=hookSize;
+            this.curve = boundaryCurve;
+            this.HookSize =hookSize;
         }
 
         /// <summary>
@@ -24,30 +24,30 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <param name="boundaryCurve"></param>
         public HookUpAnywhereFromInsidePort(Func<ICurve> boundaryCurve) {
             ValidateArg.IsNotNull(boundaryCurve,"boundaryCurve");
-            curve = boundaryCurve;
-            location=curve().Start;
+            this.curve = boundaryCurve;
+            this.location = this.curve().Start;
         }
 
-        Point location;
+        private Point location;
         /// <summary>
         /// returns a point on the boundary curve
         /// </summary>
         public override Point Location {
-            get { return location; }
+            get { return this.location; }
         }
 
         /// <summary>
         /// Gets the boundary curve of the port.
         /// </summary>
         public override ICurve Curve {
-            get { return curve(); }
+            get { return this.curve(); }
             set { throw new InvalidCastException(); }
         }
 
 #if SHARPKIT
         internal void SetLocation(Point p) { location = p.Clone(); }
 #else
-        internal void SetLocation(Point p) { location = p; }
+        internal void SetLocation(Point p) { this.location = p; }
 #endif
         internal Polyline LoosePolyline { get; set; }
 
@@ -57,16 +57,17 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         public double AdjustmentAngle {
             get {
-                return adjustmentAngle;
+                return this.adjustmentAngle;
             }
             set {
-                adjustmentAngle = value;
+                this.adjustmentAngle = value;
             }
         }
-        double hookSize = 9;
+
+        private double hookSize = 9;
         /// <summary>
         /// the size of the self-loop
         /// </summary>
-        public double HookSize { get { return hookSize; } set { hookSize = value; } }
+        public double HookSize { get { return this.hookSize; } set { this.hookSize = value; } }
     }
 }

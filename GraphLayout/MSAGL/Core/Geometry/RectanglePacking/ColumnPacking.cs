@@ -11,8 +11,8 @@ namespace Microsoft.Msagl.Core.Geometry
     /// </summary>
     public class ColumnPacking<TData> : Packing
     {
-         IEnumerable<RectangleToPack<TData>> orderedRectangles;
-         double maxHeight;
+        private IEnumerable<RectangleToPack<TData>> orderedRectangles;
+        private double maxHeight;
 
         /// <summary>
         /// Constructor for packing, call Run to do the actual pack.
@@ -35,22 +35,22 @@ namespace Microsoft.Msagl.Core.Geometry
         /// </summary>
         protected override void RunInternal()
         {
-            PackedHeight = PackedWidth = 0;
+            this.PackedHeight = this.PackedWidth = 0;
             double columnPosition = 0;
             double columnHeight = 0;
-            foreach (var current in orderedRectangles)
+            foreach (var current in this.orderedRectangles)
             {
                 Rectangle r = current.Rectangle;
-                if (columnHeight + r.Height > maxHeight)
+                if (columnHeight + r.Height > this.maxHeight)
                 {
-                    columnPosition = PackedWidth;
+                    columnPosition = this.PackedWidth;
                     columnHeight = 0;
                 }
                 r = current.Rectangle = new Rectangle(columnPosition, columnHeight,
                         new Point(r.Width, r.Height));
-                PackedWidth = Math.Max(PackedWidth, columnPosition + r.Width);
+                this.PackedWidth = Math.Max(this.PackedWidth, columnPosition + r.Width);
                 columnHeight += r.Height;
-                PackedHeight = Math.Max(PackedHeight, columnHeight);
+                this.PackedHeight = Math.Max(this.PackedHeight, columnHeight);
             }
         }
     }

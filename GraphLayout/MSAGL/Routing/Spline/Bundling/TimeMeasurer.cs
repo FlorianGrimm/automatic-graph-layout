@@ -7,7 +7,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
     /// </summary>
     internal class TimeMeasurer {
 #if TEST_MSAGL
-        static Timer timer;
+        private static Timer timer;
         static TimeMeasurer() {
             timer = new Timer();
             timer.Start();

@@ -10,9 +10,9 @@ namespace Microsoft.Msagl.Layout.Incremental
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Multipole")]
     public class MultipoleCoefficients
     {
-        Complex z0;
-        Complex[] a;
-        int p;
+        private Complex z0;
+        private Complex[] a;
+        private int p;
         /// <summary>
         /// 
         /// </summary>
@@ -24,11 +24,11 @@ namespace Microsoft.Msagl.Layout.Incremental
 #if DET
 #else
             this.p = precision;
-            z0 = new Complex(center.X, center.Y);
-            a = new Complex[precision];
+            this.z0 = new Complex(center.X, center.Y);
+            this.a = new Complex[precision];
             for (int k = 0; k < precision; ++k)
             {
-                a[k] = compute(k, points);
+                this.a[k] = this.compute(k, points);
             }
 #endif
         }
@@ -45,15 +45,16 @@ namespace Microsoft.Msagl.Layout.Incremental
             ValidateArg.IsNotNull(m2, "m2");
             Debug.Assert(m1.p == m2.p);
             this.p = m1.p;
-            z0 = new Complex(center.X, center.Y);
-            Complex[] m1a = m1.shift(z0), m2a = m2.shift(z0);
-            a = new Complex[p];
-            for (int i = 0; i < p; ++i)
+            this.z0 = new Complex(center.X, center.Y);
+            Complex[] m1a = m1.shift(this.z0), m2a = m2.shift(this.z0);
+            this.a = new Complex[this.p];
+            for (int i = 0; i < this.p; ++i)
             {
-                a[i] = m1a[i] + m2a[i];
+                this.a[i] = m1a[i] + m2a[i];
             }
         }
-        static double factorial(double n)
+
+        private static double factorial(double n)
         {
             double f = 1;
             for (int i = 2; i <= n; ++i)
@@ -62,29 +63,32 @@ namespace Microsoft.Msagl.Layout.Incremental
             }
             return f;
         }
-        static double binomial(int n, int k)
+
+        private static double binomial(int n, int k)
         {
             return factorial(n) / (factorial(k) * factorial(n - k));
         }
-        Complex sum(int l, Complex z0_minus_z1)
+
+        private Complex sum(int l, Complex z0_minus_z1)
         {
             Complex s = new Complex(0.0);
             for (int k = 1; k <= l; ++k)
             {
                 Complex bi = new Complex(binomial(l - 1, k - 1));
-                s += a[k] * Complex.Pow(z0_minus_z1, l - k) * bi;
+                s += this.a[k] * Complex.Pow(z0_minus_z1, l - k) * bi;
             }
             return s;
         }
-        Complex[] shift(Complex z1)
+
+        private Complex[] shift(Complex z1)
         {
-            Complex[] b = new Complex[p];
-            Complex a0 = b[0] = a[0];
-            Complex z0_minus_z1 = z0 - z1;
-            for (int l = 1; l < p; ++l)
+            Complex[] b = new Complex[this.p];
+            Complex a0 = b[0] = this.a[0];
+            Complex z0_minus_z1 = this.z0 - z1;
+            for (int l = 1; l < this.p; ++l)
             {
                 Complex lz = new Complex(l);
-                b[l] = -a0 * Complex.Pow(z0_minus_z1, l) / lz + sum(l, z0_minus_z1);
+                b[l] = -a0 * Complex.Pow(z0_minus_z1, l) / lz + this.sum(l, z0_minus_z1);
             }
             return b;
         }
@@ -108,7 +112,7 @@ namespace Microsoft.Msagl.Layout.Incremental
                 {
                     Point q = ps[i];
                     Complex pc = new Complex(q.X, q.Y);
-                    ak -= Complex.Pow(pc - z0, k);
+                    ak -= Complex.Pow(pc - this.z0, k);
                 }
                 ak.divideBy(k);
             }
@@ -123,14 +127,14 @@ namespace Microsoft.Msagl.Layout.Incremental
         public Point ApproximateForce(Point v)
         {
             Complex z = new Complex(v.X, v.Y);
-            Complex z_minus_z0 = z - z0;
-            Complex fz = a[0] / z_minus_z0;
+            Complex z_minus_z0 = z - this.z0;
+            Complex fz = this.a[0] / z_minus_z0;
             Complex z_minus_z0_to_k_plus_1 = z_minus_z0;
             int k = 0;
             while(true) {
-                fz -= (a[k] * (double)k) / z_minus_z0_to_k_plus_1;
+                fz -= (this.a[k] * (double)k) / z_minus_z0_to_k_plus_1;
                 ++k;
-                if(k==p) {
+                if(k== this.p) {
                     break;
                 }
                 z_minus_z0_to_k_plus_1 *= z_minus_z0;
@@ -159,7 +163,7 @@ namespace Microsoft.Msagl.Layout.Incremental
             return duv / l;
         }
 
-        struct Complex
+        private struct Complex
         {
             public Complex(double re, double im)
             {
@@ -204,8 +208,8 @@ namespace Microsoft.Msagl.Layout.Incremental
                 return (new Complex(c1 / d, c2 / d));
             }
             public void divideBy(double r) {
-                re /= r;
-                im /= r;
+                this.re /= r;
+                this.im /= r;
             }
             public static Complex Pow(Complex a, int k)
             {

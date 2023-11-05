@@ -1,18 +1,19 @@
 
 namespace Microsoft.Msagl.Core.Geometry {
     internal class HullPoint {
-        Point point;
+        private Point point;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
         internal Point Point {
-            get { return point; }
-            set { point = value; }
+            get { return this.point; }
+            set { this.point = value; }
         }
-        bool deleted;
+
+        private bool deleted;
 
         internal bool Deleted {
-            get { return deleted; }
-            set { deleted = value; }
+            get { return this.deleted; }
+            set { this.deleted = value; }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
@@ -21,7 +22,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         }
 
         public override string ToString() {
-            return point + (Deleted ? "X" : "");
+            return this.point + (this.Deleted ? "X" : "");
         }
     }
 }

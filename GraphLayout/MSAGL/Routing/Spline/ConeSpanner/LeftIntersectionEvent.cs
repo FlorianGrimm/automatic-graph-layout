@@ -7,11 +7,11 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
     /// </summary>
     internal class LeftIntersectionEvent : SweepEvent {
         internal ConeLeftSide coneLeftSide;
-        Point intersectionPoint;
-        PolylinePoint endVertex;
+        private Point intersectionPoint;
+        private PolylinePoint endVertex;
 
         internal PolylinePoint EndVertex {
-            get { return endVertex; }
+            get { return this.endVertex; }
         }
 
         internal LeftIntersectionEvent(ConeLeftSide coneLeftSide,
@@ -23,11 +23,11 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
         }
 
         internal override Point Site {
-            get { return intersectionPoint; }
+            get { return this.intersectionPoint; }
         }
 
         public override string ToString() {
-            return "LeftIntersectionEvent " + intersectionPoint;
+            return "LeftIntersectionEvent " + this.intersectionPoint;
         }
     }
 }

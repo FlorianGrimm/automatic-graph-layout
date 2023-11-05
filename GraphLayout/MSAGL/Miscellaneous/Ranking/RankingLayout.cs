@@ -13,9 +13,8 @@ namespace Microsoft.Msagl.Prototype.Ranking {
     /// Ranking layout for directed graphs.
     /// </summary>
     public class RankingLayout : AlgorithmBase {
-        GeometryGraph graph;
-
-         RankingLayoutSettings settings;
+        private GeometryGraph graph;
+        private RankingLayoutSettings settings;
 
         /// <summary>
         /// Constructs the ranking layout algorithm.
@@ -26,11 +25,11 @@ namespace Microsoft.Msagl.Prototype.Ranking {
             this.graph = geometryGraph;
         }
 
-         void SetNodePositionsAndMovedBoundaries(GeometryGraph graph) {
+        private void SetNodePositionsAndMovedBoundaries(GeometryGraph graph) {
             
-            int pivotNumber = Math.Min(graph.Nodes.Count,settings.PivotNumber);
-            double scaleX = settings.ScaleX;
-            double scaleY = settings.ScaleY;
+            int pivotNumber = Math.Min(graph.Nodes.Count, this.settings.PivotNumber);
+            double scaleX = this.settings.ScaleX;
+            double scaleY = this.settings.ScaleY;
           
             int[] pivotArray = new int[pivotNumber];
             PivotDistances pivotDistances = new PivotDistances(graph, false, pivotArray);
@@ -51,7 +50,7 @@ namespace Microsoft.Msagl.Prototype.Ranking {
                 index++;
             }
 
-            GTreeOverlapRemoval.RemoveOverlaps(graph.Nodes.ToArray(), settings.NodeSeparation);
+            GTreeOverlapRemoval.RemoveOverlaps(graph.Nodes.ToArray(), this.settings.NodeSeparation);
         }
 
         /// <summary>
@@ -59,37 +58,41 @@ namespace Microsoft.Msagl.Prototype.Ranking {
         /// </summary>
         protected override void RunInternal()
         {
-            GeometryGraph[] graphs = GraphConnectedComponents.CreateComponents(graph.Nodes, graph.Edges, this.settings.NodeSeparation).ToArray();
+            GeometryGraph[] graphs = GraphConnectedComponents.CreateComponents(this.graph.Nodes, this.graph.Edges, this.settings.NodeSeparation).ToArray();
             // layout components, compute bounding boxes
 
             for (int i = 0; i < graphs.Length; i++)
             {
-                Calculate(graphs[i]);
+                this.Calculate(graphs[i]);
             }
 
             if (graphs.Length > 1)
             {
-                Microsoft.Msagl.Layout.MDS.MdsGraphLayout.PackGraphs(graphs, settings);
+                Microsoft.Msagl.Layout.MDS.MdsGraphLayout.PackGraphs(graphs, this.settings);
                 //restore the parents
-                foreach (var node in graphs.SelectMany(g => g.Nodes))
-                    node.GeometryParent = graph;
+                foreach (var node in graphs.SelectMany(g => g.Nodes)) {
+                    node.GeometryParent = this.graph;
+                }
             }
         }
 
         private void Calculate(GeometryGraph graph)
         {
-            if (graph.Nodes.Count == 0) return;
-            SetNodePositionsAndMovedBoundaries(graph);
-            double nodeSeparation = settings.NodeSeparation;
+            if (graph.Nodes.Count == 0) {
+                return;
+            }
+
+            this.SetNodePositionsAndMovedBoundaries(graph);
+            double nodeSeparation = this.settings.NodeSeparation;
             if (nodeSeparation <= 0 )
             {
                 nodeSeparation = 10;
             }
             GTreeOverlapRemoval.RemoveOverlaps(graph.Nodes.ToArray(), nodeSeparation);
-            SetGraphBoundingBox(graph);
+            this.SetGraphBoundingBox(graph);
         }
 
-        void SetGraphBoundingBox(GeometryGraph graph) {
+        private void SetGraphBoundingBox(GeometryGraph graph) {
             graph.BoundingBox = graph.PumpTheBoxToTheGraphWithMargins();
         }
 
@@ -98,7 +101,7 @@ namespace Microsoft.Msagl.Prototype.Ranking {
         /// </summary>
         /// <param name="x">Vector to be standardized.</param>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "x")]
-        static void Standardize(double[] x)
+        private static void Standardize(double[] x)
         {
             double min = Double.PositiveInfinity;
             double max = Double.NegativeInfinity;

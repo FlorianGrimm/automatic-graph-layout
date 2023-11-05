@@ -22,10 +22,10 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811")]
         public int First {
-            get { return x; }
+            get { return this.x; }
             set
             {
-                x = value;
+                this.x = value;
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289 Support Dictionary directly based on object's GetHashCode
                 UpdateHashKey();
 #endif
@@ -37,10 +37,10 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811")]
         public int Second {
-            get { return y; }
+            get { return this.y; }
             set
             {
-                y = value;
+                this.y = value;
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289 Support Dictionary directly based on object's GetHashCode
                 UpdateHashKey();
 #endif
@@ -53,8 +53,9 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// <param name="pair1"></param>
         /// <returns></returns>
         public static bool operator <(IntPair pair0, IntPair pair1) {
-            if (pair0 != null && pair1 != null)
+            if (pair0 != null && pair1 != null) {
                 return pair0.x < pair1.x || pair0.x == pair1.x && pair0.y < pair1.y;
+            }
 
             throw new InvalidOperationException();
         }
@@ -89,8 +90,8 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811")]
         public int CompareTo(IntPair other) {
-            var r = x.CompareTo(other.x);
-            return r != 0 ? r : y.CompareTo(other.y);            
+            var r = this.x.CompareTo(other.x);
+            return r != 0 ? r : this.y.CompareTo(other.y);            
         }
 
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289 Support Dictionary directly based on object's GetHashCode
@@ -106,8 +107,8 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// </summary>
         /// <returns></returns>
         public override int GetHashCode() {
-            uint hc = (uint)x.GetHashCode();
-            return (int)((hc << 5 | hc >> 27) + (uint)y);
+            uint hc = (uint)this.x.GetHashCode();
+            return (int)((hc << 5 | hc >> 27) + (uint)this.y);
         }
 
         /// <summary>
@@ -128,7 +129,7 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return "(" + x + "," + y + ")";
+            return "(" + this.x + "," + this.y + ")";
         }
 
 #if SHARPKIT //http://code.google.com/p/sharpkit/issues/detail?id=203 Explicitly implemented interfaces are not generate without any warning
@@ -136,10 +137,10 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
 #else
         int IEdge.Source {
 #endif
-            get { return x; }
+            get { return this.x; }
             set
             {
-                x = value;
+                this.x = value;
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289 Support Dictionary directly based on object's GetHashCode
                 UpdateHashKey();
 #endif
@@ -151,10 +152,10 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
 #else
         int IEdge.Target {
 #endif
-            get { return y; }
+            get { return this.y; }
             set
             {
-                y = value;
+                this.y = value;
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=289 Support Dictionary directly based on object's GetHashCode
                 UpdateHashKey();
 #endif

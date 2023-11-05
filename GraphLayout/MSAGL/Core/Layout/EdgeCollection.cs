@@ -14,7 +14,7 @@ namespace Microsoft.Msagl.Core.Layout {
     [Serializable]
 #endif
     public class EdgeCollection : IEnumerable<Edge> {
-        readonly IList<Edge> edges = new List<Edge>();
+        private readonly IList<Edge> edges = new List<Edge>();
         /// <summary>
         /// the graph of the collection
         /// </summary>
@@ -33,12 +33,12 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         virtual public void Add(Edge item) {
             ValidateArg.IsNotNull(item, "item");
-            item.GeometryParent = graph;
-            edges.Add(item);
+            item.GeometryParent = this.graph;
+            this.edges.Add(item);
             AddEdgeToNodes(item);
         }
 
-        static void AddEdgeToNodes(Edge item) {
+        private static void AddEdgeToNodes(Edge item) {
             if (item.Source != item.Target) {
                 item.Source.AddOutEdge(item);
                 item.Target.AddInEdge(item);
@@ -53,7 +53,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         virtual public void Clear() {
             this.edges.Clear();
-            foreach (var node in graph.Nodes) {
+            foreach (var node in this.graph.Nodes) {
                 ((Set<Edge>) node.OutEdges).Clear();
                 ((Set<Edge>) node.InEdges).Clear();
                 ((Set<Edge>) node.SelfEdges).Clear();
@@ -66,7 +66,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <returns>True if the edge is found in the collection.</returns>
         public bool Contains(Edge item) {
             ValidateArg.IsNotNull(item, "item");
-            return edges.Contains(item);
+            return this.edges.Contains(item);
         }
 
         /// <summary>
@@ -95,15 +95,16 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <returns>True if the edge was removed. False if the edge was not removed or the edge was not found.</returns>
         virtual public bool Remove(Edge item) {
-            if (item == null || !this.edges.Contains(item))
+            if (item == null || !this.edges.Contains(item)) {
                 return false;
+            }
 
             DetouchEdge(item);
 
-            return edges.Remove(item);
+            return this.edges.Remove(item);
         }
 
-        static void DetouchEdge(Edge item) {
+        private static void DetouchEdge(Edge item) {
             Node source = item.Source;
             Node target = item.Target;
             if (source != target) {
@@ -121,7 +122,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <returns>The enumerator for the colleciton.</returns>
         virtual public IEnumerator<Edge> GetEnumerator() {
-            return edges.GetEnumerator();
+            return this.edges.GetEnumerator();
         }
 
         /// <summary>

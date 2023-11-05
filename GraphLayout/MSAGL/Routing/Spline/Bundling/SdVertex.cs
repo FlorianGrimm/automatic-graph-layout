@@ -12,15 +12,18 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
         internal SdVertex Prev {
             get {
-                if (PrevEdge == null) return null;
-                return PrevEdge.Source == this ? PrevEdge.Target : PrevEdge.Source;
+                if (this.PrevEdge == null) {
+                    return null;
+                }
+
+                return this.PrevEdge.Source == this ? this.PrevEdge.Target : this.PrevEdge.Source;
             }
         }
 
         internal SdBoneEdge PrevEdge { get; set; }
 
         internal SdVertex(VisibilityVertex visibilityVertex) {
-            VisibilityVertex = visibilityVertex;
+            this.VisibilityVertex = visibilityVertex;
         }
 
         internal CdtTriangle Triangle;
@@ -29,20 +32,23 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
         internal bool IsTargetOfRouting { get; set; }
 
-        internal Point Point { get { return VisibilityVertex.Point; } }
+        internal Point Point { get { return this.VisibilityVertex.Point; } }
 
-        double cost;
+        private double cost;
 
         internal double Cost {
             get {
-                if (IsSourceOfRouting) return cost;
-                return Prev == null ? double.PositiveInfinity : cost;
+                if (this.IsSourceOfRouting) {
+                    return this.cost;
+                }
+
+                return this.Prev == null ? double.PositiveInfinity : this.cost;
             }
-            set { cost = value; }
+            set { this.cost = value; }
         }
 
         public void SetPreviousToNull() {
-            PrevEdge = null;
+            this.PrevEdge = null;
         }
     }
 }

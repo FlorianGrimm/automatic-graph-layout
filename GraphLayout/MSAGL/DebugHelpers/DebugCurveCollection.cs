@@ -16,8 +16,8 @@ namespace Microsoft.Msagl.DebugHelpers{
         /// 
         /// </summary>
         /// <param name="debugCurves"></param>
-        DebugCurveCollection(IEnumerable<DebugCurve> debugCurves){
-            DebugCurvesArray = debugCurves.ToArray();
+        private DebugCurveCollection(IEnumerable<DebugCurve> debugCurves){
+            this.DebugCurvesArray = debugCurves.ToArray();
         }
         /// <summary>
         /// 

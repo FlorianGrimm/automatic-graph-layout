@@ -7,15 +7,15 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
         }
 
         internal override Point Start {
-            get { return Cone.Apex; }
+            get { return this.Cone.Apex; }
         }
 
         internal override Point Direction {
-            get { return Cone.RightSideDirection; }
+            get { return this.Cone.RightSideDirection; }
         }
 
         public override string ToString() {
-            return "ConeRightSide " + Start + " " + Direction;
+            return "ConeRightSide " + this.Start + " " + this.Direction;
         }
     }
 }

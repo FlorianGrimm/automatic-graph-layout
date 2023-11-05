@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Microsoft.Msagl.GraphmapsWithMesh
 {
-    class SteinerTree
+    internal class SteinerTree
     {
         public Stack<Tuple> Edgelist = new Stack<Tuple>();
         public List<Twin> SpanningTree = new List<Twin>();
@@ -22,11 +22,13 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
 
         public void AddVertex(Vertex w)
         {
-            foreach (Vertex z in V)
+            foreach (Vertex z in this.V)
             {
-                if (w.Id == z.Id) return;
+                if (w.Id == z.Id) {
+                    return;
+                }
             }
-            V.Add(w);
+            this.V.Add(w);
         }
     }
 
@@ -34,7 +36,7 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
     {
         public int A;
         public int B;
-        public Twin(int x, int y) { A = x; B = y; }
+        public Twin(int x, int y) { this.A = x; this.B = y; }
 
     }
     public class Tuple
@@ -44,7 +46,7 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
         public int Value;
         public Tuple(Vertex x, Vertex y, int z)
         {
-            A = x; B = y; Value = z;
+            this.A = x; this.B = y; this.Value = z;
         }
     }
 }

@@ -5,14 +5,14 @@ namespace Microsoft.Msagl.Core.Geometry {
     internal struct CompassVector {
         internal CompassVector(Direction direction)
             : this() {
-            Dir = direction;
+            this.Dir = direction;
         }
 
         
 
         internal Direction Dir { get; set; }
         internal CompassVector Right {
-            get { return new CompassVector(RotateRight(Dir)); }
+            get { return new CompassVector(RotateRight(this.Dir)); }
         }
 
         internal static Direction RotateRight(Direction direction) {
@@ -62,14 +62,18 @@ namespace Microsoft.Msagl.Core.Geometry {
 
         internal static Direction VectorDirection(Point d){
             Direction r = Direction.None;
-            if(d.X > ApproximateComparer.DistanceEpsilon)
+            if(d.X > ApproximateComparer.DistanceEpsilon) {
                 r = Direction.East;
-            else if(d.X < -ApproximateComparer.DistanceEpsilon)
+            } else if(d.X < -ApproximateComparer.DistanceEpsilon) {
                 r = Direction.West;
-            if(d.Y > ApproximateComparer.DistanceEpsilon)
+            }
+
+            if (d.Y > ApproximateComparer.DistanceEpsilon) {
                 r |= Direction.North;
-            else if(d.Y < -ApproximateComparer.DistanceEpsilon)
+            } else if(d.Y < -ApproximateComparer.DistanceEpsilon) {
                 r |= Direction.South;
+            }
+
             return r;
         }
 
@@ -82,14 +86,18 @@ namespace Microsoft.Msagl.Core.Geometry {
             double verticalDiff = b.Y - a.Y;
             double halfEpsilon = ApproximateComparer.DistanceEpsilon / 2;
 
-            if (horizontalDiff > halfEpsilon)
+            if (horizontalDiff > halfEpsilon) {
                 r = Direction.East;
-            else if (-horizontalDiff > halfEpsilon)
+            } else if (-horizontalDiff > halfEpsilon) {
                 r = Direction.West;
-            if (verticalDiff > halfEpsilon)
+            }
+
+            if (verticalDiff > halfEpsilon) {
                 r |= Direction.North;
-            else if (-verticalDiff > halfEpsilon)
+            } else if (-verticalDiff > halfEpsilon) {
                 r |= Direction.South;
+            }
+
             return r;
         }
 
@@ -148,14 +156,22 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <returns></returns>
         public Point ToPoint() {
             var p = new Point();
-            if ((Dir & Direction.East) == Direction.East)
+            if ((this.Dir & Direction.East) == Direction.East) {
                 p.X += 1;
-            if ((Dir & Direction.North) == Direction.North)
+            }
+
+            if ((this.Dir & Direction.North) == Direction.North) {
                 p.Y += 1;
-            if ((Dir & Direction.West) == Direction.West)
+            }
+
+            if ((this.Dir & Direction.West) == Direction.West) {
                 p.X -= 1;
-            if ((Dir & Direction.South) == Direction.South)
+            }
+
+            if ((this.Dir & Direction.South) == Direction.South) {
                 p.Y -= 1;
+            }
+
             return p;
         }
 

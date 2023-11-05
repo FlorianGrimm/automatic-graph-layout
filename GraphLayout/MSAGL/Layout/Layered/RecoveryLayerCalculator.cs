@@ -2,13 +2,13 @@
 
 namespace Microsoft.Msagl.Layout.Layered {
     internal class RecoveryLayerCalculator : LayerCalculator {
-        LayerArrays layers;
+        private LayerArrays layers;
 
         public RecoveryLayerCalculator(LayerArrays recoveredLayerArrays) {
-            layers=recoveredLayerArrays;
+            this.layers =recoveredLayerArrays;
         }
         public int[] GetLayers() {
-            return layers.Y;
+            return this.layers.Y;
         }
     }
 }

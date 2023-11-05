@@ -10,12 +10,12 @@ namespace Microsoft.Msagl.Layout.Incremental
     /// </summary>
     public class KDTree
     {
-        Particle[] particles;
-        internal InternalKdNode root; 
-        List<LeafKdNode> leaves;
+        private Particle[] particles;
+        internal InternalKdNode root;
+        private List<LeafKdNode> leaves;
         private Particle[] particlesBy(Particle.Dim d)
         {
-            return (from Particle p in particles
+            return (from Particle p in this.particles
                     orderby p.pos(d)
                     select p).ToArray();
         }
@@ -29,20 +29,20 @@ namespace Microsoft.Msagl.Layout.Incremental
         {
             this.particles = particles;
             Particle[][] ps = new Particle[][] {
-                particlesBy(Particle.Dim.Horizontal),
-                particlesBy(Particle.Dim.Vertical)};
-            leaves = new List<LeafKdNode>();
+                this.particlesBy(Particle.Dim.Horizontal),
+                this.particlesBy(Particle.Dim.Vertical)};
+            this.leaves = new List<LeafKdNode>();
             LeafKdNode l = new LeafKdNode(ps), r;
-            leaves.Add(l);
-            root = l.Split(out r);
-            leaves.Add(r);
+            this.leaves.Add(l);
+            this.root = l.Split(out r);
+            this.leaves.Add(r);
             var splitQueue = new SplitQueue(bucketSize);
             splitQueue.Enqueue(l, r);
             while (splitQueue.Count > 0)
             {
                 l = splitQueue.Dequeue();
                 l.Split(out r);
-                leaves.Add(r);
+                this.leaves.Add(r);
                 splitQueue.Enqueue(l, r);
             }
         }
@@ -51,12 +51,12 @@ namespace Microsoft.Msagl.Layout.Incremental
         /// </summary>
         /// <param name="precision"></param>
         public void ComputeForces(int precision) {
-            root.computeMultipoleCoefficients(precision);
-            foreach (var l in leaves)
+            this.root.computeMultipoleCoefficients(precision);
+            foreach (var l in this.leaves)
             {
                 l.ComputeForces();
                 var stack = new Stack<KdNode>();
-                stack.Push(root);
+                stack.Push(this.root);
                 while (stack.Count > 0)
                 {
                     KdNode v = stack.Pop();
@@ -105,7 +105,7 @@ namespace Microsoft.Msagl.Layout.Incremental
             internal bool splitLeft;
             internal double pos(Dim d)
             {
-                return d == Dim.Horizontal ? point.X : point.Y;
+                return d == Dim.Horizontal ? this.point.X : this.point.Y;
             }
             /// <summary>
             /// Create particle at point
@@ -124,9 +124,9 @@ namespace Microsoft.Msagl.Layout.Incremental
             internal MultipoleCoefficients multipoleCoefficients;
             internal bool intersects(KdNode v)
             {
-                Point d = v.med.Center - med.Center;
+                Point d = v.med.Center - this.med.Center;
                 double l = d.Length;
-                return l < v.med.Radius + med.Radius;
+                return l < v.med.Radius + this.med.Radius;
             }
             internal abstract void computeMultipoleCoefficients(int precision);
         }
@@ -138,54 +138,54 @@ namespace Microsoft.Msagl.Layout.Incremental
             {
                 Debug.Assert(particles[0].Length == particles[1].Length);
                 this.particles = particles;
-                ComputeMED();
+                this.ComputeMED();
             }
             internal override void computeMultipoleCoefficients(int precision)
             {
-                multipoleCoefficients = new MultipoleCoefficients(precision, med.Center, ps);
+                this.multipoleCoefficients = new MultipoleCoefficients(precision, this.med.Center, this.ps);
             }
             internal Disc ComputeMED()
             {
-                int n = Size();
-                ps = new Point[n];
+                int n = this.Size();
+                this.ps = new Point[n];
                 for (int i = 0; i < n; ++i)
                 {
-                    ps[i] = particles[0][i].point;
+                    this.ps[i] = this.particles[0][i].point;
                 }
-                return med = MinimumEnclosingDisc.LinearComputation(ps);
+                return this.med = MinimumEnclosingDisc.LinearComputation(this.ps);
             }
             private double Min(Particle.Dim d)
             {
-                return particles[(int)d][0].pos(d);
+                return this.particles[(int)d][0].pos(d);
             }
             internal int Size()
             {
-                return particles[0].Length;
+                return this.particles[0].Length;
             }
             private double Max(Particle.Dim d)
             {
-                return particles[(int)d][Size() - 1].pos(d);
+                return this.particles[(int)d][this.Size() - 1].pos(d);
             }
             private double Dimension(Particle.Dim d)
             {
-                return Max(d) - Min(d);
+                return this.Max(d) - this.Min(d);
             }
             internal InternalKdNode Split(out LeafKdNode rightSibling)
             {
                 Particle.Dim splitDirection =
-                    Dimension(Particle.Dim.Horizontal) > Dimension(Particle.Dim.Vertical)
+                    this.Dimension(Particle.Dim.Horizontal) > this.Dimension(Particle.Dim.Vertical)
                     ? Particle.Dim.Horizontal : Particle.Dim.Vertical;
                 Particle.Dim nonSplitDirection =
                     splitDirection == Particle.Dim.Horizontal
                     ? Particle.Dim.Vertical : Particle.Dim.Horizontal;
-                int n = Size(), nLeft = n / 2, nRight = n - nLeft;
+                int n = this.Size(), nLeft = n / 2, nRight = n - nLeft;
                 Particle[][]
                     leftParticles = new Particle[][] { new Particle[nLeft], new Particle[nLeft] },
                     rightParticles = new Particle[][] { new Particle[nRight], new Particle[nRight] };
                 int lCtr = 0, rCtr = 0;
                 for (int i = 0; i < n; ++i)
                 {
-                    Particle p = particles[(int)splitDirection][i];
+                    Particle p = this.particles[(int)splitDirection][i];
                     if (i < nLeft)
                     {
                         leftParticles[(int)splitDirection][i] = p;
@@ -199,7 +199,7 @@ namespace Microsoft.Msagl.Layout.Incremental
                 }
                 for (int i = 0; i < n; ++i)
                 {
-                    Particle p = particles[(int)nonSplitDirection][i];
+                    Particle p = this.particles[(int)nonSplitDirection][i];
                     if (p.splitLeft)
                     {
                         leftParticles[(int)nonSplitDirection][lCtr++] = p;
@@ -211,17 +211,17 @@ namespace Microsoft.Msagl.Layout.Incremental
                 }
                 Debug.Assert(lCtr == nLeft);
                 Debug.Assert(rCtr == nRight);
-                Disc parentMED = med;
-                particles = leftParticles;
-                ComputeMED();
+                Disc parentMED = this.med;
+                this.particles = leftParticles;
+                this.ComputeMED();
                 rightSibling = new LeafKdNode(rightParticles);
                 return new InternalKdNode(parentMED, this, rightSibling);
             }
             internal void ComputeForces()
             {
-                foreach (var u in particles[0])
+                foreach (var u in this.particles[0])
                 {
-                    foreach (var v in particles[0])
+                    foreach (var v in this.particles[0])
                     {
                         if (u != v)
                         {
@@ -238,17 +238,17 @@ namespace Microsoft.Msagl.Layout.Incremental
             internal InternalKdNode(Disc med, KdNode left, KdNode right)
             {
                 this.med = med;
-                parent = left.parent;
-                if (parent != null)
+                this.parent = left.parent;
+                if (this.parent != null)
                 {
-                    if (parent.leftChild == left)
+                    if (this.parent.leftChild == left)
                     {
-                        parent.leftChild = this;
+                        this.parent.leftChild = this;
                     }
                     else
                     {
-                        Debug.Assert(parent.rightChild == left);
-                        parent.rightChild = this;
+                        Debug.Assert(this.parent.rightChild == left);
+                        this.parent.rightChild = this;
                     }
                 }
                 this.leftChild = left;
@@ -258,27 +258,28 @@ namespace Microsoft.Msagl.Layout.Incremental
             }
             internal override void computeMultipoleCoefficients(int precision)
             {
-                leftChild.computeMultipoleCoefficients(precision);
-                rightChild.computeMultipoleCoefficients(precision);
-                multipoleCoefficients = new MultipoleCoefficients(med.Center, leftChild.multipoleCoefficients, rightChild.multipoleCoefficients);
+                this.leftChild.computeMultipoleCoefficients(precision);
+                this.rightChild.computeMultipoleCoefficients(precision);
+                this.multipoleCoefficients = new MultipoleCoefficients(this.med.Center, this.leftChild.multipoleCoefficients, this.rightChild.multipoleCoefficients);
             }
         }
-        class SplitQueue : Queue<LeafKdNode>
+
+        private class SplitQueue : Queue<LeafKdNode>
         {
-            int B;
+            private int B;
             public SplitQueue(int B)
             {
                 this.B = B;
             }
             public void Enqueue(LeafKdNode l, LeafKdNode r)
             {
-                if (l.Size() > B)
+                if (l.Size() > this.B)
                 {
-                    Enqueue(l);
+                    this.Enqueue(l);
                 }
-                if (r.Size() > B)
+                if (r.Size() > this.B)
                 {
-                    Enqueue(r);
+                    this.Enqueue(r);
                 }
             }
         }

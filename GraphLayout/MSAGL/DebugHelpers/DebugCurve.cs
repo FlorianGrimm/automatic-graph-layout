@@ -21,7 +21,7 @@ namespace Microsoft.Msagl.DebugHelpers {
         /// </summary>
         public byte Transparency { get; set; }
 
-        double width = 1;
+        private double width = 1;
 
         ///<summary>
         ///</summary>
@@ -30,8 +30,8 @@ namespace Microsoft.Msagl.DebugHelpers {
         ///<summary>
         ///</summary>
         public double Width {
-            get { return width; }
-            set { width = value; }
+            get { return this.width; }
+            set { this.width = value; }
         }
 
         ///<summary>
@@ -43,7 +43,7 @@ namespace Microsoft.Msagl.DebugHelpers {
         ///<param name="id"></param>
         public DebugCurve(byte transparency, double width, string color, ICurve curve, object id)
             : this(width, color, curve, id) {
-            Transparency = transparency;            
+            this.Transparency = transparency;            
         }
 
         ///<summary>
@@ -55,8 +55,8 @@ namespace Microsoft.Msagl.DebugHelpers {
         ///<param name="dashArray"></param>
         public DebugCurve(byte transparency, double width, string color, ICurve curve, double [] dashArray)
             : this(width, color, curve, null) {
-            Transparency = transparency;
-            DashArray = dashArray;
+            this.Transparency = transparency;
+            this.DashArray = dashArray;
         }
 
         ///<summary>
@@ -68,7 +68,7 @@ namespace Microsoft.Msagl.DebugHelpers {
         public DebugCurve(byte transparency, double width, string color, ICurve curve)
             : this(width, color, curve, null)
         {
-            Transparency = transparency;
+            this.Transparency = transparency;
         }
         /// <summary>
         /// </summary>
@@ -79,7 +79,7 @@ namespace Microsoft.Msagl.DebugHelpers {
         /// <param name="curve"></param>
         public DebugCurve(byte transparency, double width, string color, string fillColor, ICurve curve)
             : this(width, color, fillColor, curve, null) {
-           Transparency = transparency;
+            this.Transparency = transparency;
         }
 
         ///<summary>
@@ -98,11 +98,11 @@ namespace Microsoft.Msagl.DebugHelpers {
         ///<param name="curve"></param>
         ///<param name="id"></param>
         public DebugCurve(double width, string color, ICurve curve, object id) {
-            Transparency = 255;
-            Width = width;
-            Color = color;
-            Curve = curve;
-            Label = id;
+            this.Transparency = 255;
+            this.Width = width;
+            this.Color = color;
+            this.Curve = curve;
+            this.Label = id;
         }
         /// <summary>
         /// </summary>
@@ -112,7 +112,7 @@ namespace Microsoft.Msagl.DebugHelpers {
         /// <param name="curve"></param>
         /// <param name="id"></param>
         public DebugCurve(double width, string color,string fillColor, ICurve curve, object id): this(width, color, curve, null) {
-            FillColor = fillColor;
+            this.FillColor = fillColor;
         }
 
         ///<summary>

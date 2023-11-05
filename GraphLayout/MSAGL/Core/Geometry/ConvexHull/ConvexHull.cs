@@ -11,48 +11,52 @@ namespace Microsoft.Msagl.Core.Geometry {
     /// Creates the convex hull of a set of points following "Computational Geometry, second edition" of O'Rourke
     /// </summary>
     public sealed class ConvexHull {
-        HullPoint[] hullPoints;
-        Point pivot;
-        HullStack stack;
-        HullPointComparer comparer;
+        private HullPoint[] hullPoints;
+        private Point pivot;
+        private HullStack stack;
+        private HullPointComparer comparer;
 
-        ConvexHull(IEnumerable<Point> bodyPoints) {
-            SetPivotAndAllocateHullPointsArray(bodyPoints);
+        private ConvexHull(IEnumerable<Point> bodyPoints) {
+            this.SetPivotAndAllocateHullPointsArray(bodyPoints);
         }
 
-        void SetPivotAndAllocateHullPointsArray(IEnumerable<Point> bodyPoints) {
-            pivot = new Point(0, Double.MaxValue); //set Y to a very big value
+        private void SetPivotAndAllocateHullPointsArray(IEnumerable<Point> bodyPoints) {
+            this.pivot = new Point(0, Double.MaxValue); //set Y to a very big value
             int pivotIndex = -1;
             int n = 0;
             foreach (Point point in bodyPoints) {
-                if (point.Y < pivot.Y) {
-                    pivot = point;
+                if (point.Y < this.pivot.Y) {
+                    this.pivot = point;
                     pivotIndex = n;
                 }
-                else if (point.Y == pivot.Y)
-                    if (point.X > pivot.X) {
-                        pivot = point;
+                else if (point.Y == this.pivot.Y) {
+                    if (point.X > this.pivot.X) {
+                        this.pivot = point;
                         pivotIndex = n;
                     }
+                }
+
                 n++;
             }
             if (n >= 1) {
-                hullPoints = new HullPoint[n - 1]; //we will not copy the pivot into the hull points
+                this.hullPoints = new HullPoint[n - 1]; //we will not copy the pivot into the hull points
                 n = 0;
-                foreach (Point point in bodyPoints)
-                    if (n != pivotIndex)
-                        hullPoints[n++] = new HullPoint(point);
-                    else
+                foreach (Point point in bodyPoints) {
+                    if (n != pivotIndex) {
+                        this.hullPoints[n++] = new HullPoint(point);
+                    } else {
                         pivotIndex = -1; //forget where the pivot was
+                    }
+                }
             }
         }
 
-        Point StackTopPoint {
-            get { return stack.Point; }
+        private Point StackTopPoint {
+            get { return this.stack.Point; }
         }
 
-        Point StackSecondPoint {
-            get { return stack.Next.Point; }
+        private Point StackSecondPoint {
+            get { return this.stack.Next.Point; }
         }
 
         /// <summary>
@@ -65,95 +69,112 @@ namespace Microsoft.Msagl.Core.Geometry {
             return convexHull.Calculate();
         }
 
-        IEnumerable<Point> Calculate() {
-            if (pivot.Y == Double.MaxValue)
+        private IEnumerable<Point> Calculate() {
+            if (this.pivot.Y == Double.MaxValue) {
                 return new Point[0];
-            if (hullPoints.Length == 0)
-                return new[] {pivot};
-            SortAllPointsWithoutPivot();
-            Scan();
-            return EnumerateStack();
+            }
+
+            if (this.hullPoints.Length == 0) {
+                return new[] { this.pivot };
+            }
+
+            this.SortAllPointsWithoutPivot();
+            this.Scan();
+            return this.EnumerateStack();
         }
 
-        IEnumerable<Point> EnumerateStack() {
-            HullStack stackCell = stack;
+        private IEnumerable<Point> EnumerateStack() {
+            HullStack stackCell = this.stack;
             while (stackCell != null) {
                 yield return stackCell.Point;
                 stackCell = stackCell.Next;
             }
         }
 
-        void Scan() {
+        private void Scan() {
             int i = 0;
-            while (hullPoints[i].Deleted)
+            while (this.hullPoints[i].Deleted) {
                 i++;
-           
-            stack = new HullStack(pivot);
-            Push(i++);
-            if (i < hullPoints.Length) {
-                if (!hullPoints[i].Deleted)
-                    Push(i++);
-                else
-                    i++;
             }
 
-            while (i < hullPoints.Length) {
-                if (!hullPoints[i].Deleted) {
-                    if (LeftTurn(i))
-                        Push(i++);
-                    else
-                        Pop();
-                }
-                else
+            this.stack = new HullStack(this.pivot);
+            this.Push(i++);
+            if (i < this.hullPoints.Length) {
+                if (!this.hullPoints[i].Deleted) {
+                    this.Push(i++);
+                } else {
                     i++;
+                }
+            }
+
+            while (i < this.hullPoints.Length) {
+                if (!this.hullPoints[i].Deleted) {
+                    if (this.LeftTurn(i)) {
+                        this.Push(i++);
+                    } else {
+                        this.Pop();
+                    }
+                }
+                else {
+                    i++;
+                }
             }
 
             //cleanup the end
-            while (StackHasMoreThanTwoPoints() && !LeftTurnToPivot())
-                Pop();
+            while (this.StackHasMoreThanTwoPoints() && !this.LeftTurnToPivot()) {
+                this.Pop();
+            }
         }
 
-        bool LeftTurnToPivot() {
-            return Point.GetTriangleOrientation(StackSecondPoint, StackTopPoint, pivot) ==
+        private bool LeftTurnToPivot() {
+            return Point.GetTriangleOrientation(this.StackSecondPoint, this.StackTopPoint, this.pivot) ==
                    TriangleOrientation.Counterclockwise;
         }
 
-        bool StackHasMoreThanTwoPoints() {
-            return stack.Next != null && stack.Next.Next != null;
+        private bool StackHasMoreThanTwoPoints() {
+            return this.stack.Next != null && this.stack.Next.Next != null;
         }
 
-        void Pop() {
-            stack = stack.Next;
+        private void Pop() {
+            this.stack = this.stack.Next;
         }
 
-       
-        bool LeftTurn(int i) {
-            if (stack.Next == null)
+        private bool LeftTurn(int i) {
+            if (this.stack.Next == null) {
                 return true; //there is only one point in the stack
-            var orientation = Point.GetTriangleOrientationWithIntersectionEpsilon(StackSecondPoint, StackTopPoint, hullPoints[i].Point);
-            if (orientation == TriangleOrientation.Counterclockwise)
+            }
+
+            var orientation = Point.GetTriangleOrientationWithIntersectionEpsilon(this.StackSecondPoint, this.StackTopPoint, this.hullPoints[i].Point);
+            if (orientation == TriangleOrientation.Counterclockwise) {
                 return true;
-            if (orientation == TriangleOrientation.Clockwise)
+            }
+
+            if (orientation == TriangleOrientation.Clockwise) {
                 return false;
-            return BackSwitchOverPivot(hullPoints[i].Point);
+            }
+
+            return this.BackSwitchOverPivot(this.hullPoints[i].Point);
         }
-        bool BackSwitchOverPivot(Point point) {
+
+        private bool BackSwitchOverPivot(Point point) {
             //we know here that there at least two points in the stack but it has to be exaclty two 
-            if (stack.Next.Next != null)
+            if (this.stack.Next.Next != null) {
                 return false;
-            Debug.Assert(StackSecondPoint == pivot);
-            return StackTopPoint.X > pivot.X + ApproximateComparer.DistanceEpsilon &&
-                   point.X < pivot.X - ApproximateComparer.DistanceEpsilon;
+            }
+
+            Debug.Assert(this.StackSecondPoint == this.pivot);
+            return this.StackTopPoint.X > this.pivot.X + ApproximateComparer.DistanceEpsilon &&
+                   point.X < this.pivot.X - ApproximateComparer.DistanceEpsilon;
         }
 
-        void Push(int p) {
-            var t = new HullStack(hullPoints[p].Point) {Next = stack};
-            stack = t;
+        private void Push(int p) {
+            var t = new HullStack(this.hullPoints[p].Point) {Next = this.stack };
+            this.stack = t;
         }
 
-        void SortAllPointsWithoutPivot() {
-            comparer = new HullPointComparer(pivot);
-            Array.Sort(hullPoints, comparer);
+        private void SortAllPointsWithoutPivot() {
+            this.comparer = new HullPointComparer(this.pivot);
+            Array.Sort(this.hullPoints, this.comparer);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1305:SpecifyIFormatProvider", MessageId = "System.String.Format(System.String,System.Object,System.Object)")]

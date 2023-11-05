@@ -7,12 +7,12 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
     /// </summary>
     internal class RightIntersectionEvent: SweepEvent {
         internal ConeRightSide coneRightSide;
-        Point intersectionPoint;
-        PolylinePoint endVertex;
+        private Point intersectionPoint;
+        private PolylinePoint endVertex;
 
         internal PolylinePoint EndVertex {
-            get { return endVertex; }
-            set { endVertex = value; }
+            get { return this.endVertex; }
+            set { this.endVertex = value; }
         }
 
         internal RightIntersectionEvent(ConeRightSide coneRightSide,
@@ -23,11 +23,11 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
         }
 
         internal override Point Site {
-            get { return intersectionPoint; }
+            get { return this.intersectionPoint; }
         }
 
         public override string ToString() {
-            return "RightIntersectionEvent "+ intersectionPoint;
+            return "RightIntersectionEvent "+ this.intersectionPoint;
         }
     }
 }

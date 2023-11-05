@@ -5,7 +5,7 @@ using Microsoft.Msagl.Core.Layout;
 
 namespace Microsoft.Msagl.GraphmapsWithMesh
 {
-    class DijkstraAlgo
+    internal class DijkstraAlgo
     {
         public List<VertexNeighbor> Edgelist = new List<VertexNeighbor>();
         public List<int> ShortestPath = new List<int>();
@@ -59,23 +59,31 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 vList[i].Visited = false;
             }
 
-            Edgelist.Clear();
-            Distance = 0;
+            this.Edgelist.Clear();
+            this.Distance = 0;
 
             while (q.Count > 0)
             {
-                Vertex u = getMin(q);
-                if (u.Visited) continue;
-                else u.Visited = true;
+                Vertex u = this.getMin(q);
+                if (u.Visited) {
+                    continue;
+                } else {
+                    u.Visited = true;
+                }
+
                 for (int neighb = 1; neighb <= degList[u.Id]; neighb++)
                 {
                     var neighbor = eList[u.Id, neighb].NodeId;
 
                     int discourage = 0;
-                    if (eList[u.Id, neighb].Selected == 0) discourage = 1000;//continue;
-                    if (vList[eList[u.Id, neighb].NodeId].Weight > 0 &&
-                         eList[u.Id, neighb].NodeId != vList[target].Id) continue;
+                    if (eList[u.Id, neighb].Selected == 0) {
+                        discourage = 1000;//continue;
+                    }
 
+                    if (vList[eList[u.Id, neighb].NodeId].Weight > 0 &&
+                         eList[u.Id, neighb].NodeId != vList[target].Id) {
+                        continue;
+                    }
 
                     var temp = u.Dist + eList[u.Id, neighb].GetEDist(vList, u.Id, eList[u.Id, neighb].NodeId) + discourage;
 
@@ -86,37 +94,42 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                         //Update(q,  vList[neighbor]);
                     }
                 }
-                if (u.Id == vList[target].Id)
+                if (u.Id == vList[target].Id) {
                     break;
+                }
             }
 
             Vertex route = vList[target];
 
             while (route.Parent != null)
             {
-                for (int neighb = 1; neighb <= degList[route.Id]; neighb++)
+                for (int neighb = 1; neighb <= degList[route.Id]; neighb++) {
                     if (eList[route.Id, neighb].NodeId == route.Parent.Id)
                     {
 
-                        Edgelist.Add(new VertexNeighbor(route.Id, neighb));
+                        this.Edgelist.Add(new VertexNeighbor(route.Id, neighb));
 
-                        Distance += Math.Sqrt((route.XLoc - route.Parent.XLoc) * (route.XLoc - route.Parent.XLoc) + (route.YLoc - route.Parent.YLoc) * (route.YLoc - route.Parent.YLoc));
+                        this.Distance += Math.Sqrt((route.XLoc - route.Parent.XLoc) * (route.XLoc - route.Parent.XLoc) + (route.YLoc - route.Parent.YLoc) * (route.YLoc - route.Parent.YLoc));
 
                         break;
                     }
-                for (int neighb = 1; neighb <= degList[route.Parent.Id]; neighb++)
+                }
+
+                for (int neighb = 1; neighb <= degList[route.Parent.Id]; neighb++) {
                     if (eList[route.Parent.Id, neighb].NodeId == route.Id)
                     {
 
-                        Edgelist.Add(new VertexNeighbor(route.Parent.Id, neighb));
+                        this.Edgelist.Add(new VertexNeighbor(route.Parent.Id, neighb));
 
                         break;
                     }
+                }
+
                 route = route.Parent;
             }
-            if (route.Id != vList[source].Id) 
+            if (route.Id != vList[source].Id) {
                 System.Diagnostics.Debug.WriteLine("path not found");
-
+            }
         }
 
 
@@ -145,28 +158,41 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 vList[i].Visited = false;
             }
 
-            Edgelist.Clear();
-            ShortestPath.Clear();
-            Distance = 0;
+            this.Edgelist.Clear();
+            this.ShortestPath.Clear();
+            this.Distance = 0;
 
             while (q.Count > 0)
             {
                 var deq = q.Dequeue();
                 Vertex u = vList[deq];
                 u.Visited = true;
-                if (u == null || u.Invalid) return new List<int>();
+                if (u == null || u.Invalid) {
+                    return new List<int>();
+                }
+
                 for (int neighb = 0; neighb < degList[u.Id]; neighb++)
                 {
                     var neighborId = eList[u.Id, neighb].NodeId;
                     int discourage = 0;
-                    if (eList[u.Id, neighb].Selected == 1) discourage = 1000;//continue;
-                    if (eList[u.Id, neighb].NodeId == source || eList[u.Id, neighb].NodeId == target) discourage = 0;
-                    if (u.Id == source || u.Id == target) discourage = 0;
+                    if (eList[u.Id, neighb].Selected == 1) {
+                        discourage = 1000;//continue;
+                    }
+
+                    if (eList[u.Id, neighb].NodeId == source || eList[u.Id, neighb].NodeId == target) {
+                        discourage = 0;
+                    }
+
+                    if (u.Id == source || u.Id == target) {
+                        discourage = 0;
+                    }
 
                     Vertex neighbor = vList[neighborId];
                     double edist = MsaglUtilities.EucledianDistance(u.XLoc, u.YLoc, neighbor.XLoc, neighbor.YLoc);
                     var tempDist = u.Dist + edist + discourage;
-                    if (tempDist >= neighbor.Dist) continue;
+                    if (tempDist >= neighbor.Dist) {
+                        continue;
+                    }
 
                     neighbor.Dist = tempDist;
                     var tempWeight = neighbor.Dist + MsaglUtilities.EucledianDistance(vList[target].XLoc, vList[target].YLoc, neighbor.XLoc, neighbor.YLoc);
@@ -177,34 +203,40 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                         neighbor.Visited = false;
                         q.Enqueue(neighbor.Id, neighbor.Weight);
                     }
-                    else q.DecreasePriority(neighbor.Id, neighbor.Weight);
+                    else {
+                        q.DecreasePriority(neighbor.Id, neighbor.Weight);
+                    }
                 }
-                if (u.Id == target)
+                if (u.Id == target) {
                     break;
+                }
             }
 
             Vertex route = vList[target];
             int zoomlevel = Math.Max(vList[source].ZoomLevel, vList[target].ZoomLevel);
             while (route.Parent != null)
             {
-                ShortestPath.Add(route.Id);
-                for (int neighb = 0; neighb < degList[route.Id]; neighb++)
+                this.ShortestPath.Add(route.Id);
+                for (int neighb = 0; neighb < degList[route.Id]; neighb++) {
                     if (eList[route.Id, neighb].NodeId == route.Parent.Id)
                     {
-                        SetUsed(vList, eList, degList, route.Id, eList[route.Id, neighb].NodeId, zoomlevel);
-                        Edgelist.Add(new VertexNeighbor(route.Id, neighb));
+                        this.SetUsed(vList, eList, degList, route.Id, eList[route.Id, neighb].NodeId, zoomlevel);
+                        this.Edgelist.Add(new VertexNeighbor(route.Id, neighb));
 
-                        Distance += Math.Sqrt((route.XLoc - route.Parent.XLoc) * (route.XLoc - route.Parent.XLoc) + (route.YLoc - route.Parent.YLoc) * (route.YLoc - route.Parent.YLoc));
+                        this.Distance += Math.Sqrt((route.XLoc - route.Parent.XLoc) * (route.XLoc - route.Parent.XLoc) + (route.YLoc - route.Parent.YLoc) * (route.YLoc - route.Parent.YLoc));
 
                         break;
                     }
+                }
 
                 route = route.Parent;
             }
-            ShortestPath.Add(route.Id);
-            if (route.Id != source)
+            this.ShortestPath.Add(route.Id);
+            if (route.Id != source) {
                 System.Diagnostics.Debug.WriteLine("path not found");
-            return ShortestPath;
+            }
+
+            return this.ShortestPath;
         }
 
 
@@ -217,25 +249,35 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 vList[i].Visited = false;
             }
 
-            Edgelist.Clear();
-            ShortestPath.Clear();
-            Distance = 0;
+            this.Edgelist.Clear();
+            this.ShortestPath.Clear();
+            this.Distance = 0;
 
             Vertex currentVertex = vList[source];
             int bestN;
             double bestD, temp, discourage=0;
             while (true)
             {
-                if (currentVertex == null || currentVertex.Invalid) return;
+                if (currentVertex == null || currentVertex.Invalid) {
+                    return;
+                }
+
                 currentVertex.Visited = true;
                 bestD = Double.MaxValue;
                 bestN = -1;
                 for (int neighb = 0; neighb < degList[currentVertex.Id]; neighb++)
                 {
                     var neighbor = eList[currentVertex.Id, neighb].NodeId;
-                    if (vList[neighbor].Visited) continue;
-                    if (eList[currentVertex.Id, neighb].Selected == 1) discourage = 1000; //continue;
-                    else discourage = 0;
+                    if (vList[neighbor].Visited) {
+                        continue;
+                    }
+
+                    if (eList[currentVertex.Id, neighb].Selected == 1) {
+                        discourage = 1000; //continue;
+                    } else {
+                        discourage = 0;
+                    }
+
                     temp = MsaglUtilities.EucledianDistance(vList[neighbor].XLoc, vList[neighbor].YLoc,
                         vList[target].XLoc, vList[target].YLoc) + discourage;
                     if (temp < bestD)
@@ -245,11 +287,13 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                     }
 
                 }
-                if (currentVertex.Id == target)
+                if (currentVertex.Id == target) {
                     break;
+                }
+
                 if (bestN == -1)
                 {
-                    MSAGLAstarShortestPath(vList, eList, degList, source, target, n);
+                    this.MSAGLAstarShortestPath(vList, eList, degList, source, target, n);
                     return;
                 }
                 vList[bestN].Parent = currentVertex;
@@ -260,22 +304,25 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             int zoomlevel = Math.Max(vList[source].ZoomLevel, vList[target].ZoomLevel);
             while (route.Parent != null)
             {
-                ShortestPath.Add(route.Id);
-                for (int neighb = 0; neighb < degList[route.Id]; neighb++)
+                this.ShortestPath.Add(route.Id);
+                for (int neighb = 0; neighb < degList[route.Id]; neighb++) {
                     if (eList[route.Id, neighb].NodeId == route.Parent.Id)
                     {
-                        SetUsed(vList, eList, degList, route.Id, eList[route.Id, neighb].NodeId, zoomlevel);
-                        Edgelist.Add(new VertexNeighbor(route.Id, neighb));
+                        this.SetUsed(vList, eList, degList, route.Id, eList[route.Id, neighb].NodeId, zoomlevel);
+                        this.Edgelist.Add(new VertexNeighbor(route.Id, neighb));
 
 
                         break;
                     }
+                }
 
                 route = route.Parent;
             }
-            ShortestPath.Add(route.Id);
-            if (route.Id != source)
+            this.ShortestPath.Add(route.Id);
+            if (route.Id != source) {
                 System.Diagnostics.Debug.WriteLine("path not found");
+            }
+
             return;
         }
 
@@ -302,26 +349,33 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             }
 
 
-            Distance = 0;
+            this.Distance = 0;
 
             while (q.Count > 0)
             {
                 var deq = q.Dequeue();
                 Vertex u = vList[deq];
                 u.Visited = true;
-                if (u == null || u.Invalid) return;
+                if (u == null || u.Invalid) {
+                    return;
+                }
+
                 for (int neighb = 0; neighb < degList[u.Id]; neighb++)
                 {
 
                     var neighborId = eList[u.Id, neighb].NodeId;
                     int discourage = 0;
 
-                    if (u.Id < NofNodesBeforeDetour && u.Id != source) discourage = 1000;
+                    if (u.Id < NofNodesBeforeDetour && u.Id != source) {
+                        discourage = 1000;
+                    }
 
                     Vertex neighbor = vList[neighborId];
                     double edist = MsaglUtilities.EucledianDistance(u.XLoc, u.YLoc, neighbor.XLoc, neighbor.YLoc);
                     var tempDist = u.Dist + edist + discourage;
-                    if (tempDist >= neighbor.Dist) continue;
+                    if (tempDist >= neighbor.Dist) {
+                        continue;
+                    }
 
                     neighbor.Dist = tempDist;
                     neighbor.Parent = u;
@@ -330,33 +384,42 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                         neighbor.Visited = false;
                         q.Enqueue(neighbor.Id, neighbor.Dist);
                     }
-                    else q.DecreasePriority(neighbor.Id, neighbor.Dist);
+                    else {
+                        q.DecreasePriority(neighbor.Id, neighbor.Dist);
+                    }
                 }
             }
             foreach (var node in _mainGeometryGraph.Nodes)
             {
                 int target = nodeId[node];
-                if (target == source) continue;
+                if (target == source) {
+                    continue;
+                }
+
                 Vertex route = vList[target];
                 int zoomlevel = Math.Max(vList[source].ZoomLevel, vList[target].ZoomLevel);
-                Edgelist.Clear();
+                this.Edgelist.Clear();
                 while (route.Parent != null)
                 {
-                    ShortestPath.Add(route.Id);
-                    for (int neighb = 0; neighb < degList[route.Id]; neighb++)
+                    this.ShortestPath.Add(route.Id);
+                    for (int neighb = 0; neighb < degList[route.Id]; neighb++) {
                         if (eList[route.Id, neighb].NodeId == route.Parent.Id)
                         {
-                            SetUsed(vList, eList, degList, route.Id, eList[route.Id, neighb].NodeId, zoomlevel);
-                            Edgelist.Add(new VertexNeighbor(route.Id, neighb));
+                            this.SetUsed(vList, eList, degList, route.Id, eList[route.Id, neighb].NodeId, zoomlevel);
+                            this.Edgelist.Add(new VertexNeighbor(route.Id, neighb));
                             break;
                         }
+                    }
 
                     route = route.Parent;
                 }
-                if (route.Id != source)
+                if (route.Id != source) {
                     System.Diagnostics.Debug.WriteLine("path not found");
-                foreach (VertexNeighbor vn in Edgelist)
+                }
+
+                foreach (VertexNeighbor vn in this.Edgelist) {
                     g1.AddEdge(vn.A, g.EList[vn.A, vn.Neighbor].NodeId, g.EList[vn.A, vn.Neighbor].Selected, g.EList[vn.A, vn.Neighbor].Used);
+                }
             }
             return;
         }
@@ -379,24 +442,41 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                 vList[i].Visited = false;
             }
 
-            Edgelist.Clear();
-            Distance = 0;
+            this.Edgelist.Clear();
+            this.Distance = 0;
 
             while (q.Count > 0)
             {
-                Vertex u = getMin(q);
-                if (u == null) return;
-                if (u.Visited) continue;
-                else u.Visited = true;
+                Vertex u = this.getMin(q);
+                if (u == null) {
+                    return;
+                }
+
+                if (u.Visited) {
+                    continue;
+                } else {
+                    u.Visited = true;
+                }
+
                 for (int neighb = 0; neighb < degList[u.Id]; neighb++)
                 {
                     var neighbor = eList[u.Id, neighb].NodeId;
-                    if (vList[neighbor].Visited) continue;
-                    int discourage = 0;
-                    if (eList[u.Id, neighb].Selected == 1) discourage = 1000;//continue;
-                    if (eList[u.Id, neighb].NodeId == source || eList[u.Id, neighb].NodeId == target) discourage = 0;
-                    if (u.Id == source || u.Id == target) discourage = 0;
+                    if (vList[neighbor].Visited) {
+                        continue;
+                    }
 
+                    int discourage = 0;
+                    if (eList[u.Id, neighb].Selected == 1) {
+                        discourage = 1000;//continue;
+                    }
+
+                    if (eList[u.Id, neighb].NodeId == source || eList[u.Id, neighb].NodeId == target) {
+                        discourage = 0;
+                    }
+
+                    if (u.Id == source || u.Id == target) {
+                        discourage = 0;
+                    }
 
                     var temp = u.Dist + eList[u.Id, neighb].GetEDist(vList, u.Id, eList[u.Id, neighb].NodeId) + discourage;
 
@@ -407,29 +487,32 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
                         //Update(q,  vList[neighbor]);
                     }
                 }
-                if (u.Id == target)
+                if (u.Id == target) {
                     break;
+                }
             }
 
             Vertex route = vList[target];
 
             while (route.Parent != null)
             {
-                for (int neighb = 0; neighb < degList[route.Id]; neighb++)
+                for (int neighb = 0; neighb < degList[route.Id]; neighb++) {
                     if (eList[route.Id, neighb].NodeId == route.Parent.Id)
                     {
-                        SetUsed(vList, eList, degList, route.Id, eList[route.Id, neighb].NodeId, 1);
-                        Edgelist.Add(new VertexNeighbor(route.Id, neighb));
+                        this.SetUsed(vList, eList, degList, route.Id, eList[route.Id, neighb].NodeId, 1);
+                        this.Edgelist.Add(new VertexNeighbor(route.Id, neighb));
 
-                        Distance += Math.Sqrt((route.XLoc - route.Parent.XLoc) * (route.XLoc - route.Parent.XLoc) + (route.YLoc - route.Parent.YLoc) * (route.YLoc - route.Parent.YLoc));
+                        this.Distance += Math.Sqrt((route.XLoc - route.Parent.XLoc) * (route.XLoc - route.Parent.XLoc) + (route.YLoc - route.Parent.YLoc) * (route.YLoc - route.Parent.YLoc));
 
                         break;
                     }
+                }
+
                 route = route.Parent;
             }
-            if (route.Id != source)
+            if (route.Id != source) {
                 System.Diagnostics.Debug.WriteLine("path not found");
-
+            }
         }
 
         public void SetUsed(Vertex[] vList, Edge[,] eList, int[] degList, int a, int b, int zoomlevel)
@@ -438,16 +521,22 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
             {
                 if (eList[a, index].NodeId == b)
                 {
-                    if (eList[a, index].Used > 0) return;
-                    else eList[a, index].Used = zoomlevel;
+                    if (eList[a, index].Used > 0) {
+                        return;
+                    } else {
+                        eList[a, index].Used = zoomlevel;
+                    }
                 }
             }
             for (int index = 0; index < degList[b]; index++)
             {
                 if (eList[b, index].NodeId == a)
                 {
-                    if (eList[b, index].Used > 0) return;
-                    else eList[b, index].Used = zoomlevel;
+                    if (eList[b, index].Used > 0) {
+                        return;
+                    } else {
+                        eList[b, index].Used = zoomlevel;
+                    }
                 }
             }
         }
@@ -460,7 +549,7 @@ namespace Microsoft.Msagl.GraphmapsWithMesh
         public int Neighbor;
         public VertexNeighbor(int p, int q)
         {
-            A = p; Neighbor = q;
+            this.A = p; this.Neighbor = q;
         }
     }
 }

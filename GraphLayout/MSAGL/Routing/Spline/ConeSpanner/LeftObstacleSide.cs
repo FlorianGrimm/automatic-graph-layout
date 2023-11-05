@@ -3,17 +3,17 @@ using Microsoft.Msagl.Core.Geometry.Curves;
 
 namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
     internal class LeftObstacleSide : ObstacleSide {
-        readonly Point end;
+        private readonly Point end;
         internal LeftObstacleSide(PolylinePoint startVertex)
             : base(startVertex) {
-            end = startVertex.NextOnPolyline.Point;
+            this.end = startVertex.NextOnPolyline.Point;
         }
         internal override Point End {
-            get { return end; }
+            get { return this.end; }
         }
 
         internal override PolylinePoint EndVertex {
-            get { return StartVertex.NextOnPolyline; }
+            get { return this.StartVertex.NextOnPolyline; }
         }
 
     }

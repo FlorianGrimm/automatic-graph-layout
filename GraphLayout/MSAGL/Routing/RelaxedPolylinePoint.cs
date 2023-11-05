@@ -6,14 +6,14 @@ namespace Microsoft.Msagl.Routing {
         private PolylinePoint polylinePoint;
 
         internal PolylinePoint PolylinePoint {
-            get { return polylinePoint; }
-            set { polylinePoint = value; }
+            get { return this.polylinePoint; }
+            set { this.polylinePoint = value; }
         }
         private Point originalPosition;
 
         internal Point OriginalPosition {
-            get { return originalPosition; }
-            set { originalPosition = value; }
+            get { return this.originalPosition; }
+            set { this.originalPosition = value; }
         }
         
         internal RelaxedPolylinePoint(PolylinePoint polylinePoint, Point originalPosition) {
@@ -21,17 +21,18 @@ namespace Microsoft.Msagl.Routing {
             this.OriginalPosition = originalPosition;
         }
 
-        RelaxedPolylinePoint next;
+        private RelaxedPolylinePoint next;
 
         internal RelaxedPolylinePoint Next {
-            get { return next; }
-            set { next = value; }
+            get { return this.next; }
+            set { this.next = value; }
         }
-        RelaxedPolylinePoint prev;
+
+        private RelaxedPolylinePoint prev;
 
         internal RelaxedPolylinePoint Prev {
-            get { return prev; }
-            set { prev = value; }
+            get { return this.prev; }
+            set { this.prev = value; }
         }
     }
 }

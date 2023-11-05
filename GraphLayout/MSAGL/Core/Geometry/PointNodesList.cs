@@ -3,21 +3,21 @@ using System.Collections.Generic;
 
 namespace Microsoft.Msagl.Core.Geometry {
     internal class PointNodesList : IEnumerator<Point>, IEnumerable<Point> {
-        CornerSite current, head;
+        private CornerSite current, head;
 
-        CornerSite Head {
-            get { return head; }
+        private CornerSite Head {
+            get { return this.head; }
         }
 
         internal PointNodesList(CornerSite pointNode) {
-            head = pointNode;
+            this.head = pointNode;
         }
 
         internal PointNodesList() { }
         #region IEnumerator<Point> Members
 
         public Point Current {
-            get { return current.Point; }
+            get { return this.current.Point; }
         }
      
         #endregion
@@ -31,25 +31,26 @@ namespace Microsoft.Msagl.Core.Geometry {
         #region IEnumerator Members
 
         object System.Collections.IEnumerator.Current {
-            get { return current.Point; }
+            get { return this.current.Point; }
         }
 
         public bool MoveNext() {
-            if (current != null) {
-                if (current.Next != null) {
-                    current = current.Next;
+            if (this.current != null) {
+                if (this.current.Next != null) {
+                    this.current = this.current.Next;
                     return true;
-                } else
+                } else {
                     return false;
+                }
             } else {
-                current = Head;
+                this.current = this.Head;
                 return true;
             }
 
         }
 
         public void Reset() {
-            current = null;
+            this.current = null;
         }
 
         #endregion

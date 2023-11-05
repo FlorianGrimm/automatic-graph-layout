@@ -34,14 +34,14 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
             RoundVerticesAndSimplify(this.PaddedPolyline);
             this.IsRectangle = this.IsPolylineRectangle();
-            InputShape = shape;
-            Ports = new Set<Port>(InputShape.Ports);
+            this.InputShape = shape;
+            this.Ports = new Set<Port>(this.InputShape.Ports);
         }
 
 
         // From CreateSentinel only
-        Obstacle(Point a, Point b, int scanlineOrdinal) {
-            PaddedPolyline = new Polyline(ApproximateComparer.Round(a), ApproximateComparer.Round(b)) { Closed = true };
+        private Obstacle(Point a, Point b, int scanlineOrdinal) {
+            this.PaddedPolyline = new Polyline(ApproximateComparer.Round(a), ApproximateComparer.Round(b)) { Closed = true };
             this.Ordinal = scanlineOrdinal;
         }
 
@@ -85,23 +85,25 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         private Polyline looseVisibilityPolyline;
 
         internal Rectangle PaddedBoundingBox {
-            get { return PaddedPolyline.BoundingBox; }
+            get { return this.PaddedPolyline.BoundingBox; }
         }
 
         internal Rectangle VisibilityBoundingBox {
-            get { return VisibilityPolyline.BoundingBox; }
+            get { return this.VisibilityPolyline.BoundingBox; }
         }
 
         internal bool IsGroup {
-            get { return (null != InputShape) && InputShape.IsGroup; }
+            get { return (null != this.InputShape) && this.InputShape.IsGroup; }
         }
 
         internal bool IsTransparentAncestor {
-            get { return InputShape == null ? false : InputShape.IsTransparent; }
+            get { return this.InputShape == null ? false : this.InputShape.IsTransparent; }
             set {
-                if (InputShape == null)
+                if (this.InputShape == null) {
                     throw new InvalidOperationException();
-                InputShape.IsTransparent = value;
+                }
+
+                this.InputShape.IsTransparent = value;
             }
         }
 
@@ -151,26 +153,26 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal Set<Port> Ports { get; private set; }
 
         internal bool IsSentinel {
-            get { return null == InputShape; }
+            get { return null == this.InputShape; }
         }
 
         // Set the initial ActiveLowSide and ActiveHighSide of the obstacle starting at this point.
         internal void CreateInitialSides(PolylinePoint startPoint, ScanDirection scanDir) {
-            Debug.Assert((null == ActiveLowSide) && (null == ActiveHighSide)
+            Debug.Assert((null == this.ActiveLowSide) && (null == this.ActiveHighSide)
                          , "Cannot call SetInitialSides when sides are already set");
-            ActiveLowSide = new LowObstacleSide(this, startPoint, scanDir);
-            ActiveHighSide = new HighObstacleSide(this, startPoint, scanDir);
-            if (scanDir.IsFlat(ActiveHighSide)) {
+            this.ActiveLowSide = new LowObstacleSide(this, startPoint, scanDir);
+            this.ActiveHighSide = new HighObstacleSide(this, startPoint, scanDir);
+            if (scanDir.IsFlat(this.ActiveHighSide)) {
                 // No flat sides in the scanline; we'll do lookahead processing in the scanline to handle overlaps
                 // with existing segments, and normal neighbor handling will take care of collinear OpenVertexEvents.
-                ActiveHighSide = new HighObstacleSide(this, ActiveHighSide.EndVertex, scanDir);
+                this.ActiveHighSide = new HighObstacleSide(this, this.ActiveHighSide.EndVertex, scanDir);
             }
         }
 
         // Called when we've processed the HighestVertexEvent and closed the object.
         internal void Close() {
-            ActiveLowSide = null;
-            ActiveHighSide = null;
+            this.ActiveLowSide = null;
+            this.ActiveHighSide = null;
         }
 
         internal static Obstacle CreateSentinel(Point a, Point b, ScanDirection scanDir, int scanlineOrdinal) {
@@ -253,12 +255,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         
         // Return whether there were any port changes, and if so which were added and removed.
         internal bool GetPortChanges(out Set<Port> addedPorts, out Set<Port> removedPorts) {
-            addedPorts = InputShape.Ports - Ports;
-            removedPorts = Ports - InputShape.Ports;
+            addedPorts = this.InputShape.Ports - this.Ports;
+            removedPorts = this.Ports - this.InputShape.Ports;
             if ((0 == addedPorts.Count) && (0 == removedPorts.Count)) {
                 return false;
             }
-            Ports = new Set<Port>(InputShape.Ports);
+            this.Ports = new Set<Port>(this.InputShape.Ports);
             return true;
         }
 
@@ -266,12 +268,12 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            string typeString = GetType().ToString();
+            string typeString = this.GetType().ToString();
             int lastDotLoc = typeString.LastIndexOf('.');
             if (lastDotLoc >= 0) {
                 typeString = typeString.Substring(lastDotLoc + 1);
             }
-            return typeString + " [" + InputShape + "]";
+            return typeString + " [" + this.InputShape + "]";
         }
     }
 }

@@ -33,27 +33,30 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         /// <returns></returns>
         public List<Point> IterateSingleLocalizedMethod() {
             List<Point> newPositions;
-            if (Settings.UpdateMethod == UpdateMethod.Serial)
-                newPositions = Positions;
-            else
-                newPositions = new List<Point>(Positions.Count);
-
-            // For each node compute the new position by averaging over all votes.
-            for (int i = 0; i < NodeVotings.Count; i++) {
-                NodeVoting nodeVoting = NodeVotings[i];
-                int votedIndex = nodeVoting.VotedNodeIndex;
-                Point newPos = LocalizedOptimization(nodeVoting);
-                if (Settings.UpdateMethod == UpdateMethod.Serial) {
-                    newPositions[votedIndex] = newPos;
-                }
-                else newPositions.Add(newPos);
+            if (this.Settings.UpdateMethod == UpdateMethod.Serial) {
+                newPositions = this.Positions;
+            } else {
+                newPositions = new List<Point>(this.Positions.Count);
             }
 
-            if (Settings.UpdateMethod == UpdateMethod.Parallel) {
-                for (int i = 0; i < NodeVotings.Count; i++) {
-                    NodeVoting nodeVoting = NodeVotings[i];
+            // For each node compute the new position by averaging over all votes.
+            for (int i = 0; i < this.NodeVotings.Count; i++) {
+                NodeVoting nodeVoting = this.NodeVotings[i];
+                int votedIndex = nodeVoting.VotedNodeIndex;
+                Point newPos = this.LocalizedOptimization(nodeVoting);
+                if (this.Settings.UpdateMethod == UpdateMethod.Serial) {
+                    newPositions[votedIndex] = newPos;
+                }
+                else {
+                    newPositions.Add(newPos);
+                }
+            }
+
+            if (this.Settings.UpdateMethod == UpdateMethod.Parallel) {
+                for (int i = 0; i < this.NodeVotings.Count; i++) {
+                    NodeVoting nodeVoting = this.NodeVotings[i];
                     int index = nodeVoting.VotedNodeIndex;
-                    Positions[index] = newPositions[i];
+                    this.Positions[index] = newPositions[i];
                 }
             }
 
@@ -65,22 +68,26 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         /// </summary>
         /// <returns></returns>
         public List<Point> IterateAll() {
-            initMaxIterationsSolver();
+            this.initMaxIterationsSolver();
             int i = 0;
             List<Point> res = null;
-            double stressOld = StressValue(Positions);
-            while ( (!Settings.CancelOnStressMaxIteration || (i++)<Settings.MaxStressIterations)){
-                if (Settings.SolvingMethod == SolvingMethod.Localized)
-                    res = IterateSingleLocalizedMethod();
-                else {
-                    res = IterateSingleConjugateGradient();
-                    if (Settings.CancelAfterFirstConjugate) break;
+            double stressOld = this.StressValue(this.Positions);
+            while ( (!this.Settings.CancelOnStressMaxIteration || (i++)< this.Settings.MaxStressIterations)){
+                if (this.Settings.SolvingMethod == SolvingMethod.Localized) {
+                    res = this.IterateSingleLocalizedMethod();
+                } else {
+                    res = this.IterateSingleConjugateGradient();
+                    if (this.Settings.CancelAfterFirstConjugate) {
+                        break;
+                    }
                 }
 
-                double stressNew = StressValue(res);//stressNew <= stressOld (this should always hold, otherwise there is something wrong)
+                double stressNew = this.StressValue(res);//stressNew <= stressOld (this should always hold, otherwise there is something wrong)
                 double stressChange = (stressOld > 0) ? (stressOld - stressNew)/stressOld : 0;
-                stressChange = Math.Sqrt(stressChange)/Positions.Count;
-                if (stressChange < Settings.StressChangeTolerance) break;
+                stressChange = Math.Sqrt(stressChange)/ this.Positions.Count;
+                if (stressChange < this.Settings.StressChangeTolerance) {
+                    break;
+                }
             }
             return res;
         }
@@ -88,12 +95,15 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         /// <summary>
         /// Sets the maximal number of iterations for the solver. Only relevant if conjugate gradient method is used.
         /// </summary>
-         void initMaxIterationsSolver() {
-            if (Positions == null) return;
-            int problemSize = Positions.Count;
-            int maxIterat = Settings.MaxSolverIterations;
+        private void initMaxIterationsSolver() {
+            if (this.Positions == null) {
+                return;
+            }
 
-            switch (Settings.SolverMaxIteratMethod) {
+            int problemSize = this.Positions.Count;
+            int maxIterat = this.Settings.MaxSolverIterations;
+
+            switch (this.Settings.SolverMaxIteratMethod) {
                 case MaxIterationMethod.FixedMax:
                     return;
                 case MaxIterationMethod.SqrtProblemSize:
@@ -105,7 +115,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
                 default:
                     return;
             }
-            Settings.MaxSolverIterations = maxIterat;
+            this.Settings.MaxSolverIterations = maxIterat;
         }
 
         /// <summary>
@@ -115,13 +125,13 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         ///  Each dimension has to be solved seperately.
         /// </summary>
         /// <returns></returns>
-         List<Point> IterateSingleConjugateGradient() {
+        private List<Point> IterateSingleConjugateGradient() {
             SparseMatrix Lw;
             SparseMatrix Lx;
-            ConstructLinearSystemFromMajorization(out Lw, out Lx);
+            this.ConstructLinearSystemFromMajorization(out Lw, out Lx);
            
-            double[] zX = Positions.Select(p => p.X).ToArray();
-            double[] zY = Positions.Select(p => p.Y).ToArray();
+            double[] zX = this.Positions.Select(p => p.X).ToArray();
+            double[] zY = this.Positions.Select(p => p.Y).ToArray();
 
             double[] bX = Lx*zX;
             double[] bY = Lx*zY;
@@ -140,22 +150,23 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
                 { SolvingMethod.PrecondConjugateGradient, LinearSystemSolver.SolvePrecondConjugateGradient }
             };
 
-            invokers[Settings.Parallelize](new Action[] {
-                () => resX = solvers[Settings.SolvingMethod](Lw, bX, zX, Settings.MaxSolverIterations,
-                                                                                       Settings.ResidualTolerance),
+            invokers[this.Settings.Parallelize](new Action[] {
+                () => resX = solvers[this.Settings.SolvingMethod](Lw, bX, zX, this.Settings.MaxSolverIterations,
+                                                                                       this.Settings.ResidualTolerance),
                                                                        () =>
                                                                        resY =
-                                                                       solvers[Settings.SolvingMethod](Lw, bY,
+                                                                       solvers[this.Settings.SolvingMethod](Lw, bY,
                                                                                                                  zY,
-                                                                                                                 Settings.MaxSolverIterations,
-                                                                       
-                                                                                       Settings.ResidualTolerance)
+                                                                                                                 this.Settings.MaxSolverIterations,
+
+                                                                                       this.Settings.ResidualTolerance)
 });
 
-            for (int i = 0; i < Positions.Count; i++)
-                Positions[i] = new Point(resX[i], resY[i]);
+            for (int i = 0; i < this.Positions.Count; i++) {
+                this.Positions[i] = new Point(resX[i], resY[i]);
+            }
 
-            return Positions;
+            return this.Positions;
 
         }
 
@@ -165,8 +176,8 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         /// </summary>
         /// <param name="nodeVoting"></param>
         /// <returns></returns>
-         Point LocalizedOptimization(NodeVoting nodeVoting) {
-            Point currentPosition = Positions[nodeVoting.VotedNodeIndex];
+        private Point LocalizedOptimization(NodeVoting nodeVoting) {
+            Point currentPosition = this.Positions[nodeVoting.VotedNodeIndex];
             double nextX = 0;
             double nextY = 0;
             double sumWeights = 0;
@@ -179,7 +190,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
             foreach (VoteBlock votingBlock in nodeVoting.VotingBlocks) {
                 double blockWeight = votingBlock.BlockWeight;
                 foreach (Vote vote in votingBlock.Votings) {
-                    Point voterPos = Positions[vote.VoterIndex];
+                    Point voterPos = this.Positions[vote.VoterIndex];
 
                     double votingDistance = vote.Distance;
                     double diffX = currentPosition.X - voterPos.X;
@@ -208,7 +219,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         ///     Clears the votings for a given node representative, but leaves the index references.
         /// </summary>
         /// <param name="nodeVoting"></param>
-         void ClearVoting(NodeVoting nodeVoting) {
+        private void ClearVoting(NodeVoting nodeVoting) {
             foreach (VoteBlock block in nodeVoting.VotingBlocks) {
                 block.Votings.Clear();
             }
@@ -218,8 +229,8 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         ///     Clears the Votings of the nodes.
         /// </summary>
         public void ClearVotings() {
-            foreach (NodeVoting nodeVoting in NodeVotings) {
-                ClearVoting(nodeVoting);
+            foreach (NodeVoting nodeVoting in this.NodeVotings) {
+                this.ClearVoting(nodeVoting);
             }
         }
 
@@ -284,8 +295,8 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         }
 #endif
 
-         void ConstructLinearSystemFromMajorization(out SparseMatrix Lw, out SparseMatrix Lx) {
-            int numEdges = GetNumberOfEdges(NodeVotings);
+        private void ConstructLinearSystemFromMajorization(out SparseMatrix Lw, out SparseMatrix Lx) {
+            int numEdges = this.GetNumberOfEdges(this.NodeVotings);
 
 #if SHARPKIT //SharpKit/Colin: multidimensional arrays not supported in JavaScript - https://code.google.com/p/sharpkit/issues/detail?id=340
             var edgesDistance = new double[numEdges];
@@ -298,17 +309,19 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
 
             //each element in the array corresponds to a node, the list corresponds to the adjacency list of that node.
             //int[0]: node id of adjacent node, int[1]: edge id of this edge
-            var adjLists = new List<int[]>[NodeVotings.Count];
+            var adjLists = new List<int[]>[this.NodeVotings.Count];
 
             int row = 0;
             int edgeId = 0;
-            foreach (NodeVoting nodeVoting in NodeVotings) {
+            foreach (NodeVoting nodeVoting in this.NodeVotings) {
                 int targetId = nodeVoting.VotedNodeIndex;
                 int numAdj = 0;
                 nodeVoting.VotingBlocks.ForEach(block => numAdj += block.Votings.Count);
                 var currentAdj = new List<int[]>(numAdj);
-                if (row != targetId)
+                if (row != targetId) {
                     throw new ArgumentOutOfRangeException("VotedNodeIndex must be consecutive starting from 0");
+                }
+
                 adjLists[row] = currentAdj;
                 foreach (VoteBlock block in nodeVoting.VotingBlocks) {
                     foreach (Vote voting in block.Votings) {
@@ -374,7 +387,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
 
                         // Lx, which is similar to weighted laplacian but takes the distance into account
                         //TODO extract the distance computation outside of this step to make the procedure faster
-                        double euclid = (Positions[rowId] - Positions[colId]).Length;
+                        double euclid = (this.Positions[rowId] - this.Positions[colId]).Length;
                         double entry = -weight*distance/euclid;
                         Lx.Values()[valPos] = entry;
                         sumLx += entry;
@@ -391,7 +404,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
             }
         }
 
-         int GetNumberOfEdges(List<NodeVoting> nodeVotings) {
+        private int GetNumberOfEdges(List<NodeVoting> nodeVotings) {
             int i = 0;
             foreach (NodeVoting nodeVoting in nodeVotings) {
                 int targetId = nodeVoting.VotedNodeIndex;
@@ -409,7 +422,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         /// <returns></returns>
         public double StressValue(List<Point> nodePositions) {
             double stress = 0;
-            foreach (NodeVoting nodeVoting in NodeVotings) {
+            foreach (NodeVoting nodeVoting in this.NodeVotings) {
                 int targetId = nodeVoting.VotedNodeIndex;
                 foreach (VoteBlock block in nodeVoting.VotingBlocks) {
                     foreach (Vote voting in block.Votings) {

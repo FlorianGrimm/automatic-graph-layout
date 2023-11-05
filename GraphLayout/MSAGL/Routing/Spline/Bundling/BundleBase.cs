@@ -14,10 +14,8 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         internal BundleInfo OutgoingBundleInfo;
 
         internal BundleInfo IncomingBundleInfo;
-
-        readonly Point[] points;
-
-        readonly Point[] tangents;
+        private readonly Point[] points;
+        private readonly Point[] tangents;
 
         internal OrientedHubSegment[] OrientedHubSegments;
 
@@ -49,64 +47,64 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// constructor
         /// </summary>
         internal BundleBase(int count, ICurve boundaryCurve, Point position, bool belongsToRealNode, int stationIndex) {
-            BelongsToRealNode = belongsToRealNode;
-            Curve = boundaryCurve;
-            Position = position;
+            this.BelongsToRealNode = belongsToRealNode;
+            this.Curve = boundaryCurve;
+            this.Position = position;
             this.stationIndex = stationIndex;
-            points = new Point[count];
-            tangents = new Point[count];
-            OrientedHubSegments = new OrientedHubSegment[count];
-            ParameterSpan = Curve.ParEnd - Curve.ParStart;
+            this.points = new Point[count];
+            this.tangents = new Point[count];
+            this.OrientedHubSegments = new OrientedHubSegment[count];
+            this.ParameterSpan = this.Curve.ParEnd - this.Curve.ParStart;
         }
 
-        internal Point CurveCenter { get { return Curve.BoundingBox.Center; } }
+        internal Point CurveCenter { get { return this.Curve.BoundingBox.Center; } }
 
-        internal BundleBase OppositeBase { get { return OutgoingBundleInfo != null ? OutgoingBundleInfo.TargetBase : IncomingBundleInfo.SourceBase; } }
+        internal BundleBase OppositeBase { get { return this.OutgoingBundleInfo != null ? this.OutgoingBundleInfo.TargetBase : this.IncomingBundleInfo.SourceBase; } }
 
-        internal int Count { get { return points.Length; } }
+        internal int Count { get { return this.points.Length; } }
 
-        internal Point[] Points { get { return points; } }
+        internal Point[] Points { get { return this.points; } }
 
-        internal Point[] Tangents { get { return tangents; } }
+        internal Point[] Tangents { get { return this.tangents; } }
 
-        double initialMidParameter;
+        private double initialMidParameter;
 
         internal double InitialMidParameter {
-            get { return initialMidParameter; }
+            get { return this.initialMidParameter; }
             set {
-                initialMidParameter = value;
-                InitialMidPoint = Curve[value];
+                this.initialMidParameter = value;
+                this.InitialMidPoint = this.Curve[value];
             }
         }
 
         internal Point InitialMidPoint { get; set; }
 
-        double parRight;
+        private double parRight;
         /// <summary>
         /// corresponds to the left point of the base
         /// </summary>
         internal double ParRight {
-            get { return parRight; }
+            get { return this.parRight; }
             set {
-                parRight = value;
-                RightPoint = Curve[parRight];
+                this.parRight = value;
+                this.RightPoint = this.Curve[this.parRight];
             }
         }
 
-        double parLeft;
+        private double parLeft;
         /// <summary>
         /// corresponds to the right point of the base
         /// </summary>
         internal double ParLeft {
-            get { return parLeft; }
+            get { return this.parLeft; }
             set {
-                parLeft = value;
-                LeftPoint = Curve[parLeft];
+                this.parLeft = value;
+                this.LeftPoint = this.Curve[this.parLeft];
             }
         }
 
         internal double ParMid {
-            get { return (parRight + parLeft) / 2; }
+            get { return (this.parRight + this.parLeft) / 2; }
         }
 
         internal Point RightPoint { get; set; }
@@ -114,7 +112,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         internal Point LeftPoint { get; set; }
 
         internal Point MidPoint {
-            get { return (RightPoint + LeftPoint) / 2; }
+            get { return (this.RightPoint + this.LeftPoint) / 2; }
         }
 
         //previous in ccw order
@@ -124,96 +122,123 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
 
         internal double ParameterSpan;
 
-        internal double Span { get { return SpanBetweenTwoPoints(parRight, parLeft); } }
+        internal double Span { get { return this.SpanBetweenTwoPoints(this.parRight, this.parLeft); } }
 
         internal double SpanBetweenTwoPoints(double right, double left) {
-            return (right <= left ? left - right : left - right + ParameterSpan);
+            return (right <= left ? left - right : left - right + this.ParameterSpan);
         }
 
         internal Point RotateLeftPoint(int rotationOfSourceLeftPoint, double parameterChange) {
-            if (rotationOfSourceLeftPoint == 0) return LeftPoint;
-            return RotatePoint(rotationOfSourceLeftPoint, parLeft, parameterChange);
+            if (rotationOfSourceLeftPoint == 0) {
+                return this.LeftPoint;
+            }
+
+            return this.RotatePoint(rotationOfSourceLeftPoint, this.parLeft, parameterChange);
         }
 
         internal Point RotateRigthPoint(int rotationOfSourceRightPoint, double parameterChange) {
-            if (rotationOfSourceRightPoint == 0) return RightPoint;
-            return RotatePoint(rotationOfSourceRightPoint, parRight, parameterChange);
+            if (rotationOfSourceRightPoint == 0) {
+                return this.RightPoint;
+            }
+
+            return this.RotatePoint(rotationOfSourceRightPoint, this.parRight, parameterChange);
         }
 
-        Point RotatePoint(int rotation, double t, double parameterChange) {
-            double change = ParameterSpan * parameterChange;
+        private Point RotatePoint(int rotation, double t, double parameterChange) {
+            double change = this.ParameterSpan * parameterChange;
 
             t = t + rotation * change;
-            t = AdjustParam(t);
+            t = this.AdjustParam(t);
 
-            return Curve[t];
+            return this.Curve[t];
         }
 
         internal double AdjustParam(double t) {
-            if (t > Curve.ParEnd)
-                t = Curve.ParStart + (t - Curve.ParEnd);
-            else if (t < Curve.ParStart)
-                t = Curve.ParEnd - (Curve.ParStart - t);
+            if (t > this.Curve.ParEnd) {
+                t = this.Curve.ParStart + (t - this.Curve.ParEnd);
+            } else if (t < this.Curve.ParStart) {
+                t = this.Curve.ParEnd - (this.Curve.ParStart - t);
+            }
+
             return t;
         }
 
         internal void RotateBy(int rotationOfRightPoint, int rotationOfLeftPoint, double parameterChange) {
-            double change = ParameterSpan * parameterChange;
-            if (rotationOfRightPoint != 0)
-                ParRight = AdjustParam(ParRight + rotationOfRightPoint * change);
-            if (rotationOfLeftPoint != 0)
-                ParLeft = AdjustParam(ParLeft + rotationOfLeftPoint * change);
+            double change = this.ParameterSpan * parameterChange;
+            if (rotationOfRightPoint != 0) {
+                this.ParRight = this.AdjustParam(this.ParRight + rotationOfRightPoint * change);
+            }
+
+            if (rotationOfLeftPoint != 0) {
+                this.ParLeft = this.AdjustParam(this.ParLeft + rotationOfLeftPoint * change);
+            }
         }
 
         internal bool Intersect(BundleBase other) {
-            return Intersect(parRight, parLeft, other.parRight, other.parLeft);
+            return this.Intersect(this.parRight, this.parLeft, other.parRight, other.parLeft);
         }
 
         internal bool Intersect(double lParRight, double lParLeft, double rParRight, double rParLeft) {
-            if (lParRight > lParLeft)
-                return Intersect(lParRight, Curve.ParEnd, rParRight, rParLeft) || Intersect(Curve.ParStart, lParLeft, rParRight, rParLeft);
+            if (lParRight > lParLeft) {
+                return this.Intersect(lParRight, this.Curve.ParEnd, rParRight, rParLeft) || this.Intersect(this.Curve.ParStart, lParLeft, rParRight, rParLeft);
+            }
 
-            if (rParRight > rParLeft)
-                return Intersect(lParRight, lParLeft, rParRight, Curve.ParEnd) || Intersect(lParRight, lParLeft, Curve.ParStart, rParLeft);
+            if (rParRight > rParLeft) {
+                return this.Intersect(lParRight, lParLeft, rParRight, this.Curve.ParEnd) || this.Intersect(lParRight, lParLeft, this.Curve.ParStart, rParLeft);
+            }
 
             Debug.Assert(lParRight <= lParLeft);
             Debug.Assert(rParRight <= rParLeft);
-            if (ApproximateComparer.LessOrEqual(lParLeft, rParRight)) return false;
-            if (ApproximateComparer.LessOrEqual(rParLeft, lParRight)) return false;
+            if (ApproximateComparer.LessOrEqual(lParLeft, rParRight)) {
+                return false;
+            }
+
+            if (ApproximateComparer.LessOrEqual(rParLeft, lParRight)) {
+                return false;
+            }
 
             return true;
         }
 
         internal bool RelativeOrderOfBasesIsPreserved(int rotationOfRightPoint, int rotationOfLeftPoint, double parameterChange) {
-            double change = ParameterSpan * parameterChange;
+            double change = this.ParameterSpan * parameterChange;
 
             //we do not swap parRight and parLeft
-            double rnew = parRight + rotationOfRightPoint * change;
-            double lnew = (parRight < parLeft ? parLeft + rotationOfLeftPoint * change : parLeft + ParameterSpan + rotationOfLeftPoint * change);
-            if (rnew > lnew) return false;
+            double rnew = this.parRight + rotationOfRightPoint * change;
+            double lnew = (this.parRight < this.parLeft ? this.parLeft + rotationOfLeftPoint * change : this.parLeft + this.ParameterSpan + rotationOfLeftPoint * change);
+            if (rnew > lnew) {
+                return false;
+            }
 
             //span could not be greater than pi
-            if (SpanBetweenTwoPoints(rnew, lnew) > ParameterSpan / 2.0) return false;
+            if (this.SpanBetweenTwoPoints(rnew, lnew) > this.ParameterSpan / 2.0) {
+                return false;
+            }
 
             //the base is the only base in the hub
-            if (Prev == null) return true;
+            if (this.Prev == null) {
+                return true;
+            }
 
             //distance between mid points is larger than parameterChange => we can't change the order
-            if (SpanBetweenTwoPoints(Prev.ParMid, ParMid) > change && SpanBetweenTwoPoints(ParMid, Next.ParMid) > change)
+            if (this.SpanBetweenTwoPoints(this.Prev.ParMid, this.ParMid) > change && this.SpanBetweenTwoPoints(this.ParMid, this.Next.ParMid) > change) {
                 return true;
+            }
 
-            Point rSoP = RotateLeftPoint(rotationOfLeftPoint, parameterChange);
-            Point lSoP = RotateRigthPoint(rotationOfRightPoint, parameterChange);
+            Point rSoP = this.RotateLeftPoint(rotationOfLeftPoint, parameterChange);
+            Point lSoP = this.RotateRigthPoint(rotationOfRightPoint, parameterChange);
             Point newMidPoint = (rSoP + lSoP) / 2.0;
-            Point curMidPoint = MidPoint;
+            Point curMidPoint = this.MidPoint;
 
             //check Prev
-            if (Point.GetTriangleOrientation(CurveCenter, Prev.MidPoint, curMidPoint) != Point.GetTriangleOrientation(CurveCenter, Prev.MidPoint, newMidPoint))
+            if (Point.GetTriangleOrientation(this.CurveCenter, this.Prev.MidPoint, curMidPoint) != Point.GetTriangleOrientation(this.CurveCenter, this.Prev.MidPoint, newMidPoint)) {
                 return false;
+            }
 
             //Next
-            if (Point.GetTriangleOrientation(CurveCenter, Next.MidPoint, curMidPoint) != Point.GetTriangleOrientation(CurveCenter, Next.MidPoint, newMidPoint))
+            if (Point.GetTriangleOrientation(this.CurveCenter, this.Next.MidPoint, curMidPoint) != Point.GetTriangleOrientation(this.CurveCenter, this.Next.MidPoint, newMidPoint)) {
                 return false;
+            }
 
             return true;
         }

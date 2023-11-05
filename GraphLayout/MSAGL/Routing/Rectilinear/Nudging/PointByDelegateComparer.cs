@@ -3,8 +3,7 @@ using Microsoft.Msagl.Core.Geometry;
 
 namespace Microsoft.Msagl.Routing.Rectilinear.Nudging{
     internal class PointByDelegateComparer : IComparer<Point>{
-
-        PointProjection projection;
+        private PointProjection projection;
 
         public PointByDelegateComparer(PointProjection projection){
             this.projection = projection;
@@ -27,7 +26,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging{
         ///                 </param><param name="y">The second object to compare.
         ///                 </param>
         public int Compare(Point x, Point y){
-            return  projection(x).CompareTo(projection(y));
+            return this.projection(x).CompareTo(this.projection(y));
         }
 
 

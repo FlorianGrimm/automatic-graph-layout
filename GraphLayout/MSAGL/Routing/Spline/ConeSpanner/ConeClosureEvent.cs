@@ -6,15 +6,16 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
     /// when this event happens the cone has to be removed
     /// </summary>
     internal class ConeClosureEvent:SweepEvent {
-        Cone coneToClose;
+        private Cone coneToClose;
 
         internal Cone ConeToClose {
-            get { return coneToClose; }
+            get { return this.coneToClose; }
         }
-        Point site;
+
+        private Point site;
 
         internal override Point Site {
-            get { return site; }
+            get { return this.site; }
         }
 
         internal ConeClosureEvent(Point site, Cone cone) {
@@ -23,7 +24,7 @@ namespace Microsoft.Msagl.Routing.Spline.ConeSpanner {
         }
 
         public override string ToString() {
-            return "ConeClosureEvent " + site;
+            return "ConeClosureEvent " + this.site;
         }
     }
 }

@@ -9,52 +9,60 @@ namespace Microsoft.Msagl.Miscellaneous.Routing
 {
     public class ShortestPathTree
     {
-         Set<Point> _points = new Set<Point>();
-         Dictionary<Point, Point> _paret = new Dictionary<Point, Point>();
-         Point _root;
+        private Set<Point> _points = new Set<Point>();
+        private Dictionary<Point, Point> _paret = new Dictionary<Point, Point>();
+        private Point _root;
 
         public ShortestPathTree(Point root)
         {
-            _root = root;
-            _points.Insert(root);
-            _paret[_root] = _root;
+            this._root = root;
+            this._points.Insert(root);
+            this._paret[this._root] = this._root;
         }
 
         public void AddPathToTree(List<Point> path)
         {
-            if (!path.First().Equals(_root))
+            if (!path.First().Equals(this._root)) {
                 path.Reverse();
-            if (!path.First().Equals(_root))
+            }
+
+            if (!path.First().Equals(this._root)) {
                 return;
+            }
+
             int i;
 
             for (i = path.Count - 1; i >= 0; i--)
             {
-                if (_points.Contains(path[i])) break;
+                if (this._points.Contains(path[i])) {
+                    break;
+                }
             }
 
             for (int j = path.Count - 1; j > i; j--)
             {
-                if (_points.Contains(path[j]))
+                if (this._points.Contains(path[j]))
                 {
                     // shouldn't happen!
                     break;
                 }
-                _points.Insert(path[j]);
-                _paret[path[j]] = path[j - 1];
+                this._points.Insert(path[j]);
+                this._paret[path[j]] = path[j - 1];
             }
         }
 
         public List<Point> GetPathFromRoot(Point s)
         {
             var path = new List<Point>();
-            if (!_points.Contains(s))
+            if (!this._points.Contains(s)) {
                 return null;
-            for (Point p = s; !p.Equals(_root); p = _paret[p])
+            }
+
+            for (Point p = s; !p.Equals(this._root); p = this._paret[p])
             {
                 path.Insert(0,p);
             }
-            path.Insert(0, _root);
+            path.Insert(0, this._root);
             return path;
         }
     }

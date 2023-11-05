@@ -18,9 +18,9 @@ namespace Microsoft.Msagl.Core.Geometry {
         // @@PERF: two of these are created per node/cluster during Generate(); consider making 
         //           them a struct instead to reduce heap churn - they are in lists that are sorted
         //           so consider the CompareTo overhead of passing the struct instead of classref.
-        class Event : IComparable<Event> {
+        private class Event : IComparable<Event> {
             internal bool IsForOpen { get; private set; }
-            double Position { get; set; }
+            private double Position { get; set; }
             internal OverlapRemovalNode Node { get; private set; }
 
             internal Event(bool isForOpen, OverlapRemovalNode node, double position) {

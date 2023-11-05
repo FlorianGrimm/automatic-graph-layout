@@ -1,16 +1,17 @@
 namespace Microsoft.Msagl.Core.Geometry {
     internal class HullStack {
-        Point hullPoint;
+        private Point hullPoint;
 
         internal Point Point {
-            get { return hullPoint; }
-            set { hullPoint = value; }
+            get { return this.hullPoint; }
+            set { this.hullPoint = value; }
         }
-        HullStack next;
+
+        private HullStack next;
 
         internal HullStack Next {
-            get { return next; }
-            set { next = value; }
+            get { return this.next; }
+            set { this.next = value; }
         }
 
         internal HullStack(Point hullPoint) {
@@ -18,7 +19,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         }
 
         public override string ToString() {
-            return hullPoint.ToString();
+            return this.hullPoint.ToString();
         }
 
     }

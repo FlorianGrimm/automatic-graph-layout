@@ -18,8 +18,8 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         /// node boundary curve
         /// </summary>
         public ICurve BoundaryCurve {
-            get { return boundaryCurve; }
-            set { boundaryCurve = value; }
+            get { return this.boundaryCurve; }
+            set { this.boundaryCurve = value; }
         }
     }
 }

@@ -29,33 +29,44 @@ namespace Microsoft.Msagl.Routing {
             nodesToShapes[edge.Source].Ports.Insert(edge.SourcePort);
         }
 
-        static void BindShapes(Dictionary<Node, Shape> nodesToShapes) {
+        private static void BindShapes(Dictionary<Node, Shape> nodesToShapes) {
             foreach (var nodeShape in nodesToShapes) {
                 var cluster = nodeShape.Key as Cluster;
-                if(cluster==null) continue;
+                if(cluster==null) {
+                    continue;
+                }
+
                 var shape=nodeShape.Value;
                 foreach (var child in Children(cluster) ) {
                     Shape childShape;
-                    if(nodesToShapes.TryGetValue(child, out childShape))
+                    if(nodesToShapes.TryGetValue(child, out childShape)) {
                         shape.AddChild(childShape);
+                    }
                 }
             }
         }
 
-        static void ProcessAncestorDescendantCouple(Cluster ancestor, Node node, Dictionary<Node, Shape> nodesToShapes) {
+        private static void ProcessAncestorDescendantCouple(Cluster ancestor, Node node, Dictionary<Node, Shape> nodesToShapes) {
             Cluster parent=Parent(node);
             do {
-                foreach (var n in Children(parent))
+                foreach (var n in Children(parent)) {
                     CreateShapeIfNeeeded(n, nodesToShapes);
-                if (parent == ancestor)
+                }
+
+                if (parent == ancestor) {
                     break;
+                }
+
                 parent = Parent(parent);                
             } while (true);
             CreateShapeIfNeeeded(parent, nodesToShapes);
         }
 
-        static void CreateShapeIfNeeeded(Node n, Dictionary<Node, Shape> nodesToShapes) {
-            if (nodesToShapes.ContainsKey(n)) return;
+        private static void CreateShapeIfNeeeded(Node n, Dictionary<Node, Shape> nodesToShapes) {
+            if (nodesToShapes.ContainsKey(n)) {
+                return;
+            }
+
             nodesToShapes[n] = new RelativeShape(() => n.BoundaryCurve)
 #if TEST_MSAGL
         {
@@ -65,25 +76,28 @@ namespace Microsoft.Msagl.Routing {
                 ;
         }
 
-        static IEnumerable<Node> Children(Cluster parent) {
+        private static IEnumerable<Node> Children(Cluster parent) {
             return parent.Clusters.Concat(parent.Nodes);
         }
 
-
-        static Cluster Parent(Node node) {
+        private static Cluster Parent(Node node) {
             return node.ClusterParent;
         }
 
         internal static bool NumberOfActiveNodesIsUnderThreshold(List<Edge> inParentEdges, List<Edge> outParentEdges, int threshold) {
             var usedNodeSet = new Set<Node>();
-            foreach (var edge in inParentEdges) 
-                if(SetOfActiveNodesIsLargerThanThreshold((Cluster)edge.Target, edge.Source, usedNodeSet, threshold))
-                   return false;
-            
-            foreach (var edge in outParentEdges) 
-                if(SetOfActiveNodesIsLargerThanThreshold((Cluster)edge.Source, edge.Target, usedNodeSet, threshold))
-                  return false;
-            
+            foreach (var edge in inParentEdges) {
+                if (SetOfActiveNodesIsLargerThanThreshold((Cluster)edge.Target, edge.Source, usedNodeSet, threshold)) {
+                    return false;
+                }
+            }
+
+            foreach (var edge in outParentEdges) {
+                if (SetOfActiveNodesIsLargerThanThreshold((Cluster)edge.Source, edge.Target, usedNodeSet, threshold)) {
+                    return false;
+                }
+            }
+
             return true;
         }
 
@@ -92,11 +106,14 @@ namespace Microsoft.Msagl.Routing {
             do {
                 foreach (var n in Children(parent)) {
                     usedNodeSet.Insert(n);
-                    if (usedNodeSet.Count > threshold)
+                    if (usedNodeSet.Count > threshold) {
                         return true;
+                    }
                 }
-                if (parent == ancestor)
+                if (parent == ancestor) {
                     break;
+                }
+
                 parent = Parent(parent);
             } while (true);
             

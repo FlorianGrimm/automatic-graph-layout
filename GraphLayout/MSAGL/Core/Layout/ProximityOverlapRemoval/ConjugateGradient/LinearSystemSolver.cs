@@ -17,7 +17,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.ConjugateGradient 
         /// <param name="iMax"></param>
         /// <param name="epsilon"></param>
         /// <returns></returns>
-         static Vector SolveConjugateGradient(SparseMatrix A, Vector b, Vector x, int iMax, double epsilon) {
+        private static Vector SolveConjugateGradient(SparseMatrix A, Vector b, Vector x, int iMax, double epsilon) {
             Vector r = b - (A*x); // r= b-Ax
             Vector d = r.Clone(); // d=r
             double deltaNew = r*r;

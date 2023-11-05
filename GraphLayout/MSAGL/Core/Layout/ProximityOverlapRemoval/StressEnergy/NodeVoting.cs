@@ -21,11 +21,11 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         /// </summary>
         /// <param name="votedNodeIndex"></param>
         public NodeVoting(int votedNodeIndex) {
-            VotedNodeIndex = votedNodeIndex;
-            VotingBlocks=new List<VoteBlock>();
+            this.VotedNodeIndex = votedNodeIndex;
+            this.VotingBlocks =new List<VoteBlock>();
 
-            var voteBlock = new VoteBlock(new List<Vote>(), 1); 
-            VotingBlocks.Add(voteBlock);
+            var voteBlock = new VoteBlock(new List<Vote>(), 1);
+            this.VotingBlocks.Add(voteBlock);
         }
 
         /// <summary>
@@ -35,8 +35,8 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         /// <param name="votingBlocks"></param>
         public NodeVoting(int votedNodeIndex, List<VoteBlock> votingBlocks)
         {
-            VotedNodeIndex = votedNodeIndex;
-            VotingBlocks = votingBlocks;
+            this.VotedNodeIndex = votedNodeIndex;
+            this.VotingBlocks = votingBlocks;
         }
     }
 }

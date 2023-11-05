@@ -14,25 +14,25 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
 {
     /// <summary>
     /// </summary>
-    class ConstraintVector
+    internal class ConstraintVector
     {
         internal Constraint[] Vector { get; private set; }
-        internal bool IsEmpty { get { return null == Vector; } }
+        internal bool IsEmpty { get { return null == this.Vector; } }
 
         internal void Create(int numConstraints)
         {
-            Vector = new Constraint[numConstraints];
+            this.Vector = new Constraint[numConstraints];
 
             // Initialize this to out of range.
-            firstActiveConstraintIndex = numConstraints;
+            this.firstActiveConstraintIndex = numConstraints;
         }
 
         private int nextConstraintIndex;
         internal void Add(Constraint constraint)
         {
             Debug.Assert(!constraint.IsActive, "Constraint should not be active");
-            constraint.SetVectorIndex(nextConstraintIndex);
-            Vector[nextConstraintIndex++] = constraint;
+            constraint.SetVectorIndex(this.nextConstraintIndex);
+            this.Vector[this.nextConstraintIndex++] = constraint;
         }
 
         private int firstActiveConstraintIndex;
@@ -41,11 +41,11 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             Debug.Assert(!constraint.IsActive, "Constraint is already active");
 
             // Swap it from the inactive region to the start of the active region of the Vector.
-            Debug.Assert(firstActiveConstraintIndex > 0, "All constraints are already active");
-            --firstActiveConstraintIndex;
-            Debug.Assert(!Vector[firstActiveConstraintIndex].IsActive, "Constraint in inactive region is active");
+            Debug.Assert(this.firstActiveConstraintIndex > 0, "All constraints are already active");
+            --this.firstActiveConstraintIndex;
+            Debug.Assert(!this.Vector[this.firstActiveConstraintIndex].IsActive, "Constraint in inactive region is active");
 
-            SwapConstraint(constraint);
+            this.SwapConstraint(constraint);
 
             //Debug_AssertConsistency();
         }
@@ -55,11 +55,11 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             Debug.Assert(constraint.IsActive, "Constraint is not active");
 
             // Swap it from the active region to the end of the inactive region of the Vector.
-            Debug.Assert(firstActiveConstraintIndex < Vector.Length, "All constraints are already inactive");
-            Debug.Assert(Vector[firstActiveConstraintIndex].IsActive, "Constraint in active region is not active");
+            Debug.Assert(this.firstActiveConstraintIndex < this.Vector.Length, "All constraints are already inactive");
+            Debug.Assert(this.Vector[this.firstActiveConstraintIndex].IsActive, "Constraint in active region is not active");
 
-            SwapConstraint(constraint);
-            ++firstActiveConstraintIndex;
+            this.SwapConstraint(constraint);
+            ++this.firstActiveConstraintIndex;
 
             //Debug_AssertConsistency();
         }
@@ -68,50 +68,50 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         {
             // Swap out the constraint at the current active/inactive border index (which has been updated
             // according to the direction we're moving it).
-            Constraint swapConstraint = Vector[firstActiveConstraintIndex];
+            Constraint swapConstraint = this.Vector[this.firstActiveConstraintIndex];
             swapConstraint.SetVectorIndex(constraint.VectorIndex);
-            Vector[constraint.VectorIndex] = swapConstraint;
+            this.Vector[constraint.VectorIndex] = swapConstraint;
 
             // Toggle the state of the constraint being updated.
-            Vector[firstActiveConstraintIndex] = constraint;
-            constraint.SetActiveState(!constraint.IsActive, firstActiveConstraintIndex);
+            this.Vector[this.firstActiveConstraintIndex] = constraint;
+            constraint.SetActiveState(!constraint.IsActive, this.firstActiveConstraintIndex);
         }
 
         internal void Reinitialize()
         {
             // Qpsc requires reinitializing the block structure
-            if (null == Vector)
+            if (null == this.Vector)
             {
                 return;
             }
-            foreach (var constraint in Vector)
+            foreach (var constraint in this.Vector)
             {
                 constraint.Reinitialize();
             }
-            firstActiveConstraintIndex = Vector.Length;
+            this.firstActiveConstraintIndex = this.Vector.Length;
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic"), Conditional("TEST_MSAGL")]
         internal void Debug_AssertIsFull()
         {
-            Debug.Assert(Vector.Length == nextConstraintIndex, "AllConstraints.Vector is not full");
-            Debug_AssertConsistency();
+            Debug.Assert(this.Vector.Length == this.nextConstraintIndex, "AllConstraints.Vector is not full");
+            this.Debug_AssertConsistency();
         }
 
         [Conditional("TEST_MSAGL")]
         internal void Debug_AssertConsistency()
         {
-            for (int ii = 0; ii < Vector.Length; ++ii)
+            for (int ii = 0; ii < this.Vector.Length; ++ii)
             {
-                var constraint = Vector[ii];
+                var constraint = this.Vector[ii];
                 Debug.Assert(constraint.VectorIndex == ii, "Inconsistent constraint.VectorIndex");
                 if (constraint.IsActive)
                 {
-                    Debug.Assert(constraint.VectorIndex >= firstActiveConstraintIndex, "Active constraint is in Inactive region");
+                    Debug.Assert(constraint.VectorIndex >= this.firstActiveConstraintIndex, "Active constraint is in Inactive region");
                 }
                 else
                 {
-                    Debug.Assert(constraint.VectorIndex < firstActiveConstraintIndex, "Inactive constraint is in Active region");
+                    Debug.Assert(constraint.VectorIndex < this.firstActiveConstraintIndex, "Inactive constraint is in Active region");
                 }
             }
         }
@@ -128,7 +128,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         internal void RecycleDfDvNode(DfDvNode node) {
             // In the case of long constraint chains make sure this does not end up as big as the number of constraints in the block.
             if (this.DfDvRecycleStack.Count < 1024) {
-                DfDvRecycleStack.Push(node);
+                this.DfDvRecycleStack.Push(node);
             }
         }
 
@@ -161,7 +161,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         /// </summary>
         public override string ToString()
         {
-            return Vector.ToString();
+            return this.Vector.ToString();
         }
     }
 }

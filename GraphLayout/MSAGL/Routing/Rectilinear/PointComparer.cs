@@ -102,7 +102,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         [Conditional("TEST_MSAGL")]
-// ReSharper disable InconsistentNaming
+        private
+        // ReSharper disable InconsistentNaming
         static void Assert_Rounded(double d) {
             // Be sure there is enough precision to round that far; anything larger than this is
             // unlikely to be a graph coordinate (it's probably a line intersection way out of range).
@@ -112,7 +113,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         }
 
         [Conditional("TEST_MSAGL")]
-        static void Assert_Rounded(Point p) {
+        private static void Assert_Rounded(Point p) {
             Assert_Rounded(p.X);
             Assert_Rounded(p.Y);
         }

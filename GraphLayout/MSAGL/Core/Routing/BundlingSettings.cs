@@ -18,15 +18,14 @@ namespace Microsoft.Msagl.Core.Routing {
         ///the default value of CapacityOverflowCoefficient
         ///</summary>
         static public double DefaultCapacityOverflowCoefficientMultiplier = 1000;
-
-        double capacityOverflowCoefficient = DefaultCapacityOverflowCoefficientMultiplier;
+        private double capacityOverflowCoefficient = DefaultCapacityOverflowCoefficientMultiplier;
         ///<summary>
         ///this number is muliplied by the overflow penalty cost and by the sum of the LengthImportanceCoefficient 
         ///and InkImportanceCoefficient, and added to the routing price
         ///</summary>
         public double CapacityOverflowCoefficient {
-            get { return capacityOverflowCoefficient; }
-            set { capacityOverflowCoefficient = value; }
+            get { return this.capacityOverflowCoefficient; }
+            set { this.capacityOverflowCoefficient = value; }
         }
 
         /// <summary>
@@ -47,32 +46,30 @@ namespace Microsoft.Msagl.Core.Routing {
         ///the default path lenght importance coefficient
         ///</summary>
         static public double DefaultPathLengthImportance = 500;
-
-        double pathLengthImportance = DefaultPathLengthImportance;
+        private double pathLengthImportance = DefaultPathLengthImportance;
 
         /// <summary>
         /// the importance of path lengths coefficient
         /// </summary>
         public double PathLengthImportance {
-            get { return pathLengthImportance; }
-            set { pathLengthImportance = value; }
+            get { return this.pathLengthImportance; }
+            set { this.pathLengthImportance = value; }
         }
 
         ///<summary>
         ///the default ink importance
         ///</summary>
         static public double DefaultInkImportance = 0.01;
-
-        double inkImportance = DefaultInkImportance;
+        private double inkImportance = DefaultInkImportance;
 
         ///<summary>
         ///</summary>
         public double InkImportance {
-            get { return inkImportance; }
-            set { inkImportance = value; }
+            get { return this.inkImportance; }
+            set { this.inkImportance = value; }
         }
 
-        double edgeSeparation = DefaultEdgeSeparation;
+        private double edgeSeparation = DefaultEdgeSeparation;
 
         ///<summary>
         ///default edge separation
@@ -83,78 +80,78 @@ namespace Microsoft.Msagl.Core.Routing {
         /// Separation between to neighboring edges within a bundle
         /// </summary>
         public double EdgeSeparation {
-            get { return edgeSeparation; }
-            set { edgeSeparation = value; }
+            get { return this.edgeSeparation; }
+            set { this.edgeSeparation = value; }
         }
 
-        bool useCubicBezierSegmentsInsideOfHubs;
+        private bool useCubicBezierSegmentsInsideOfHubs;
 
         ///<summary>
         ///if is set to true will be using Cubic Bezie Segments inside of hubs, otherwise will be using Biarcs
         ///</summary>
         public bool UseCubicBezierSegmentsInsideOfHubs {
-            get { return useCubicBezierSegmentsInsideOfHubs; }
-            set { useCubicBezierSegmentsInsideOfHubs = value; }
+            get { return this.useCubicBezierSegmentsInsideOfHubs; }
+            set { this.useCubicBezierSegmentsInsideOfHubs = value; }
         }
 
-        bool useGreedyMetrolineOrdering = true;
+        private bool useGreedyMetrolineOrdering = true;
 
         ///<summary>
         ///if is set to true will be using greedy ordering algorithm, otherwise will be using linear
         ///</summary>
         public bool UseGreedyMetrolineOrdering {
-            get { return useGreedyMetrolineOrdering; }
-            set { useGreedyMetrolineOrdering = value; }
+            get { return this.useGreedyMetrolineOrdering; }
+            set { this.useGreedyMetrolineOrdering = value; }
         }
 
-        double angleThreshold = Math.PI / 180 * 45; //45 degrees;
+        private double angleThreshold = Math.PI / 180 * 45; //45 degrees;
         ///<summary>
         ///min angle for gluing edges
         ///</summary>
         public double AngleThreshold {
-            get { return angleThreshold; }
-            set { angleThreshold = value; }
+            get { return this.angleThreshold; }
+            set { this.angleThreshold = value; }
         }
 
-        double hubRepulsionImportance = 100;
+        private double hubRepulsionImportance = 100;
 
         /// <summary>
         /// the importance of hub repulsion coefficient
         /// </summary>
         public double HubRepulsionImportance {
-            get { return hubRepulsionImportance; }
-            set { hubRepulsionImportance = value; }
+            get { return this.hubRepulsionImportance; }
+            set { this.hubRepulsionImportance = value; }
         }
 
-        double bundleRepulsionImportance = 100;
+        private double bundleRepulsionImportance = 100;
 
         /// <summary>
         /// the importance of bundle repulsion coefficient
         /// </summary>
         public double BundleRepulsionImportance {
-            get { return bundleRepulsionImportance; }
-            set { bundleRepulsionImportance = value; }
+            get { return this.bundleRepulsionImportance; }
+            set { this.bundleRepulsionImportance = value; }
         }
 
-        double minimalRatioOfGoodCdtEdges = 0.9;
+        private double minimalRatioOfGoodCdtEdges = 0.9;
 
         /// <summary>
         /// minimal ration of cdt edges with satisfied capacity needed to perform bundling
         /// (otherwise bundling will not be executed)
         /// </summary>
         public double MinimalRatioOfGoodCdtEdges {
-            get { return minimalRatioOfGoodCdtEdges; }
-            set { minimalRatioOfGoodCdtEdges = value; }
+            get { return this.minimalRatioOfGoodCdtEdges; }
+            set { this.minimalRatioOfGoodCdtEdges = value; }
         }
 
-        bool highestQuality = true;
+        private bool highestQuality = true;
 
         /// <summary>
         /// speed vs quality of the drawing
         /// </summary>
         public bool HighestQuality {
-            get { return highestQuality; }
-            set { highestQuality = value; }
+            get { return this.highestQuality; }
+            set { this.highestQuality = value; }
         }
         /// <summary>
         /// if is set to true the original spline before the trimming should be kept under the corresponding EdgeGeometry

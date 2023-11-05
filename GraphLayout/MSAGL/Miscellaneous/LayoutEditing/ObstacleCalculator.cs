@@ -14,50 +14,50 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
     /// calculations with obstacles
     /// </summary>
     public class ObstacleCalculator {
-        List<Polyline> looseObstacles = new List<Polyline>();
-        Set<ICurve> portObstacles = new Set<ICurve>();
-        RectangleNode<Polyline, Point> rootOfLooseHierarchy;
-        RectangleNode<Polyline, Point> rootOfTightHierarachy;
-        RouterBetweenTwoNodes router;
-        LineSegment sourceFilterLine;
-        LineSegment targetFilterLine;
-        Set<Polyline> tightObstacles = new Set<Polyline>();
+        private List<Polyline> looseObstacles = new List<Polyline>();
+        private Set<ICurve> portObstacles = new Set<ICurve>();
+        private RectangleNode<Polyline, Point> rootOfLooseHierarchy;
+        private RectangleNode<Polyline, Point> rootOfTightHierarachy;
+        private RouterBetweenTwoNodes router;
+        private LineSegment sourceFilterLine;
+        private LineSegment targetFilterLine;
+        private Set<Polyline> tightObstacles = new Set<Polyline>();
 
         internal ObstacleCalculator(RouterBetweenTwoNodes router) {
             this.router = router;
         }
 
         internal Set<Polyline> TightObstacles {
-            get { return tightObstacles; }
+            get { return this.tightObstacles; }
             //            set { tightObstacles = value; }
         }
 
         internal List<Polyline> LooseObstacles {
-            get { return looseObstacles; }
+            get { return this.looseObstacles; }
             //            set { looseObstacles = value; }
         }
 
         internal RectangleNode<Polyline, Point> RootOfTightHierararchy {
-            get { return rootOfTightHierarachy; }
-            private set { rootOfTightHierarachy = value; }
+            get { return this.rootOfTightHierarachy; }
+            private set { this.rootOfTightHierarachy = value; }
         }
 
-        RectangleNode<Polyline, Point> RootOfLooseHierarchy {
-            get { return rootOfLooseHierarchy; }
-            set { rootOfLooseHierarchy = value; }
+        private RectangleNode<Polyline, Point> RootOfLooseHierarchy {
+            get { return this.rootOfLooseHierarchy; }
+            set { this.rootOfLooseHierarchy = value; }
         }
 
         internal LineSegment SourceFilterLine {
-            get { return sourceFilterLine; }
+            get { return this.sourceFilterLine; }
         }
 
         internal LineSegment TargetFilterLine {
-            get { return targetFilterLine; }
+            get { return this.targetFilterLine; }
             //            set { targetFilterLine = value; }
         }
 
-        double EnteringAngle {
-            get { return router.EnteringAngleBound * Math.PI / 180; }
+        private double EnteringAngle {
+            get { return this.router.EnteringAngleBound * Math.PI / 180; }
         }
 
         /// <summary>
@@ -66,23 +66,23 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         /// </summary>
         /// <returns></returns>
         internal void Calculate() {
-            CreateTightObstacles();
-            CreateLooseObstacles();
+            this.CreateTightObstacles();
+            this.CreateLooseObstacles();
         }
 
-        void CreateLooseObstacles() {
-            RootOfLooseHierarchy = RootOfTightHierararchy.Clone();
+        private void CreateLooseObstacles() {
+            this.RootOfLooseHierarchy = this.RootOfTightHierararchy.Clone();
 
-            TraverseHierarchy(RootOfLooseHierarchy, delegate(RectangleNode<Polyline, Point> node) {
+            TraverseHierarchy(this.RootOfLooseHierarchy, delegate(RectangleNode<Polyline, Point> node) {
                 if (node.UserData != null) {
                     Polyline tightPolyline = node.UserData;
                     double distance =
-                        FindMaxPaddingForTightPolyline(tightPolyline);
-                    LooseObstacles.Add(
+                        this.FindMaxPaddingForTightPolyline(tightPolyline);
+                    this.LooseObstacles.Add(
                         node.UserData =
                         LoosePolylineWithFewCorners(tightPolyline,
                                                     Math.Min(
-                                                        router.LoosePadding,
+                                                        this.router.LoosePadding,
                                                         distance * 0.3)));
                     node.Rectangle = node.UserData.BoundingBox;
                     InteractiveObstacleCalculator.UpdateRectsForParents(node);
@@ -109,52 +109,66 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         //}
 
 
-        static void TraverseHierarchy(RectangleNode<Polyline, Point> node, Visitor visitor) {
+        private static void TraverseHierarchy(RectangleNode<Polyline, Point> node, Visitor visitor) {
             visitor(node);
-            if (node.Left != null)
+            if (node.Left != null) {
                 TraverseHierarchy(node.Left, visitor);
-            if (node.Right != null)
+            }
+
+            if (node.Right != null) {
                 TraverseHierarchy(node.Right, visitor);
+            }
         }
 
-        void CreateTightObstacles() {
-            CreateInitialTightObstacles();
+        private void CreateTightObstacles() {
+            this.CreateInitialTightObstacles();
             List<Set<Polyline>> overlappingPolylineSets;
             do {
-                RemoveTightObstaclesOverlappingPortTightObstacles();
-                CalculateTightHierarchy();
-                overlappingPolylineSets = GetOverlappingSets();
-                foreach (var overlappingSet in overlappingPolylineSets)
-                    InsertOverlappingSet(overlappingSet);
+                this.RemoveTightObstaclesOverlappingPortTightObstacles();
+                this.CalculateTightHierarchy();
+                overlappingPolylineSets = this.GetOverlappingSets();
+                foreach (var overlappingSet in overlappingPolylineSets) {
+                    this.InsertOverlappingSet(overlappingSet);
+                }
             } while (overlappingPolylineSets.Count > 0);
         }
 
-        void RemoveTightObstaclesOverlappingPortTightObstacles() {
+        private void RemoveTightObstaclesOverlappingPortTightObstacles() {
             var toRemove = new List<Polyline>();
-            foreach (Polyline poly in TightObstaclesMinusPortObstacles())
-                foreach (ICurve portObstacle in portObstacles)
-                    if (poly.BoundingBox.Intersects(portObstacle.BoundingBox))
+            foreach (Polyline poly in this.TightObstaclesMinusPortObstacles()) {
+                foreach (ICurve portObstacle in this.portObstacles) {
+                    if (poly.BoundingBox.Intersects(portObstacle.BoundingBox)) {
                         if (Curve.GetAllIntersections(poly, portObstacle, false).Count > 0 ||
-                            OneCurveLiesInsideOfOther(poly, portObstacle))
+                            OneCurveLiesInsideOfOther(poly, portObstacle)) {
                             toRemove.Add(poly);
+                        }
+                    }
+                }
+            }
 
-            foreach (Polyline poly in toRemove)
-                TightObstacles.Remove(poly);
+            foreach (Polyline poly in toRemove) {
+                this.TightObstacles.Remove(poly);
+            }
         }
 
-        IEnumerable<Polyline> TightObstaclesMinusPortObstacles() {
-            foreach (Polyline p in TightObstacles)
-                if (portObstacles.Contains(p) == false)
+        private IEnumerable<Polyline> TightObstaclesMinusPortObstacles() {
+            foreach (Polyline p in this.TightObstacles) {
+                if (this.portObstacles.Contains(p) == false) {
                     yield return p;
+                }
+            }
         }
 
-        void InsertOverlappingSet(Set<Polyline> overlappingSet) {
-            foreach (Polyline p in overlappingSet)
-                tightObstacles.Remove(p);
+        private void InsertOverlappingSet(Set<Polyline> overlappingSet) {
+            foreach (Polyline p in overlappingSet) {
+                this.tightObstacles.Remove(p);
+            }
 
             var hull = new Polyline();
-            foreach (Point p in ConvexHull.CalculateConvexHull(EnumerateOverSetOfPolylines(overlappingSet)))
+            foreach (Point p in ConvexHull.CalculateConvexHull(this.EnumerateOverSetOfPolylines(overlappingSet))) {
                 hull.AddPoint(p);
+            }
+
             hull.Closed = true;
 
             //debug 
@@ -166,35 +180,39 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             //SugiyamaLayoutSettings.Show(ls.ToArray());
             //end of debug
 
-            tightObstacles.Insert(hull);
+            this.tightObstacles.Insert(hull);
         }
 
-        IEnumerable<Point> EnumerateOverSetOfPolylines(Set<Polyline> pp) {
-            foreach (Polyline poly in pp)
-                foreach (Point p in poly)
+        private IEnumerable<Point> EnumerateOverSetOfPolylines(Set<Polyline> pp) {
+            foreach (Polyline poly in pp) {
+                foreach (Point p in poly) {
                     yield return p;
+                }
+            }
         }
 
-        List<Set<Polyline>> GetOverlappingSets() {
-            PolylineGraph overlapGraph = CalculateOverlapGraph();
+        private List<Set<Polyline>> GetOverlappingSets() {
+            PolylineGraph overlapGraph = this.CalculateOverlapGraph();
             return ConnectedComponents(overlapGraph);
         }
 
-        static List<Set<Polyline>> ConnectedComponents(PolylineGraph overlapGraph) {
+        private static List<Set<Polyline>> ConnectedComponents(PolylineGraph overlapGraph) {
             var list = new List<Set<Polyline>>();
             var processedPolylines = new Set<Polyline>();
             foreach (Polyline poly in overlapGraph.Nodes) {
                 if (!processedPolylines.Contains(poly)) {
                     Set<Polyline> component = GetComponent(poly, overlapGraph);
-                    if (component.Count > 1)
+                    if (component.Count > 1) {
                         list.Add(component);
+                    }
+
                     processedPolylines += component;
                 }
             }
             return list;
         }
 
-        static Set<Polyline> GetComponent(Polyline poly, PolylineGraph graph) {
+        private static Set<Polyline> GetComponent(Polyline poly, PolylineGraph graph) {
             var ret = new Set<Polyline>();
             ret.Insert(poly);
             var queue = new Queue<Polyline>();
@@ -210,26 +228,26 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             return ret;
         }
 
-        PolylineGraph CalculateOverlapGraph() {
+        private PolylineGraph CalculateOverlapGraph() {
             var graph = new PolylineGraph();
-            CreateEdgesUnderTwoNodes(rootOfTightHierarachy, rootOfTightHierarachy, graph);
+            this.CreateEdgesUnderTwoNodes(this.rootOfTightHierarachy, this.rootOfTightHierarachy, graph);
             return graph;
         }
 
-        void CalculateTightHierarchy() {
+        private void CalculateTightHierarchy() {
             var rectNodes = new List<RectangleNode<Polyline, Point>>();
-            foreach (Polyline polyline in TightObstacles)
+            foreach (Polyline polyline in this.TightObstacles) {
                 rectNodes.Add(CreateRectNodeOfPolyline(polyline));
-            RootOfTightHierararchy = RectangleNode<Polyline, Point>.CreateRectangleNodeOnListOfNodes(rectNodes);
+            }
+
+            this.RootOfTightHierararchy = RectangleNode<Polyline, Point>.CreateRectangleNodeOnListOfNodes(rectNodes);
         }
 
-
-        static RectangleNode<Polyline, Point> CreateRectNodeOfPolyline(Polyline polyline) {
+        private static RectangleNode<Polyline, Point> CreateRectNodeOfPolyline(Polyline polyline) {
             return new RectangleNode<Polyline, Point>(polyline, (polyline as ICurve).BoundingBox);
         }
 
-
-        void CreateEdgesUnderTwoNodes(RectangleNode<Polyline, Point> a, RectangleNode<Polyline, Point> b,
+        private void CreateEdgesUnderTwoNodes(RectangleNode<Polyline, Point> a, RectangleNode<Polyline, Point> b,
                                       PolylineGraph overlapGraph) {
             //if (a.GetHashCode() < b.GetHashCode())
             //    return;
@@ -241,30 +259,30 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             if (a.Rectangle.Intersects(b.Rectangle)) {
                 if (a.UserData != null) {
                     if (b.UserData != null) {
-                        if (a.UserData != b.UserData)
+                        if (a.UserData != b.UserData) {
                             if (Curve.GetAllIntersections(a.UserData, b.UserData, false).Count > 0 ||
                                 OneCurveLiesInsideOfOther(a.UserData, b.UserData)) {
                                 overlapGraph.AddEdge(a.UserData, b.UserData);
                                 overlapGraph.AddEdge(b.UserData, a.UserData);
                             }
+                        }
                     } else {
-                        CreateEdgesUnderTwoNodes(a, b.Left, overlapGraph);
-                        CreateEdgesUnderTwoNodes(a, b.Right, overlapGraph);
+                        this.CreateEdgesUnderTwoNodes(a, b.Left, overlapGraph);
+                        this.CreateEdgesUnderTwoNodes(a, b.Right, overlapGraph);
                     }
                 } else if (b.UserData != null) {
-                    CreateEdgesUnderTwoNodes(b, a.Left, overlapGraph);
-                    CreateEdgesUnderTwoNodes(b, a.Right, overlapGraph);
+                    this.CreateEdgesUnderTwoNodes(b, a.Left, overlapGraph);
+                    this.CreateEdgesUnderTwoNodes(b, a.Right, overlapGraph);
                 } else {
-                    CreateEdgesUnderTwoNodes(a.Left, b.Left, overlapGraph);
-                    CreateEdgesUnderTwoNodes(a.Left, b.Right, overlapGraph);
-                    CreateEdgesUnderTwoNodes(a.Right, b.Left, overlapGraph);
-                    CreateEdgesUnderTwoNodes(a.Right, b.Right, overlapGraph);
+                    this.CreateEdgesUnderTwoNodes(a.Left, b.Left, overlapGraph);
+                    this.CreateEdgesUnderTwoNodes(a.Left, b.Right, overlapGraph);
+                    this.CreateEdgesUnderTwoNodes(a.Right, b.Left, overlapGraph);
+                    this.CreateEdgesUnderTwoNodes(a.Right, b.Right, overlapGraph);
                 }
             }
         }
 
-
-        static bool OneCurveLiesInsideOfOther(ICurve polyA, ICurve polyB) {
+        private static bool OneCurveLiesInsideOfOther(ICurve polyA, ICurve polyB) {
             return (Curve.PointRelativeToCurveLocation(polyA.Start, polyB) != PointLocation.Outside ||
                     Curve.PointRelativeToCurveLocation(polyB.Start, polyA) != PointLocation.Outside);
         }
@@ -273,30 +291,29 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         /// <summary>
         /// 
         /// </summary>
-        void CreateInitialTightObstacles() {
-            tightObstacles = new Set<Polyline>();
-            foreach (Node node in router.Graph.Nodes) {
-                if (node == router.Source)
-                    CreatePortObstacles(router.Source, router.SourcePort, out sourceFilterLine);
-                else if (node == router.Target)
-                    CreatePortObstacles(router.Target, router.TargetPort, out targetFilterLine);
-                else {
-                    TightObstacles.Insert(PaddedPolylineBoundaryOfNode(node, router.Padding));
+        private void CreateInitialTightObstacles() {
+            this.tightObstacles = new Set<Polyline>();
+            foreach (Node node in this.router.Graph.Nodes) {
+                if (node == this.router.Source) {
+                    this.CreatePortObstacles(this.router.Source, this.router.SourcePort, out this.sourceFilterLine);
+                } else if (node == this.router.Target) {
+                    this.CreatePortObstacles(this.router.Target, this.router.TargetPort, out this.targetFilterLine);
+                } else {
+                    this.TightObstacles.Insert(PaddedPolylineBoundaryOfNode(node, this.router.Padding));
                 }
             }
         }
 
-
-        void CreatePortObstacles(Node node, Port port, out LineSegment filterLine) {
+        private void CreatePortObstacles(Node node, Port port, out LineSegment filterLine) {
             var bp = port as CurvePort;
             if (bp != null) {
-                var padding = router.Padding;
+                var padding = this.router.Padding;
                 var closedCurve = node.BoundaryCurve;
                 Curve paddingCurve = GetPaddedPolyline(closedCurve, padding).ToCurve();
                 Point portPoint = node.BoundaryCurve[bp.Parameter];
                 double length = node.BoundaryCurve.BoundingBox.Width + node.BoundaryCurve.BoundingBox.Height;
-                double leftTipPar = GetLeftTipParam(bp.Parameter, portPoint, paddingCurve, node, length);
-                double rightTipPar = GetRightTipParam(bp.Parameter, portPoint, paddingCurve, node, length);
+                double leftTipPar = this.GetLeftTipParam(bp.Parameter, portPoint, paddingCurve, node, length);
+                double rightTipPar = this.GetRightTipParam(bp.Parameter, portPoint, paddingCurve, node, length);
                 paddingCurve = TrimCurve(paddingCurve, rightTipPar, leftTipPar);
                 //a simplifying hack here. I know that the parameter start from 0 and advances by 1 on every segment                
                 int n = paddingCurve.Segments.Count / 2;
@@ -307,15 +324,15 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
                                              0.5 * (rightChunk.Start + rightChunk.End));
                 Polyline pol = Polyline.PolylineFromCurve(leftChunk);
                 pol.Closed = true;
-                portObstacles.Insert(pol);
-                TightObstacles.Insert(pol);
+                this.portObstacles.Insert(pol);
+                this.TightObstacles.Insert(pol);
                 pol = Polyline.PolylineFromCurve(rightChunk);
                 pol.Closed = true;
-                portObstacles.Insert(pol);
-                TightObstacles.Insert(pol);
+                this.portObstacles.Insert(pol);
+                this.TightObstacles.Insert(pol);
             } else {
                 filterLine = null;
-                portObstacles.Insert(node.BoundaryCurve);
+                this.portObstacles.Insert(node.BoundaryCurve);
             }
         }
 
@@ -328,13 +345,12 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             return InteractiveObstacleCalculator.CreatePaddedPolyline(Curve.PolylineAroundClosedCurve(closedCurve), padding);
         }
 
-
-
-        static Curve TrimCurve(Curve curve, double u, double v) {
+        private static Curve TrimCurve(Curve curve, double u, double v) {
             Debug.Assert(u >= curve.ParStart && u <= curve.ParEnd);
             Debug.Assert(v >= curve.ParStart && v <= curve.ParEnd);
-            if (u < v)
+            if (u < v) {
                 return curve.Trim(u, v) as Curve;
+            }
 
             var c = new Curve();
             c.AddSegment(curve.Trim(u, curve.ParEnd) as Curve);
@@ -342,24 +358,24 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             return c;
         }
 
-        double GetRightTipParam(double portParam, Point portPoint, Curve paddingCurve, Node node, double length) {
+        private double GetRightTipParam(double portParam, Point portPoint, Curve paddingCurve, Node node, double length) {
             bool curveIsClockwise = InteractiveObstacleCalculator.CurveIsClockwise(node.BoundaryCurve, node.Center);
             Point tan = curveIsClockwise
                             ? node.BoundaryCurve.RightDerivative(portParam)
                             : -node.BoundaryCurve.LeftDerivative(portParam);
-            tan = (tan.Normalize() * length).Rotate(EnteringAngle);
+            tan = (tan.Normalize() * length).Rotate(this.EnteringAngle);
             IList<IntersectionInfo> xs = Curve.GetAllIntersections(paddingCurve,
                                                                    new LineSegment(portPoint, portPoint + tan), true);
             Debug.Assert(xs.Count == 1);
             return xs[0].Par0;
         }
 
-        double GetLeftTipParam(double portParam, Point portPoint, Curve paddingCurve, Node node, double length) {
+        private double GetLeftTipParam(double portParam, Point portPoint, Curve paddingCurve, Node node, double length) {
             bool curveIsClockwise = InteractiveObstacleCalculator.CurveIsClockwise(node.BoundaryCurve, node.Center);
             Point tan = curveIsClockwise
                             ? node.BoundaryCurve.LeftDerivative(portParam)
                             : -node.BoundaryCurve.RightDerivative(portParam);
-            tan = ((-tan.Normalize()) * length).Rotate(-EnteringAngle);
+            tan = ((-tan.Normalize()) * length).Rotate(-this.EnteringAngle);
             IList<IntersectionInfo> xs = Curve.GetAllIntersections(paddingCurve,
                                                                    new LineSegment(portPoint, portPoint + tan), true);
             Debug.Assert(xs.Count == 1);
@@ -373,14 +389,15 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         /// <param name="node"></param>
         /// <param name="padding"></param>
         /// <returns></returns>
-        static Polyline PaddedPolylineBoundaryOfNode(Node node, double padding) {
+        private static Polyline PaddedPolylineBoundaryOfNode(Node node, double padding) {
             return InteractiveObstacleCalculator.CreatePaddedPolyline(Curve.PolylineAroundClosedCurve(node.BoundaryCurve), padding);
         }
 
-
-        static Polyline LoosePolylineWithFewCorners(Polyline tightPolyline, double p) {
-            if (p < ApproximateComparer.DistanceEpsilon)
+        private static Polyline LoosePolylineWithFewCorners(Polyline tightPolyline, double p) {
+            if (p < ApproximateComparer.DistanceEpsilon) {
                 return tightPolyline;
+            }
+
             Polyline loosePolyline = CreateLoosePolylineOnBisectors(tightPolyline, p);
             return loosePolyline;
         }
@@ -413,7 +430,7 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         //    return pp;
         //}
 
-        static Polyline CreateLoosePolylineOnBisectors(Polyline tightPolyline, double p) {
+        private static Polyline CreateLoosePolylineOnBisectors(Polyline tightPolyline, double p) {
             var ret = new Polyline();
 
             ret.AddPoint(GetStickingVertexOnBisector(tightPolyline.StartPoint, p));
@@ -442,8 +459,9 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
                     } else {
                         candidate = currentSticking;
                         if (Point.GetTriangleOrientation(ret.EndPoint.Point, blockingPoint, pp.Point) ==
-                            TriangleOrientation.Counterclockwise)
+                            TriangleOrientation.Counterclockwise) {
                             blockingPoint = pp.Point;
+                        }
                     }
                 }
             }
@@ -454,8 +472,9 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
                     TriangleOrientation.Counterclockwise) {
                     //the first point is visible, but now can we cut it
                     if (Point.GetTriangleOrientation(ret.EndPoint.Point, blockingPoint, ret.StartPoint.Next.Point) ==
-                        TriangleOrientation.Counterclockwise)
+                        TriangleOrientation.Counterclockwise) {
                         ret.RemoveStartPoint();
+                    }
                 } else {
                     ret.AddPoint(candidate);
                 }
@@ -463,9 +482,9 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
                 //trying to cut away the first point
                 if (
                     Point.GetTriangleOrientation(ret.EndPoint.Point, tightPolyline.StartPoint.Point,
-                                                 ret.StartPoint.Next.Point) == TriangleOrientation.Counterclockwise)
+                                                 ret.StartPoint.Next.Point) == TriangleOrientation.Counterclockwise) {
                     ret.RemoveStartPoint();
-                else { }
+                } else { }
             }
 
             ret.Closed = true;
@@ -473,20 +492,20 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             return ret;
         }
 
-        static Point GetStickingVertexOnBisector(PolylinePoint pp, double p) {
+        private static Point GetStickingVertexOnBisector(PolylinePoint pp, double p) {
             Point u = pp.Polyline.Prev(pp).Point;
             Point v = pp.Point;
             Point w = pp.Polyline.Next(pp).Point;
             return p * ((v - u).Normalize() + (v - w).Normalize()).Normalize() + v;
         }
 
-
-        double FindMaxPaddingForTightPolyline(Polyline polyline) {
+        private double FindMaxPaddingForTightPolyline(Polyline polyline) {
             var dist = double.MaxValue;
             var polygon = new Polygon(polyline);
 
-            foreach (var poly in RootOfLooseHierarchy.GetAllLeaves().Where(p => p != polyline))
+            foreach (var poly in this.RootOfLooseHierarchy.GetAllLeaves().Where(p => p != polyline)) {
                 dist = Math.Min(dist, Polygon.Distance(polygon, new Polygon(poly)));
+            }
 
             //            TraverseHierarchy(RootOfLooseHierarchy, delegate(RectangleNode<Polyline, Point> node) {
             //                                                        if (node.UserData != null)
@@ -496,26 +515,25 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             //                                                                                                 new Polygon(
             //                                                                                                     node.UserData)));
             //                                                    });
-            dist = Math.Min(dist, RouterBetweenTwoNodes.DistanceFromPointToPolyline(router.SourcePoint, polyline));
-            dist = Math.Min(dist, RouterBetweenTwoNodes.DistanceFromPointToPolyline(router.TargetPoint, polyline));
+            dist = Math.Min(dist, RouterBetweenTwoNodes.DistanceFromPointToPolyline(this.router.SourcePoint, polyline));
+            dist = Math.Min(dist, RouterBetweenTwoNodes.DistanceFromPointToPolyline(this.router.TargetPoint, polyline));
             return dist;
         }
 
-
-        static bool CurvesIntersect(ICurve a, ICurve b) {
+        private static bool CurvesIntersect(ICurve a, ICurve b) {
             return Curve.GetAllIntersections(a, b, false).Count > 0;
         }
 
         internal bool ObstaclesIntersectLine(Point a, Point b) {
-            return ObstaclesIntersectICurve(new LineSegment(a, b));
+            return this.ObstaclesIntersectICurve(new LineSegment(a, b));
         }
 
         internal bool ObstaclesIntersectICurve(ICurve curve) {
-            return CurveIntersectsRectangleNode(curve, RootOfTightHierararchy)
+            return CurveIntersectsRectangleNode(curve, this.RootOfTightHierararchy)
                    ||
-                   (SourceFilterLine != null && CurvesIntersect(curve, SourceFilterLine))
+                   (this.SourceFilterLine != null && CurvesIntersect(curve, this.SourceFilterLine))
                    ||
-                   (TargetFilterLine != null && CurvesIntersect(curve, TargetFilterLine));
+                   (this.TargetFilterLine != null && CurvesIntersect(curve, this.TargetFilterLine));
         }
 
         internal static bool CurveIntersectsRectangleNode(ICurve curve, RectangleNode<Polyline, Point> rectNode) {
@@ -523,13 +541,15 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
             return CurveIntersectsRectangleNode(curve, ref boundingBox, rectNode);
         }
 
-        static bool CurveIntersectsRectangleNode(ICurve curve, ref Rectangle curveBox, RectangleNode<Polyline, Point> rectNode) {
-            if (!rectNode.Rectangle.Intersects(curveBox))
+        private static bool CurveIntersectsRectangleNode(ICurve curve, ref Rectangle curveBox, RectangleNode<Polyline, Point> rectNode) {
+            if (!rectNode.Rectangle.Intersects(curveBox)) {
                 return false;
+            }
 
-            if (rectNode.UserData != null)
+            if (rectNode.UserData != null) {
                 return Curve.CurveCurveIntersectionOne(rectNode.UserData, curve, false) != null ||
                        Inside(rectNode.UserData, curve);
+            }
 
             Debug.Assert(rectNode.Left != null && rectNode.Right != null);
 
@@ -544,13 +564,13 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         /// <param name="curveUnderTest"></param>
         /// <param name="curve"></param>
         /// <returns></returns>
-        static bool Inside(ICurve curveUnderTest, ICurve curve) {
+        private static bool Inside(ICurve curveUnderTest, ICurve curve) {
             return Curve.PointRelativeToCurveLocation(curve.Start, curveUnderTest) == PointLocation.Inside;
         }
 
         #region Nested type: Visitor
 
-        delegate void Visitor(RectangleNode<Polyline, Point> node);
+        private delegate void Visitor(RectangleNode<Polyline, Point> node);
 
         #endregion
         /// <summary>
@@ -566,14 +586,16 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
 
         }
 
-        static bool CurveIntersectsRectangleNode(ICurve curve, ref Rectangle curveBox, RectangleNode<Polyline, Point> rectNode, Polyline polylineToIgnore) {
-            if (!rectNode.Rectangle.Intersects(curveBox))
+        private static bool CurveIntersectsRectangleNode(ICurve curve, ref Rectangle curveBox, RectangleNode<Polyline, Point> rectNode, Polyline polylineToIgnore) {
+            if (!rectNode.Rectangle.Intersects(curveBox)) {
                 return false;
+            }
 
-            if (rectNode.UserData != null)
+            if (rectNode.UserData != null) {
                 return rectNode.UserData != polylineToIgnore &&
                        (Curve.CurveCurveIntersectionOne(rectNode.UserData, curve, false) != null ||
                         Inside(rectNode.UserData, curve));
+            }
 
             Debug.Assert(rectNode.Left != null && rectNode.Right != null);
 
@@ -585,14 +607,14 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
         {
             private Dictionary<Polyline, List<Polyline>> sourceToTargets = new Dictionary<Polyline, List<Polyline>>();
 
-            internal IEnumerable<Polyline> Nodes { get { return sourceToTargets.Keys; } }
+            internal IEnumerable<Polyline> Nodes { get { return this.sourceToTargets.Keys; } }
 
             internal void AddEdge(Polyline source, Polyline target)
             {
                 List<Polyline> listOfEdges;
-                if (!sourceToTargets.TryGetValue(source, out listOfEdges))
+                if (!this.sourceToTargets.TryGetValue(source, out listOfEdges))
                 {
-                    sourceToTargets[source] = listOfEdges = new List<Polyline>();
+                    this.sourceToTargets[source] = listOfEdges = new List<Polyline>();
                 }
 
                 listOfEdges.Add(target);
@@ -600,7 +622,7 @@ namespace Microsoft.Msagl.Prototype.LayoutEditing {
 
             internal IEnumerable<Polyline> Descendents(Polyline Polyline)
             {
-                return sourceToTargets[Polyline];
+                return this.sourceToTargets[Polyline];
             }
         }
     }

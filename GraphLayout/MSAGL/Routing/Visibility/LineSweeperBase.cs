@@ -9,8 +9,8 @@ using Microsoft.Msagl.Core;
 
 namespace Microsoft.Msagl.Routing.Visibility {
     internal class LineSweeperBase : IComparer<SweepEvent> {
-        Point directionPerp; // sweep direction rotated 90 degrees clockwse
-        BinaryHeapWithComparer<SweepEvent> eventQueue;
+        private Point directionPerp; // sweep direction rotated 90 degrees clockwse
+        private BinaryHeapWithComparer<SweepEvent> eventQueue;
 
         protected RbTree<SegmentBase> LeftObstacleSideTree { get; set; }
 
@@ -19,39 +19,40 @@ namespace Microsoft.Msagl.Routing.Visibility {
         protected RbTree<SegmentBase> RightObstacleSideTree { get; set; }
         protected Set<Point> Ports;
         public LineSweeperBase(IEnumerable<Polyline> obstacles, Point sweepDirection) {
-            Obstacles = obstacles;
-            SweepDirection = sweepDirection;
-            DirectionPerp = sweepDirection.Rotate(-Math.PI / 2);
-            EventQueue = new BinaryHeapWithComparer<SweepEvent>(this);
-            ObstacleSideComparer = new ObstacleSideComparer(this);
-            LeftObstacleSideTree = new RbTree<SegmentBase>(ObstacleSideComparer);
-            RightObstacleSideTree = new RbTree<SegmentBase>(ObstacleSideComparer);
+            this.Obstacles = obstacles;
+            this.SweepDirection = sweepDirection;
+            this.DirectionPerp = sweepDirection.Rotate(-Math.PI / 2);
+            this.EventQueue = new BinaryHeapWithComparer<SweepEvent>(this);
+            this.ObstacleSideComparer = new ObstacleSideComparer(this);
+            this.LeftObstacleSideTree = new RbTree<SegmentBase>(this.ObstacleSideComparer);
+            this.RightObstacleSideTree = new RbTree<SegmentBase>(this.ObstacleSideComparer);
         }
 
         protected internal BinaryHeapWithComparer<SweepEvent> EventQueue {
-            get { return eventQueue; }
-            set { eventQueue = value; }
+            get { return this.eventQueue; }
+            set { this.eventQueue = value; }
         }
         public Point SweepDirection { get; set; }
         /// <summary>
         /// sweep direction rotated by 90 degrees clockwise
         /// </summary>
         protected Point DirectionPerp {
-            get { return directionPerp; }
-            set { directionPerp = value; }
+            get { return this.directionPerp; }
+            set { this.directionPerp = value; }
         }
 
         protected double PreviousZ=double.NegativeInfinity;
-        double z;
+        private double z;
         public double Z {
-            get { return z; }
+            get { return this.z; }
             set {
-                if (value > z + ApproximateComparer.Tolerance)
-                    PreviousZ = z;
+                if (value > this.z + ApproximateComparer.Tolerance) {
+                    this.PreviousZ = this.z;
+                }
 #if TEST_MSAGL
-                Debug.Assert(PreviousZ<=value); 
+                Debug.Assert(this.PreviousZ <=value);
 #endif
-                z = value;
+                this.z = value;
          //       Debug.Assert(TreesAreCorrect());
             }
         }
@@ -62,76 +63,83 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
 
         protected double GetZ(SweepEvent eve) {
-            return SweepDirection * eve.Site;
+            return this.SweepDirection * eve.Site;
         }
 
         protected double GetZ(Point point) {
-            return SweepDirection * point;
+            return this.SweepDirection * point;
         }
 
         protected bool SegmentIsNotHorizontal(Point a, Point b) {
-            return Math.Abs((a - b) * SweepDirection) > ApproximateComparer.DistanceEpsilon;
+            return Math.Abs((a - b) * this.SweepDirection) > ApproximateComparer.DistanceEpsilon;
         }
 
         protected void RemoveLeftSide(LeftObstacleSide side) {
-            ObstacleSideComparer.SetOperand(side);
-            LeftObstacleSideTree.Remove(side);
+            this.ObstacleSideComparer.SetOperand(side);
+            this.LeftObstacleSideTree.Remove(side);
         }
 
         protected void RemoveRightSide(RightObstacleSide side) {
-            ObstacleSideComparer.SetOperand(side);
-            RightObstacleSideTree.Remove(side);
+            this.ObstacleSideComparer.SetOperand(side);
+            this.RightObstacleSideTree.Remove(side);
         }
 
         protected void InsertLeftSide(LeftObstacleSide side) {
-            ObstacleSideComparer.SetOperand(side);
-            LeftObstacleSideTree.Insert((side));
+            this.ObstacleSideComparer.SetOperand(side);
+            this.LeftObstacleSideTree.Insert((side));
         }
 
         protected void InsertRightSide(RightObstacleSide side) {
-            ObstacleSideComparer.SetOperand(side);
-            RightObstacleSideTree.Insert(side);
+            this.ObstacleSideComparer.SetOperand(side);
+            this.RightObstacleSideTree.Insert(side);
         }
 
         protected RightObstacleSide FindFirstObstacleSideToTheLeftOfPoint(Point point) {
             var node =
-                RightObstacleSideTree.FindLast(
+                this.RightObstacleSideTree.FindLast(
                     s => Point.PointToTheRightOfLineOrOnLine(point, s.Start, s.End));
             return node == null ? null : (RightObstacleSide)(node.Item);
         }
 
         protected LeftObstacleSide FindFirstObstacleSideToToTheRightOfPoint(Point point) {
             var node =
-                LeftObstacleSideTree.FindFirst(
+                this.LeftObstacleSideTree.FindFirst(
                     s => !Point.PointToTheRightOfLineOrOnLine(point, s.Start, s.End));
             return node == null ? null : (LeftObstacleSide)node.Item;
         }
 
         protected void EnqueueEvent(SweepEvent eve) {
-            Debug.Assert(GetZ(eve.Site)>=PreviousZ);
-            eventQueue.Enqueue(eve);
+            Debug.Assert(this.GetZ(eve.Site)>= this.PreviousZ);
+            this.eventQueue.Enqueue(eve);
         }
 
         protected void InitQueueOfEvents() {
-            foreach (var obstacle in Obstacles)
-                EnqueueLowestPointsOnObstacles(obstacle);
-            if (Ports != null)
-                foreach (var point in Ports)
-                    EnqueueEvent(new PortObstacleEvent(point));
+            foreach (var obstacle in this.Obstacles) {
+                this.EnqueueLowestPointsOnObstacles(obstacle);
+            }
+
+            if (this.Ports != null) {
+                foreach (var point in this.Ports) {
+                    this.EnqueueEvent(new PortObstacleEvent(point));
+                }
+            }
         }
 
-        void EnqueueLowestPointsOnObstacles(Polyline poly) {
-            PolylinePoint candidate = GetLowestPoint(poly);
-            EnqueueEvent(new LowestVertexEvent(candidate));
+        private void EnqueueLowestPointsOnObstacles(Polyline poly) {
+            PolylinePoint candidate = this.GetLowestPoint(poly);
+            this.EnqueueEvent(new LowestVertexEvent(candidate));
         }
 
-        PolylinePoint GetLowestPoint(Polyline poly) {
+        private PolylinePoint GetLowestPoint(Polyline poly) {
             PolylinePoint candidate = poly.StartPoint;
             PolylinePoint pp = poly.StartPoint.Next;
 
-            for (; pp != null; pp = pp.Next)
-                if (Less(pp.Point, candidate.Point))
+            for (; pp != null; pp = pp.Next) {
+                if (this.Less(pp.Point, candidate.Point)) {
                     candidate = pp;
+                }
+            }
+
             return candidate;
         }
 
@@ -148,26 +156,31 @@ namespace Microsoft.Msagl.Routing.Visibility {
             ValidateArg.IsNotNull(b, "b");
             Point aSite = a.Site;
             Point bSite = b.Site;
-            return ComparePoints(ref aSite, ref bSite);
+            return this.ComparePoints(ref aSite, ref bSite);
         }
 
-        bool Less(Point a, Point b) {
-            return ComparePoints(ref a, ref b) < 0;
+        private bool Less(Point a, Point b) {
+            return this.ComparePoints(ref a, ref b) < 0;
         }
 
-        int ComparePoints(ref Point aSite, ref Point bSite) {
-            var aProjection = SweepDirection * aSite;
-            var bProjection = SweepDirection * bSite;
-            if (aProjection < bProjection)
+        private int ComparePoints(ref Point aSite, ref Point bSite) {
+            var aProjection = this.SweepDirection * aSite;
+            var bProjection = this.SweepDirection * bSite;
+            if (aProjection < bProjection) {
                 return -1;
-            if (aProjection > bProjection)
+            }
+
+            if (aProjection > bProjection) {
                 return 1;
+            }
 
-            aProjection = directionPerp * aSite;
-            bProjection = directionPerp * bSite;
+            aProjection = this.directionPerp * aSite;
+            bProjection = this.directionPerp * bSite;
 
-            if (aProjection < bProjection)
+            if (aProjection < bProjection) {
                 return -1;
+            }
+
             return aProjection > bProjection ? 1 : 0;
         }
     }

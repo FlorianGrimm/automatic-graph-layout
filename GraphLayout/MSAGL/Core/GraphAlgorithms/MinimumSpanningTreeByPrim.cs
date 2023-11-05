@@ -11,13 +11,14 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
     /// 
     /// </summary>
     public class MinimumSpanningTreeByPrim {
-        readonly BasicGraphOnEdges<IEdge> graph;
-        readonly Func<IEdge, double> weight;
-        readonly int root;
-        readonly BinaryHeapPriorityQueue q;
-        Set<int> treeNodes = new Set<int>();
+        private readonly BasicGraphOnEdges<IEdge> graph;
+        private readonly Func<IEdge, double> weight;
+        private readonly int root;
+        private readonly BinaryHeapPriorityQueue q;
+        private Set<int> treeNodes = new Set<int>();
+
         //map of neighbors of the tree to the edges connected them to the tree
-        Dictionary<int, IEdge> hedgehog = new Dictionary<int, IEdge>(); 
+        private Dictionary<int, IEdge> hedgehog = new Dictionary<int, IEdge>(); 
         
         /// <summary>
         /// 
@@ -36,11 +37,11 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
             this.graph = graph;
             this.weight = weight;
             this.root = root;
-            q=new BinaryHeapPriorityQueue(graph.NodeCount);
+            this.q =new BinaryHeapPriorityQueue(graph.NodeCount);
         }
 
-        bool NodeIsInTree(int i) {
-            return treeNodes.Contains(i);
+        private bool NodeIsInTree(int i) {
+            return this.treeNodes.Contains(i);
         }
 
         /// <summary>
@@ -49,79 +50,88 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// <returns></returns>
         public IList<IEdge> GetTreeEdges()
         {
-            var ret = new List<IEdge>(graph.NodeCount - 1);
-            Init();
-            while (ret.Count < graph.NodeCount - 1 && q.Count > 0) //some nodes might have no edges
-                AddEdgeToTree(ret);
+            var ret = new List<IEdge>(this.graph.NodeCount - 1);
+            this.Init();
+            while (ret.Count < this.graph.NodeCount - 1 && this.q.Count > 0) //some nodes might have no edges
+{
+                this.AddEdgeToTree(ret);
+            }
+
             return ret;
         }
 
-        void AddEdgeToTree(List<IEdge> ret) {
-            var v = q.Dequeue();
-            var e = hedgehog[v];
-            treeNodes.Insert(v);
+        private void AddEdgeToTree(List<IEdge> ret) {
+            var v = this.q.Dequeue();
+            var e = this.hedgehog[v];
+            this.treeNodes.Insert(v);
             ret.Add(e);
-            UpdateOutEdgesOfV(v);
-            UpdateInEdgesOfV(v);
+            this.UpdateOutEdgesOfV(v);
+            this.UpdateInEdgesOfV(v);
         }
 
-        void UpdateOutEdgesOfV(int v) {
-            foreach (var outEdge in graph.OutEdges(v)) {
+        private void UpdateOutEdgesOfV(int v) {
+            foreach (var outEdge in this.graph.OutEdges(v)) {
                 var u = outEdge.Target;
-                if (NodeIsInTree(u)) continue;
+                if (this.NodeIsInTree(u)) {
+                    continue;
+                }
+
                 IEdge oldEdge;
-                if (hedgehog.TryGetValue(u, out oldEdge)) {
-                    var oldWeight = weight(oldEdge);
-                    var newWeight = weight(outEdge);
+                if (this.hedgehog.TryGetValue(u, out oldEdge)) {
+                    var oldWeight = this.weight(oldEdge);
+                    var newWeight = this.weight(outEdge);
                     if (newWeight < oldWeight) {
-                        q.DecreasePriority(u, newWeight);
-                        hedgehog[u] = outEdge;
+                        this.q.DecreasePriority(u, newWeight);
+                        this.hedgehog[u] = outEdge;
                     }
                 } else {
-                    q.Enqueue(u, weight(outEdge));
-                    hedgehog[u] = outEdge;
+                    this.q.Enqueue(u, this.weight(outEdge));
+                    this.hedgehog[u] = outEdge;
                 }
             }
         }
 
-        void UpdateInEdgesOfV(int v)
+        private void UpdateInEdgesOfV(int v)
         {
-            foreach (var inEdge in graph.InEdges(v))
+            foreach (var inEdge in this.graph.InEdges(v))
             {
                 var u = inEdge.Source;
-                if (NodeIsInTree(u)) continue;
+                if (this.NodeIsInTree(u)) {
+                    continue;
+                }
+
                 IEdge oldEdge;
-                if (hedgehog.TryGetValue(u, out oldEdge))
+                if (this.hedgehog.TryGetValue(u, out oldEdge))
                 {
-                    var oldWeight = weight(oldEdge);
-                    var newWeight = weight(inEdge);
+                    var oldWeight = this.weight(oldEdge);
+                    var newWeight = this.weight(inEdge);
                     if (newWeight < oldWeight)
                     {
-                        q.DecreasePriority(u, newWeight);
-                        hedgehog[u] = inEdge;
+                        this.q.DecreasePriority(u, newWeight);
+                        this.hedgehog[u] = inEdge;
                     }
                 }
                 else
                 {
-                    q.Enqueue(u, weight(inEdge));
-                    hedgehog[u] = inEdge;
+                    this.q.Enqueue(u, this.weight(inEdge));
+                    this.hedgehog[u] = inEdge;
                 }
             }
         }
 
-        void Init() {
-            treeNodes.Insert(root);
+        private void Init() {
+            this.treeNodes.Insert(this.root);
 
-            foreach (var outEdge in graph.OutEdges(root)) {
-                var w = weight(outEdge);
-                q.Enqueue(outEdge.Target, w);
-                hedgehog[outEdge.Target] = outEdge;
+            foreach (var outEdge in this.graph.OutEdges(this.root)) {
+                var w = this.weight(outEdge);
+                this.q.Enqueue(outEdge.Target, w);
+                this.hedgehog[outEdge.Target] = outEdge;
             }
 
-            foreach (var inEdge in graph.InEdges(root)) {
-                var w = weight(inEdge);
-                q.Enqueue(inEdge.Source, w);
-                hedgehog[inEdge.Source] = inEdge;
+            foreach (var inEdge in this.graph.InEdges(this.root)) {
+                var w = this.weight(inEdge);
+                this.q.Enqueue(inEdge.Source, w);
+                this.hedgehog[inEdge.Source] = inEdge;
             }
         }
     }

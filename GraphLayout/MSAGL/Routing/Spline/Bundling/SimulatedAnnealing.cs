@@ -20,18 +20,18 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// <summary>
         /// bundle data
         /// </summary>
-        readonly MetroGraphData metroGraphData;
+        private readonly MetroGraphData metroGraphData;
 
         /// <summary>
         /// Algorithm settings
         /// </summary>
-        readonly BundlingSettings bundlingSettings;
+        private readonly BundlingSettings bundlingSettings;
 
         ///  calculates rouing cost
-        readonly CostCalculator costCalculator;
+        private readonly CostCalculator costCalculator;
 
         ///  used for fast calculation of intersections
-        readonly IntersectionCache cache;
+        private readonly IntersectionCache cache;
 
         /// <summary>
         /// fix routing by simulated annealing algorithm
@@ -44,66 +44,74 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return new SimulatedAnnealing(metroGraphData, bundlingSettings).FixRouting(changedPoints);
         }
 
-        SimulatedAnnealing(MetroGraphData metroGraphData, BundlingSettings bundlingSettings) {
+        private SimulatedAnnealing(MetroGraphData metroGraphData, BundlingSettings bundlingSettings) {
             this.metroGraphData = metroGraphData;
             this.bundlingSettings = bundlingSettings;
-            costCalculator = new CostCalculator(metroGraphData, bundlingSettings);
-            cache = new IntersectionCache(metroGraphData, bundlingSettings, costCalculator, metroGraphData.Cdt);
+            this.costCalculator = new CostCalculator(metroGraphData, bundlingSettings);
+            this.cache = new IntersectionCache(metroGraphData, bundlingSettings, this.costCalculator, metroGraphData.Cdt);
         }
 
-        const int MaxIterations = 100;
-        const double MaxStep = 50;
-        const double MinStep = 1;
-        const double MinRelativeChange = 0.0005;
-
-        HashSet<Station> stationsForOptimizations;
+        private const int MaxIterations = 100;
+        private const double MaxStep = 50;
+        private const double MinStep = 1;
+        private const double MinRelativeChange = 0.0005;
+        private HashSet<Station> stationsForOptimizations;
 
         /// <summary>
         /// Use constraint edge routing to reduce ink
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1303:Do not pass literals as localized parameters",
          MessageId = "Microsoft.Msagl.Routing.Spline.Bundling.GeneralBundling.InkMetric.OutputQ(System.String,Microsoft.Msagl.Routing.Spline.Bundling.GeneralBundling.MetroGraphData,Microsoft.Msagl.Core.Routing.BundlingSettings)"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Globalization", "CA1303:Do not pass literals as localized parameters", MessageId = "Microsoft.Msagl.Routing.Spline.Bundling.GeneralBundling.InkMetric.OutputQ(System.String,Microsoft.Msagl.Routing.Spline.Bundling.GeneralBundling.MetroGraphData,Microsoft.Msagl.Routing.Spline.Bundling.BundlingSettings)")]
-        bool FixRouting(HashSet<Point> changedPoints) {
-            stationsForOptimizations = GetStationsForOptimizations(changedPoints);
+        private bool FixRouting(HashSet<Point> changedPoints) {
+            this.stationsForOptimizations = this.GetStationsForOptimizations(changedPoints);
 
-            cache.InitializeCostCache();
+            this.cache.InitializeCostCache();
 
             double step = MaxStep;
             double energy = double.PositiveInfinity;
 
-            List<Point> x = new List<Point>(metroGraphData.VirtualNodes().Select(v => v.Position));
+            List<Point> x = new List<Point>(this.metroGraphData.VirtualNodes().Select(v => v.Position));
             int iteration = 0;
             while (iteration++ < MaxIterations) {
-                bool coordinatesChanged = TryMoveNodes();
+                bool coordinatesChanged = this.TryMoveNodes();
                 //TimeMeasurer.DebugOutput("  #iter = " + iteration + " moved: " + cnt + "/" + metroGraphData.VirtualNodes().Count() + " step: " + step);
 
-                if (iteration <= 1 && !coordinatesChanged) return false;
-                if (!coordinatesChanged) break;
+                if (iteration <= 1 && !coordinatesChanged) {
+                    return false;
+                }
+
+                if (!coordinatesChanged) {
+                    break;
+                }
 
                 double oldEnergy = energy;
-                energy = CostCalculator.Cost(metroGraphData, bundlingSettings);
+                energy = CostCalculator.Cost(this.metroGraphData, this.bundlingSettings);
                 //TimeMeasurer.DebugOutput("energy: " + energy);
 
-                step = UpdateMaxStep(step, oldEnergy, energy);
+                step = this.UpdateMaxStep(step, oldEnergy, energy);
                 List<Point> oldX = x;
-                x = new List<Point>(metroGraphData.VirtualNodes().Select(v => v.Position));
-                if (step < MinStep || Converged(step, oldX, x)) break;
+                x = new List<Point>(this.metroGraphData.VirtualNodes().Select(v => v.Position));
+                if (step < MinStep || this.Converged(step, oldX, x)) {
+                    break;
+                }
             }
 
             //TimeMeasurer.DebugOutput("SA completed after " + iteration + " iterations");
             return true;
         }
 
-        HashSet<Station> GetStationsForOptimizations(HashSet<Point> changedPoints) {
+        private HashSet<Station> GetStationsForOptimizations(HashSet<Point> changedPoints) {
             if (changedPoints == null) {
-                return new HashSet<Station>(metroGraphData.VirtualNodes());
+                return new HashSet<Station>(this.metroGraphData.VirtualNodes());
             }
             else {
                 HashSet<Station> result = new HashSet<Station>();
                 foreach (var p in changedPoints) {
-                    if (metroGraphData.PointToStations.ContainsKey(p)) {
-                        var s = metroGraphData.PointToStations[p];
-                        if (!s.IsRealNode) result.Add(s);
+                    if (this.metroGraphData.PointToStations.ContainsKey(p)) {
+                        var s = this.metroGraphData.PointToStations[p];
+                        if (!s.IsRealNode) {
+                            result.Add(s);
+                        }
                     }
                 }
                 return result;
@@ -113,7 +121,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// <summary>
         /// stop SA if relative changes are small
         /// </summary>
-        bool Converged(double step, List<Point> oldx, List<Point> newx) {
+        private bool Converged(double step, List<Point> oldx, List<Point> newx) {
             //return false;
 
             double num = 0, den = 0;
@@ -125,44 +133,46 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return (res < MinRelativeChange);
         }
 
-        int stepsWithProgress = 0;
+        private int stepsWithProgress = 0;
 
-        double UpdateMaxStep(double step, double oldEnergy, double newEnergy) {
+        private double UpdateMaxStep(double step, double oldEnergy, double newEnergy) {
             //cooling factor
             double T = 0.8;
             if (newEnergy + 1.0 < oldEnergy) {
-                stepsWithProgress++;
-                if (stepsWithProgress >= 5) {
-                    stepsWithProgress = 0;
+                this.stepsWithProgress++;
+                if (this.stepsWithProgress >= 5) {
+                    this.stepsWithProgress = 0;
                     step = Math.Min(MaxStep, step / T);
                 }
             }
             else {
-                stepsWithProgress = 0;
+                this.stepsWithProgress = 0;
                 step *= T;
             }
 
             return step;
         }
 
-
-        bool TryMoveNodes() {
+        private bool TryMoveNodes() {
             var coordinatesChanged = false;
             HashSet<Station> movedStations = new HashSet<Station>();
             //foreach (var node in metroGraphData.VirtualNodes()) {
-            foreach (var node in stationsForOptimizations) {
-                if (TryMoveNode(node)) {
-                    Debug.Assert(stationsForOptimizations.Contains(node));
+            foreach (var node in this.stationsForOptimizations) {
+                if (this.TryMoveNode(node)) {
+                    Debug.Assert(this.stationsForOptimizations.Contains(node));
 
                     coordinatesChanged = true;
          
                     movedStations.Add(node);
-                    foreach (var adj in node.Neighbors)
-                        if (!adj.IsRealNode) movedStations.Add(adj);                    
+                    foreach (var adj in node.Neighbors) {
+                        if (!adj.IsRealNode) {
+                            movedStations.Add(adj);
+                        }
+                    }
                 }
             }
 
-            stationsForOptimizations = movedStations;
+            this.stationsForOptimizations = movedStations;
             return coordinatesChanged;
         }
 
@@ -170,56 +180,66 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// Move node to decrease the cost of the drawing
         /// Returns true iff position has changed
         /// </summary>
-        bool TryMoveNode(Station node) {
-            Point direction = BuildDirection(node);
-            if (direction.Length == 0) return false;
+        private bool TryMoveNode(Station node) {
+            Point direction = this.BuildDirection(node);
+            if (direction.Length == 0) {
+                return false;
+            }
 
-            double stepLength = BuildStepLength(node, direction);
+            double stepLength = this.BuildStepLength(node, direction);
             if (stepLength < MinStep) {
                 //try random direction
                 direction = Point.RandomPoint();
-                stepLength = BuildStepLength(node, direction);
-                if (stepLength < MinStep)
+                stepLength = this.BuildStepLength(node, direction);
+                if (stepLength < MinStep) {
                     return false;
+                }
             }
 
             Point step = direction * stepLength;
             Point newPosition = node.Position + step;
             //can this happen?
-            if (metroGraphData.PointToStations.ContainsKey(newPosition)) return false;
+            if (this.metroGraphData.PointToStations.ContainsKey(newPosition)) {
+                return false;
+            }
 
-            metroGraphData.MoveNode(node, newPosition);
-            cache.UpdateCostCache(node);
+            this.metroGraphData.MoveNode(node, newPosition);
+            this.cache.UpdateCostCache(node);
             return true;
         }
 
         /// <summary>
         /// Calculate the direction to improve the ink function
         /// </summary>
-        Point BuildDirection(Station node) {
-            var forceInk = BuildForceForInk(node);
-            var forcePL = BuildForceForPathLengths(node);
-            var forceR = BuildForceForRadius(node);
-            var forceBundle = BuildForceForBundle(node);
+        private Point BuildDirection(Station node) {
+            var forceInk = this.BuildForceForInk(node);
+            var forcePL = this.BuildForceForPathLengths(node);
+            var forceR = this.BuildForceForRadius(node);
+            var forceBundle = this.BuildForceForBundle(node);
 
             var force = forceInk + forcePL + forceR + forceBundle;
-            if (force.Length < 0.1) return new Point();
+            if (force.Length < 0.1) {
+                return new Point();
+            }
+
             force = force.Normalize();
 
             return force;
         }
 
-        double BuildStepLength(Station node, Point direction) {
+        private double BuildStepLength(Station node, Point direction) {
             double stepLength = MinStep;
 
-            double costGain = CostGain(node, node.Position + direction * stepLength);
-            if (costGain < 0.01)
+            double costGain = this.CostGain(node, node.Position + direction * stepLength);
+            if (costGain < 0.01) {
                 return 0;
+            }
 
             while (2 * stepLength <= MaxStep) {
-                double newCostGain = CostGain(node, node.Position + direction * stepLength * 2);
-                if (newCostGain <= costGain)
+                double newCostGain = this.CostGain(node, node.Position + direction * stepLength * 2);
+                if (newCostGain <= costGain) {
                     break;
+                }
 
                 stepLength *= 2;
                 costGain = newCostGain;
@@ -232,14 +252,20 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// Computes cost delta when moving the node
         /// the cost will be negative if a new position overlaps obstacles
         /// </summary>
-        double CostGain(Station node, Point newPosition) {
+        private double CostGain(Station node, Point newPosition) {
             double MInf = -12345678.0;
-            double rGain = costCalculator.RadiusGain(node, newPosition);
-            if (rGain < MInf) return MInf;
-            double bundleGain = costCalculator.BundleGain(node, newPosition);
-            if (bundleGain < MInf) return MInf;
-            double inkGain = costCalculator.InkGain(node, newPosition);
-            double plGain = costCalculator.PathLengthsGain(node, newPosition);
+            double rGain = this.costCalculator.RadiusGain(node, newPosition);
+            if (rGain < MInf) {
+                return MInf;
+            }
+
+            double bundleGain = this.costCalculator.BundleGain(node, newPosition);
+            if (bundleGain < MInf) {
+                return MInf;
+            }
+
+            double inkGain = this.costCalculator.InkGain(node, newPosition);
+            double plGain = this.costCalculator.PathLengthsGain(node, newPosition);
 
             return rGain + inkGain + plGain + bundleGain;
         }
@@ -247,7 +273,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// <summary>
         /// force to decrease ink
         /// </summary>
-        Point BuildForceForInk(Station node) {
+        private Point BuildForceForInk(Station node) {
             //return new Point();
             Point direction = new Point();
             foreach (var adj in node.Neighbors) {
@@ -256,7 +282,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             }
 
             //derivative
-            Point force = direction * bundlingSettings.InkImportance;
+            Point force = direction * this.bundlingSettings.InkImportance;
 
             return force;
         }
@@ -264,11 +290,11 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// <summary>
         /// direction to decrease path lengths
         /// </summary>
-        Point BuildForceForPathLengths(Station node) {
+        private Point BuildForceForPathLengths(Station node) {
             //return new Point();
             var direction = new Point();
 
-            foreach (var mni in metroGraphData.MetroNodeInfosOfNode(node)) {
+            foreach (var mni in this.metroGraphData.MetroNodeInfosOfNode(node)) {
                 var metroline = mni.Metroline;
                 Point u = mni.PolyPoint.Next.Point;
                 Point v = mni.PolyPoint.Prev.Point;
@@ -280,7 +306,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             }
 
             //derivative
-            Point force = direction * bundlingSettings.PathLengthImportance;
+            Point force = direction * this.bundlingSettings.PathLengthImportance;
 
             return force;
         }
@@ -288,12 +314,12 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
         /// <summary>
         /// direction to increase radii
         /// </summary>
-        Point BuildForceForRadius(Station node) {
+        private Point BuildForceForRadius(Station node) {
             Point direction = new Point();
 
             double idealR = node.cachedIdealRadius;
             List<Tuple<Polyline, Point>> touchedObstacles;
-            bool res = metroGraphData.looseIntersections.HubAvoidsObstacles(node, node.Position, idealR, out touchedObstacles);
+            bool res = this.metroGraphData.looseIntersections.HubAvoidsObstacles(node, node.Position, idealR, out touchedObstacles);
             Debug.Assert(res);
 
             foreach (var d in touchedObstacles) {
@@ -305,24 +331,24 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             }
 
             //derivative
-            Point force = direction * bundlingSettings.HubRepulsionImportance;
+            Point force = direction * this.bundlingSettings.HubRepulsionImportance;
 
             return force;
         }
-        
+
         /// <summary>
         /// direction to push a bundle away from obstacle
         /// </summary>
-        Point BuildForceForBundle(Station node) {
+        private Point BuildForceForBundle(Station node) {
             var direction = new Point();
             foreach (var adj in node.Neighbors) {
-                double idealWidth = metroGraphData.GetWidth(node, adj, bundlingSettings.EdgeSeparation);
+                double idealWidth = this.metroGraphData.GetWidth(node, adj, this.bundlingSettings.EdgeSeparation);
 
                 List<Tuple<Point, Point>> closestPoints;
-                bool res = metroGraphData.cdtIntersections.BundleAvoidsObstacles(node, adj, node.Position, adj.Position, idealWidth / 2, out closestPoints);
+                bool res = this.metroGraphData.cdtIntersections.BundleAvoidsObstacles(node, adj, node.Position, adj.Position, idealWidth / 2, out closestPoints);
                 if (!res) {
 #if TEST_MSAGL&& TEST_MSAGL
-                    HubDebugger.ShowHubsWithAdditionalICurves(metroGraphData, bundlingSettings, new LineSegment(node.Position, adj.Position));
+                    HubDebugger.ShowHubsWithAdditionalICurves(this.metroGraphData, this.bundlingSettings, new LineSegment(node.Position, adj.Position));
 #endif
                 }
                 Debug.Assert(res);  //todo : still unsolved
@@ -337,7 +363,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             }
 
             //derivative
-            Point force = direction * bundlingSettings.BundleRepulsionImportance;
+            Point force = direction * this.bundlingSettings.BundleRepulsionImportance;
 
             return force;
         }

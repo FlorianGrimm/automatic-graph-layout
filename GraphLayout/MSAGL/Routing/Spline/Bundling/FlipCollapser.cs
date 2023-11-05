@@ -14,9 +14,9 @@ using Microsoft.Msagl.Routing.ConstrainedDelaunayTriangulation;
 
 namespace Microsoft.Msagl.Routing.Spline.Bundling {
     internal class FlipCollapser {
-        readonly MetroGraphData metroGraphData;
-        readonly BundlingSettings bundlingSettings;
-        readonly Cdt cdt;
+        private readonly MetroGraphData metroGraphData;
+        private readonly BundlingSettings bundlingSettings;
+        private readonly Cdt cdt;
 
         internal FlipCollapser(MetroGraphData metroGraphData, BundlingSettings bundlingSettings, Cdt cdt) {
             this.metroGraphData = metroGraphData;
@@ -101,7 +101,7 @@ namespace Microsoft.Msagl.Routing.Spline.Bundling {
             return OrderedPair(pp, pp.Next);
         }
 
-        static PointPair OrderedPair(PolylinePoint p0, PolylinePoint p1) {
+        private static PointPair OrderedPair(PolylinePoint p0, PolylinePoint p1) {
             return new PointPair(p0.Point, p1.Point);
         }
     }

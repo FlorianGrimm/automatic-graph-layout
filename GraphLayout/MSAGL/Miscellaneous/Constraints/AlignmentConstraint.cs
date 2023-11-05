@@ -10,7 +10,7 @@ namespace Microsoft.Msagl.Prototype.Constraints {
     /// This doesn't work yet, but it will be a constraint that aligns nodes, optionally to some fixed orientation (horizontal, vertical, 45 degrees, etc).
     /// </summary>
     public class AlignmentConstraint : IConstraint {
-        List<Node> nodes;
+        private List<Node> nodes;
         /// <summary>
         /// Create an alignment constraint for the given set of nodes
         /// </summary>
@@ -19,9 +19,9 @@ namespace Microsoft.Msagl.Prototype.Constraints {
             this.nodes = nodes.ToList();
         }
 
-        void leastSquaresLineFit(out double a, out double b) {
-            double mx = 0, my = 0, sx2 = 0, sy2 = 0, sxy=0, n = nodes.Count;
-            foreach (var v in nodes) {
+        private void leastSquaresLineFit(out double a, out double b) {
+            double mx = 0, my = 0, sx2 = 0, sy2 = 0, sxy=0, n = this.nodes.Count;
+            foreach (var v in this.nodes) {
                 double x = v.Center.X, y = v.Center.Y;
                 mx += x;
                 my += y;
@@ -44,9 +44,9 @@ namespace Microsoft.Msagl.Prototype.Constraints {
         /// <returns></returns>
         public double Project() {
             double a, b, d=0;
-            leastSquaresLineFit(out a, out b);
+            this.leastSquaresLineFit(out a, out b);
             // project to the line y = a + b x
-            foreach (var v in nodes) {
+            foreach (var v in this.nodes) {
                 double x0 = v.Center.X, y0 = v.Center.Y;
                 double x = (b * y0 + x0 ) / (b * b + 1.0);
                 double y = a + b * x;
@@ -65,7 +65,7 @@ namespace Microsoft.Msagl.Prototype.Constraints {
         /// <summary>
         /// Get the list of nodes involved in the constraint
         /// </summary>
-        public IEnumerable<Node> Nodes { get { return nodes;} }
+        public IEnumerable<Node> Nodes { get { return this.nodes;} }
 
         #endregion
     }

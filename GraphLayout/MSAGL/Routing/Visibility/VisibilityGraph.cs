@@ -13,47 +13,50 @@ namespace Microsoft.Msagl.Routing.Visibility {
   /// the visibility graph
   /// </summary>
   public class VisibilityGraph {
-
-    Dictionary<VisibilityVertex, VisibilityEdge> _prevEdgesDictionary = new Dictionary<VisibilityVertex, VisibilityEdge>();
+        private Dictionary<VisibilityVertex, VisibilityEdge> _prevEdgesDictionary = new Dictionary<VisibilityVertex, VisibilityEdge>();
 
     internal Dictionary<VisibilityVertex, int> visVertexToId = new Dictionary<VisibilityVertex, int>();
 
 
-    internal void ClearPrevEdgesTable() { _prevEdgesDictionary.Clear(); }
+    internal void ClearPrevEdgesTable() { this._prevEdgesDictionary.Clear(); }
 
     internal void ShrinkLengthOfPrevEdge(VisibilityVertex v, double lengthMultiplier) {
-      _prevEdgesDictionary[v].LengthMultiplier = lengthMultiplier;
+            this._prevEdgesDictionary[v].LengthMultiplier = lengthMultiplier;
     }
     /// <summary>
     /// needed for shortest path calculations
     /// </summary>        
     internal VisibilityVertex PreviosVertex(VisibilityVertex v) {
       VisibilityEdge prev;
-      if (!_prevEdgesDictionary.TryGetValue(v, out prev))
-        return null;
-      if (prev.Source == v)
-        return prev.Target;
-      return prev.Source;
+      if (!this._prevEdgesDictionary.TryGetValue(v, out prev)) {
+                return null;
+            }
+
+            if (prev.Source == v) {
+                return prev.Target;
+            }
+
+            return prev.Source;
     }
 
     internal void SetPreviousEdge(VisibilityVertex v, VisibilityEdge e) {
       Debug.Assert(v == e.Source || v == e.Target);
-      _prevEdgesDictionary[v] = e;
+            this._prevEdgesDictionary[v] = e;
     }
 
 
 
-    /// <summary>
-    /// the default is just to return VisibilityVertex
-    /// </summary>
-    Func<Point, VisibilityVertex> vertexFactory = (point => new VisibilityVertex(point));
+        /// <summary>
+        /// the default is just to return VisibilityVertex
+        /// </summary>
+        private Func<Point, VisibilityVertex> vertexFactory = (point => new VisibilityVertex(point));
 
     internal Func<Point, VisibilityVertex> VertexFactory {
-      get { return vertexFactory; }
-      set { vertexFactory = value; }
+      get { return this.vertexFactory; }
+      set { this.vertexFactory = value; }
     }
 
-    readonly Dictionary<Point, VisibilityVertex> pointToVertexMap =
+        private readonly Dictionary<Point, VisibilityVertex> pointToVertexMap =
         new Dictionary<Point, VisibilityVertex>();
 
 
@@ -100,18 +103,20 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
     static internal VisibilityGraph CalculateGraphOfBoundaries(List<Polyline> holes) {
       var graphOfHoleBoundaries = new VisibilityGraph();
-      foreach (Polyline polyline in holes)
-        graphOfHoleBoundaries.AddHole(polyline);
-      return graphOfHoleBoundaries;
+      foreach (Polyline polyline in holes) {
+                graphOfHoleBoundaries.AddHole(polyline);
+            }
+
+            return graphOfHoleBoundaries;
     }
 
     internal void AddHole(Polyline polyline) {
       var p = polyline.StartPoint;
       while (p != polyline.EndPoint) {
-        AddEdge(p, p.Next);
+                this.AddEdge(p, p.Next);
         p = p.Next;
       }
-      AddEdge(polyline.EndPoint, polyline.StartPoint);
+            this.AddEdge(polyline.EndPoint, polyline.StartPoint);
     }
 
 
@@ -134,9 +139,10 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
 #if TEST_MSAGL || VERIFY
     internal static void CheckThatPolylinesAreConvex(IEnumerable<Polyline> holes) {
-      foreach (var polyline in holes)
-        CheckThatPolylineIsConvex(polyline);
-    }
+      foreach (var polyline in holes) {
+                CheckThatPolylineIsConvex(polyline);
+            }
+        }
 
     [SuppressMessage("Microsoft.Usage", "CA2201:DoNotRaiseReservedExceptionTypes")]
     internal static void CheckThatPolylineIsConvex(Polyline polyline) {
@@ -151,19 +157,23 @@ namespace Microsoft.Msagl.Routing.Visibility {
         b = b.Next;
         c = c.Next;
         var currentOrient = Point.GetTriangleOrientation(a.Point, b.Point, c.Point);
-        if (currentOrient == TriangleOrientation.Collinear) continue;
+        if (currentOrient == TriangleOrientation.Collinear) {
+                    continue;
+                }
 
-        if (orient == TriangleOrientation.Collinear)
-          orient = currentOrient;
-        else if (orient != currentOrient)
-          throw new InvalidOperationException();
-      }
+                if (orient == TriangleOrientation.Collinear) {
+                    orient = currentOrient;
+                } else if (orient != currentOrient) {
+                    throw new InvalidOperationException();
+                }
+            }
 
       var o = Point.GetTriangleOrientation(polyline.EndPoint.Point, polyline.StartPoint.Point,
                                            polyline.StartPoint.Next.Point);
-      if (o != TriangleOrientation.Collinear && o != orient)
-        throw new InvalidOperationException();
-    }
+      if (o != TriangleOrientation.Collinear && o != orient) {
+                throw new InvalidOperationException();
+            }
+        }
 #endif // TEST || VERIFY
 
     /// <summary>
@@ -171,19 +181,19 @@ namespace Microsoft.Msagl.Routing.Visibility {
     /// </summary>
     public IEnumerable<VisibilityEdge> Edges {
       get {
-        return PointToVertexMap.Values.SelectMany(vertex => vertex.OutEdges);
+        return this.PointToVertexMap.Values.SelectMany(vertex => vertex.OutEdges);
       }
     }
 
     internal Dictionary<Point, VisibilityVertex> PointToVertexMap {
-      get { return pointToVertexMap; }
+      get { return this.pointToVertexMap; }
     }
 
-    internal int VertexCount { get { return PointToVertexMap.Count; } }
+    internal int VertexCount { get { return this.PointToVertexMap.Count; } }
 
 
     internal VisibilityVertex AddVertex(PolylinePoint polylinePoint) {
-      return AddVertex(polylinePoint.Point);
+      return this.AddVertex(polylinePoint.Point);
     }
 
 
@@ -199,28 +209,30 @@ namespace Microsoft.Msagl.Routing.Visibility {
             return newVertex;
 #else
       VisibilityVertex vertex;
-      return !PointToVertexMap.TryGetValue(point, out vertex)
-             ? (PointToVertexMap[point] = VertexFactory(point))
+      return !this.PointToVertexMap.TryGetValue(point, out vertex)
+             ? (this.PointToVertexMap[point] = this.VertexFactory(point))
              : vertex;
 #endif
     }
 
     internal void AddVertex(VisibilityVertex vertex) {
-      Debug.Assert(!PointToVertexMap.ContainsKey(vertex.Point), "A vertex already exists at this location");
-      PointToVertexMap[vertex.Point] = vertex;
+      Debug.Assert(!this.PointToVertexMap.ContainsKey(vertex.Point), "A vertex already exists at this location");
+            this.PointToVertexMap[vertex.Point] = vertex;
 
     }
 
     internal bool ContainsVertex(Point point) {
-      return PointToVertexMap.ContainsKey(point);
+      return this.PointToVertexMap.ContainsKey(point);
     }
 
 
     static internal VisibilityEdge AddEdge(VisibilityVertex source, VisibilityVertex target) {
       VisibilityEdge visEdge;
-      if (source.TryGetEdge(target, out visEdge))
-        return visEdge;
-      if (source == target) {
+      if (source.TryGetEdge(target, out visEdge)) {
+                return visEdge;
+            }
+
+            if (source == target) {
         Debug.Assert(false, "Self-edges are not allowed");
         throw new InvalidOperationException("Self-edges are not allowed");
       }
@@ -232,8 +244,8 @@ namespace Microsoft.Msagl.Routing.Visibility {
       return edge;
     }
 
-    void AddEdge(PolylinePoint source, PolylinePoint target) {
-      AddEdge(source.Point, target.Point);
+        private void AddEdge(PolylinePoint source, PolylinePoint target) {
+            this.AddEdge(source.Point, target.Point);
     }
 
     static internal void AddEdge(VisibilityEdge edge) {
@@ -244,21 +256,24 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
     internal VisibilityEdge AddEdge(Point source, Point target) {
       VisibilityEdge edge;
-      var sourceV = FindVertex(source);
+      var sourceV = this.FindVertex(source);
       VisibilityVertex targetV = null;
       if (sourceV != null) {
-        targetV = FindVertex(target);
-        if (targetV != null && sourceV.TryGetEdge(targetV, out edge))
-          return edge;
-      }
+        targetV = this.FindVertex(target);
+        if (targetV != null && sourceV.TryGetEdge(targetV, out edge)) {
+                    return edge;
+                }
+            }
 
       if (sourceV == null) { //then targetV is also null
-        sourceV = AddVertex(source);
-        targetV = AddVertex(target);
+        sourceV = this.AddVertex(source);
+        targetV = this.AddVertex(target);
       }
-      else if (targetV == null)
-        targetV = AddVertex(target);
-      edge = new VisibilityEdge(sourceV, targetV);
+      else if (targetV == null) {
+                targetV = this.AddVertex(target);
+            }
+
+            edge = new VisibilityEdge(sourceV, targetV);
       sourceV.OutEdges.Insert(edge);
       targetV.AddInEdge(edge);
       return edge;
@@ -277,86 +292,102 @@ namespace Microsoft.Msagl.Routing.Visibility {
 
     internal VisibilityEdge AddEdge(Point source, Point target, Func<VisibilityVertex, VisibilityVertex, VisibilityEdge> edgeCreator) {
       VisibilityEdge edge;
-      var sourceV = FindVertex(source);
+      var sourceV = this.FindVertex(source);
       VisibilityVertex targetV = null;
       if (sourceV != null) {
-        targetV = FindVertex(target);
-        if (targetV != null && sourceV.TryGetEdge(targetV, out edge))
-          return edge;
-      }
+        targetV = this.FindVertex(target);
+        if (targetV != null && sourceV.TryGetEdge(targetV, out edge)) {
+                    return edge;
+                }
+            }
 
       if (sourceV == null) { //then targetV is also null
-        sourceV = AddVertex(source);
-        targetV = AddVertex(target);
+        sourceV = this.AddVertex(source);
+        targetV = this.AddVertex(target);
       }
-      else if (targetV == null)
-        targetV = AddVertex(target);
+      else if (targetV == null) {
+                targetV = this.AddVertex(target);
+            }
 
-      edge = edgeCreator(sourceV, targetV);
+            edge = edgeCreator(sourceV, targetV);
       sourceV.OutEdges.Insert(edge);
       targetV.AddInEdge(edge);
       return edge;
     }
 
     internal VisibilityVertex FindVertex(Point point) {
-      return PointToVertexMap.TryGetValue(point, out VisibilityVertex v) ? v : null;
+      return this.PointToVertexMap.TryGetValue(point, out VisibilityVertex v) ? v : null;
     }
 
     internal VisibilityVertex GetVertex(PolylinePoint polylinePoint) {
-      return FindVertex(polylinePoint.Point);
+      return this.FindVertex(polylinePoint.Point);
     }
 
     internal IEnumerable<VisibilityVertex> Vertices() {
-      return PointToVertexMap.Values;
+      return this.PointToVertexMap.Values;
     }
 
     internal void RemoveVertex(VisibilityVertex vertex) {
       // Debug.Assert(PointToVertexMap.ContainsKey(vertex.Point), "Cannot find vertex in PointToVertexMap");
 
-      foreach (var edge in vertex.OutEdges)
-        edge.Target.RemoveInEdge(edge);
+      foreach (var edge in vertex.OutEdges) {
+                edge.Target.RemoveInEdge(edge);
+            }
 
-      foreach (var edge in vertex.InEdges)
-        edge.Source.RemoveOutEdge(edge);
+            foreach (var edge in vertex.InEdges) {
+                edge.Source.RemoveOutEdge(edge);
+            }
 
-      PointToVertexMap.Remove(vertex.Point);
+            this.PointToVertexMap.Remove(vertex.Point);
     }
 
     internal void RemoveEdge(VisibilityVertex v1, VisibilityVertex v2) {
       VisibilityEdge edge;
-      if (!v1.TryGetEdge(v2, out edge)) return;
-      edge.Source.RemoveOutEdge(edge);
+      if (!v1.TryGetEdge(v2, out edge)) {
+                return;
+            }
+
+            edge.Source.RemoveOutEdge(edge);
       edge.Target.RemoveInEdge(edge);
     }
 
     internal void RemoveEdge(Point p1, Point p2) {
       // the order of p1 and p2 is not important.
-      VisibilityEdge edge = FindEdge(p1, p2);
-      if (edge == null) return;
-      edge.Source.RemoveOutEdge(edge);
+      VisibilityEdge edge = this.FindEdge(p1, p2);
+      if (edge == null) {
+                return;
+            }
+
+            edge.Source.RemoveOutEdge(edge);
       edge.Target.RemoveInEdge(edge);
     }
 
     static internal VisibilityEdge FindEdge(VisibilityEdge edge) {
-      if (edge.Source.TryGetEdge(edge.Target, out edge))
-        return edge;
-      return null;
+      if (edge.Source.TryGetEdge(edge.Target, out edge)) {
+                return edge;
+            }
+
+            return null;
     }
 
 
     internal VisibilityEdge FindEdge(Point source, Point target) {
-      var sourceV = FindVertex(source);
-      if (sourceV == null)
-        return null;
-      var targetV = FindVertex(target);
-      if (targetV == null)
-        return null;
+      var sourceV = this.FindVertex(source);
+      if (sourceV == null) {
+                return null;
+            }
 
-      VisibilityEdge edge;
-      if (sourceV.TryGetEdge(targetV, out edge))
-        return edge;
+            var targetV = this.FindVertex(target);
+      if (targetV == null) {
+                return null;
+            }
 
-      return null;
+            VisibilityEdge edge;
+      if (sourceV.TryGetEdge(targetV, out edge)) {
+                return edge;
+            }
+
+            return null;
     }
 
     static internal void RemoveEdge(VisibilityEdge edge) {
@@ -365,7 +396,7 @@ namespace Microsoft.Msagl.Routing.Visibility {
     }
 
     public void ClearEdges() {
-      foreach (var visibilityVertex in Vertices()) {
+      foreach (var visibilityVertex in this.Vertices()) {
         visibilityVertex.ClearEdges();
       }
     }

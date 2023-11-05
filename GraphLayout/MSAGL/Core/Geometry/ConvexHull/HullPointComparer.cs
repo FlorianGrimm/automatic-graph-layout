@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.Msagl.Core.Geometry {
     internal class HullPointComparer:IComparer<HullPoint> {
-        Point pivot;
+        private Point pivot;
       
         /// <summary>
         /// note that this function can change "deleted" member for collinear points
@@ -17,22 +17,27 @@ namespace Microsoft.Msagl.Core.Geometry {
 #else
         int IComparer<HullPoint>.Compare(HullPoint i, HullPoint j) {
 #endif
-            if (i == j)
+            if (i == j) {
                 return 0;
-            if (i == null)
-                return -1;
-            if (j == null)
-                return 1;
+            }
 
-            switch (Point.GetTriangleOrientationWithIntersectionEpsilon(pivot, i.Point, j.Point)) {
+            if (i == null) {
+                return -1;
+            }
+
+            if (j == null) {
+                return 1;
+            }
+
+            switch (Point.GetTriangleOrientationWithIntersectionEpsilon(this.pivot, i.Point, j.Point)) {
                 case TriangleOrientation.Counterclockwise:
                     return -1;
                 case TriangleOrientation.Clockwise:
                     return 1;
                 case TriangleOrientation.Collinear: {
                     //because of the double point error pi and pj can be on different sizes of the pivot on the horizontal line passing through the pivot, or rather just above it
-                    var piDelX = i.Point.X - pivot.X;
-                    var pjDelX = j.Point.X - pivot.X;
+                    var piDelX = i.Point.X - this.pivot.X;
+                    var pjDelX = j.Point.X - this.pivot.X;
                     if (piDelX > ApproximateComparer.DistanceEpsilon && pjDelX < -ApproximateComparer.DistanceEpsilon) {
                         return -1;
                     }
@@ -42,8 +47,8 @@ namespace Microsoft.Msagl.Core.Geometry {
 
                     //here i and j cannot be on the different sides of the pivot because of the choice of the pivot
                     //delete the one that is closer to the pivot.
-                    var pi = i.Point - pivot;
-                    var pj = j.Point - pivot;
+                    var pi = i.Point - this.pivot;
+                    var pj = j.Point - this.pivot;
                     var iMinJ = pi.L1 - pj.L1;
                     if (iMinJ < 0) {
                         i.Deleted = true;
@@ -55,10 +60,11 @@ namespace Microsoft.Msagl.Core.Geometry {
                     }
 
                     //points are the same, leave the one with the greatest hash code
-                    if (i.GetHashCode() < j.GetHashCode())
+                    if (i.GetHashCode() < j.GetHashCode()) {
                         i.Deleted = true;
-                    else
+                    } else {
                         j.Deleted = true;
+                    }
 
                     return 0;
                 }

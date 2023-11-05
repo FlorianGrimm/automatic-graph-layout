@@ -19,59 +19,59 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
     /// are just intersecting rays, we only care about the X (H scan) or Y (V scan) coordinate.
     /// </summary>
     internal class LookaheadScan : IComparer<BasicReflectionEvent> {
-        readonly RbTree<BasicReflectionEvent> eventTree;
-        readonly Func<BasicReflectionEvent, bool> findFirstPred;
-        readonly ScanDirection scanDirection;
-        readonly List<BasicReflectionEvent> staleSites = new List<BasicReflectionEvent>();
-        Point findFirstPoint;
+        private readonly RbTree<BasicReflectionEvent> eventTree;
+        private readonly Func<BasicReflectionEvent, bool> findFirstPred;
+        private readonly ScanDirection scanDirection;
+        private readonly List<BasicReflectionEvent> staleSites = new List<BasicReflectionEvent>();
+        private Point findFirstPoint;
 
         internal LookaheadScan(ScanDirection scanDir) {
-            scanDirection = scanDir;
-            eventTree = new RbTree<BasicReflectionEvent>(this);
-            findFirstPred = new Func<BasicReflectionEvent, bool>(n => CompareToFindFirstPoint(n.Site) >= 0);
+            this.scanDirection = scanDir;
+            this.eventTree = new RbTree<BasicReflectionEvent>(this);
+            this.findFirstPred = new Func<BasicReflectionEvent, bool>(n => this.CompareToFindFirstPoint(n.Site) >= 0);
         }
 
         internal void Add(BasicReflectionEvent initialSite) {
             // Assert we can't find it - subsumption should have taken care of that.
-            Debug.Assert(null == Find(initialSite.Site), "Should not add the same Lookahead coordinate twice");
-            eventTree.Insert(initialSite);
+            Debug.Assert(null == this.Find(initialSite.Site), "Should not add the same Lookahead coordinate twice");
+            this.eventTree.Insert(initialSite);
         }
 
         // Buffer up the events that are known to be stale - that is, will never queued as events because the
         // event-load intersection is the same as the site.
 
         internal void MarkStaleSite(BasicReflectionEvent siteEvent) {
-            staleSites.Add(siteEvent);
+            this.staleSites.Add(siteEvent);
         }
 
         internal void RemoveStaleSites() {
-            int cSites = staleSites.Count; // for (;;) is faster than IEnumerator for Lists
+            int cSites = this.staleSites.Count; // for (;;) is faster than IEnumerator for Lists
             if (cSites > 0) {
                 for (int ii = 0; ii < cSites; ++ii) {
-                    RemoveExact(staleSites[ii]);
+                    this.RemoveExact(this.staleSites[ii]);
                 }
-                staleSites.Clear();
+                this.staleSites.Clear();
             }
         }
 
         internal void RemoveSitesForFlatBottom(Point low, Point high) {
-            for (RBNode<BasicReflectionEvent> node = FindFirstInRange(low, high);
+            for (RBNode<BasicReflectionEvent> node = this.FindFirstInRange(low, high);
                  null != node;
-                 node = FindNextInRange(node, high)) {
-                MarkStaleSite(node.Item);
+                 node = this.FindNextInRange(node, high)) {
+                this.MarkStaleSite(node.Item);
             }
-            RemoveStaleSites();
+            this.RemoveStaleSites();
         }
 
         internal RBNode<BasicReflectionEvent> Find(Point site) {
-            return FindFirstInRange(site, site);
+            return this.FindFirstInRange(site, site);
         }
 
         internal bool RemoveExact(BasicReflectionEvent initialSite) {
-            RBNode<BasicReflectionEvent> node = eventTree.Find(initialSite);
+            RBNode<BasicReflectionEvent> node = this.eventTree.Find(initialSite);
             if (null != node) {
                 if (node.Item.Site == initialSite.Site) {
-                    eventTree.DeleteNodeInternal(node);
+                    this.eventTree.DeleteNodeInternal(node);
                     return true;
                 }
             }
@@ -81,25 +81,25 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal RBNode<BasicReflectionEvent> FindFirstInRange(Point low, Point high) {
             // We only use FindFirstPoint in this routine, to find the first satisfying node,
             // so we don't care that we leave leftovers in it.
-            findFirstPoint = low;
-            RBNode<BasicReflectionEvent> nextNode = eventTree.FindFirst(findFirstPred);
+            this.findFirstPoint = low;
+            RBNode<BasicReflectionEvent> nextNode = this.eventTree.FindFirst(this.findFirstPred);
 
             if (null != nextNode) {
                 // It's >= low; is it <= high?
-                if (Compare(nextNode.Item.Site, high) <= 0) {
+                if (this.Compare(nextNode.Item.Site, high) <= 0) {
                     return nextNode;
                 }
             }
             return null;
         }
 
-        int CompareToFindFirstPoint(Point treeItem) {
-            return Compare(treeItem, findFirstPoint);
+        private int CompareToFindFirstPoint(Point treeItem) {
+            return this.Compare(treeItem, this.findFirstPoint);
         }
 
         internal RBNode<BasicReflectionEvent> FindNextInRange(RBNode<BasicReflectionEvent> prev, Point high) {
-            RBNode<BasicReflectionEvent> nextNode = eventTree.Next(prev);
-            if ((null != nextNode) && (Compare(nextNode.Item.Site, high) <= 0)) {
+            RBNode<BasicReflectionEvent> nextNode = this.eventTree.Next(prev);
+            if ((null != nextNode) && (this.Compare(nextNode.Item.Site, high) <= 0)) {
                 return nextNode;
             }
             return null;
@@ -118,11 +118,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         public int Compare(BasicReflectionEvent lhs, BasicReflectionEvent rhs) {
             ValidateArg.IsNotNull(lhs, "lhs");
             ValidateArg.IsNotNull(rhs, "rhs");
-            return scanDirection.CompareScanCoord(lhs.Site, rhs.Site);
+            return this.scanDirection.CompareScanCoord(lhs.Site, rhs.Site);
         }
 
         internal int Compare(Point lhs, Point rhs) {
-            return scanDirection.CompareScanCoord(lhs, rhs);
+            return this.scanDirection.CompareScanCoord(lhs, rhs);
         }
 
         #endregion // IComparer<BasicReflectionEvent>

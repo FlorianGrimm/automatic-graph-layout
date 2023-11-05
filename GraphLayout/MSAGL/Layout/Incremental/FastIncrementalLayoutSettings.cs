@@ -20,51 +20,51 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// <summary>
         /// Stop after maxIterations completed
         /// </summary>
-        int maxIterations = 100;
+        private int maxIterations = 100;
 
         /// <summary>
         /// Stop after maxIterations completed
         /// </summary>
         public int MaxIterations {
-            get { return maxIterations; }
-            set { maxIterations = value; }
+            get { return this.maxIterations; }
+            set { this.maxIterations = value; }
         }
-        
-        int minorIterations = 3;
+
+        private int minorIterations = 3;
         /// <summary>
         /// Number of iterations in inner loop.
         /// </summary>
         public int MinorIterations {
-            get { return minorIterations; }
-            set { minorIterations = value; }
+            get { return this.minorIterations; }
+            set { this.minorIterations = value; }
         }
-        
-        int iterations;
+
+        private int iterations;
         /// <summary>
         /// Number of iterations completed
         /// </summary>
         public int Iterations {
-            get { return iterations; }
-            set { iterations = value; }
+            get { return this.iterations; }
+            set { this.iterations = value; }
         }
-        
-        int projectionIterations = 5;
+
+        private int projectionIterations = 5;
         /// <summary>
         /// number of times to project over all constraints at each layout iteration
         /// </summary>
         public int ProjectionIterations {
-            get { return projectionIterations; }
-            set { projectionIterations = value; }
+            get { return this.projectionIterations; }
+            set { this.projectionIterations = value; }
         }
-        
-        bool approximateRepulsion = true;
+
+        private bool approximateRepulsion = true;
         /// <summary>
         /// Rather than computing the exact repulsive force between all pairs of nodes (which would take O(n^2) time for n nodes)
         /// use a fast inexact technique (that takes O(n log n) time)
         /// </summary>
         public bool ApproximateRepulsion {
-            get { return approximateRepulsion; }
-            set { approximateRepulsion = value; }
+            get { return this.approximateRepulsion; }
+            set { this.approximateRepulsion = value; }
         }
 
         /// <summary>
@@ -75,96 +75,96 @@ namespace Microsoft.Msagl.Layout.Incremental {
             set;
         }
 
-        double initialStepSize = 1.4;
+        private double initialStepSize = 1.4;
         /// <summary>
         /// StepSize taken at each iteration (a coefficient of the force on each node) adapts depending on change in
         /// potential energy at each step.  With this scheme changing the InitialStepSize doesn't have much effect
         /// because if it is too large or too small it will be quickly updated by the algorithm anyway.
         /// </summary>
         public double InitialStepSize {
-            get { return initialStepSize; }
+            get { return this.initialStepSize; }
             set {
                 if (value <= 0 || value > 2) {
                     throw new ArgumentException("ForceScalar should be greater than 0 and less than 2 (if we let you set it to 0 nothing would happen, greater than 2 would most likely be very unstable!)");
                 }
-                initialStepSize = value;
+                this.initialStepSize = value;
             }
         }
-        
-        double decay = 0.9;
+
+        private double decay = 0.9;
         /// <summary>
         /// FrictionalDecay isn't really friction so much as a scaling of velocity to improve convergence.  0.8 seems to work well.
         /// </summary>
         public double Decay {
-            get { return decay; }
+            get { return this.decay; }
             set {
                 if (value < 0.1 || value > 1) {
                     throw new ArgumentException("Setting decay too small gives no progress.  1==no decay, 0.1==minimum allowed value");
                 }
-                decay = value;
+                this.decay = value;
             }
         }
-        
-        double friction = 0.8;
+
+        private double friction = 0.8;
         /// <summary>
         /// Friction isn't really friction so much as a scaling of velocity to improve convergence.  0.8 seems to work well.
         /// </summary>
         public double Friction {
-            get { return friction; }
+            get { return this.friction; }
             set {
                 if (value < 0 || value > 1) {
                     throw new ArgumentException("Setting friction less than 0 or greater than 1 would just be strange.  1==no friction, 0==no conservation of velocity");
                 }
-                friction = value;
+                this.friction = value;
             }
         }
 
-        double repulsiveForceConstant = 1.0;
+        private double repulsiveForceConstant = 1.0;
         /// <summary>
         /// strength of repulsive force between each pair of nodes.  A setting of 1.0 should work OK.
         /// </summary>
         public double RepulsiveForceConstant {
-            get { return repulsiveForceConstant; }
-            set { repulsiveForceConstant = value; }
+            get { return this.repulsiveForceConstant; }
+            set { this.repulsiveForceConstant = value; }
         }
 
-        double attractiveForceConstant = 1.0;
+        private double attractiveForceConstant = 1.0;
         /// <summary>
         /// strength of attractive force between pairs of nodes joined by an edge.  A setting of 1.0 should work OK.
         /// </summary>
         public double AttractiveForceConstant {
-            get { return attractiveForceConstant; }
-            set { attractiveForceConstant = value; }
+            get { return this.attractiveForceConstant; }
+            set { this.attractiveForceConstant = value; }
         }
 
-        double gravity = 1.0;
+        private double gravity = 1.0;
         /// <summary>
         /// gravity is a constant force applied to all nodes attracting them to the Origin
         /// and keeping disconnected components from flying apart.  A setting of 1.0 should work OK.
         /// </summary>
         public double GravityConstant {
-            get { return gravity; }
-            set { gravity = value; }
+            get { return this.gravity; }
+            set { this.gravity = value; }
         }
 
-        bool interComponentForces = true;
+        private bool interComponentForces = true;
         /// <summary>
         /// If the following is false forces will not be considered between each component and each component will have its own gravity origin.
         /// </summary>
         public bool InterComponentForces
         {
-            get { return interComponentForces; }
-            set { interComponentForces = value; }
+            get { return this.interComponentForces; }
+            set { this.interComponentForces = value; }
         }
 
-        bool applyForces = true;
+        private bool applyForces = true;
         /// <summary>
         /// If the following is false forces will not be applied, but constraints will still be satisfied.
         /// </summary>
         public bool ApplyForces
         {
-            get { return applyForces; }
-            set { applyForces = value; }
+            get { return this.applyForces; }
+            set { this.applyForces = value; }
         }
 
         internal FastIncrementalLayout algorithm;
@@ -182,7 +182,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// <returns>LinkedListNode which you should hang on to if you want to call RemoveLock later on.</returns>
         public LockPosition CreateLock(Node node, Rectangle bounds) {
             LockPosition lp = new LockPosition(node, bounds);
-            lp.listNode = locks.AddLast(lp);
+            lp.listNode = this.locks.AddLast(lp);
             return lp;
         }
 
@@ -199,7 +199,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         public LockPosition CreateLock(Node node, Rectangle bounds, double weight)
         {
             LockPosition lp = new LockPosition(node, bounds, weight);
-            lp.listNode = locks.AddLast(lp);
+            lp.listNode = this.locks.AddLast(lp);
             return lp;
         }
 
@@ -209,11 +209,11 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         public void ResetLayout()
         {
-            Unconverge();
-            if (algorithm != null)
+            this.Unconverge();
+            if (this.algorithm != null)
             {
-                algorithm.ResetNodePositions();
-                algorithm.SetLockNodeWeights();
+                this.algorithm.ResetNodePositions();
+                this.algorithm.SetLockNodeWeights();
             }
         }
 
@@ -223,9 +223,9 @@ namespace Microsoft.Msagl.Layout.Incremental {
         internal void Unconverge()
         {
 
-            iterations = 0;
+            this.iterations = 0;
             //EdgeRoutesUpToDate = false;
-            converged = false;
+            this.converged = false;
         }
 
 		/// <summary>
@@ -233,7 +233,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
 		/// </summary>
 		public void InitializeLayout(GeometryGraph graph, int initialConstraintLevel)
         {
-            InitializeLayout(graph, initialConstraintLevel, anyCluster => this);
+            this.InitializeLayout(graph, initialConstraintLevel, anyCluster => this);
         }
 
         /// <summary>
@@ -245,8 +245,8 @@ namespace Microsoft.Msagl.Layout.Incremental {
         public void InitializeLayout(GeometryGraph graph, int initialConstraintLevel, Func<Cluster, LayoutAlgorithmSettings> clusterSettings) 
         {
             ValidateArg.IsNotNull(graph, "graph");
-            algorithm = new FastIncrementalLayout(graph, this, initialConstraintLevel, clusterSettings);
-            ResetLayout();
+            this.algorithm = new FastIncrementalLayout(graph, this, initialConstraintLevel, clusterSettings);
+            this.ResetLayout();
         }
 
         /// <summary>
@@ -270,20 +270,20 @@ namespace Microsoft.Msagl.Layout.Incremental {
 		/// </summary>
 		public void IncrementalRun(GeometryGraph graph)
         {
-            IncrementalRun(graph, anyCluster => this);
+            this.IncrementalRun(graph, anyCluster => this);
         }
 
         private void SetupIncrementalRun(GeometryGraph graph, Func<Cluster, LayoutAlgorithmSettings> clusterSettings)
         {
             ValidateArg.IsNotNull(graph, "graph");
-            if (!IsInitialized)
+            if (!this.IsInitialized)
             {
-                InitializeLayout(graph, MaxConstraintLevel, clusterSettings);
+                this.InitializeLayout(graph, this.MaxConstraintLevel, clusterSettings);
             }
-            else if (IsDone)
+            else if (this.IsDone)
             {
                 // If we were already done from last time but we are doing more work then something has changed.
-                ResetLayout();
+                this.ResetLayout();
             }
         }
 
@@ -292,8 +292,8 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         public void IncrementalRun(GeometryGraph graph, Func<Cluster, LayoutAlgorithmSettings> clusterSettings)
         {
-            SetupIncrementalRun(graph, clusterSettings);
-            algorithm.Run();
+            this.SetupIncrementalRun(graph, clusterSettings);
+            this.algorithm.Run();
             graph.UpdateBoundingBox();
         }
 
@@ -306,8 +306,8 @@ namespace Microsoft.Msagl.Layout.Incremental {
             {
                 cancelToken.ThrowIfCanceled();
             }
-            SetupIncrementalRun(graph, clusterSettings);
-            algorithm.Run(cancelToken);
+            this.SetupIncrementalRun(graph, clusterSettings);
+            this.algorithm.Run(cancelToken);
             graph.UpdateBoundingBox();
         }
 
@@ -316,21 +316,21 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         /// <returns></returns>
         public override LayoutAlgorithmSettings Clone() {
-            return MemberwiseClone() as LayoutAlgorithmSettings;
+            return this.MemberwiseClone() as LayoutAlgorithmSettings;
         }
 
         /// <summary>
         /// 
         /// </summary>
         public IEnumerable<IConstraint> StructuralConstraints {
-            get { return structuralConstraints; }
+            get { return this.structuralConstraints; }
         }
 
         /// <summary>
         /// 
         /// </summary>
         public void AddStructuralConstraint(IConstraint cc) {
-            structuralConstraints.Add(cc);
+            this.structuralConstraints.Add(cc);
         }
 
         internal List<IConstraint> structuralConstraints = new List<IConstraint>();
@@ -338,8 +338,8 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// Clear all constraints over the graph
         /// </summary>
         public void ClearConstraints() {
-            locks.Clear();
-            structuralConstraints.Clear();
+            this.locks.Clear();
+            this.structuralConstraints.Clear();
            // clusterHierarchies.Clear();
         }
 
@@ -348,7 +348,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         public void ClearStructuralConstraints()
         {
-            structuralConstraints.Clear();
+            this.structuralConstraints.Clear();
         }
 
         /// <summary>
@@ -369,17 +369,17 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         public bool RouteEdges { get; set; }
 
-        bool approximateRouting = true;
+        private bool approximateRouting = true;
         /// <summary>
         /// If RouteEdges is true then the following is checked to see whether to do optimal shortest path routing
         /// or use a sparse visibility graph spanner to do approximate---but much faster---shortest path routing
         /// </summary>
         public bool ApproximateRouting {
-            get { return approximateRouting; }
-            set { approximateRouting = value; }
+            get { return this.approximateRouting; }
+            set { this.approximateRouting = value; }
         }
 
-        bool logScaleEdgeForces = true;
+        private bool logScaleEdgeForces = true;
         /// <summary>
         /// If true then attractive forces across edges are computed as:
         /// AttractiveForceConstant * actualLength * Math.Log((actualLength + epsilon) / (idealLength + epsilon))
@@ -389,21 +389,21 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// lots of constraints.
         /// </summary>
         public bool LogScaleEdgeForces {
-            get { return logScaleEdgeForces; }
-            set { logScaleEdgeForces = value; }
+            get { return this.logScaleEdgeForces; }
+            set { this.logScaleEdgeForces = value; }
         }
 
-        double displacementThreshold = 0.1;
+        private double displacementThreshold = 0.1;
         /// <summary>
         /// If the amount of total squared displacement after a particular iteration falls below DisplacementThreshold then Converged is set to true.
         /// Make DisplacementThreshold larger if you want layout to finish sooner - but not necessarily make as much progress towards a good layout.
         /// </summary>
         public double DisplacementThreshold {
-            get { return displacementThreshold; }
-            set { displacementThreshold = value; }
+            get { return this.displacementThreshold; }
+            set { this.displacementThreshold = value; }
         }
 
-        bool converged;
+        private bool converged;
         /// <summary>
         /// Set to true if displacement from the last iteration was less than DisplacementThreshold.        
         /// The caller should invoke FastIncrementalLayout.CalculateLayout() in a loop, e.g.:
@@ -417,7 +417,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// RemainingIterations affects damping.
         /// </summary>
         public bool Converged { 
-            get { return converged; }
+            get { return this.converged; }
             set { this.converged = value; }
         }
 
@@ -426,10 +426,10 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         public int PercentDone {
             get {
-                if (Converged) {
+                if (this.Converged) {
                     return 100;
                 } else {
-                    return (int)((100.0 * (double)iterations) / (double)MaxIterations);
+                    return (int)((100.0 * (double)this.iterations) / (double)this.MaxIterations);
                 }
             }
         }
@@ -439,7 +439,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         public bool IsDone {
             get {
-                return Converged || iterations >= MaxIterations;
+                return this.Converged || this.iterations >= this.MaxIterations;
             }
         }
 
@@ -452,9 +452,9 @@ namespace Microsoft.Msagl.Layout.Incremental {
         {
             get
             {
-                if (algorithm != null)
+                if (this.algorithm != null)
                 {
-                    return algorithm.energy;
+                    return this.algorithm.energy;
                 }
                 return 0;
             }
@@ -466,18 +466,18 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         public bool EdgeRoutesUpToDate { get; set; }
 
-        int maxConstraintLevel = 2;
+        private int maxConstraintLevel = 2;
         /// <summary>
         /// 
         /// </summary>
         public int MaxConstraintLevel { 
             get { 
-                return maxConstraintLevel; 
+                return this.maxConstraintLevel; 
             } 
             set {
-                if (maxConstraintLevel != value)
+                if (this.maxConstraintLevel != value)
                 {
-                    maxConstraintLevel = value;
+                    this.maxConstraintLevel = value;
                     if (this.IsInitialized)
                     {
                         this.Uninitialize();
@@ -486,18 +486,18 @@ namespace Microsoft.Msagl.Layout.Incremental {
             } 
         }
 
-        int minConstraintLevel = 0;
+        private int minConstraintLevel = 0;
         /// <summary>
         /// 
         /// </summary>
         public int MinConstraintLevel { 
             get 
             { 
-                return minConstraintLevel; 
+                return this.minConstraintLevel; 
             } 
             set 
-            { 
-                minConstraintLevel = value;
+            {
+                this.minConstraintLevel = value;
             } 
         }
 
@@ -512,9 +512,11 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// Running only at level 2 will most likely leave the graph stuck in a tangled local minimum.
         /// </summary>
         public int GetCurrentConstraintLevel() {
-            if (algorithm == null)
+            if (this.algorithm == null) {
                 return 0;
-            return algorithm.GetCurrentConstraintLevel();
+            }
+
+            return this.algorithm.GetCurrentConstraintLevel();
         }
 
         /// <summary>
@@ -528,21 +530,21 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// Running only at level 2 will most likely leave the graph stuck in a tangled local minimum.
         /// </summary>
         public void SetCurrentConstraintLevel(int value) {
-            algorithm.SetCurrentConstraintLevel(value);
+            this.algorithm.SetCurrentConstraintLevel(value);
         }
 
-        double attractiveInterClusterForceConstant = 1.0;
+        private double attractiveInterClusterForceConstant = 1.0;
         /// <summary>
         /// Attractive strength of edges connected to clusters
         /// </summary>
         public double AttractiveInterClusterForceConstant {
             get
             {
-                return attractiveInterClusterForceConstant;
+                return this.attractiveInterClusterForceConstant;
             }
             set
             {
-                attractiveInterClusterForceConstant = value;
+                this.attractiveInterClusterForceConstant = value;
             }
         }
 
@@ -560,36 +562,36 @@ namespace Microsoft.Msagl.Layout.Incremental {
         public FastIncrementalLayoutSettings(FastIncrementalLayoutSettings previousSettings)
         {
             ValidateArg.IsNotNull(previousSettings, "previousSettings");
-            maxIterations = previousSettings.maxIterations;
-            minorIterations = previousSettings.minorIterations;
-            projectionIterations = previousSettings.projectionIterations;
-            approximateRepulsion = previousSettings.approximateRepulsion;
-            initialStepSize = previousSettings.initialStepSize;
-            RungeKuttaIntegration = previousSettings.RungeKuttaIntegration;
-            decay = previousSettings.decay;
-            friction = previousSettings.friction;
-            repulsiveForceConstant = previousSettings.repulsiveForceConstant;
-            attractiveForceConstant = previousSettings.attractiveForceConstant;
-            gravity = previousSettings.gravity;
-            interComponentForces = previousSettings.interComponentForces;
-            applyForces = previousSettings.applyForces;
-            IdealEdgeLength = previousSettings.IdealEdgeLength;
-            AvoidOverlaps = previousSettings.AvoidOverlaps;
-            RespectEdgePorts = previousSettings.RespectEdgePorts;
-            RouteEdges = previousSettings.RouteEdges;
-            approximateRouting = previousSettings.approximateRouting;
-            logScaleEdgeForces = previousSettings.logScaleEdgeForces;
-            displacementThreshold = previousSettings.displacementThreshold;
-            minConstraintLevel = previousSettings.minConstraintLevel;
-            maxConstraintLevel = previousSettings.maxConstraintLevel;
-            attractiveInterClusterForceConstant = previousSettings.attractiveInterClusterForceConstant;
-            clusterGravity = previousSettings.clusterGravity;
-            PackingAspectRatio = previousSettings.PackingAspectRatio;
-            NodeSeparation = previousSettings.NodeSeparation;
-            ClusterMargin = previousSettings.ClusterMargin;
+            this.maxIterations = previousSettings.maxIterations;
+            this.minorIterations = previousSettings.minorIterations;
+            this.projectionIterations = previousSettings.projectionIterations;
+            this.approximateRepulsion = previousSettings.approximateRepulsion;
+            this.initialStepSize = previousSettings.initialStepSize;
+            this.RungeKuttaIntegration = previousSettings.RungeKuttaIntegration;
+            this.decay = previousSettings.decay;
+            this.friction = previousSettings.friction;
+            this.repulsiveForceConstant = previousSettings.repulsiveForceConstant;
+            this.attractiveForceConstant = previousSettings.attractiveForceConstant;
+            this.gravity = previousSettings.gravity;
+            this.interComponentForces = previousSettings.interComponentForces;
+            this.applyForces = previousSettings.applyForces;
+            this.IdealEdgeLength = previousSettings.IdealEdgeLength;
+            this.AvoidOverlaps = previousSettings.AvoidOverlaps;
+            this.RespectEdgePorts = previousSettings.RespectEdgePorts;
+            this.RouteEdges = previousSettings.RouteEdges;
+            this.approximateRouting = previousSettings.approximateRouting;
+            this.logScaleEdgeForces = previousSettings.logScaleEdgeForces;
+            this.displacementThreshold = previousSettings.displacementThreshold;
+            this.minConstraintLevel = previousSettings.minConstraintLevel;
+            this.maxConstraintLevel = previousSettings.maxConstraintLevel;
+            this.attractiveInterClusterForceConstant = previousSettings.attractiveInterClusterForceConstant;
+            this.clusterGravity = previousSettings.clusterGravity;
+            this.PackingAspectRatio = previousSettings.PackingAspectRatio;
+            this.NodeSeparation = previousSettings.NodeSeparation;
+            this.ClusterMargin = previousSettings.ClusterMargin;
         }
 
-        double clusterGravity = 1.0;
+        private double clusterGravity = 1.0;
 
         /// <summary>
         /// Controls how tightly members of clusters are pulled together
@@ -598,11 +600,11 @@ namespace Microsoft.Msagl.Layout.Incremental {
         {
             get
             {
-                return clusterGravity;
+                return this.clusterGravity;
             }
             set
             {
-                clusterGravity = value;
+                this.clusterGravity = value;
             }
         }
 
@@ -611,7 +613,7 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         public EdgeConstraints IdealEdgeLength { get; set; }
 
-        bool updateClusterBoundaries = true;
+        private bool updateClusterBoundaries = true;
 
         /// <summary>
         /// Force groups to follow their constituent nodes, 
@@ -619,8 +621,8 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         public bool UpdateClusterBoundariesFromChildren
         {
-            get { return updateClusterBoundaries; }
-            set { updateClusterBoundaries = value; }
+            get { return this.updateClusterBoundaries; }
+            set { this.updateClusterBoundaries = value; }
         }
 
         /// <summary>

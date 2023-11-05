@@ -19,10 +19,10 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         internal Point Center {
             get {
-                return center;
+                return this.center;
             }
             set {
-                center = mNode.Center = value;
+                this.center = this.mNode.Center = value;
             }
         }
         /// <summary>
@@ -31,9 +31,9 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// and update width and height
         /// </summary>
         internal void ResetBounds() {
-            center = previousCenter = mNode.Center;
-            Width = mNode.Width;
-            Height = mNode.Height;
+            this.center = this.previousCenter = this.mNode.Center;
+            this.Width = this.mNode.Width;
+            this.Height = this.mNode.Height;
         }
         internal double stayWeight = 1;
 
@@ -47,26 +47,27 @@ namespace Microsoft.Msagl.Layout.Incremental {
         public FiNode(int index, Node mNode) {
             this.index = index;
             this.mNode = mNode;
-            ResetBounds();
+            this.ResetBounds();
         }
 
         internal OverlapRemovalNode getOlapNode(bool horizontal) {
-            return horizontal ? mOlapNodeX : mOlapNodeY;
+            return horizontal ? this.mOlapNodeX : this.mOlapNodeY;
         }
 
         internal void SetOlapNode(bool horizontal, OverlapRemovalNode olapNode) {
-            if (horizontal)
-                mOlapNodeX = olapNode;
-            else
-                mOlapNodeY = olapNode;
+            if (horizontal) {
+                this.mOlapNodeX = olapNode;
+            } else {
+                this.mOlapNodeY = olapNode;
+            }
         }
 
         internal void SetVariableDesiredPos(bool horizontal) {
             if (horizontal) {
-                mOlapNodeX.Variable.DesiredPos = desiredPosition.X;
+                this.mOlapNodeX.Variable.DesiredPos = this.desiredPosition.X;
             }
             else {
-                mOlapNodeY.Variable.DesiredPos = desiredPosition.Y;
+                this.mOlapNodeY.Variable.DesiredPos = this.desiredPosition.Y;
             }
         }
         /// <summary>
@@ -74,17 +75,18 @@ namespace Microsoft.Msagl.Layout.Incremental {
         /// </summary>
         /// <param name="horizontal"></param>
         internal void UpdatePos(bool horizontal) {
-            if (horizontal)
+            if (horizontal) {
                 // Y has not yet been solved so reuse the previous position.
-                Center = new Point(getOlapNode(true).Position, previousCenter.Y);
-            else
+                this.Center = new Point(this.getOlapNode(true).Position, this.previousCenter.Y);
+            } else {
                 // Assumes X has been solved and set on prior pass.
-                Center = new Point(Center.X, getOlapNode(false).Position);
+                this.Center = new Point(this.Center.X, this.getOlapNode(false).Position);
+            }
         }
 
         public override string ToString()
         {
-            return "FINode(" + index + "):" + mNode;
+            return "FINode(" + this.index + "):" + this.mNode;
         }
     }
 }

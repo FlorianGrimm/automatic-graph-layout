@@ -7,23 +7,24 @@ namespace Microsoft.Msagl.Core.DataStructures
   /// </summary>
   public struct Size
   {
-    double width;
+        private double width;
     /// <summary>
     /// width
     /// </summary>
     public double Width
     {
-      get { return width; }
-      set { width = value; }
+      get { return this.width; }
+      set { this.width = value; }
     }
-    double height;
+
+        private double height;
     /// <summary>
     /// Height
     /// </summary>
     public double Height
     {
-      get { return height; }
-      set { height = value; }
+      get { return this.height; }
+      set { this.height = value; }
     }
 
     /// <summary>
@@ -63,8 +64,8 @@ namespace Microsoft.Msagl.Core.DataStructures
       /// </summary>
       /// <param name="padding"></param>
       public void Pad(double padding) {
-          width += 2*padding;
-          height += 2*padding;
+            this.width += 2*padding;
+            this.height += 2*padding;
       }
   }
 

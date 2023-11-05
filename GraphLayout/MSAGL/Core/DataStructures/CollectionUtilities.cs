@@ -14,8 +14,9 @@ namespace Microsoft.Msagl.Core.DataStructures {
         internal static void AddToMap<TS, T, TC>(Dictionary<T, TC> dictionary, T key, TS value)
             where TC : ICollection<TS>, new() {
             TC tc;
-            if (!dictionary.TryGetValue(key, out tc))
+            if (!dictionary.TryGetValue(key, out tc)) {
                 dictionary[key] = tc = new TC();
+            }
 
             tc.Add(value);
         }
@@ -30,8 +31,9 @@ namespace Microsoft.Msagl.Core.DataStructures {
             where TC : ICollection<TS> {
             var tc = dictionary[key];
             tc.Remove(value);
-            if (tc.Count == 0)
+            if (tc.Count == 0) {
                 dictionary.Remove(key);
+            }
         }
     }
 }

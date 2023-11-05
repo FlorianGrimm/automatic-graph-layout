@@ -24,8 +24,8 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy
         /// <param name="votings"></param>
         /// <param name="blockWeight"></param>
         public VoteBlock(List<Vote> votings, double blockWeight){
-            Votings = votings;
-            BlockWeight = blockWeight;
+            this.Votings = votings;
+            this.BlockWeight = blockWeight;
         }
     }
 }

@@ -14,80 +14,80 @@ using Microsoft.Msagl.Core;
 
 namespace Microsoft.Msagl.Routing.Rectilinear {
     internal class RectilinearScanLine : IComparer<BasicObstacleSide> {
-        readonly ScanDirection scanDirection;
+        private readonly ScanDirection scanDirection;
 
         // This is the data structure that allows fast insert/remove of obstacle edges as well as
         // scanning for next/prev edges along the direction of the scan line.
-        RbTree<BasicObstacleSide> SideTree { get; set; }
+        private RbTree<BasicObstacleSide> SideTree { get; set; }
 
         // Because sides may overlap and thus their relative positions change, retain the current
         // position, which is set on insertions by parameter, and by Overlap events via SetLinePosition.
         private Point linePositionAtLastInsertOrRemove;
 
         internal RectilinearScanLine(ScanDirection scanDir, Point start) {
-            scanDirection = scanDir;
-            SideTree = new RbTree<BasicObstacleSide>(this);
+            this.scanDirection = scanDir;
+            this.SideTree = new RbTree<BasicObstacleSide>(this);
             this.linePositionAtLastInsertOrRemove = start;
         }
 
         internal RBNode<BasicObstacleSide> Insert(BasicObstacleSide side, Point scanPos) {
-            DevTraceInfo(1, "prev LinePos = {0}, new LinePos = {1}, inserting side = {2}", this.linePositionAtLastInsertOrRemove, scanPos, side.ToString());
-            Assert(!scanDirection.IsFlat(side), "Flat sides are not allowed in the scanline");
-            Assert(null == Find(side), "side already exists in the ScanLine");
+            this.DevTraceInfo(1, "prev LinePos = {0}, new LinePos = {1}, inserting side = {2}", this.linePositionAtLastInsertOrRemove, scanPos, side.ToString());
+            this.Assert(!this.scanDirection.IsFlat(side), "Flat sides are not allowed in the scanline");
+            this.Assert(null == this.Find(side), "side already exists in the ScanLine");
             this.linePositionAtLastInsertOrRemove = scanPos;
 
             // RBTree's internal operations on insert/remove etc. mean the node can't cache the
             // RBNode returned by insert(); instead we must do find() on each call.  But we can
             // use the returned node to get predecessor/successor.
-            var node = SideTree.Insert(side);
-            DevTraceDump(2);
+            var node = this.SideTree.Insert(side);
+            this.DevTraceDump(2);
             return node;
         }
 
-        internal int Count { get { return SideTree.Count; } }
+        internal int Count { get { return this.SideTree.Count; } }
 
         internal void Remove(BasicObstacleSide side, Point scanPos) {
-            DevTraceInfo(1, "current linePos = {0}, removing side = {1}", this.linePositionAtLastInsertOrRemove, side.ToString());
-            Assert(null != Find(side), "side does not exist in the ScanLine");
+            this.DevTraceInfo(1, "current linePos = {0}, removing side = {1}", this.linePositionAtLastInsertOrRemove, side.ToString());
+            this.Assert(null != this.Find(side), "side does not exist in the ScanLine");
             this.linePositionAtLastInsertOrRemove = scanPos;
-            SideTree.Remove(side);
-            DevTraceDump(2);
+            this.SideTree.Remove(side);
+            this.DevTraceDump(2);
         }
 
         internal RBNode<BasicObstacleSide> Find(BasicObstacleSide side) {
             // Sides that start after the current position cannot be in the scanline.
-            if (-1 == scanDirection.ComparePerpCoord(this.linePositionAtLastInsertOrRemove, side.Start)) {
+            if (-1 == this.scanDirection.ComparePerpCoord(this.linePositionAtLastInsertOrRemove, side.Start)) {
                 return null;
             }
-            return SideTree.Find(side);
+            return this.SideTree.Find(side);
         }
 
         internal RBNode<BasicObstacleSide> NextLow(BasicObstacleSide side) {
-            return NextLow(Find(side));
+            return this.NextLow(this.Find(side));
         }
 
         internal RBNode<BasicObstacleSide> NextLow(RBNode<BasicObstacleSide> sideNode) {
-            var pred = SideTree.Previous(sideNode);
+            var pred = this.SideTree.Previous(sideNode);
             return pred;
         }
 
         internal RBNode<BasicObstacleSide> NextHigh(BasicObstacleSide side) {
-            return NextHigh(Find(side));
+            return this.NextHigh(this.Find(side));
         }
 
         internal RBNode<BasicObstacleSide> NextHigh(RBNode<BasicObstacleSide> sideNode) {
-            var succ = SideTree.Next(sideNode);
+            var succ = this.SideTree.Next(sideNode);
             return succ;
         }
 
         internal RBNode<BasicObstacleSide> Next(Direction dir, RBNode<BasicObstacleSide> sideNode) {
-            var succ = (StaticGraphUtility.IsAscending(dir)) ? SideTree.Next(sideNode) : SideTree.Previous(sideNode);
+            var succ = (StaticGraphUtility.IsAscending(dir)) ? this.SideTree.Next(sideNode) : this.SideTree.Previous(sideNode);
             return succ;
         }
 
         internal RBNode<BasicObstacleSide> Lowest()
         {
-            return SideTree.TreeMinimum();
+            return this.SideTree.TreeMinimum();
         }
 
 #if DEVTRACE
@@ -137,8 +137,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             Debug_VerifySidesDoNotIntersect(first, second);
 
             // Other than intersecting sides at vertices of the same obstacle, there should be no interior intersections...
-            Point firstIntersect = VisibilityGraphGenerator.ScanLineIntersectSide(this.linePositionAtLastInsertOrRemove, first, scanDirection);
-            Point secondIntersect = VisibilityGraphGenerator.ScanLineIntersectSide(this.linePositionAtLastInsertOrRemove, second, scanDirection);
+            Point firstIntersect = VisibilityGraphGenerator.ScanLineIntersectSide(this.linePositionAtLastInsertOrRemove, first, this.scanDirection);
+            Point secondIntersect = VisibilityGraphGenerator.ScanLineIntersectSide(this.linePositionAtLastInsertOrRemove, second, this.scanDirection);
             var cmp = firstIntersect.CompareTo(secondIntersect);
 
             // ... but we may still have rectangular sides that coincide, or angled sides that are close enough here but
@@ -154,7 +154,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                 }
             }
 
-            DevTraceInfo(4, "Compare {0} @ {1:F5} {2:F5} and {3:F5} {4:F5}: {5} {6}",
+            this.DevTraceInfo(4, "Compare {0} @ {1:F5} {2:F5} and {3:F5} {4:F5}: {5} {6}",
                             cmp, firstIntersect.X, firstIntersect.Y, secondIntersect.X, secondIntersect.Y, first, second);
             return cmp;
         }
@@ -179,15 +179,15 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return this.linePositionAtLastInsertOrRemove + " " + scanDirection;
+            return this.linePositionAtLastInsertOrRemove + " " + this.scanDirection;
         }
 
         [Conditional("TEST_MSAGL")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        void Assert(bool condition, string message) {
+        private void Assert(bool condition, string message) {
 #if TEST_MSAGL
             if (!condition) {
-                Test_DumpScanLine();
+                this.Test_DumpScanLine();
             }
 #endif // TEST
             Debug.Assert(condition, message);
@@ -202,7 +202,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         [Conditional("DEVTRACE")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        void DevTraceInfo(int verboseLevel, string format, params object[] args) {
+        private void DevTraceInfo(int verboseLevel, string format, params object[] args) {
 #if DEVTRACE
             scanLineTrace.WriteLineIf(DevTrace.Level.Info, verboseLevel, format, args);
 #endif // DEVTRACE
@@ -210,7 +210,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 
         [Conditional("DEVTRACE")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
-        void DevTraceDump(int verboseLevel) {
+        private void DevTraceDump(int verboseLevel) {
 #if DEVTRACE
             if (scanLineDump.IsLevel(verboseLevel)) {
                 Test_DumpScanLine();
@@ -224,7 +224,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
 #if TEST_MSAGL
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic")]
         internal void Test_DumpScanLine() {
-            DebugCurveCollection.WriteToFile(Test_GetScanLineDebugCurves(), StaticGraphUtility.GetDumpFileName("ScanLine"));
+            DebugCurveCollection.WriteToFile(this.Test_GetScanLineDebugCurves(), StaticGraphUtility.GetDumpFileName("ScanLine"));
         }
 #endif // TEST
 
@@ -239,7 +239,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             int index = 0;
             var bbox = new Rectangle();
             BasicObstacleSide prevSide = null;
-            foreach (var currentSide in SideTree) {
+            foreach (var currentSide in this.SideTree) {
                 string color = colors[index];
                 index ^= 1;
                 if (null == prevSide) {
@@ -247,7 +247,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                     bbox = new Rectangle(currentSide.Start, currentSide.End);
                 }
                 else {
-                    if (-1 != Compare(prevSide, currentSide)) {
+                    if (-1 != this.Compare(prevSide, currentSide)) {
                         // Note: we toggled the index, so the red replaces the colour whose turn it is now
                         // and will leave the red line bracketed by two sides of the same colour.
                         color = "red";
@@ -260,8 +260,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             }
 
             // Add the sweep line.
-            Point start = StaticGraphUtility.RectangleBorderIntersect(bbox, this.linePositionAtLastInsertOrRemove, scanDirection.OppositeDirection);
-            Point end = StaticGraphUtility.RectangleBorderIntersect(bbox, this.linePositionAtLastInsertOrRemove, scanDirection.Direction);
+            Point start = StaticGraphUtility.RectangleBorderIntersect(bbox, this.linePositionAtLastInsertOrRemove, this.scanDirection.OppositeDirection);
+            Point end = StaticGraphUtility.RectangleBorderIntersect(bbox, this.linePositionAtLastInsertOrRemove, this.scanDirection.Direction);
             debugCurves.Add(new DebugCurve(0.025, "black", new LineSegment(start, end)));
             return debugCurves;
         }

@@ -56,40 +56,43 @@ namespace Microsoft.Msagl.Layout.Initial
         /// </summary>
         protected override void RunInternal()
         {
-            if (SingleComponent)
+            if (this.SingleComponent)
             {
-                componentCount = 1;
-                LayoutComponent(graph);
+                this.componentCount = 1;
+                this.LayoutComponent(this.graph);
             }
             else
             {
-                foreach (var c in graph.RootCluster.AllClustersDepthFirst())
+                foreach (var c in this.graph.RootCluster.AllClustersDepthFirst())
                 {
-                    if (c == graph.RootCluster || c.RectangularBoundary == null) continue;
+                    if (c == this.graph.RootCluster || c.RectangularBoundary == null) {
+                        continue;
+                    }
+
                     c.RectangularBoundary.GenerateFixedConstraints = false;
                 }
 
-                var components = graph.GetClusteredConnectedComponents().ToList();
+                var components = this.graph.GetClusteredConnectedComponents().ToList();
 
-                componentCount = components.Count;
+                this.componentCount = components.Count;
 
                 foreach (var component in components)
                 {
-                    LayoutComponent(component);
+                    this.LayoutComponent(component);
                 }
 
-                graph.BoundingBox = MdsGraphLayout.PackGraphs(components, settings);
+                this.graph.BoundingBox = MdsGraphLayout.PackGraphs(components, this.settings);
                 this.ProgressComplete();
 
                 // update positions of original graph elements
-                foreach (var v in graph.Nodes)
+                foreach (var v in this.graph.Nodes)
                 {
                     var copy = v.AlgorithmData as GraphConnectedComponents.AlgorithmDataNodeWrap;
                     Debug.Assert(copy != null);
                     v.Center = copy.node.Center;
                 }
 
-                foreach (var e in graph.Edges)
+                foreach (var e in this.graph.Edges)
                 {
                     var copy = e.AlgorithmData as Edge;
                     if (copy != null)
@@ -99,7 +102,7 @@ namespace Microsoft.Msagl.Layout.Initial
                     }
                 }
 
-                foreach (var c in graph.RootCluster.AllClustersDepthFirst().Where(c => c != graph.RootCluster))
+                foreach (var c in this.graph.RootCluster.AllClustersDepthFirst().Where(c => c != this.graph.RootCluster))
                 {
                     var copy = c.AlgorithmData as GraphConnectedComponents.AlgorithmDataNodeWrap;
                     var copyCluster = copy.node as Cluster;
@@ -117,42 +120,42 @@ namespace Microsoft.Msagl.Layout.Initial
             if (component.Nodes.Count > 1 || component.RootCluster.Clusters.Any())
             {
                 // for small graphs (below 100 nodes) do extra iterations
-                settings.MaxIterations = LayoutAlgorithmHelpers.NegativeLinearInterpolation(
+                this.settings.MaxIterations = LayoutAlgorithmHelpers.NegativeLinearInterpolation(
                     component.Nodes.Count,
                     /*lowerThreshold:*/ 50, /*upperThreshold:*/ 500, /*minIterations:*/ 5, /*maxIterations:*/ 10);
-                settings.MinorIterations = LayoutAlgorithmHelpers.NegativeLinearInterpolation(component.Nodes.Count,
+                this.settings.MinorIterations = LayoutAlgorithmHelpers.NegativeLinearInterpolation(component.Nodes.Count,
                     /*lowerThreshold:*/ 50, /*upperThreshold:*/ 500, /*minIterations:*/ 3, /*maxIterations:*/ 20);
 
-                if (settings.MinConstraintLevel == 0)
+                if (this.settings.MinConstraintLevel == 0)
                 {
                     // run PivotMDS with a largish Scale so that the layout comes back oversized.
                     // subsequent incremental iterations do a better job of untangling when they're pulling it in
                     // rather than pushing it apart.
                     PivotMDS pivotMDS = new PivotMDS(component); ;
-                    this.RunChildAlgorithm(pivotMDS, 0.5 / componentCount);
+                    this.RunChildAlgorithm(pivotMDS, 0.5 / this.componentCount);
                 }
-                FastIncrementalLayout fil = new FastIncrementalLayout(component, settings, settings.MinConstraintLevel, anyCluster => settings);
-                Debug.Assert(settings.Iterations == 0);
+                FastIncrementalLayout fil = new FastIncrementalLayout(component, this.settings, this.settings.MinConstraintLevel, anyCluster => this.settings);
+                Debug.Assert(this.settings.Iterations == 0);
 
-                foreach (var level in GetConstraintLevels(component))
+                foreach (var level in this.GetConstraintLevels(component))
                 {
-                    if (level > settings.MaxConstraintLevel)
+                    if (level > this.settings.MaxConstraintLevel)
                     {
                         break;
                     }
-                    if (level > settings.MinConstraintLevel)
+                    if (level > this.settings.MinConstraintLevel)
                     {
                         fil.SetCurrentConstraintLevel(level);
                     }
                     do
                     {
                         fil.Run();
-                    } while (!settings.IsDone);
+                    } while (!this.settings.IsDone);
                 }
             }
 
             // Pad the graph with margins so the packing will be spaced out.
-            component.Margins = settings.NodeSeparation;
+            component.Margins = this.settings.NodeSeparation;
             component.UpdateBoundingBox();
 
             // Zero the graph
@@ -166,7 +169,7 @@ namespace Microsoft.Msagl.Layout.Initial
         /// Will only include ConstraintLevel == 2 if AvoidOverlaps is on and there are fewer than 2000 nodes
         /// </summary>
         /// <returns>0, 1 or 2</returns>
-        IEnumerable<int> GetConstraintLevels(GeometryGraph component)
+        private IEnumerable<int> GetConstraintLevels(GeometryGraph component)
         {
             var keys = (from c in this.settings.StructuralConstraints select c.Level).ToList();
             keys.Add(0);

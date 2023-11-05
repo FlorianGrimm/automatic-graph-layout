@@ -57,18 +57,18 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         {
             // Note: newVectorIndex may be the same as the old one if we are changing the state
             // of the last inactive or first active constraint.
-            Debug.Assert(IsActive != activeState, "Constraint is already set to activationState");
-            IsActive = activeState;
-            VectorIndex = newVectorIndex;
-            if (IsActive)
+            Debug.Assert(this.IsActive != activeState, "Constraint is already set to activationState");
+            this.IsActive = activeState;
+            this.VectorIndex = newVectorIndex;
+            if (this.IsActive)
             {
-                ++Left.ActiveConstraintCount;
-                ++Right.ActiveConstraintCount;
+                ++this.Left.ActiveConstraintCount;
+                ++this.Right.ActiveConstraintCount;
             }
             else
             {
-                --Left.ActiveConstraintCount;
-                --Right.ActiveConstraintCount;
+                --this.Left.ActiveConstraintCount;
+                --this.Right.ActiveConstraintCount;
             }
         }
         internal void SetVectorIndex(int vectorIndex)
@@ -82,8 +82,8 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         {
             // Called by Qpsc or equivalence-constraint-regapping initial block restructuring.
             // All variables have been moved to their own blocks again, so reset solution states.
-            IsActive = false;
-            IsUnsatisfiable = false;
+            this.IsActive = false;
+            this.IsUnsatisfiable = false;
             this.ClearDfDv();
         }
 

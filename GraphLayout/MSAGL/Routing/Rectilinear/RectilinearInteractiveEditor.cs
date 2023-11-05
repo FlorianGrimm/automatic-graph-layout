@@ -76,7 +76,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
         /// Create a RectilinearEdgeRouter populated with the passed obstacles.
         /// </summary>
         /// <returns>The populated RectilinearEdgeRouter</returns>
-        static RectilinearEdgeRouter FillRouter(double cornerFitRadius, double padding, IEnumerable<Node> obstacleNodes, IEnumerable<Edge> geomEdges
+        private static RectilinearEdgeRouter FillRouter(double cornerFitRadius, double padding, IEnumerable<Node> obstacleNodes, IEnumerable<Edge> geomEdges
                             , EdgeRoutingMode edgeRoutingMode, bool useSparseVisibilityGraph, double bendPenaltyAsAPercentageOfDistance) {
             Debug.Assert((EdgeRoutingMode.Rectilinear == edgeRoutingMode) || (EdgeRoutingMode.RectilinearToCenter == edgeRoutingMode)
                         , "Non-rectilinear edgeRoutingMode");
@@ -117,7 +117,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
             }
         }
 
-        static void CreateSelfEdges(IEnumerable<Edge> selfEdges, double cornerFitRadius) {
+        private static void CreateSelfEdges(IEnumerable<Edge> selfEdges, double cornerFitRadius) {
             foreach (var edge in selfEdges) {
                 CreateSimpleEdgeCurveWithGivenFitRadius(edge, cornerFitRadius);
             }
@@ -139,7 +139,10 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
                 var dx = edge.Source.BoundaryCurve.BoundingBox.Width / 2;
                 var dy = edge.Source.BoundingBox.Height / 4;
                 edge.UnderlyingPolyline = CreateUnderlyingPolylineForSelfEdge(a, dx, dy);
-                for (var site = edge.UnderlyingPolyline.HeadSite.Next; site.Next != null; site = site.Next) CalculateCoefficiensUnderSite(site, cornerFitRadius);
+                for (var site = edge.UnderlyingPolyline.HeadSite.Next; site.Next != null; site = site.Next) {
+                    CalculateCoefficiensUnderSite(site, cornerFitRadius);
+                }
+
                 edge.Curve = edge.UnderlyingPolyline.CreateCurve();
             }
             else
@@ -149,8 +152,9 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
             }
 
             if (!Arrowheads.TrimSplineAndCalculateArrowheads(edge.EdgeGeometry, edge.Source.BoundaryCurve, edge.Target.BoundaryCurve, edge.Curve,
-                true))
+                true)) {
                 Arrowheads.CreateBigEnoughSpline(edge);
+            }
         }
 
 
@@ -177,12 +181,13 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
                 edge.Curve = edge.UnderlyingPolyline.CreateCurve();
             }
 
-            if (!Arrowheads.TrimSplineAndCalculateArrowheads(edge.EdgeGeometry, edge.Source.BoundaryCurve, edge.Target.BoundaryCurve, edge.Curve, true))
+            if (!Arrowheads.TrimSplineAndCalculateArrowheads(edge.EdgeGeometry, edge.Source.BoundaryCurve, edge.Target.BoundaryCurve, edge.Curve, true)) {
                 Arrowheads.CreateBigEnoughSpline(edge);
+            }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", MessageId = "Microsoft.Msagl.Core.Geometry.Site")]
-        static SmoothedPolyline CreateUnderlyingPolylineForSelfEdge(Point p0, double dx, double dy)
+        private static SmoothedPolyline CreateUnderlyingPolylineForSelfEdge(Point p0, double dx, double dy)
         {
             var p1 = p0 + new Point(0, dy);
             var p2 = p0 + new Point(dx, dy);

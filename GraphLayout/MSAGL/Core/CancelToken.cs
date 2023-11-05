@@ -12,16 +12,15 @@ namespace Microsoft.Msagl.Core {
     /// </summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable")]
     public class CancelToken {
-
-        volatile bool canceled;
+        private volatile bool canceled;
 
         /// <summary>
         /// Set this flag to true when you want to cancel the layout.
         /// </summary>
         public bool Canceled {
-            get { return canceled; }
-            set { 
-                canceled = value;
+            get { return this.canceled; }
+            set {
+                this.canceled = value;
 #if PPC
                 if (canceled)
                 {
@@ -38,8 +37,9 @@ namespace Microsoft.Msagl.Core {
 #if PPC
             cancellationTokenSource.Token.ThrowIfCancellationRequested();
 #endif
-            if (this.Canceled)
+            if (this.Canceled) {
                 throw new OperationCanceledException();
+            }
         }
 
 #if PPC

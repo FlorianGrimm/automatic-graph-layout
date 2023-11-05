@@ -11,13 +11,13 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     public class RoundedRect : ICurve {
         ///<summary>
         ///</summary>
-         Curve curve;
+        private Curve curve;
         ///<summary>
         /// underlying curve
         ///</summary>
         public Curve Curve
         {
-            get { return curve; }
+            get { return this.curve; }
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         public double RadiusY { get;  set; }
 
-         RoundedRect()
+        private RoundedRect()
         {
         }
 
@@ -41,10 +41,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="radiusX">horizontal radius of the corner ellipse segments</param>
         /// <param name="radiusY">vertical radius of the corner ellipse segments</param>
         public RoundedRect(Rectangle bounds, double radiusX, double radiusY) {
-            RadiusX = radiusX;
-            RadiusY = radiusY;
-            curve = new Curve(8);
-            CurveFactory.CreateRectangleWithRoundedCorners(curve,
+            this.RadiusX = radiusX;
+            this.RadiusY = radiusY;
+            this.curve = new Curve(8);
+            CurveFactory.CreateRectangleWithRoundedCorners(this.curve,
                 bounds.Width, bounds.Height, radiusX, radiusY, bounds.Center);
         }
 
@@ -59,7 +59,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                 return this.Clone();
             }
 
-            return new RoundedRect(target, RadiusX, RadiusY);
+            return new RoundedRect(target, this.RadiusX, this.RadiusY);
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         public Point this[double t] {
-            get { return curve[t]; }
+            get { return this.curve[t]; }
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
         public Point Derivative(double t) {
-            return curve.Derivative(t);
+            return this.curve.Derivative(t);
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         public Point SecondDerivative(double t) {
-            return curve.SecondDerivative(t);
+            return this.curve.SecondDerivative(t);
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t">the parameter of the derivative</param>
         /// <returns></returns>
         public Point ThirdDerivative(double t) {
-            return curve.ThirdDerivative(t);
+            return this.curve.ThirdDerivative(t);
         }
 
         /// <summary>
@@ -104,11 +104,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <value></value>
         public ParallelogramNodeOverICurve ParallelogramNodeOverICurve {
-            get { return curve.ParallelogramNodeOverICurve; }
+            get { return this.curve.ParallelogramNodeOverICurve; }
         }
 
-        bool dirtyBounds = true;
-        Rectangle cachedBounds;
+        private bool dirtyBounds = true;
+        private Rectangle cachedBounds;
 
         /// <summary>
         /// XY bounding box of the curve
@@ -116,12 +116,12 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         public Rectangle BoundingBox {
             get 
             {
-                if (dirtyBounds)
+                if (this.dirtyBounds)
                 {
-                    cachedBounds = curve.BoundingBox;
-                    dirtyBounds = false;
+                    this.cachedBounds = this.curve.BoundingBox;
+                    this.dirtyBounds = false;
                 }
-                return cachedBounds;
+                return this.cachedBounds;
             }
         }
 
@@ -129,14 +129,14 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// the start of the parameter domain
         /// </summary>
         public double ParStart {
-            get { return curve.ParStart; }
+            get { return this.curve.ParStart; }
         }
 
         /// <summary>
         /// the end of the parameter domain
         /// </summary>
         public double ParEnd {
-            get { return curve.ParEnd; }
+            get { return this.curve.ParEnd; }
         }
 
         /// <summary>
@@ -146,7 +146,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="end"></param>
         /// <returns></returns>
         public ICurve Trim(double start, double end) {
-            return curve.Trim(start, end);
+            return this.curve.Trim(start, end);
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="end">The ending parameter</param>
         /// <returns>The trimmed curve</returns>
         public ICurve TrimWithWrap(double start, double end) {
-            return curve.TrimWithWrap(start, end);
+            return this.curve.TrimWithWrap(start, end);
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         public void Translate(Point delta) {
             this.curve.Translate(delta);
-            dirtyBounds = true;
+            this.dirtyBounds = true;
         }
 
         /// <summary>
@@ -172,24 +172,24 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <returns></returns>
         public ICurve ScaleFromOrigin(double xScale, double yScale) {
-            var bounds = curve.BoundingBox;
+            var bounds = this.curve.BoundingBox;
             var lt = Point.Scale(xScale, yScale, bounds.LeftTop);
             var rb = Point.Scale(xScale, yScale, bounds.RightBottom);
-            return new RoundedRect(new Rectangle(lt, rb), RadiusX, RadiusY);
+            return new RoundedRect(new Rectangle(lt, rb), this.RadiusX, this.RadiusY);
         }
 
         /// <summary>
         /// this[ParStart]
         /// </summary>
         public Point Start {
-            get { return curve.Start; }
+            get { return this.curve.Start; }
         }
 
         /// <summary>
         /// this[ParEnd]
         /// </summary>
         public Point End {
-            get { return curve.End; }
+            get { return this.curve.End; }
         }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="dir"></param>
         /// <returns></returns>
         public ICurve OffsetCurve(double offset, Point dir) {
-            return curve.OffsetCurve(offset, dir);
+            return this.curve.OffsetCurve(offset, dir);
         }
 
         /// <summary>
@@ -217,14 +217,14 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="end"></param>
         /// <returns></returns>
         public double LengthPartial(double start, double end) {
-            return curve.LengthPartial(start, end);
+            return this.curve.LengthPartial(start, end);
         }
 
         /// <summary>
         /// Get the length of the curve
         /// </summary>
         public double Length {
-            get { return curve.Length; }
+            get { return this.curve.Length; }
         }
 
 
@@ -234,7 +234,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="length"></param>
         /// <returns></returns>
         public double GetParameterAtLength(double length) {
-            return curve.GetParameterAtLength(length);
+            return this.curve.GetParameterAtLength(length);
         }
 
         /// <summary>
@@ -243,11 +243,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="transformation"></param>
         /// <returns>the transformed curve</returns>
         public ICurve Transform(PlaneTransformation transformation) {
-            var bounds = curve.BoundingBox;
+            var bounds = this.curve.BoundingBox;
             var lt = transformation * bounds.LeftTop;
             var rb = transformation * bounds.RightBottom;
             var transBounds = new Rectangle(lt, rb);
-            return new RoundedRect(transBounds, RadiusX, RadiusY);
+            return new RoundedRect(transBounds, this.RadiusX, this.RadiusY);
         }
 
         /// <summary>
@@ -268,7 +268,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="targetPoint"></param>
         /// <returns></returns>
         public double ClosestParameter(Point targetPoint) {
-            return curve.ClosestParameter(targetPoint);
+            return this.curve.ClosestParameter(targetPoint);
         }
 
         /// <summary>
@@ -289,7 +289,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
         public Point LeftDerivative(double t) {
-            return curve.LeftDerivative(t);
+            return this.curve.LeftDerivative(t);
         }
 
         /// <summary>
@@ -298,7 +298,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
         public Point RightDerivative(double t) {
-            return curve.RightDerivative(t);
+            return this.curve.RightDerivative(t);
         }
 
         /// <summary>
@@ -307,7 +307,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         public double Curvature(double t) {
-            return curve.Curvature(t);
+            return this.curve.Curvature(t);
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         public double CurvatureDerivative(double t) {
-            return curve.CurvatureDerivative(t);
+            return this.curve.CurvatureDerivative(t);
         }
 
         /// <summary>
@@ -325,7 +325,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="t"></param>
         /// <returns></returns>
         public double CurvatureSecondDerivative(double t) {
-            return curve.CurvatureSecondDerivative(t);
+            return this.curve.CurvatureSecondDerivative(t);
         }
     }
 }

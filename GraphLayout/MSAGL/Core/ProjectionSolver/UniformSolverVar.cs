@@ -2,38 +2,39 @@ using System.Diagnostics;
 
 namespace Microsoft.Msagl.Core.ProjectionSolver{
     internal class UniformSolverVar{
-        double lowBound = double.NegativeInfinity;
-        double upperBound = double.PositiveInfinity;
+        private double lowBound = double.NegativeInfinity;
+        private double upperBound = double.PositiveInfinity;
         internal bool IsFixed;
-        double position;
+        private double position;
 
         internal double Width { get; set; }
 
         internal double Position{
-            get { return position; }
+            get { return this.position; }
             set {
-                if (value < lowBound)
-                    position = lowBound;
-                else if (value > upperBound)
-                    position = upperBound;
-                else
-                    position = value;
+                if (value < this.lowBound) {
+                    this.position = this.lowBound;
+                } else if (value > this.upperBound) {
+                    this.position = this.upperBound;
+                } else {
+                    this.position = value;
+                }
             }
         }
 
         internal double LowBound {
-            get { return lowBound; }
+            get { return this.lowBound; }
             set {
-                Debug.Assert(value<=upperBound);
-                lowBound = value;
+                Debug.Assert(value<= this.upperBound);
+                this.lowBound = value;
             }
         }
 
         internal double UpperBound {
-            get { return upperBound; }
+            get { return this.upperBound; }
             set {
-                Debug.Assert(value>=LowBound);
-                upperBound = value;
+                Debug.Assert(value>= this.LowBound);
+                this.upperBound = value;
             }
         }
 
@@ -41,7 +42,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver{
 
 #if TEST_MSAGL
         public override string ToString() {
-            return lowBound + " " + Position + " " + upperBound;
+            return this.lowBound + " " + this.Position + " " + this.upperBound;
         }
 #endif
     }

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Msagl.Core.Geometry;
 
 namespace Microsoft.Msagl.Core.Layout{
-    interface IObstacle {
+    internal interface IObstacle {
         Rectangle Rectangle { get; }
     }
 }

@@ -12,8 +12,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal List<GroupBoundaryCrossing> Crossings { get; private set; }
 
         internal PointAndCrossings(Point loc, List<GroupBoundaryCrossing> crossings) : this() {
-            Location = loc;
-            Crossings = crossings;
+            this.Location = loc;
+            this.Crossings = crossings;
         }
     }
 }

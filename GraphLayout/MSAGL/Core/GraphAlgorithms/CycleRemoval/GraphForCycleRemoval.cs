@@ -7,86 +7,88 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         /// <summary>
         /// this dictionary contains only buckets with nodes which are sources in the graph of constrained edges
         /// </summary>
-        SortedDictionary<int, Set<int>> deltaDegreeBucketsForSourcesInConstrainedSubgraph = new SortedDictionary<int, Set<int>>();
-        Dictionary<int, NodeInfo> nodeInfoDictionary = new Dictionary<int, NodeInfo>();
-        Set<int> sources=new Set<int>();
-        Set<int> sinks=new Set<int>();
-        Set<IntPair> edgesToKeep = new Set<IntPair>();
+        private SortedDictionary<int, Set<int>> deltaDegreeBucketsForSourcesInConstrainedSubgraph = new SortedDictionary<int, Set<int>>();
+        private Dictionary<int, NodeInfo> nodeInfoDictionary = new Dictionary<int, NodeInfo>();
+        private Set<int> sources=new Set<int>();
+        private Set<int> sinks=new Set<int>();
+        private Set<IntPair> edgesToKeep = new Set<IntPair>();
 
         internal void AddEdge(IntPair edge) {
-            edgesToKeep.Insert(edge);
+            this.edgesToKeep.Insert(edge);
             int source = edge.First; int target = edge.Second;
-            GetOrCreateNodeInfo(source).AddOutEdge(target);
-            GetOrCreateNodeInfo(target).AddInEdge(source);
+            this.GetOrCreateNodeInfo(source).AddOutEdge(target);
+            this.GetOrCreateNodeInfo(target).AddInEdge(source);
         }
 
-
-         NodeInfo GetOrCreateNodeInfo(int node) {
+        private NodeInfo GetOrCreateNodeInfo(int node) {
             NodeInfo nodeInfo;
-            if (!nodeInfoDictionary.TryGetValue(node, out nodeInfo)) {
+            if (!this.nodeInfoDictionary.TryGetValue(node, out nodeInfo)) {
                 nodeInfo = new NodeInfo();
-                nodeInfoDictionary[node] = nodeInfo;
+                this.nodeInfoDictionary[node] = nodeInfo;
             }
             return nodeInfo;
         }
 
         internal void AddConstraintEdge(IntPair intPair) {
             int source = intPair.First; int target = intPair.Second;
-            GetOrCreateNodeInfo(source).AddOutConstrainedEdge(target);
-            GetOrCreateNodeInfo(target).AddInConstrainedEdge(source);
+            this.GetOrCreateNodeInfo(source).AddOutConstrainedEdge(target);
+            this.GetOrCreateNodeInfo(target).AddInConstrainedEdge(source);
         }
 
         internal bool IsEmpty() {
-            return nodeInfoDictionary.Count == 0;
+            return this.nodeInfoDictionary.Count == 0;
         }
 
         internal void RemoveNode(int u) {
-            sources.Remove(u);
-            sinks.Remove(u);
-            RemoveNodeFromItsBucket(u);
+            this.sources.Remove(u);
+            this.sinks.Remove(u);
+            this.RemoveNodeFromItsBucket(u);
             NodeInfo uNodeInfo=this.nodeInfoDictionary[u];
             Set<int> allNbs = new Set<int>(uNodeInfo.AllNeighbors);
-            foreach(int v in allNbs)
-                RemoveNodeFromItsBucket(v);
+            foreach(int v in allNbs) {
+                this.RemoveNodeFromItsBucket(v);
+            }
 
-            DisconnectNodeFromGraph(u, uNodeInfo);
+            this.DisconnectNodeFromGraph(u, uNodeInfo);
 
-            foreach (int v in allNbs)
-                AddNodeToBucketsSourcesAndSinks(v, nodeInfoDictionary[v]);
-  
-
-        }
-
-         void DisconnectNodeFromGraph(int u, NodeInfo uNodeInfo) {
-            foreach (int v in uNodeInfo.OutEdges)
-                nodeInfoDictionary[v].RemoveInEdge(u);
-
-            foreach (int v in uNodeInfo.OutConstrainedEdges)
-                nodeInfoDictionary[v].RemoveInConstrainedEdge(u);
-
-            foreach (int v in uNodeInfo.InEdges)
-                nodeInfoDictionary[v].RemoveOutEdge(u);
-
-            foreach (int v in uNodeInfo.InConstrainedEdges)
-                nodeInfoDictionary[v].RemoveOutConstrainedEdge(u);
-
-            nodeInfoDictionary.Remove(u);
-        }
-
-        
-
-         void RemoveNodeFromItsBucket(int v) {
-            int delta = DeltaDegree(v);
-            Set<int> bucket;
-            if (this.deltaDegreeBucketsForSourcesInConstrainedSubgraph.TryGetValue(delta, out bucket)) {
-                bucket.Remove(v);
-                if (bucket.Count == 0)
-                    deltaDegreeBucketsForSourcesInConstrainedSubgraph.Remove(delta);
+            foreach (int v in allNbs) {
+                this.AddNodeToBucketsSourcesAndSinks(v, this.nodeInfoDictionary[v]);
             }
         }
 
-         int DeltaDegree(int v) {
-            int delta = nodeInfoDictionary[v].DeltaDegree;
+        private void DisconnectNodeFromGraph(int u, NodeInfo uNodeInfo) {
+            foreach (int v in uNodeInfo.OutEdges) {
+                this.nodeInfoDictionary[v].RemoveInEdge(u);
+            }
+
+            foreach (int v in uNodeInfo.OutConstrainedEdges) {
+                this.nodeInfoDictionary[v].RemoveInConstrainedEdge(u);
+            }
+
+            foreach (int v in uNodeInfo.InEdges) {
+                this.nodeInfoDictionary[v].RemoveOutEdge(u);
+            }
+
+            foreach (int v in uNodeInfo.InConstrainedEdges) {
+                this.nodeInfoDictionary[v].RemoveOutConstrainedEdge(u);
+            }
+
+            this.nodeInfoDictionary.Remove(u);
+        }
+
+        private void RemoveNodeFromItsBucket(int v) {
+            int delta = this.DeltaDegree(v);
+            Set<int> bucket;
+            if (this.deltaDegreeBucketsForSourcesInConstrainedSubgraph.TryGetValue(delta, out bucket)) {
+                bucket.Remove(v);
+                if (bucket.Count == 0) {
+                    this.deltaDegreeBucketsForSourcesInConstrainedSubgraph.Remove(delta);
+                }
+            }
+        }
+
+        private int DeltaDegree(int v) {
+            int delta = this.nodeInfoDictionary[v].DeltaDegree;
             return delta;
         }
 
@@ -131,24 +133,28 @@ namespace Microsoft.Msagl.Core.GraphAlgorithms {
         }
 
         internal void Initialize() {
-            foreach (var p in nodeInfoDictionary) 
-                AddNodeToBucketsSourcesAndSinks(p.Key, p.Value);
+            foreach (var p in this.nodeInfoDictionary) {
+                this.AddNodeToBucketsSourcesAndSinks(p.Key, p.Value);
+            }
         }
 
-         void AddNodeToBucketsSourcesAndSinks(int v, NodeInfo nodeInfo) {
-            if (nodeInfo.InDegree == 0)
-                sources.Insert(v);
-            else if (nodeInfo.OutDegree == 0)
-                sinks.Insert(v);
-            else if (nodeInfo.InDegreeOfConstrainedEdges == 0)
-                GetOrCreateBucket(nodeInfo.DeltaDegree).Insert(v);
+        private void AddNodeToBucketsSourcesAndSinks(int v, NodeInfo nodeInfo) {
+            if (nodeInfo.InDegree == 0) {
+                this.sources.Insert(v);
+            } else if (nodeInfo.OutDegree == 0) {
+                this.sinks.Insert(v);
+            } else if (nodeInfo.InDegreeOfConstrainedEdges == 0) {
+                this.GetOrCreateBucket(nodeInfo.DeltaDegree).Insert(v);
+            }
         }
 
-         Set<int> GetOrCreateBucket(int delta) {
+        private Set<int> GetOrCreateBucket(int delta) {
             Set<int> ret;
-            if (this.deltaDegreeBucketsForSourcesInConstrainedSubgraph.TryGetValue(delta, out ret))
+            if (this.deltaDegreeBucketsForSourcesInConstrainedSubgraph.TryGetValue(delta, out ret)) {
                 return ret;
-            return deltaDegreeBucketsForSourcesInConstrainedSubgraph[delta] = new Set<int>();
+            }
+
+            return this.deltaDegreeBucketsForSourcesInConstrainedSubgraph[delta] = new Set<int>();
         }
     }
 }

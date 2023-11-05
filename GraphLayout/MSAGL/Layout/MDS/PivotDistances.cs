@@ -45,35 +45,37 @@ namespace Microsoft.Msagl.Layout.MDS
         /// </summary>
         protected override void  RunInternal()
         {
-            Result = new double[pivotArray.Length][];
+            this.Result = new double[this.pivotArray.Length][];
 
-            Node[] nodes = new Node[graph.Nodes.Count];
-            graph.Nodes.CopyTo(nodes, 0);
-            double[] min = new double[graph.Nodes.Count];
+            Node[] nodes = new Node[this.graph.Nodes.Count];
+            this.graph.Nodes.CopyTo(nodes, 0);
+            double[] min = new double[this.graph.Nodes.Count];
             for (int i = 0; i < min.Length; i++)
             {
                 min[i] = Double.PositiveInfinity;
             }
             Node pivot = nodes[0];
-            pivotArray[0] = 0;
+            this.pivotArray[0] = 0;
             for (int i = 0; ; i++) {
-                var ssd = new SingleSourceDistances(graph, pivot);
+                var ssd = new SingleSourceDistances(this.graph, pivot);
                 ssd.Run();
-                Result[i] = ssd.Result;
-                if (i + 1 < pivotArray.Length)
+                this.Result[i] = ssd.Result;
+                if (i + 1 < this.pivotArray.Length)
                 {//looking for the next pivot
                     int argmax = 0;
-                    for (int j = 0; j < Result[i].Length; j++)
+                    for (int j = 0; j < this.Result[i].Length; j++)
                     {
-                        min[j] = Math.Min(min[j], Result[i][j]);
-                        if (min[j] > min[argmax])
+                        min[j] = Math.Min(min[j], this.Result[i][j]);
+                        if (min[j] > min[argmax]) {
                             argmax = j;
+                        }
                     }
                     pivot = nodes[argmax];
-                    pivotArray[i + 1] = argmax;
+                    this.pivotArray[i + 1] = argmax;
                 }
-                else
+                else {
                     break;
+                }
             }
 
         }

@@ -25,8 +25,7 @@ namespace Microsoft.Msagl.Layout.MDS
         private double scaleY = 200;
         private double exponent = -2;
         private double rotationAngle;
-
-        bool removeOverlaps = true;
+        private bool removeOverlaps = true;
 
         
         /// <summary>
@@ -37,12 +36,12 @@ namespace Microsoft.Msagl.Layout.MDS
 #else
         public bool RunInParallel = true;
 #endif
-        int _callIterationsWithMajorizationThreshold = 3000;
+        private int _callIterationsWithMajorizationThreshold = 3000;
 
         /// remove overlaps between node boundaries
         public bool RemoveOverlaps {
-            set { removeOverlaps = value; }
-            get { return removeOverlaps; }
+            set { this.removeOverlaps = value; }
+            get { return this.removeOverlaps; }
         }
 
         /// <summary>
@@ -54,8 +53,8 @@ namespace Microsoft.Msagl.Layout.MDS
         [DefaultValue(50)]
 #endif
         public int PivotNumber {
-            set { pivotNumber = value; }
-            get { return pivotNumber; }
+            set { this.pivotNumber = value; }
+            get { return this.pivotNumber; }
         }
 
         /// <summary>
@@ -71,8 +70,8 @@ namespace Microsoft.Msagl.Layout.MDS
         [DefaultValue(0)]
 #endif
             public int IterationsWithMajorization {
-            set { iterationsWithMajorization = value; }
-            get { return iterationsWithMajorization; }
+            set { this.iterationsWithMajorization = value; }
+            get { return this.iterationsWithMajorization; }
         }
 
         /// <summary>
@@ -84,8 +83,8 @@ namespace Microsoft.Msagl.Layout.MDS
         [DefaultValue(200.0)]
 #endif
         public double ScaleX {
-            set { scaleX = value; }
-            get { return scaleX; }
+            set { this.scaleX = value; }
+            get { return this.scaleX; }
         }
 
         /// <summary>
@@ -97,8 +96,8 @@ namespace Microsoft.Msagl.Layout.MDS
         [DefaultValue(200.0)]
 #endif
         public double ScaleY {
-            set { scaleY = value; }
-            get { return scaleY; }
+            set { this.scaleY = value; }
+            get { return this.scaleY; }
         }
 
         /// <summary>
@@ -109,8 +108,8 @@ namespace Microsoft.Msagl.Layout.MDS
         [DefaultValue(-2.00)]
 #endif
         public double Exponent {
-            set { exponent = value; }
-            get { return exponent; }
+            set { this.exponent = value; }
+            get { return this.exponent; }
         }
 
         /// <summary>
@@ -122,8 +121,8 @@ namespace Microsoft.Msagl.Layout.MDS
         [DefaultValue(0.0)]
 #endif
         public double RotationAngle {
-            set { rotationAngle = value%360; }
-            get { return rotationAngle; }
+            set { this.rotationAngle = value%360; }
+            get { return this.rotationAngle; }
         }
 
         /// <summary>
@@ -131,7 +130,7 @@ namespace Microsoft.Msagl.Layout.MDS
         /// </summary>
         /// <returns></returns>
         public override LayoutAlgorithmSettings Clone() {
-            return MemberwiseClone() as LayoutAlgorithmSettings;
+            return this.MemberwiseClone() as LayoutAlgorithmSettings;
         }
 
         
@@ -143,15 +142,15 @@ namespace Microsoft.Msagl.Layout.MDS
 
         
         public int GetNumberOfIterationsWithMajorization(int nodeCount) {
-            if (nodeCount > CallIterationsWithMajorizationThreshold) {
+            if (nodeCount > this.CallIterationsWithMajorizationThreshold) {
                 return 0;
             }
-            return IterationsWithMajorization;
+            return this.IterationsWithMajorization;
         }
 
         public int CallIterationsWithMajorizationThreshold {
-            get { return _callIterationsWithMajorizationThreshold; }
-            set { _callIterationsWithMajorizationThreshold = value; }
+            get { return this._callIterationsWithMajorizationThreshold; }
+            set { this._callIterationsWithMajorizationThreshold = value; }
         }
     }
 }

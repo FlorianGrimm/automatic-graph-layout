@@ -12,76 +12,78 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// the coeffiecient used to calculate the first and the second control points of the 
         /// Bezier segment for the fillet at the site
         /// </summary>
-         double previouisBezierCoefficient = 0.5;
+        private double previouisBezierCoefficient = 0.5;
         /// <summary>
         /// used to calculate the first control points: the formula is kPrev * a + (1 - kPrev) * b
         /// </summary>
         public double PreviousBezierSegmentFitCoefficient {
-            get { return previouisBezierCoefficient; }
-            set { previouisBezierCoefficient = value; }
+            get { return this.previouisBezierCoefficient; }
+            set { this.previouisBezierCoefficient = value; }
         }
+
         /// <summary>
         /// the coeffiecient used to calculate the third and the fourth control points of the 
         /// Bezier segment for the fillet at the site
         /// </summary>
-         double nextBezierCoefficient = 0.5;
+        private double nextBezierCoefficient = 0.5;
         /// <summary>
         /// the coefficient tells how tight the segment fits to the segment after the site; the formula is kNext * c + (1 - kNext) * b
         /// </summary>
         public double NextBezierSegmentFitCoefficient {
-            get { return nextBezierCoefficient; }
-            set { nextBezierCoefficient = value; }
+            get { return this.nextBezierCoefficient; }
+            set { this.nextBezierCoefficient = value; }
         }
 
-        double previousTangentCoefficient=1.0/3;
+        private double previousTangentCoefficient=1.0/3;
 
         ///<summary>
         ///used to calculate the second control point
         ///</summary>
         public double PreviousTangentCoefficient {
-            get { return previousTangentCoefficient; }
-            set { previousTangentCoefficient = value; }
+            get { return this.previousTangentCoefficient; }
+            set { this.previousTangentCoefficient = value; }
         }
-        double nextTangentCoefficient = 1.0 / 3;
+
+        private double nextTangentCoefficient = 1.0 / 3;
 
         ///<summary>
         ///used to calculate the third control point
         ///</summary>
         public double NextTangentCoefficient
         {
-            get { return nextTangentCoefficient; }
-            set { nextTangentCoefficient = value; }
+            get { return this.nextTangentCoefficient; }
+            set { this.nextTangentCoefficient = value; }
         }
 
         //   internal double par;
-         Point point;
+        private Point point;
 
         /// <summary>
         /// gets the site point
         /// </summary>
         public Point Point {
-            get { return point; }
-            set { point = value; }
+            get { return this.point; }
+            set { this.point = value; }
         }
 
-         CornerSite prev;
+        private CornerSite prev;
 /// <summary>
 /// gets the previous site
 /// </summary>
 		public CornerSite Previous
 		{
-            get { return prev; }
-            set { prev = value; }
+            get { return this.prev; }
+            set { this.prev = value; }
         }
 
-         CornerSite next;
+        private CornerSite next;
 /// <summary>
 /// gets the next site
 /// </summary>
 		public CornerSite Next
 		{
-            get { return next; }
-            set { next = value; }
+            get { return this.next; }
+            set { this.next = value; }
         }
         internal CornerSite() { }
         /// <summary>
@@ -89,7 +91,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// </summary>
         /// <param name="sitePoint"></param>
         public CornerSite(Point sitePoint) {
-            point = sitePoint;
+            this.point = sitePoint;
         }
         /// <summary>
         /// a constructor
@@ -99,8 +101,8 @@ namespace Microsoft.Msagl.Core.Geometry {
 		public CornerSite(CornerSite previousSite, Point sitePoint )
 		{
             ValidateArg.IsNotNull(previousSite, "pr");
-            point = sitePoint;
-            prev = previousSite;
+            this.point = sitePoint;
+            this.prev = previousSite;
             previousSite.next = this;
         }
         /// <summary>
@@ -113,26 +115,28 @@ namespace Microsoft.Msagl.Core.Geometry {
 		{
             ValidateArg.IsNotNull(previousSite, "pr");
             ValidateArg.IsNotNull(nextSite, "ne");
-            prev = previousSite;
-            point = sitePoint;
-            next = nextSite;
+            this.prev = previousSite;
+            this.point = sitePoint;
+            this.next = nextSite;
 
             previousSite.next = this;
-            next.prev = this;
+            this.next.prev = this;
         }
         
         internal double Turn {
             get {
-                if (this.Next == null || this.Previous == null)
+                if (this.Next == null || this.Previous == null) {
                     return 0;
-                return Point.SignedDoubledTriangleArea(Previous.Point, Point, Next.Point);
+                }
+
+                return Point.SignedDoubledTriangleArea(this.Previous.Point, this.Point, this.Next.Point);
             }
         }
 
         internal CornerSite Clone() {
             CornerSite s = new CornerSite();
-            s.PreviousBezierSegmentFitCoefficient = PreviousBezierSegmentFitCoefficient;
-            s.Point = Point;
+            s.PreviousBezierSegmentFitCoefficient = this.PreviousBezierSegmentFitCoefficient;
+            s.Point = this.Point;
             return s;
         }
 /// <summary>
@@ -140,7 +144,7 @@ namespace Microsoft.Msagl.Core.Geometry {
 /// </summary>
 /// <returns></returns>
         public override string ToString() {
-            return Point.ToString();
+            return this.Point.ToString();
         }
 
     }

@@ -24,11 +24,11 @@ namespace Microsoft.Msagl.Core.Layout {
         public int SelectedNeighbor = 0;
 
         public ICurve BoundaryCurve {
-            get { return BoundaryOnLayer; }
+            get { return this.BoundaryOnLayer; }
         }
 
         internal LgNodeInfo(Node geometryNode) {
-            GeometryNode = geometryNode;
+            this.GeometryNode = geometryNode;
             //OriginalCurveOfGeomNode = geometryNode.BoundaryCurve.Clone();
         }
 
@@ -36,7 +36,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// the center of the node
         /// </summary>
         public Point Center {
-            get { return GeometryNode.Center; }
+            get { return this.GeometryNode.Center; }
         }
 
         
@@ -45,7 +45,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         public Rectangle BoundingBox {
             get {
-                return BoundaryOnLayer.BoundingBox;
+                return this.BoundaryOnLayer.BoundingBox;
             }
         }
 
@@ -54,7 +54,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return GeometryNode.ToString();
+            return this.GeometryNode.ToString();
         }
 
         public double LabelVisibleFromScale = 0.0;
@@ -82,7 +82,7 @@ namespace Microsoft.Msagl.Core.Layout {
         {
             get
             {
-                switch (LabelPosition)
+                switch (this.LabelPosition)
                 {
                     case LabelPlacement.Top:
                         return new Point(0, 0.5);
@@ -98,16 +98,16 @@ namespace Microsoft.Msagl.Core.Layout {
             {
                 if (Math.Abs(value.X) < 0.1 && value.Y > 0.4)
                 {
-                    LabelPosition = LabelPlacement.Top;
+                    this.LabelPosition = LabelPlacement.Top;
                 }
                 else if (Math.Abs(value.X) < 0.1 && value.Y < -0.4) {
-                    LabelPosition = LabelPlacement.Bottom;
+                    this.LabelPosition = LabelPlacement.Bottom;
                 } 
                 else if (Math.Abs(value.Y) < 0.1 && value.X > 0.4) {
-                    LabelPosition = LabelPlacement.Right;
+                    this.LabelPosition = LabelPlacement.Right;
                 } 
                 else {
-                    LabelPosition = LabelPlacement.Left;
+                    this.LabelPosition = LabelPlacement.Left;
                 }
             }
         }
@@ -117,8 +117,8 @@ namespace Microsoft.Msagl.Core.Layout {
         public Polyline BoundaryOnLayer { get; set; }
 
         public void Translate(Point delta) {
-            GeometryNode.Center += delta;
-            BoundaryOnLayer.Translate(delta);
+            this.GeometryNode.Center += delta;
+            this.BoundaryOnLayer.Translate(delta);
         }
     }
 }

@@ -20,10 +20,11 @@ namespace Microsoft.Msagl.Core.Layout {
 #endif
     public class GeometryGraph : GeometryObject
     {
-         IList<Node> nodes;
-         EdgeCollection edges;
+        private IList<Node> nodes;
+        private EdgeCollection edges;
 #if TEST_MSAGL
     [NonSerialized]
+        private
 #endif
          Cluster rootCluster;
 
@@ -59,11 +60,11 @@ namespace Microsoft.Msagl.Core.Layout {
         /// Bounding box of the graph
         /// </summary>
         public override Rectangle BoundingBox {
-            get { return boundingBox; }
-            set { boundingBox = value; }
+            get { return this.boundingBox; }
+            set { this.boundingBox = value; }
         }
 
-        double margins;
+        private double margins;
 #if TEST_MSAGL
         /// <summary>
         /// curves to show debug stuff
@@ -76,80 +77,80 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         public double Margins
         {
-            get { return margins; }
-            set { margins = value; }
+            get { return this.margins; }
+            set { this.margins = value; }
         }
 
         /// <summary>
         /// Width of the graph
         /// </summary>
         public double Width {
-            get { return BoundingBox.RightBottom.X - BoundingBox.LeftTop.X; }
+            get { return this.BoundingBox.RightBottom.X - this.BoundingBox.LeftTop.X; }
         }
 
         /// <summary>
         /// Height of the graph
         /// </summary>
         public double Height {
-            get { return BoundingBox.Height; }
+            get { return this.BoundingBox.Height; }
         }
 
         /// <summary>
         /// Left bound of the graph
         /// </summary>
         public double Left {
-            get { return BoundingBox.Left; }
+            get { return this.BoundingBox.Left; }
         }
 
         /// <summary>
         /// Right bound of the graph
         /// </summary>
         public double Right {
-            get { return BoundingBox.Right; }
+            get { return this.BoundingBox.Right; }
         }
 
         /// <summary>
         /// Left bottom corner of the graph
         /// </summary>
         internal Point LeftBottom {
-            get { return new Point(BoundingBox.Left, BoundingBox.Bottom); }
+            get { return new Point(this.BoundingBox.Left, this.BoundingBox.Bottom); }
         }
 
         /// <summary>
         /// Right top corner of the graph
         /// </summary>
         internal Point RightTop {
-            get { return new Point(Right, Top); }
+            get { return new Point(this.Right, this.Top); }
         }
 
         /// <summary>
         /// Bottom bound of the graph
         /// </summary>
         public double Bottom {
-            get { return BoundingBox.Bottom; }
+            get { return this.BoundingBox.Bottom; }
         }
 
         /// <summary>
         /// Top bound of the graph
         /// </summary>
         public double Top {
-            get { return BoundingBox.Bottom + BoundingBox.Height; }
+            get { return this.BoundingBox.Bottom + this.BoundingBox.Height; }
         }
 
         /// <summary>
         /// The nodes in the graph.
         /// </summary>
         public IList<Node> Nodes {
-            get { return nodes; }
-            set { nodes = value; }
+            get { return this.nodes; }
+            set { this.nodes = value; }
         }
 
         /// <summary>
         /// Edges of the graph
         /// </summary>
         public EdgeCollection Edges {
-            get { return edges; }
-            set { edges =value; }
+            get { return this.edges; }
+            set { this.edges =value; }
         }
 
         /// <summary>
@@ -158,7 +159,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <returns></returns>
         public ICollection<Label> CollectAllLabels()
         {
-            return Edges.SelectMany(e => e.Labels).ToList();
+            return this.Edges.SelectMany(e => e.Labels).ToList();
         }
 
         /// <summary>
@@ -166,16 +167,21 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         /// <param name="matrix">the matrix</param>
         public void Transform(PlaneTransformation matrix) {
-            foreach (var node in Nodes)
+            foreach (var node in this.Nodes) {
                 node.Transform(matrix);
-            foreach (var edge in Edges)
+            }
+
+            foreach (var edge in this.Edges) {
                 edge.Transform(matrix);
+            }
 #if TEST_MSAGL
-            if (DebugCurves != null)
-                foreach (var dc in DebugCurves)
+            if (this.DebugCurves != null) {
+                foreach (var dc in this.DebugCurves) {
                     dc.Curve = dc.Curve.Transform(matrix);
+                }
+            }
 #endif
-            UpdateBoundingBox();
+            this.UpdateBoundingBox();
         }
 
         /// <summary>
@@ -184,12 +190,12 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <returns></returns>
         public Rectangle PumpTheBoxToTheGraphWithMargins() {
             var b = Rectangle.CreateAnEmptyBox();
-            PumpTheBoxToTheGraph(ref b);
-            var del=new Point(Margins, -Margins);
+            this.PumpTheBoxToTheGraph(ref b);
+            var del=new Point(this.Margins, -this.Margins);
             b.RightBottom += del;
             b.LeftTop -= del;
-            b.Width = Math.Max(b.Width, MinimalWidth);
-            b.Height = Math.Max(b.Height, MinimalHeight);
+            b.Width = Math.Max(b.Width, this.MinimalWidth);
+            b.Height = Math.Max(b.Height, this.MinimalHeight);
 
             return b;
         }
@@ -202,13 +208,17 @@ namespace Microsoft.Msagl.Core.Layout {
         ///the minimal height of the graph
         ///</summary>
         public double MinimalHeight { get; set; }
+
         /// <summary>
         /// enlarge the rectangle to contain the graph
         /// </summary>
         /// <param name="b"></param>
-        void PumpTheBoxToTheGraph(ref Rectangle b) {
-            foreach (Edge e in Edges) {
-                if (e.UnderCollapsedCluster()) continue;
+        private void PumpTheBoxToTheGraph(ref Rectangle b) {
+            foreach (Edge e in this.Edges) {
+                if (e.UnderCollapsedCluster()) {
+                    continue;
+                }
+
                 if (e.Curve != null) {
 #if SHARPKIT //https://code.google.com/p/sharpkit/issues/detail?id=369 there are no structs in js
                     var cb = e.Curve.BoundingBox.Clone();
@@ -219,28 +229,36 @@ namespace Microsoft.Msagl.Core.Layout {
                     b.Add(cb);
                 }
 
-                foreach (var l in e.Labels.Where(lbl => lbl != null))
+                foreach (var l in e.Labels.Where(lbl => lbl != null)) {
                     b.Add(l.BoundingBox);
+                }
             }
 
-            foreach (Node n in Nodes) {
-                if (n.UnderCollapsedCluster()) continue;
+            foreach (Node n in this.Nodes) {
+                if (n.UnderCollapsedCluster()) {
+                    continue;
+                }
+
                 b.Add(n.BoundingBox);
             }
 
 
-            foreach (var c in RootCluster.Clusters) {
+            foreach (var c in this.RootCluster.Clusters) {
                 if (c.BoundaryCurve == null) {
-                    if (c.RectangularBoundary != null)
+                    if (c.RectangularBoundary != null) {
                         c.BoundaryCurve = c.RectangularBoundary.RectangularHull();
+                    }
                 }
-                if (c.BoundaryCurve != null)
+                if (c.BoundaryCurve != null) {
                     b.Add(c.BoundaryCurve.BoundingBox);
+                }
             }
 #if TEST_MSAGL
-            if(DebugCurves!=null)
-                foreach (var debugCurve in DebugCurves.Where(d => d.Curve != null))
+            if(this.DebugCurves !=null) {
+                foreach (var debugCurve in this.DebugCurves.Where(d => d.Curve != null)) {
                     b.Add(debugCurve.Curve.BoundingBox);
+                }
+            }
 #endif
         }
 
@@ -250,28 +268,32 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         public void Translate(Point delta)
         {
-            var nodeSet = new Set<Node>(Nodes);
-            foreach (var v in Nodes)
+            var nodeSet = new Set<Node>(this.Nodes);
+            foreach (var v in this.Nodes) {
                 v.Center += delta;
+            }
 
-            foreach (var cluster in RootCluster.AllClustersDepthFirstExcludingSelf()) {
-                foreach (var node in cluster.Nodes.Where(n => !nodeSet.Contains(n)))
+            foreach (var cluster in this.RootCluster.AllClustersDepthFirstExcludingSelf()) {
+                foreach (var node in cluster.Nodes.Where(n => !nodeSet.Contains(n))) {
                     node.Center += delta;
+                }
+
                 cluster.Center += delta;
                 cluster.RectangularBoundary.TranslateRectangle(delta);                
             }
 
-            foreach (var e in edges)
+            foreach (var e in this.edges) {
                 e.Translate(delta);
+            }
 
-            BoundingBox = new Rectangle(BoundingBox.Left + delta.X, BoundingBox.Bottom + delta.Y, new Point(BoundingBox.Width, BoundingBox.Height));
+            this.BoundingBox = new Rectangle(this.BoundingBox.Left + delta.X, this.BoundingBox.Bottom + delta.Y, new Point(this.BoundingBox.Width, this.BoundingBox.Height));
         }
 
         /// <summary>
         /// Updates the bounding box to fit the contents.
         /// </summary>
         public void UpdateBoundingBox() {
-            this.BoundingBox = PumpTheBoxToTheGraphWithMargins();
+            this.BoundingBox = this.PumpTheBoxToTheGraphWithMargins();
         }
 
         /// <summary>
@@ -281,7 +303,7 @@ namespace Microsoft.Msagl.Core.Layout {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate")]
         public IEnumerable<Node> GetFlattenedNodesAndClusters()
         {
-            foreach (Node v in Nodes)
+            foreach (Node v in this.Nodes)
             {
                 yield return v;
             }
@@ -310,22 +332,28 @@ namespace Microsoft.Msagl.Core.Layout {
         public void SetDebugIds()
         {
             int id = 0;
-            foreach (var node in RootCluster.AllClustersDepthFirst())
+            foreach (var node in this.RootCluster.AllClustersDepthFirst()) {
                 node.DebugId = id++;
+            }
 
-            foreach (var node in Nodes)
-                if (node.DebugId == null)
+            foreach (var node in this.Nodes) {
+                if (node.DebugId == null) {
                     node.DebugId = id++;
+                }
+            }
         }
 
         internal void CheckClusterConsistency() {
-            foreach (var cluster in RootCluster.AllClustersDepthFirst())
+            foreach (var cluster in this.RootCluster.AllClustersDepthFirst()) {
                 CheckClusterConsistency(cluster);
+            }
         }
 
-        static void CheckClusterConsistency(Cluster cluster) {
-            if (cluster.BoundaryCurve == null)
+        private static void CheckClusterConsistency(Cluster cluster) {
+            if (cluster.BoundaryCurve == null) {
                 return;
+            }
+
             foreach (var child in cluster.Clusters.Concat(cluster.Nodes)) {
                 var inside=Curve.CurveIsInsideOther(child.BoundaryCurve, cluster.BoundaryCurve);
 #if TEST_MSAGL

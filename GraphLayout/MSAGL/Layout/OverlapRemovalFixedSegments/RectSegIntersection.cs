@@ -8,11 +8,11 @@ namespace Microsoft.Msagl.Layout.OverlapRemovalFixedSegments
 {
     public class RectSegIntersection
     {
-        const int INSIDE = 0; // 0000
-        const int LEFT = 1;   // 0001
-        const int RIGHT = 2;  // 0010
-        const int BOTTOM = 4; // 0100
-        const int TOP = 8;    // 1000
+        private const int INSIDE = 0; // 0000
+        private const int LEFT = 1;   // 0001
+        private const int RIGHT = 2;  // 0010
+        private const int BOTTOM = 4; // 0100
+        private const int TOP = 8;    // 1000
 
         public static double acc = 10e-16; 
         public static bool GetInt(double x, double x1, double x2, out double alpha) {
@@ -31,15 +31,17 @@ namespace Microsoft.Msagl.Layout.OverlapRemovalFixedSegments
         public static int GetOutCode(Rectangle rect, Point p) {
             int code = INSIDE;
 
-            if (p.X < rect.Left)
+            if (p.X < rect.Left) {
                 code |= LEFT;
-            else if (p.X > rect.Right)
+            } else if (p.X > rect.Right) {
                 code |= RIGHT;
+            }
 
-            if (p.Y < rect.Bottom)
+            if (p.Y < rect.Bottom) {
                 code |= BOTTOM;
-            else if (p.Y > rect.Top)
+            } else if (p.Y > rect.Top) {
                 code |= TOP;
+            }
 
             return code;
         }
@@ -116,18 +118,19 @@ namespace Microsoft.Msagl.Layout.OverlapRemovalFixedSegments
             double a = rect.Area;
             double a1 = 0;
 
-            if (iTop && iBottom)
+            if (iTop && iBottom) {
                 a1 = GetHorizontalTrapezoidArea(rect.LeftBottom, ipBottom, ipTop, rect.LeftTop);
-            else if (iTop && iLeft)
+            } else if (iTop && iLeft) {
                 a1 = GetTriangleArea(ipLeft, ipTop, rect.LeftTop);
-            else if (iTop && iRight)
+            } else if (iTop && iRight) {
                 a1 = GetTriangleArea(ipRight, rect.RightTop, ipTop);
-            else if (iLeft && iRight)
+            } else if (iLeft && iRight) {
                 a1 = GetVerticalTrapezoidArea(rect.LeftBottom, rect.RightBottom, ipRight, ipLeft);
-            else if (iLeft && iBottom)
+            } else if (iLeft && iBottom) {
                 a1 = GetTriangleArea(rect.LeftBottom, ipBottom, ipLeft);
-            else if (iRight && iBottom)
+            } else if (iRight && iBottom) {
                 a1 = GetTriangleArea(ipBottom, rect.RightBottom, ipRight);
+            }
 
             return Math.Min(a1, a - a1);
         }
@@ -218,7 +221,7 @@ namespace Microsoft.Msagl.Layout.OverlapRemovalFixedSegments
             return true;
         }
 
-         static double GetOverlapAmountInsideOutside(Rectangle rect, Point pInside, Point pOutside)
+        private static double GetOverlapAmountInsideOutside(Rectangle rect, Point pInside, Point pOutside)
         {
             // todo: maybe reduce penalty
             int outCode = GetOutCode(rect, pOutside);
@@ -283,7 +286,10 @@ namespace Microsoft.Msagl.Layout.OverlapRemovalFixedSegments
         public static Point GetOrthShiftUntilNoLongerOverlapRectSeg(Rectangle rect, Point p1, Point p2, Point moveDir)
         {
             Point d = (p2 - p1).Rotate90Cw().Normalize();
-            if (Dot(d, moveDir) < 0) d = -d;
+            if (Dot(d, moveDir) < 0) {
+                d = -d;
+            }
+
             double minProj = 0;
 
             minProj = Math.Min(minProj, Dot(rect.LeftBottom - p1, d));
@@ -313,16 +319,24 @@ namespace Microsoft.Msagl.Layout.OverlapRemovalFixedSegments
             var p2 = rect.Center + dir;
 
             GetIntX(rect.Left, p1, p2, out alpha);
-            if (alpha > 0) t = Math.Min(t, alpha);
+            if (alpha > 0) {
+                t = Math.Min(t, alpha);
+            }
 
             GetIntX(rect.Right, p1, p2, out alpha);
-            if (alpha > 0) t = Math.Min(t, alpha);
+            if (alpha > 0) {
+                t = Math.Min(t, alpha);
+            }
 
             GetIntY(rect.Bottom, p1, p2, out alpha);
-            if (alpha > 0) t = Math.Min(t, alpha);
+            if (alpha > 0) {
+                t = Math.Min(t, alpha);
+            }
 
             GetIntY(rect.Top, p1, p2, out alpha);
-            if (alpha > 0) t = Math.Min(t, alpha);
+            if (alpha > 0) {
+                t = Math.Min(t, alpha);
+            }
 
             return p1 + t*dir;
         }
@@ -377,8 +391,9 @@ namespace Microsoft.Msagl.Layout.OverlapRemovalFixedSegments
                 insideBoundary &= !boxSmall.Contains(p1);
                 insideBoundary &= !boxSmall.Contains(p2);
 
-                if(insideBoundary)
+                if(insideBoundary) {
                     boxesContaining.Add(r);
+                }
             }
 
             return boxesContaining.Any();
@@ -400,8 +415,9 @@ namespace Microsoft.Msagl.Layout.OverlapRemovalFixedSegments
                 var v0 = p1 - p0;
                 var v1 = p2 - p1;
 
-                if (!Point.ParallelWithinEpsilon(v0, v1, 1))
+                if (!Point.ParallelWithinEpsilon(v0, v1, 1)) {
                     return false;
+                }
             }
             return true;
         }

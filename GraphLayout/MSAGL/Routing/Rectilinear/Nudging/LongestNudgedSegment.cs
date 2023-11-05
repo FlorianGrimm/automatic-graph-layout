@@ -11,7 +11,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
 
 
         internal LongestNudgedSegment(int variable) {
-            Id = variable;
+            this.Id = variable;
         }
 
         
@@ -21,11 +21,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         internal Direction CompassDirection { get; set; }
 
         //the segment can go only North or East independently of the edge directions
-        readonly List<PathEdge> edges = new List<PathEdge>();
-        Point start;
-        Point end;
-        internal override Point Start { get { return start; } }
-        internal override Point End { get { return end; } }
+        private readonly List<PathEdge> edges = new List<PathEdge>();
+        private Point start;
+        private Point end;
+        internal override Point Start { get { return this.start; } }
+        internal override Point End { get { return this.end; } }
 
 
 
@@ -33,11 +33,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         /// the list of edges holding the same offset and direction
         /// </summary>
         internal List<PathEdge> Edges {
-            get { return edges; }
+            get { return this.edges; }
         }
 
         internal void AddEdge(PathEdge edge) {
-            if (Edges.Count == 0) {
+            if (this.Edges.Count == 0) {
                 var dir = (edge.Target - edge.Source).CompassDirection;
                 switch (dir) {
                     case Core.Geometry.Direction.South:
@@ -47,47 +47,49 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
                         dir = Core.Geometry.Direction.East;
                         break;
                 }
-                CompassDirection = dir;
-                start = edge.Source;
-                end = edge.Source; //does not matter; it will be fixed immediately
+                this.CompassDirection = dir;
+                this.start = edge.Source;
+                this.end = edge.Source; //does not matter; it will be fixed immediately
             }
 
-            switch (CompassDirection) {
+            switch (this.CompassDirection) {
                 case Core.Geometry.Direction.North:
-                    TryPointForStartAndEndNorth(edge.Source);
-                    TryPointForStartAndEndNorth(edge.Target);
+                    this.TryPointForStartAndEndNorth(edge.Source);
+                    this.TryPointForStartAndEndNorth(edge.Target);
                     break;
                 case Core.Geometry.Direction.East:
-                    TryPointForStartAndEndEast(edge.Source);
-                    TryPointForStartAndEndEast(edge.Target);
+                    this.TryPointForStartAndEndEast(edge.Source);
+                    this.TryPointForStartAndEndEast(edge.Target);
                     break;
             }
-            Edges.Add(edge);
+            this.Edges.Add(edge);
         }
 
-        void TryPointForStartAndEndNorth(Point p) {
-            if (p.Y < start.Y)
-                start = p;
-            else if (p.Y > end.Y)
-                end = p;
+        private void TryPointForStartAndEndNorth(Point p) {
+            if (p.Y < this.start.Y) {
+                this.start = p;
+            } else if (p.Y > this.end.Y) {
+                this.end = p;
+            }
         }
 
-        void TryPointForStartAndEndEast(Point p) {
-            if (p.X < start.X)
-                start = p;
-            else if (p.X > end.X)
-                end = p;
+        private void TryPointForStartAndEndEast(Point p) {
+            if (p.X < this.start.X) {
+                this.start = p;
+            } else if (p.X > this.end.X) {
+                this.end = p;
+            }
         }
 
-        bool isFixed;
+        private bool isFixed;
 
         /// <summary>
         /// the segments constraining "this" from the right
         /// </summary>
 
         internal bool IsFixed {
-            get { return isFixed; }
-            set { isFixed = value; }
+            get { return this.isFixed; }
+            set { this.isFixed = value; }
         }
 
         internal int Id = -1;
@@ -97,24 +99,28 @@ namespace Microsoft.Msagl.Routing.Rectilinear.Nudging {
         /// the maximal width of the edges 
         /// </summary>
         public double Width {
-            get { return edges.Max(edge => edge.Width); }
+            get { return this.edges.Max(edge => edge.Width); }
         }
 
 
         internal double GetLeftBound() {
-            if (!IsFixed)
-                return Edges.Max(edge => edge.AxisEdge.LeftBound);
-            return CompassDirection == Core.Geometry.Direction.North ? Edges[0].Source.X : -Edges[0].Source.Y;
+            if (!this.IsFixed) {
+                return this.Edges.Max(edge => edge.AxisEdge.LeftBound);
+            }
+
+            return this.CompassDirection == Core.Geometry.Direction.North ? this.Edges[0].Source.X : -this.Edges[0].Source.Y;
         }
 
         internal double GetRightBound() {
-            if (!IsFixed)
-                return Edges.Min(edge => edge.AxisEdge.RightBound);
-            return Position();
+            if (!this.IsFixed) {
+                return this.Edges.Min(edge => edge.AxisEdge.RightBound);
+            }
+
+            return this.Position();
         }
 
-        double Position() {
-            return CompassDirection == Core.Geometry.Direction.North ? Edges[0].Source.X : -Edges[0].Source.Y;
+        private double Position() {
+            return this.CompassDirection == Core.Geometry.Direction.North ? this.Edges[0].Source.X : -this.Edges[0].Source.Y;
         }
 
         internal double IdealPosition {get;set;}

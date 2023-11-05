@@ -77,7 +77,7 @@ namespace Microsoft.Msagl.Core.Geometry {
             set;
         }
 
-         bool generateFixedConstraintsDefault;
+        private bool generateFixedConstraintsDefault;
 
         /// <summary>
         /// The default value that GenerateFixedConstraints will be reverted to when a lock is released
@@ -86,11 +86,11 @@ namespace Microsoft.Msagl.Core.Geometry {
         {
             get
             {
-                return generateFixedConstraintsDefault;
+                return this.generateFixedConstraintsDefault;
             }
             set
             {
-                GenerateFixedConstraints = generateFixedConstraintsDefault = value;
+                this.GenerateFixedConstraints = this.generateFixedConstraintsDefault = value;
             }
         }
 
@@ -102,14 +102,14 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// </summary>
         /// <returns></returns>
         public ICurve RectangularHull() {
-            Debug.Assert(rectangle.Bottom <= rectangle.Top);
-            if (RadiusX > 0 || RadiusY > 0)
+            Debug.Assert(this.rectangle.Bottom <= this.rectangle.Top);
+            if (this.RadiusX > 0 || this.RadiusY > 0)
             {
-                return CurveFactory.CreateRectangleWithRoundedCorners(rectangle.Width, rectangle.Height, RadiusX, RadiusY, rectangle.Center);
+                return CurveFactory.CreateRectangleWithRoundedCorners(this.rectangle.Width, this.rectangle.Height, this.RadiusX, this.RadiusY, this.rectangle.Center);
             }
             else
             {
-                return CurveFactory.CreateRectangle(rectangle.Width, rectangle.Height, rectangle.Center);
+                return CurveFactory.CreateRectangle(this.rectangle.Width, this.rectangle.Height, this.rectangle.Center);
             }
         }
         /// <summary>
@@ -117,16 +117,15 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// </summary>
         public Rectangle Rect {
             get {
-                return rectangle;
+                return this.rectangle;
             }
             set
             {
-                rectangle = value;
+                this.rectangle = value;
             }
         }
 
-        
-         class Margin
+        private class Margin
         {
             public double Left;
             public double Right;
@@ -134,9 +133,9 @@ namespace Microsoft.Msagl.Core.Geometry {
             public double Bottom;
         }
 
-        Margin defaultMargin;
+        private Margin defaultMargin;
         internal bool DefaultMarginIsSet {
-            get { return defaultMargin!=null; }
+            get { return this.defaultMargin !=null; }
         }
 
         /// <summary>
@@ -146,7 +145,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         {
             get
             {
-                return defaultMargin.Left;
+                return this.defaultMargin.Left;
             }
         }
         /// <summary>
@@ -156,7 +155,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         {
             get
             {
-                return defaultMargin.Top;
+                return this.defaultMargin.Top;
             }
         }
 
@@ -167,7 +166,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         {
             get
             {
-                return defaultMargin.Right;
+                return this.defaultMargin.Right;
             }
         }
         /// <summary>
@@ -177,7 +176,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         {
             get
             {
-                return defaultMargin.Bottom;
+                return this.defaultMargin.Bottom;
             }
         }
 
@@ -186,7 +185,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// </summary>
         public void StoreDefaultMargin()
         {
-            defaultMargin = new Margin { Left = LeftMargin, Right = RightMargin, Bottom = BottomMargin, Top = TopMargin };
+            this.defaultMargin = new Margin { Left = this.LeftMargin, Right = this.RightMargin, Bottom = this.BottomMargin, Top = this.TopMargin };
         }
 
         /// <summary>
@@ -194,7 +193,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// </summary>
         public void StoreDefaultMargin(double left, double right, double bottom, double top)
         {
-            defaultMargin = new Margin { Left = left, Right = right, Bottom = bottom, Top = top };
+            this.defaultMargin = new Margin { Left = left, Right = right, Bottom = bottom, Top = top };
         }
 
         /// <summary>
@@ -202,12 +201,12 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// </summary>
         public void RestoreDefaultMargin()
         {
-            if (defaultMargin != null)
+            if (this.defaultMargin != null)
             {
-                LeftMargin = defaultMargin.Left;
-                RightMargin = defaultMargin.Right;
-                TopMargin = defaultMargin.Top;
-                BottomMargin = defaultMargin.Bottom;
+                this.LeftMargin = this.defaultMargin.Left;
+                this.RightMargin = this.defaultMargin.Right;
+                this.TopMargin = this.defaultMargin.Top;
+                this.BottomMargin = this.defaultMargin.Bottom;
             }
         }
 
@@ -218,7 +217,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <param name="delta"></param>
         public void TranslateRectangle(Point delta)
         {
-            rectangle = new Rectangle(rectangle.Left + delta.X, rectangle.Bottom + delta.Y, new Point(rectangle.Width, rectangle.Height));
+            this.rectangle = new Rectangle(this.rectangle.Left + delta.X, this.rectangle.Bottom + delta.Y, new Point(this.rectangle.Width, this.rectangle.Height));
         }
         
         /// <summary>
@@ -238,19 +237,19 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <param name="bottom"></param>
         public void Lock(double left, double right, double top, double bottom) {
             double weight = 1e4;
-            LeftBorderInfo = new BorderInfo(LeftBorderInfo.InnerMargin, left, weight);
-            RightBorderInfo = new BorderInfo(RightBorderInfo.InnerMargin, right, weight);
-            TopBorderInfo = new BorderInfo(TopBorderInfo.InnerMargin, top, weight);
-            BottomBorderInfo = new BorderInfo(BottomBorderInfo.InnerMargin, bottom, weight);
+            this.LeftBorderInfo = new BorderInfo(this.LeftBorderInfo.InnerMargin, left, weight);
+            this.RightBorderInfo = new BorderInfo(this.RightBorderInfo.InnerMargin, right, weight);
+            this.TopBorderInfo = new BorderInfo(this.TopBorderInfo.InnerMargin, top, weight);
+            this.BottomBorderInfo = new BorderInfo(this.BottomBorderInfo.InnerMargin, bottom, weight);
         }
         /// <summary>
         /// Releases the lock on all four borders
         /// </summary>
         public void Unlock() {
-            LeftBorderInfo = new BorderInfo(LeftBorderInfo.InnerMargin);
-            RightBorderInfo = new BorderInfo(RightBorderInfo.InnerMargin);
-            TopBorderInfo = new BorderInfo(TopBorderInfo.InnerMargin);
-            BottomBorderInfo = new BorderInfo(BottomBorderInfo.InnerMargin);
+            this.LeftBorderInfo = new BorderInfo(this.LeftBorderInfo.InnerMargin);
+            this.RightBorderInfo = new BorderInfo(this.RightBorderInfo.InnerMargin);
+            this.TopBorderInfo = new BorderInfo(this.TopBorderInfo.InnerMargin);
+            this.BottomBorderInfo = new BorderInfo(this.BottomBorderInfo.InnerMargin);
         }
         /// <summary>
         /// boundary can shrink no more than this

@@ -18,21 +18,20 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
     [Serializable]
 #endif
     abstract public class ParallelogramNodeOverICurve : ParallelogramNode {
-
-        ICurve seg;
+        private ICurve seg;
         /// <summary>
         /// The segment bounded by the parallelogram
         /// </summary>
         internal ICurve Seg {
             get {
-                return seg;
+                return this.seg;
             }
             set {
-                seg = value;
+                this.seg = value;
             }
         }
 
-        double leafBoxesOffset = DefaultLeafBoxesOffset;
+        private double leafBoxesOffset = DefaultLeafBoxesOffset;
 
         static internal double DefaultLeafBoxesOffset = 0.5;
         /// <summary>
@@ -41,7 +40,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <value></value>
         internal double LeafBoxesOffset {
             get {
-                return leafBoxesOffset;
+                return this.leafBoxesOffset;
             }
         }
 
@@ -49,7 +48,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
 
         internal ParallelogramNodeOverICurve(ICurve s, double leafBoxesOffset) {
-            seg = s;
+            this.seg = s;
             this.leafBoxesOffset = leafBoxesOffset;
         }
 
@@ -63,9 +62,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             return CreateParallelogramNodeForCurveSeg(segment.ParStart, segment.ParEnd, segment, DefaultLeafBoxesOffset);
         }
 
-        static bool WithinEpsilon(ICurve seg, double start, double end, double eps) {
-            if (seg is LineSegment)
+        private static bool WithinEpsilon(ICurve seg, double start, double end, double eps) {
+            if (seg is LineSegment) {
                 return true;
+            }
 
             int n = 3; //hack !!!! but maybe can be proven for Bezier curves and other regular curves
             double d = (end - start) / n;
@@ -85,8 +85,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         internal static double DistToSegm(Point p, Point s, Point e) {
 
             Point l = e - s;
-            if (l.Length < ApproximateComparer.IntersectionEpsilon)
+            if (l.Length < ApproximateComparer.IntersectionEpsilon) {
                 return (p - (0.5f * (s + e))).Length;
+            }
+
             Point perp = new Point(-l.Y, l.X);
             perp = perp * (1.0f / perp.Length);
             return Math.Abs((p - s) * perp);
@@ -103,8 +105,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         internal static bool CreateParallelogramOnSubSeg(double start, double end, ICurve seg, ref Parallelogram box,  
             Point startPoint, Point endPoint) {
 
-            if (seg is CubicBezierSegment)
+            if (seg is CubicBezierSegment) {
                 return CreateParallelogramOnSubSegOnBezierSeg(start, end, seg, ref box);
+            }
 
             Point tan1 = seg.Derivative(start);
 
@@ -118,13 +121,15 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             double numerator = p * tan2Perp;
             double denumerator = (tan1 * tan2Perp);
             double x;// = (p * tan2Perp) / (tan1 * tan2Perp);
-            if (Math.Abs(numerator) < ApproximateComparer.DistanceEpsilon)
+            if (Math.Abs(numerator) < ApproximateComparer.DistanceEpsilon) {
                 x = 0;
-            else if (Math.Abs(denumerator) < ApproximateComparer.DistanceEpsilon) {
+            } else if (Math.Abs(denumerator) < ApproximateComparer.DistanceEpsilon) {
                 //it is degenerated; adjacent sides are parallel, but 
                 //since p * tan2Perp is big it does not contain e
                 return false;
-            } else x = numerator / denumerator;
+            } else {
+                x = numerator / denumerator;
+            }
 
             tan1 *= x;
 
@@ -139,14 +144,16 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
             double delta = (end - start) / 64;
             for (int i = 1; i < 64; i++) {
-                if (!box.Contains(seg[start + delta * i])) 
+                if (!box.Contains(seg[start + delta * i])) {
                     return false;
-               }
+                }
+            }
             return true;
 
 
         }
-        delegate Point B(int i);
+
+        private delegate Point B(int i);
         internal static bool CreateParallelogramOnSubSegOnBezierSeg(double start, double end, ICurve seg, ref Parallelogram box) {
 
             CubicBezierSegment trimSeg = seg.Trim(start, end) as CubicBezierSegment;
@@ -157,13 +164,15 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
             box = new Parallelogram(b(0), a, b(3) - b(0));
 
-            if (box.Contains(b(2)))
+            if (box.Contains(b(2))) {
                 return true;
+            }
 
             box = new Parallelogram(b(3), b(2) - b(3), b(0) - b(3));
 
-            if (box.Contains(b(1)))
+            if (box.Contains(b(1))) {
                 return true;
+            }
 
             return false;
         }
@@ -172,8 +181,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         internal static ParallelogramNodeOverICurve CreateParallelogramNodeForCurveSeg(double start, double end, ICurve seg, double eps) {
 
             bool closedSeg = (start == seg.ParStart && end == seg.ParEnd && ApproximateComparer.Close(seg.Start, seg.End));
-            if (closedSeg)
+            if (closedSeg) {
                 return CreateNodeWithSegmentSplit(start, end, seg, eps);
+            }
 
             Point s = seg[start];
             Point e = seg[end];
@@ -195,14 +205,15 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             bool we = WithinEpsilon(seg, start, end, eps);
             Parallelogram box = new Parallelogram();
             
-            if (we && CreateParallelogramOnSubSeg(start, end, seg, ref box, s, e)) 
+            if (we && CreateParallelogramOnSubSeg(start, end, seg, ref box, s, e)) {
                 return new ParallelogramLeaf(start, end, box, seg, eps);
-            
+            }
+
             return CreateNodeWithSegmentSplit(start, end, seg, eps);
             
         }
 
-         static ParallelogramNodeOverICurve CreateNodeWithSegmentSplit(double start, double end, ICurve seg, double eps) {
+        private static ParallelogramNodeOverICurve CreateNodeWithSegmentSplit(double start, double end, ICurve seg, double eps) {
             ParallelogramInternalTreeNode pBNode = new ParallelogramInternalTreeNode(seg, eps);
             pBNode.AddChild(CreateParallelogramNodeForCurveSeg(start, 0.5 * (start + end), seg, eps));
             pBNode.AddChild(CreateParallelogramNodeForCurveSeg(0.5 * (start + end), end, seg, eps));
