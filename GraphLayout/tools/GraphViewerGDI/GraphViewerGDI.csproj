@@ -30,12 +30,12 @@
     <DocumentationFile>bin\Debug\Microsoft.Msagl.GraphViewerGdi.xml</DocumentationFile>
     <RunCodeAnalysis>false</RunCodeAnalysis>
     <UseVSHostingProcess>false</UseVSHostingProcess>
-    <NoWarn>1591</NoWarn>
+    <NoWarn>1591;CA1416;SYSLIB0006</NoWarn>
     <CodeAnalysisRuleSet />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DocumentationFile>bin\Release\Microsoft.Msagl.GraphViewerGdi.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
+    <NoWarn>1591;CA1416;SYSLIB0006</NoWarn>
     <CodeAnalysisRuleSet />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'DebugSurface|AnyCPU' ">

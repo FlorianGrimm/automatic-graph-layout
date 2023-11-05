@@ -321,7 +321,9 @@ namespace Microsoft.Msagl.Drawing {
         /// <param name="nodeId"></param>
         /// <returns></returns>
         public Node FindNode(string nodeId) {
-            return nodeMap[nodeId] as Node;
+            nodeMap.TryGetValue(nodeId, out var result);
+            //return nodeMap[nodeId] as Node;
+            return result;
         }
 
         /// <summary>

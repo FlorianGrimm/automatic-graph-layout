@@ -1,6 +1,6 @@
 ﻿using Microsoft.Msagl.Drawing;
 using System;
-using dwg = System.Drawing;
+using SystemDrawing = System.Drawing;
 using System.Xml;
 
 namespace SvgLayerSample.Svg {
@@ -16,7 +16,7 @@ namespace SvgLayerSample.Svg {
         private readonly Text TextElement;
         public double PaddingTop { get; set; } = 0d;
 
-        public dwg.Font Font  {
+        public SystemDrawing.Font Font  {
             get {
                 return TextElement.Font;
             }
@@ -30,7 +30,7 @@ namespace SvgLayerSample.Svg {
             this.LabelText = Utils.WordWrap(labelText, 25);
             this.TextElement = new Text(this.LabelText);
         }
-        public Label(string labelText, dwg.Font font) {
+        public Label(string labelText, SystemDrawing.Font font) {
             this.LabelText = Utils.WordWrap(labelText, 25);
             this.TextElement = new Text(this.LabelText);
             this.Font = font;

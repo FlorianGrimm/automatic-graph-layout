@@ -1,5 +1,5 @@
 ﻿using System.Xml;
-using dwg = System.Drawing;
+using SystemDrawing = System.Drawing;
 
 namespace SvgLayerSample.Svg {
     public class Text : SvgElement {
@@ -7,8 +7,8 @@ namespace SvgLayerSample.Svg {
         public double TextWidth { get; set; }
         public double TextHeight { get; set; }
 
-        private dwg.Font _font = new dwg.Font(dwg.FontFamily.GenericSerif, 16);
-        public dwg.Font Font { get { return _font; }
+        private SystemDrawing.Font _font = new SystemDrawing.Font(SystemDrawing.FontFamily.GenericSerif, 16);
+        public SystemDrawing.Font Font { get { return _font; }
             set {
                 _font = value;
                 (this.TextWidth, this.TextHeight) = CalculateTextWidth(this.Content);
@@ -25,8 +25,8 @@ namespace SvgLayerSample.Svg {
         }
 
         private (float Width, float Height) CalculateTextWidth(string text) {
-            using (dwg.Bitmap bmp = new dwg.Bitmap(1, 1))
-            using (dwg.Graphics g = dwg.Graphics.FromImage(bmp)) {
+            using (SystemDrawing.Bitmap bmp = new SystemDrawing.Bitmap(1, 1))
+            using (SystemDrawing.Graphics g = SystemDrawing.Graphics.FromImage(bmp)) {
                 var measurements = g.MeasureString(text, this.Font);
                 return (measurements.Width, measurements.Height);
             }
