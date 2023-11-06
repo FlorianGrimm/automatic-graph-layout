@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Microsoft.Msagl.Core.Geometry.Curves{
+namespace Microsoft.Msagl.Core.Geometry.Curves {
     /// <summary>
     /// A class representing an ellipse.
     /// </summary>
 #if TEST_MSAGL
     [Serializable]
 #endif
-    public class Ellipse : ICurve{
+    public class Ellipse : ICurve {
 #if TEST_MSAGL
         /// <summary>
         /// </summary>
@@ -29,15 +29,15 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <param name="offset">the width of the offset</param>
         /// <param name="dir">the direction of the offset</param>
         /// <returns></returns>
-        public ICurve OffsetCurve(double offset, Point dir){
+        public ICurve? OffsetCurve(double offset, Point dir) {
             //is dir inside or outside
             Point d = dir - this.center;
             double angle = Point.Angle(this.aAxis, d);
-            Point s = this.aAxis *Math.Cos(angle) + this.bAxis *Math.Sin(angle);
-            if(s.Length < d.Length){
+            Point s = this.aAxis * Math.Cos(angle) + this.bAxis * Math.Sin(angle);
+            if (s.Length < d.Length) {
                 double al = this.aAxis.Length;
                 double bl = this.bAxis.Length;
-                return new Ellipse((al + offset)* this.aAxis.Normalize(), (bl + offset)* this.bAxis.Normalize(), this.center);
+                return new Ellipse((al + offset) * this.aAxis.Normalize(), (bl + offset) * this.bAxis.Normalize(), this.center);
             }
             {
                 double al = this.aAxis.Length;
@@ -46,7 +46,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         if (al < offset || bl < offset)
           throw new Exception("wrong parameter for ellipse offset");
 #endif
-                return new Ellipse((al - offset)* this.aAxis.Normalize(), (bl - offset)* this.bAxis.Normalize(), this.center);
+                return new Ellipse((al - offset) * this.aAxis.Normalize(), (bl - offset) * this.bAxis.Normalize(), this.center);
             }
         }
 
@@ -54,21 +54,21 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// Reverse the ellipe: not implemented.
         /// </summary>
         /// <returns>returns the reversed curve</returns>
-        public ICurve Reverse(){
+        public ICurve? Reverse() {
             return null; // throw new Exception("not implemented");
         }
 
         /// <summary>
         /// Returns the start point of the curve
         /// </summary>
-        public Point Start{
+        public Point Start {
             get { return this[this.ParStart]; }
         }
 
         /// <summary>
         /// Returns the end point of the curve
         /// </summary>
-        public Point End{
+        public Point End {
             get { return this[this.ParEnd]; }
         }
 
@@ -78,11 +78,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <param name="start">the trim start parameter</param>
         /// <param name="end">the trim end parameter</param>
         /// <returns></returns>
-        public ICurve Trim(double start, double end){
-            Debug.Assert(start<=end);
-            Debug.Assert(start>= this.ParStart -ApproximateComparer.Tolerance);
-            Debug.Assert(end<= this.ParEnd +ApproximateComparer.Tolerance);
-            
+        public ICurve Trim(double start, double end) {
+            Debug.Assert(start <= end);
+            Debug.Assert(start >= this.ParStart - ApproximateComparer.Tolerance);
+            Debug.Assert(end <= this.ParEnd + ApproximateComparer.Tolerance);
+
             return new Ellipse(Math.Max(start, this.ParStart), Math.Min(end, this.ParEnd), this.AxisA, this.AxisB, this.center);
         }
 
@@ -92,8 +92,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <param name="start">The starting parameter</param>
         /// <param name="end">The ending parameter</param>
         /// <returns>The trimmed curve</returns>
-        public ICurve TrimWithWrap(double start, double end)
-        {
+        public ICurve TrimWithWrap(double start, double end) {
             throw new NotImplementedException();
         }
 
@@ -103,7 +102,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <summary>
         /// the X axis of the ellipse
         /// </summary>
-        public Point AxisA{
+        public Point AxisA {
             get { return this.aAxis; }
             set { this.aAxis = value; }
         }
@@ -113,7 +112,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <summary>
         /// the Y axis of the ellipse
         /// </summary>
-        public Point AxisB{
+        public Point AxisB {
             get { return this.bAxis; }
             set { this.bAxis = value; }
         }
@@ -123,7 +122,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <summary>
         /// the center of the ellipse
         /// </summary>
-        public Point Center{
+        public Point Center {
             get { return this.center; }
             set { this.center = value; }
         }
@@ -131,7 +130,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <summary>
         /// The bounding box of the ellipse
         /// </summary>
-        public Rectangle BoundingBox{
+        public Rectangle BoundingBox {
             get { return this.box; }
         }
 
@@ -140,8 +139,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// </summary>
         /// <param name="t">the parameter of the derivative</param>
         /// <returns></returns>
-        public Point this[double t]{
-            get { return this.center + Math.Cos(t)* this.aAxis + Math.Sin(t)* this.bAxis; }
+        public Point this[double t] {
+            get { return this.center + Math.Cos(t) * this.aAxis + Math.Sin(t) * this.bAxis; }
         }
 
         /// <summary>
@@ -149,8 +148,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// </summary>
         /// <param name="t">the p</param>
         /// <returns></returns>
-        public Point Derivative(double t){
-            return -Math.Sin(t)* this.aAxis + Math.Cos(t)* this.bAxis;
+        public Point Derivative(double t) {
+            return -Math.Sin(t) * this.aAxis + Math.Cos(t) * this.bAxis;
         }
 
         /// <summary>
@@ -158,8 +157,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public Point SecondDerivative(double t){
-            return -Math.Cos(t)* this.aAxis - Math.Sin(t)* this.bAxis;
+        public Point SecondDerivative(double t) {
+            return -Math.Cos(t) * this.aAxis - Math.Sin(t) * this.bAxis;
         }
 
         /// <summary>
@@ -167,20 +166,20 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public Point ThirdDerivative(double t){
-            return Math.Sin(t)* this.aAxis - Math.Cos(t)* this.bAxis;
+        public Point ThirdDerivative(double t) {
+            return Math.Sin(t) * this.aAxis - Math.Cos(t) * this.bAxis;
         }
 
         /// <summary>
         /// a tree of ParallelogramNodes covering the edge
         /// </summary>
         /// <value></value>
-        public ParallelogramNodeOverICurve ParallelogramNodeOverICurve{
-            get{
+        public ParallelogramNodeOverICurve ParallelogramNodeOverICurve {
+            get {
 #if PPC
                 lock(this){
 #endif
-                if(this.parallelogramNodeOverICurve != null) {
+                if (this.parallelogramNodeOverICurve != null) {
                     return this.parallelogramNodeOverICurve;
                 }
 
@@ -191,10 +190,10 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
             }
         }
 
-        private static ParallelogramNodeOverICurve CreateNodeWithSegmentSplit(double start, double end, Ellipse seg, double eps){
+        private static ParallelogramNodeOverICurve CreateNodeWithSegmentSplit(double start, double end, Ellipse seg, double eps) {
             var pBNode = new ParallelogramInternalTreeNode(seg, eps);
-            pBNode.AddChild(CreateParallelogramNodeForCurveSeg(start, 0.5*(start + end), seg, eps));
-            pBNode.AddChild(CreateParallelogramNodeForCurveSeg(0.5*(start + end), end, seg, eps));
+            pBNode.AddChild(CreateParallelogramNodeForCurveSeg(start, 0.5 * (start + end), seg, eps));
+            pBNode.AddChild(CreateParallelogramNodeForCurveSeg(0.5 * (start + end), end, seg, eps));
             var boxes = new List<Parallelogram>();
             boxes.Add(pBNode.Children[0].Parallelogram);
             boxes.Add(pBNode.Children[1].Parallelogram);
@@ -203,9 +202,9 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         }
 
         internal static ParallelogramNodeOverICurve CreateParallelogramNodeForCurveSeg(double start, double end,
-                                                                                       Ellipse seg, double eps){
+                                                                                       Ellipse seg, double eps) {
             bool closedSeg = (start == seg.ParStart && end == seg.ParEnd && ApproximateComparer.Close(seg.Start, seg.End));
-            if(closedSeg) {
+            if (closedSeg) {
                 return CreateNodeWithSegmentSplit(start, end, seg, eps);
             }
 
@@ -213,7 +212,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
             Point e = seg[end];
             Point w = e - s;
             Point middle = seg[(start + end) / 2];
-           
+
             if (ParallelogramNodeOverICurve.DistToSegm(middle, s, e) <= ApproximateComparer.IntersectionEpsilon &&
                 w * w < Curve.LineSegmentThreshold * Curve.LineSegmentThreshold && end - start < Curve.LineSegmentThreshold) {
                 var ls = new LineSegment(s, e);
@@ -228,14 +227,14 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
             bool we = WithinEpsilon(seg, start, end, eps);
             var box = new Parallelogram();
 
-            if(we && CreateParallelogramOnSubSeg(start, end, seg, ref box)){
+            if (we && CreateParallelogramOnSubSeg(start, end, seg, ref box)) {
                 return new ParallelogramLeaf(start, end, box, seg, eps);
-            } else{
+            } else {
                 return CreateNodeWithSegmentSplit(start, end, seg, eps);
             }
         }
 
-        internal static bool CreateParallelogramOnSubSeg(double start, double end, Ellipse seg, ref Parallelogram box){
+        internal static bool CreateParallelogramOnSubSeg(double start, double end, Ellipse seg, ref Parallelogram box) {
             Point tan1 = seg.Derivative(start);
 
             Point tan2 = seg.Derivative(end);
@@ -247,17 +246,17 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
 
             Point p = e - corner;
 
-            double numerator = p*tan2Perp;
-            double denumerator = (tan1*tan2Perp);
+            double numerator = p * tan2Perp;
+            double denumerator = (tan1 * tan2Perp);
             double x; // = (p * tan2Perp) / (tan1 * tan2Perp);
-            if(Math.Abs(numerator) < ApproximateComparer.DistanceEpsilon) {
+            if (Math.Abs(numerator) < ApproximateComparer.DistanceEpsilon) {
                 x = 0;
-            } else if(Math.Abs(denumerator) < ApproximateComparer.DistanceEpsilon){
+            } else if (Math.Abs(denumerator) < ApproximateComparer.DistanceEpsilon) {
                 //it is degenerated; adjacent sides are parallel, but 
                 //since p * tan2Perp is big it does not contain e
                 return false;
             } else {
-                x = numerator/denumerator;
+                x = numerator / denumerator;
             }
 
             tan1 *= x;
@@ -274,18 +273,18 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
             return true;
         }
 
-        private static bool WithinEpsilon(Ellipse seg, double start, double end, double eps){
+        private static bool WithinEpsilon(Ellipse seg, double start, double end, double eps) {
             int n = 3; //hack !!!! but maybe can be proven for Bezier curves and other regular curves
-            double d = (end - start)/n;
+            double d = (end - start) / n;
             Point s = seg[start];
             Point e = seg[end];
 
             double d0 = ParallelogramNodeOverICurve.DistToSegm(seg[start + d], s, e);
-            if(d0 > eps) {
+            if (d0 > eps) {
                 return false;
             }
 
-            double d1 = ParallelogramNodeOverICurve.DistToSegm(seg[start + d*(n - 1)], s, e);
+            double d1 = ParallelogramNodeOverICurve.DistToSegm(seg[start + d * (n - 1)], s, e);
 
             return d1 <= eps;
         }
@@ -300,7 +299,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <summary>
         /// the start of the parameter domain
         /// </summary>   
-        public double ParStart{
+        public double ParStart {
             get { return this.parStart; }
             set { this.parStart = value; }
         }
@@ -310,7 +309,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <summary>
         /// the end of the parameter domain
         /// </summary>
-        public double ParEnd{
+        public double ParEnd {
             get { return this.parEnd; }
             set { this.parEnd = value; }
         }
@@ -326,8 +325,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <param name="axis1">y radius</param>
         /// <param name="center">the ellipse center</param>
         /// </summary>
-        public Ellipse(double parStart, double parEnd, Point axis0, Point axis1, Point center){
-            Debug.Assert(parStart<=parEnd);
+        public Ellipse(double parStart, double parEnd, Point axis0, Point axis1, Point center) {
+            Debug.Assert(parStart <= parEnd);
             this.ParStart = parStart;
             this.ParEnd = parEnd;
             this.AxisA = axis0;
@@ -352,7 +351,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
             }
         }
 
-        
+
         /// <summary>
         /// The point on the ellipse corresponding to the parameter t is calculated by 
         /// the formula center + cos(t)*axis0 + sin(t) * axis1.
@@ -366,7 +365,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <param name="centerX">x coordinate of the center</param>
         /// <param name="centerY">y coordinate of the center</param>
         public Ellipse(double parStart, double parEnd, Point axis0, Point axis1, double centerX, double centerY)
-            : this(parStart, parEnd, axis0, axis1, new Point(centerX, centerY)){
+            : this(parStart, parEnd, axis0, axis1, new Point(centerX, centerY)) {
         }
 
         /// <summary>
@@ -376,7 +375,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <param name="axis1">an axis</param>
         /// <param name="center"></param>
         public Ellipse(Point axis0, Point axis1, Point center)
-            : this(0, Math.PI*2, axis0, axis1, center){
+            : this(0, Math.PI * 2, axis0, axis1, center) {
         }
 
 
@@ -387,14 +386,13 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <param name="axisB">the length of the Y axis</param>
         /// <param name="center"></param>
         public Ellipse(double axisA, double axisB, Point center)
-            : this(0, Math.PI*2, new Point(axisA, 0), new Point(0, axisB), center){
+            : this(0, Math.PI * 2, new Point(axisA, 0), new Point(0, axisB), center) {
         }
 
         /// <summary>
         /// Moves the ellipse to the delta vector
         /// </summary>
-        public void Translate(Point delta)
-        {
+        public void Translate(Point delta) {
             this.center += delta;
             this.box.Center += delta;
             this.parallelogramNodeOverICurve = null;
@@ -406,8 +404,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <param name="xScale"></param>
         /// <param name="yScale"></param>
         /// <returns>the moved ellipse</returns>
-        public ICurve ScaleFromOrigin(double xScale, double yScale)
-        {
+        public ICurve ScaleFromOrigin(double xScale, double yScale) {
             return new Ellipse(this.parStart, this.parEnd, this.aAxis * xScale, this.bAxis * yScale, Point.Scale(xScale, yScale, this.center));
         }
 
@@ -425,17 +422,17 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
             var lenplus = length + eps;
             var lenminsu = length - eps;
             while (u - l > ApproximateComparer.DistanceEpsilon) {
-                var m = 0.5*(u + l);
+                var m = 0.5 * (u + l);
                 var len = this.LengthPartial(this.ParStart, m);
-                if(len>lenplus) {
-                    u =m;
+                if (len > lenplus) {
+                    u = m;
                 } else if (len < lenminsu) {
                     l = m;
                 } else {
                     return m;
                 }
             }
-            return (u + l)/2;
+            return (u + l) / 2;
         }
 
         /// <summary>
@@ -443,11 +440,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// </summary>
         /// <param name="transformation"></param>
         /// <returns>the transformed ellipse</returns>
-        public ICurve Transform(PlaneTransformation transformation){
-            if(transformation != null){
-                Point ap = transformation* this.aAxis - transformation.Offset;
-                Point bp = transformation* this.bAxis - transformation.Offset;
-                return new Ellipse(this.parStart, this.parEnd, ap, bp, transformation* this.center);
+        public ICurve Transform(PlaneTransformation transformation) {
+            if (transformation != null) {
+                Point ap = transformation * this.aAxis - transformation.Offset;
+                Point bp = transformation * this.bAxis - transformation.Offset;
+                return new Ellipse(this.parStart, this.parEnd, ap, bp, transformation * this.center);
             }
             return this;
         }
@@ -474,7 +471,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
                     closest = par;
                 }
             }
-            if (closest == 0 && high == Math.PI*2) {
+            if (closest == 0 && high == Math.PI * 2) {
                 low = -Math.PI;
             }
 
@@ -493,13 +490,13 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// <param name="end"></param>
         /// <returns></returns>
         public double LengthPartial(double start, double end) {
-            return Curve.LengthWithInterpolationAndThreshold(this.Trim(start, end), Curve.LineSegmentThreshold/100);
+            return Curve.LengthWithInterpolationAndThreshold(this.Trim(start, end), Curve.LineSegmentThreshold / 100);
         }
 
         /// <summary>
         /// Return the length of the ellipse curve: not implemented
         /// </summary>
-        public double Length{
+        public double Length {
             get {
                 return Curve.LengthWithInterpolation(this);
             }
@@ -510,7 +507,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// clones the curve. 
         /// </summary>
         /// <returns>the cloned curve</returns>
-        public ICurve Clone(){
+        public ICurve Clone() {
             return new Ellipse(this.parStart, this.parEnd, this.aAxis, this.bAxis, this.center);
         }
 
@@ -521,30 +518,30 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// </summary>
         /// <param name="targetPoint"></param>
         /// <returns>the parameter of the closest point</returns>     
-        public double ClosestParameter(Point targetPoint){
+        public double ClosestParameter(Point targetPoint) {
             double savedParStart = 0;
             const int numberOfTestPoints = 8;
-            double t = (this.ParEnd - this.ParStart)/(numberOfTestPoints + 1);
+            double t = (this.ParEnd - this.ParStart) / (numberOfTestPoints + 1);
             double closest = this.ParStart;
             double minDist = Double.MaxValue;
-            for (int i = 0; i <= numberOfTestPoints; i++){
-                double par = this.ParStart + i*t;
+            for (int i = 0; i <= numberOfTestPoints; i++) {
+                double par = this.ParStart + i * t;
                 Point p = targetPoint - this[par];
-                double d = p*p;
-                if(d < minDist){
+                double d = p * p;
+                if (d < minDist) {
                     minDist = d;
                     closest = par;
                 }
             }
             bool parStartWasChanged = false;
-            if(closest == 0 && this.ParEnd == Math.PI*2){
+            if (closest == 0 && this.ParEnd == Math.PI * 2) {
                 parStartWasChanged = true;
                 savedParStart = this.ParStart;
                 this.ParStart = -Math.PI;
             }
             double ret = ClosestPointOnCurve.ClosestPoint(this, targetPoint, closest, this.ParStart, this.ParEnd);
-            if(ret<0) {
-                ret += 2*Math.PI;
+            if (ret < 0) {
+                ret += 2 * Math.PI;
             }
 
             if (parStartWasChanged) {
@@ -559,7 +556,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// </summary>
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
-        public Point LeftDerivative(double t){
+        public Point LeftDerivative(double t) {
             return this.Derivative(t);
         }
 
@@ -568,7 +565,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// </summary>
         /// <param name="t">the parameter where the derivative is calculated</param>
         /// <returns></returns>
-        public Point RightDerivative(double t){
+        public Point RightDerivative(double t) {
             return this.Derivative(t);
         }
 
@@ -581,7 +578,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public double Curvature(double t){
+        public double Curvature(double t) {
             throw new NotImplementedException();
         }
 
@@ -590,7 +587,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public double CurvatureDerivative(double t){
+        public double CurvatureDerivative(double t) {
             throw new NotImplementedException();
         }
 
@@ -600,7 +597,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// </summary>
         /// <param name="t"></param>
         /// <returns></returns>
-        public double CurvatureSecondDerivative(double t){
+        public double CurvatureSecondDerivative(double t) {
             throw new NotImplementedException();
         }
 
@@ -609,17 +606,17 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         /// returns true if the ellipse goes counterclockwise
         /// </summary>
         /// <returns></returns>
-        public bool OrientedCounterclockwise(){
-            return this.AxisA.X* this.AxisB.Y - this.AxisB.X* this.AxisA.Y > 0;
+        public bool OrientedCounterclockwise() {
+            return this.AxisA.X * this.AxisB.Y - this.AxisB.X * this.AxisA.Y > 0;
         }
 
-      
+
         ///<summary>
         ///returns the box of the ellipse that this ellipse is a part of
         ///</summary>
         ///<returns></returns>
         public Rectangle FullBox() {
-            var del= this.AxisA + this.AxisB;
+            var del = this.AxisA + this.AxisB;
             return new Rectangle(this.center + del, this.center - del);
         }
 
@@ -627,7 +624,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves{
         ///is it a proper circle?
         ///</summary>
         public bool IsArc() {
-            return Math.Abs(this.AxisA * this.AxisB)<= ApproximateComparer.Tolerance && Math.Abs(this.AxisA.Length - this.AxisB.Length) < ApproximateComparer.DistanceEpsilon;
+            return Math.Abs(this.AxisA * this.AxisB) <= ApproximateComparer.Tolerance && Math.Abs(this.AxisA.Length - this.AxisB.Length) < ApproximateComparer.DistanceEpsilon;
         }
 
     }

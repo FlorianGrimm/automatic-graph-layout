@@ -7,7 +7,7 @@ namespace Microsoft.Msagl.Core
     /// </summary>
     public class ProgressChangedEventArgs : EventArgs
     {
-        private string algorithmDescription;
+        private string? algorithmDescription;
         private double ratioComplete;
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace Microsoft.Msagl.Core
         /// </summary>
         /// <param name="ratioComplete">between 0 (not started) and 1 (finished)</param>
         /// <param name="algorithmDescription">a useful description</param>
-        public ProgressChangedEventArgs(double ratioComplete, string algorithmDescription)
+        public ProgressChangedEventArgs(double ratioComplete, string? algorithmDescription)
         {
             this.ratioComplete = ratioComplete;
             this.algorithmDescription = algorithmDescription;
@@ -33,17 +33,11 @@ namespace Microsoft.Msagl.Core
         /// <summary>
         /// A useful algorithm description: e.g. the stage of layout in progress.
         /// </summary>
-        public string AlgorithmDescription
-        {
-            get { return this.algorithmDescription; }
-        }
+        public string? AlgorithmDescription => this.algorithmDescription;
 
         /// <summary>
         /// The ratio complete of the current stage: should always be between 0 and 1.
         /// </summary>
-        public double RatioComplete
-        {
-            get { return this.ratioComplete; }
-        }
+        public double RatioComplete => this.ratioComplete;
     }
 }

@@ -8,10 +8,10 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <summary>
         /// 
         /// </summary>
-        public object DataBeforeChange;
+        public object? DataBeforeChange;
         /// <summary>
         /// 
         /// </summary>
-        public object DataAfterChange;
+        public object? DataAfterChange;
    }
 }

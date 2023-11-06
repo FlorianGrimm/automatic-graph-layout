@@ -236,8 +236,8 @@ namespace Microsoft.Msagl.Core.Layout {
         /// <summary>
         /// A curve representing the edge
         /// </summary>
-        public ICurve Curve {
-            get { return this.edgeGeometry != null ? this.edgeGeometry.Curve : null; }
+        public ICurve? Curve {
+            get { return this.edgeGeometry?.Curve; }
             set {
                 this.RaiseLayoutChangeEvent(value);
                 this.edgeGeometry.Curve = value;
@@ -362,7 +362,7 @@ namespace Microsoft.Msagl.Core.Layout {
         /// 
         /// </summary>
         /// <param name="newValue"></param>
-        public override void RaiseLayoutChangeEvent(object newValue) {
+        public override void RaiseLayoutChangeEvent(object? newValue) {
             this.edgeGeometry.RaiseLayoutChangeEvent(newValue);
         }
 

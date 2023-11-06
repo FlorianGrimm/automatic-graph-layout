@@ -75,15 +75,15 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 #endif
         }
 
-        private Polyline polyline;
+        private Polyline? _Polyline;
 
         /// <summary>
         /// 
         /// </summary>
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        public Polyline Polyline {
-            get { return this.polyline; }
-            set { this.polyline = value; }
+        public Polyline? Polyline {
+            get { return this._Polyline; }
+            set { this._Polyline = value; }
         }
 
 		/// <summary>
@@ -96,15 +96,15 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <summary>
         /// 
         /// </summary>
-        public PolylinePoint NextOnPolyline {
-            get { return this.Polyline.Next(this); }
+        public PolylinePoint? NextOnPolyline {
+            get { return this.Polyline?.Next(this); }
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public PolylinePoint PrevOnPolyline {
-            get { return this.Polyline.Prev(this); }
+        public PolylinePoint? PrevOnPolyline {
+            get { return this.Polyline?.Prev(this); }
         }
 
     }

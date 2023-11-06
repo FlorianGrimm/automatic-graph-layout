@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Microsoft.Msagl.Core.DataStructures {
-    internal class RBTreeEnumerator<T> : IEnumerator<T>
+    public class RBTreeEnumerator<T> : IEnumerator<T>
         where T : notnull {
         private readonly RbTree<T> _Tree;
         private bool _InitialState;

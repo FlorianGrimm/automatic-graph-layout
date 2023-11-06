@@ -28,8 +28,8 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal Point VisibilityBorderIntersect { get; private set; }
         internal bool IsOverlapped { get; private set; }
         internal double InitialWeight { get { return this.IsOverlapped ? ScanSegment.OverlappedWeight : ScanSegment.NormalWeight; } }
-        private double unpaddedToPaddedBorderWeight = ScanSegment.NormalWeight; 
-        
+        private double unpaddedToPaddedBorderWeight = ScanSegment.NormalWeight;
+
         internal bool IsCollinearWithPort {
             get { return CompassVector.IsPureDirection(PointComparer.GetDirections(this.VisibilityBorderIntersect, this.ObstaclePort.Location)); }
         }
@@ -43,7 +43,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         internal bool WantVisibilityIntersection {
             get { return !this.IsOverlapped && this.CanExtend && (!this.ObstaclePort.HasCollinearEntrances || this.IsCollinearWithPort); }
         }
-        internal bool CanExtend { get { return PointComparer.GetDirections(this.MaxVisibilitySegment.Start, this.MaxVisibilitySegment.End) != Direction. None; } }
+        internal bool CanExtend { get { return PointComparer.GetDirections(this.MaxVisibilitySegment.Start, this.MaxVisibilitySegment.End) != Direction.None; } }
 
         internal ObstaclePortEntrance(ObstaclePort oport, Point unpaddedBorderIntersect, Direction outDir, ObstacleTree obstacleTree) {
             this.ObstaclePort = oport;
@@ -83,9 +83,15 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // File Test: Nudger_Overlap4
             // Use the VisibilityBoundingBox for groups because those are what the tree consists of.
             var rect = new Rectangle(this.UnpaddedBorderIntersect, this.VisibilityBorderIntersect);
-            return this.InteriorEdgeCrossesObstacle(rect, obs => obs.VisibilityPolyline,
+            if (obstacleTree.Root is null) {
+                return false;
+            } else {
+                return this.InteriorEdgeCrossesObstacle(
+                    rect,
+                    obs => obs.VisibilityPolyline,
                     obstacleTree.Root.GetLeafRectangleNodesIntersectingRectangle(rect)
                         .Where(node => !node.UserData.IsGroup && (node.UserData != this.Obstacle)).Select(node => node.UserData));
+            }
         }
 
         private bool InteriorEdgeCrossesConvexHullSiblings() {
@@ -96,8 +102,11 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
                     this.Obstacle.ConvexHull.Obstacles.Where(obs => obs != this.Obstacle));
         }
 
-        private bool InteriorEdgeCrossesObstacle(Rectangle rect, Func<Obstacle, Polyline> whichPolylineToUse, IEnumerable<Obstacle> candidates) {
-            LineSegment lineSeg = null;
+        private bool InteriorEdgeCrossesObstacle(
+            Rectangle rect,
+            Func<Obstacle, Polyline> whichPolylineToUse,
+            IEnumerable<Obstacle> candidates) {
+            LineSegment? lineSeg = null;
             foreach (var blocker in candidates) {
                 var blockerPolyline = whichPolylineToUse(blocker);
                 if (!StaticGraphUtility.RectangleInteriorsIntersect(rect, blockerPolyline.BoundingBox)) {
@@ -152,18 +161,17 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             // when VisibilityBorderIntersect is on the incoming ScanSegment (it jumps out above with borderVertex found).
             if (this.OutwardDirection == PointComparer.GetPureDirection(targetVertex.Point, this.VisibilityBorderIntersect)) {
                 Debug.Assert(false, "Unexpected reversed direction between VisibilityBorderIntersect and targetVertex");
-// ReSharper disable HeuristicUnreachableCode
+                // ReSharper disable HeuristicUnreachableCode
                 this.VisibilityBorderIntersect = targetVertex.Point;
                 borderVertex = targetVertex;
-// ReSharper restore HeuristicUnreachableCode
-            }
-            else {
+                // ReSharper restore HeuristicUnreachableCode
+            } else {
                 borderVertex = transUtil.FindOrAddVertex(this.VisibilityBorderIntersect);
                 transUtil.FindOrAddEdge(borderVertex, targetVertex, this.InitialWeight);
             }
             this.ExtendEdgeChain(transUtil, borderVertex, targetVertex, limitRect, routeToCenter);
         }
-        
+
         internal void ExtendEdgeChain(TransientGraphUtility transUtil, VisibilityVertex paddedBorderVertex
                                 , VisibilityVertex targetVertex, Rectangle limitRect, bool routeToCenter) {
             // Extend the edge chain to the opposite side of the limit rectangle.
@@ -179,7 +187,7 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
             }
         }
 
-        
+
         /// <summary>
         /// </summary>
         /// <returns></returns>

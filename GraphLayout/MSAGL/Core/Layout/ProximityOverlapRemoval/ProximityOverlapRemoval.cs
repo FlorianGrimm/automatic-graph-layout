@@ -657,7 +657,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval {
         }
 #endif
 
-        private static Size[] GetNodeSizesByPaddingWithHalfSeparation(Node[] nodes, double nodeSeparation) {
+        private static Size[]? GetNodeSizesByPaddingWithHalfSeparation(Node[] nodes, double nodeSeparation) {
             if (nodes == null) {
                 return null;
             }

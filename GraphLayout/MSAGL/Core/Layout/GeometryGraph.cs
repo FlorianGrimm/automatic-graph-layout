@@ -321,10 +321,12 @@ namespace Microsoft.Msagl.Core.Layout {
         /// Finds the first node with the corresponding user data.
         /// </summary>
         /// <returns>The first node with the given user data. Null if no such node exists.</returns>
-        public Node FindNodeByUserData(object userData)
+        public Node? FindNodeByUserData(object? userData)
         {
-            return this.Nodes.FirstOrDefault(n => n.UserData.Equals(userData));
+            if (userData is null) { return null; }
+            return this.Nodes.FirstOrDefault(n => userData.Equals(n.UserData));
         }
+
 #if TEST_MSAGL
         ///<summary>
         ///</summary>

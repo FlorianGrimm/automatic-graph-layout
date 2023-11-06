@@ -37,12 +37,12 @@ namespace Microsoft.Msagl.Routing {
         /// <summary>
         /// The curve of the shape.
         /// </summary>
-        public virtual ICurve? BoundaryCurve { 
+        public virtual ICurve BoundaryCurve { 
             get { return this._BoundaryCurve; }
             set { this._BoundaryCurve = value; }
         }
 
-        private ICurve? _BoundaryCurve;
+        private ICurve _BoundaryCurve;
 
         /// <summary>
         /// The bounding box of the shape.
@@ -66,6 +66,7 @@ namespace Microsoft.Msagl.Routing {
         /// Default constructor.
         /// </summary>
         public Shape() : this (null) {
+            this.UserData = string.Empty;
         }
 
         /// <summary>
@@ -73,7 +74,7 @@ namespace Microsoft.Msagl.Routing {
         /// </summary>
         /// <param name="boundaryCurve"></param>
         public Shape(ICurve? boundaryCurve) {
-            this._BoundaryCurve = boundaryCurve;     // RelativeShape throws an exception on BoundaryCurve_set so set _boundaryCurve directly.
+            this._BoundaryCurve = boundaryCurve ?? NilCurve.Empty;     // RelativeShape throws an exception on BoundaryCurve_set so set _boundaryCurve directly.
         }
 
         /// <summary>

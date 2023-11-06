@@ -85,7 +85,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
         internal uint Id { get; private set; }
 #endif // VERIFY || VERBOSE
 
-        internal Block(Variable initialVariable, ConstraintVector allConstraints
+        internal Block(Variable? initialVariable, ConstraintVector allConstraints
 #if VERIFY || VERBOSE
                         , ref uint blockId
 #endif // VERIFY || VERBOSE
@@ -681,7 +681,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
 #endif // VERBOSE
         } // end Expand()
 
-        internal Block Split(bool isQpsc
+        internal Block? Split(bool isQpsc
 #if VERIFY || VERBOSE
                             , ref uint blockId
 #endif // VERIFY || VERBOSE
@@ -766,7 +766,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
                 );
         }
 
-        internal Block SplitOnConstraint(Constraint constraintToSplit
+        internal Block? SplitOnConstraint(Constraint constraintToSplit
 #if VERIFY || VERBOSE
                                         , ref uint blockId
 #endif // VERIFY || VERBOSE
@@ -777,7 +777,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             // constraints in the block are active, and the block split and recalc of reference positions
             // doesn't change the actual positions of any variables.
             this.allConstraints.DeactivateConstraint(constraintToSplit);
-            var newSplitBlock = new Block(null, this.allConstraints
+            Block? newSplitBlock = new Block(null, this.allConstraints
 #if VERIFY || VERBOSE
                                         , ref blockId
 #endif // VERIFY || VERBOSE

@@ -137,7 +137,7 @@ namespace Microsoft.Msagl.Routing.Visibility
 
             RBNode<VisibilityEdge> good = null;
             while (n != tree.Nil) {
-                n = n.Item.TargetPoint >= targetPoint ? (good = n).left : n.right;
+                n = n.Item.TargetPoint >= targetPoint ? (good = n).Left : n.Right;
             }
 
             return good;

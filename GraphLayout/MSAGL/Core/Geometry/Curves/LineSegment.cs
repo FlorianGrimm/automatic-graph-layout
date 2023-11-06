@@ -19,7 +19,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="offset"></param>
         /// <param name="dir"></param>
         /// <returns></returns>
-        public ICurve OffsetCurve(double offset, Point dir) { return null; }
+        public ICurve? OffsetCurve(double offset, Point dir) => null;
+
         /// <summary>
         /// the line start point
         /// </summary>
@@ -58,7 +59,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        public ICurve Trim(double start, double end) {
+        public ICurve? Trim(double start, double end) {
 
             if (start > end) {
                 throw new InvalidOperationException();//"wrong params in trimming");
@@ -185,7 +186,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// </summary>
         /// <returns></returns>
 
-        public ICurve Reverse() {
+        public ICurve? Reverse() {
             return new LineSegment(this.b, this.a);
         }
 

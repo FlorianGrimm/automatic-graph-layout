@@ -132,12 +132,12 @@ namespace Microsoft.Msagl.Core.Geometry
         /// </summary>
         /// <param name="points"></param>
         /// <returns>Smallest disc that encloses all the points</returns>
-        public static Disc SlowComputation(Point[] points)
+        public static Disc? SlowComputation(Point[] points)
         {
             ValidateArg.IsNotNull(points, "points");
             int n = points.Length;
-            Disc mc = null;
-            int[] b = null;
+            Disc? mc = null;
+            int[]? b = null;
             for (int i = 0; i < n; ++i)
             {
                 for (int j = 0; j < n; ++j)

@@ -12,6 +12,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1043:UseIntegralOrStringArgumentForIndexers")]
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "t")]
         Point this[double t] { get; }
+
         /// <summary>
         /// first derivative at t
         /// </summary>
@@ -19,6 +20,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "t")]
         Point Derivative(double t);
+
         /// <summary>
         /// second derivative
         /// </summary>
@@ -26,6 +28,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "t")]
         Point SecondDerivative(double t);
+
         /// <summary>
         /// third derivative
         /// </summary>
@@ -44,17 +47,17 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <summary>
         /// XY bounding box of the curve
         /// </summary>
-        Rectangle BoundingBox { get;}
+        Rectangle BoundingBox { get; }
 
         /// <summary>
         /// the start of the parameter domain
         /// </summary>
-        double ParStart { get;}
+        double ParStart { get; }
 
         /// <summary>
         /// the end of the parameter domain
         /// </summary>
-        double ParEnd { get;}
+        double ParEnd { get; }
 
         /// <summary>
         /// Returns the trim curve between start and end, without wrap
@@ -63,7 +66,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="end"></param>
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1716:IdentifiersShouldNotMatchKeywords", MessageId = "End")]
-        ICurve Trim(double start, double end);
+        ICurve? Trim(double start, double end);
 
         /// <summary>
         /// Returns the trim curve between start and end, with wrap, if supported by the implementing class.
@@ -88,7 +91,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <summary>
         /// this[ParStart]
         /// </summary>
-        Point Start { get;}
+        Point Start { get; }
 
         /// <summary>
         /// this[ParEnd]
@@ -100,20 +103,15 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// this[Reverse[t]]=this[ParEnd+ParStart-t]
         /// </summary>
         /// <returns></returns>
-        ICurve Reverse();
+        ICurve? Reverse();
 
-
-
-      /// <summary>
+        /// <summary>
         /// Offsets the curve in the direction of dir
-      /// </summary>
-      /// <param name="offset"></param>
-      /// <param name="dir"></param>
-      /// <returns></returns>
-        
-        
-        
-        ICurve OffsetCurve(double offset, Point dir);
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="dir"></param>
+        /// <returns></returns>
+        ICurve? OffsetCurve(double offset, Point dir);
 
         /// <summary>
         /// return length of the curve segment [start,end] 
@@ -127,7 +125,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <summary>
         /// Get the length of the curve
         /// </summary>
-        double Length { get;}
+        double Length { get; }
 
 
         /// <summary>
@@ -146,7 +144,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns>the transformed curve</returns>
         ICurve Transform(PlaneTransformation transformation);
 
-        
+
         /// <summary>
         /// returns a parameter t such that the distance between curve[t] and targetPoint is minimal 
         /// and t belongs to the closed segment [low,high]
@@ -156,17 +154,17 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="low">the low bound of the parameter</param>
         /// <returns></returns>
         double ClosestParameterWithinBounds(Point targetPoint, double low, double high);
-        
+
         /// <summary>
         /// returns a parameter t such that the distance between curve[t] and a is minimal
         /// </summary>
         /// <param name="targetPoint"></param>
         /// <returns></returns>
         double ClosestParameter(Point targetPoint);
-/// <summary>
-/// clones the curve. 
-/// </summary>
-/// <returns>the cloned curve</returns>
+        /// <summary>
+        /// clones the curve. 
+        /// </summary>
+        /// <returns>the cloned curve</returns>
         ICurve Clone();
 
 
@@ -187,7 +185,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "t")]
         Point RightDerivative(double t);
 
-        
+
         /// <summary>
         /// the signed curvature of the segment at t
         /// </summary>
@@ -211,7 +209,5 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <returns></returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "t")]
         double CurvatureSecondDerivative(double t);
-
-
     }
 }

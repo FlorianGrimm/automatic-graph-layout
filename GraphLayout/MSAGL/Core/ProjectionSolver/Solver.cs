@@ -1184,7 +1184,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             return this.SearchAllConstraints(maxViolation, useViolationCache);
         } // end GetMaxViolatedConstraint()
 
-        private Constraint SearchViolationCache(double maxViolation)
+        private Constraint? SearchViolationCache(double maxViolation)
         {
             // If we have any previously cached max violated constraints, then we'll first remove any
             // that are incoming to or outgoing from the lastModifiedBlock on the current Project()
@@ -1202,7 +1202,7 @@ namespace Microsoft.Msagl.Core.ProjectionSolver
             // SearchAllConstraints, due to two loops, so only do it if the block has a sufficiently small
             // number of constraints.  Use the Variables as a proxy for the constraint count of the block.
             // @@PERF: the block could keep a constraint count to make ViolationCache cutoff more accurate.
-            Constraint maxViolatedConstraint = null;
+            Constraint? maxViolatedConstraint = null;
             if ((null != this.lastModifiedBlock)
                     && (this.lastModifiedBlock.Variables.Count < (this.numberOfVariables >> 1))
                     && this.violationCache.FilterBlock(this.lastModifiedBlock)      // Also removes unsatisfiables

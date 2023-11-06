@@ -28,7 +28,7 @@ namespace Microsoft.Msagl.Core.Geometry
         /// (except in VERIFY/VERBOSE where it uses ToString()).  When Solve() is complete, the caller
         /// should copy the Node.Position property into whatever property the class specialization for this has.
         /// </summary>
-        public Object UserData { get; set; }
+        public Object? UserData { get; set; }
 
         /// <summary>
         /// The string representing the user data object, or a null indicator string.
@@ -45,11 +45,11 @@ namespace Microsoft.Msagl.Core.Geometry
         /// The Variable representing this Node (or Cluster border) in the ProjectionSolver passed to
         /// Generate().  Once Solve() is called, this is cleared out.
         /// </summary>
-        public ProjectionSolver.Variable Variable { get; set; }
+        public ProjectionSolver.Variable? Variable { get; set; }
 
         // Set and retrieved during Cluster.GenerateFromEvents.
-        internal List<OverlapRemovalNode> LeftNeighbors { get; set; }
-        internal List<OverlapRemovalNode> RightNeighbors { get; set; }
+        internal List<OverlapRemovalNode>? LeftNeighbors { get; set; }
+        internal List<OverlapRemovalNode>? RightNeighbors { get; set; }
 
         // If these are set, it means that during the horizontal pass we deferred a node's constraint
         // generation to the vertical pass, so we can't jump out of neighbour evaluation on that node.
@@ -125,8 +125,14 @@ namespace Microsoft.Msagl.Core.Geometry
         internal uint Id { get; private set; }
 
         // This is the normal node ctor, from ConstraintGenerator.
-        internal OverlapRemovalNode(uint id, object userData, double position, double positionP,
-                    double size, double sizeP, double weight)
+        internal OverlapRemovalNode(
+            uint id, 
+            object userData, 
+            double position, 
+            double positionP,
+            double size, 
+            double sizeP, 
+            double weight)
         {
             ValidateArg.IsPositive(size, "size");
             ValidateArg.IsPositive(size, "sizeP");

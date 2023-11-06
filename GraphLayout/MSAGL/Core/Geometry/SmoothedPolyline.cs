@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 using Microsoft.Msagl.Core.Geometry.Curves;
 
 namespace Microsoft.Msagl.Core.Geometry {
@@ -10,32 +11,32 @@ namespace Microsoft.Msagl.Core.Geometry {
      System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly",
          MessageId = "Polyline")
 #if TEST_MSAGL
-    ,Serializable
+    , Serializable
 #endif
     ]
-    public class SmoothedPolyline: IEnumerable<Point> {
+    public class SmoothedPolyline : IEnumerable<Point> {
 
 
         /// <summary>
         /// creates the polyline from corner points
         /// </summary>
         ///<param name="points">points of the polyline</param>
-        public static SmoothedPolyline FromPoints(IEnumerable<Point> points){
+        public static SmoothedPolyline? FromPoints(IEnumerable<Point> points) {
             ValidateArg.IsNotNull(points, "points");
-            SmoothedPolyline ret=null;
-            CornerSite site=null;
-            foreach(Point p in points){
-                if(site==null){
-                    site=new CornerSite(p);
-                    ret=new SmoothedPolyline(site);
+            SmoothedPolyline? result = null;
+            CornerSite? site = null;
+            foreach (Point p in points) {
+                if (site == null) {
+                    site = new CornerSite(p);
+                    result = new SmoothedPolyline(site);
                 } else {
-                    CornerSite s=new CornerSite(p);
-                    s.Previous=site;
-                    site.Next=s;
-                    site=s;
+                    CornerSite s = new CornerSite(p);
+                    s.Previous = site;
+                    site.Next = s;
+                    site = s;
                 }
             }
-            return ret;
+            return result;
         }
 
         private readonly CornerSite headSite;
@@ -45,18 +46,18 @@ namespace Microsoft.Msagl.Core.Geometry {
         public CornerSite HeadSite {
             get { return this.headSite; }
         }
-/// <summary>
-/// clones the polyline
-/// </summary>
-/// <returns></returns>
+        /// <summary>
+        /// clones the polyline
+        /// </summary>
+        /// <returns></returns>
         public SmoothedPolyline Clone() {
             CornerSite h; //the site of teh clone
             CornerSite s = this.headSite; //the old site
             CornerSite prev = null;
-            CornerSite headOfTheClone=null;
+            CornerSite headOfTheClone = null;
             while (s != null) {
-                h=s.Clone();
-                h.Previous=prev;
+                h = s.Clone();
+                h.Previous = prev;
                 if (prev != null) {
                     prev.Next = h;
                 } else {
@@ -68,10 +69,10 @@ namespace Microsoft.Msagl.Core.Geometry {
             }
             return new SmoothedPolyline(headOfTheClone);
         }
-/// <summary>
-/// a constructor
-/// </summary>
-/// <param name="head"></param>
+        /// <summary>
+        /// a constructor
+        /// </summary>
+        /// <param name="head"></param>
         public SmoothedPolyline(CornerSite head) {
             this.headSite = head;
         }
@@ -100,9 +101,9 @@ namespace Microsoft.Msagl.Core.Geometry {
             CornerSite s0 = this.headSite;
             CornerSite s1 = this.headSite.Next;
             while (s1 != null) {
-               yield return new LineSegment(s0.Point,s1.Point);
-                s0=s1;
-                s1=s1.Next;
+                yield return new LineSegment(s0.Point, s1.Point);
+                s0 = s1;
+                s1 = s1.Next;
             }
         }
 #endif
@@ -152,18 +153,18 @@ namespace Microsoft.Msagl.Core.Geometry {
             var kNext = b.NextBezierSegmentFitCoefficient;
             var a = b.Previous;
             var c = b.Next;
-            var s = kPrev*a.Point + (1 - kPrev)*b.Point;
-            var e = kNext*c.Point + (1 - kNext)*b.Point;
-            var u = s*b.PreviousTangentCoefficient + (1 - b.PreviousTangentCoefficient)*b.Point;
-            var v = e*b.NextTangentCoefficient + (1 - b.NextTangentCoefficient)*b.Point;
+            var s = kPrev * a.Point + (1 - kPrev) * b.Point;
+            var e = kNext * c.Point + (1 - kNext) * b.Point;
+            var u = s * b.PreviousTangentCoefficient + (1 - b.PreviousTangentCoefficient) * b.Point;
+            var v = e * b.NextTangentCoefficient + (1 - b.NextTangentCoefficient) * b.Point;
             return new CubicBezierSegment(s, u, v, e);
         }
 
         #region IEnumerable<Point> Members
-/// <summary>
-/// the enumerator of the polyline corners
-/// </summary>
-/// <returns></returns>
+        /// <summary>
+        /// the enumerator of the polyline corners
+        /// </summary>
+        /// <returns></returns>
         public IEnumerator<Point> GetEnumerator() {
             return new PointNodesList(this.headSite);
         }

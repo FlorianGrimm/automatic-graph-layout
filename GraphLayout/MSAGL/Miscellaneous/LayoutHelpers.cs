@@ -29,7 +29,7 @@ namespace Microsoft.Msagl.Miscellaneous {
         /// Calculates the graph layout
         /// </summary>
         /// <exception cref="System.OperationCanceledException">Thrown when the layout is canceled.</exception>
-        public static void CalculateLayout(GeometryGraph geometryGraph, LayoutAlgorithmSettings settings, CancelToken cancelToken, string tileDirectory = null) {
+        public static void CalculateLayout(GeometryGraph geometryGraph, LayoutAlgorithmSettings settings, CancelToken cancelToken, string? tileDirectory = null) {
             if (settings is RankingLayoutSettings) {
                 var rankingLayoutSettings = settings as RankingLayoutSettings;
                 var rankingLayout = new RankingLayout(rankingLayoutSettings, geometryGraph);

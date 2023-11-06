@@ -85,7 +85,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="transformation"></param>][
         /// <param name="transformation0"></param>
         /// <returns></returns>
-        static public PlaneTransformation operator *(PlaneTransformation transformation, PlaneTransformation transformation0) {
+        static public PlaneTransformation? operator *(PlaneTransformation? transformation, PlaneTransformation? transformation0) {
             return Multiply(transformation, transformation0);
         }
 
@@ -95,7 +95,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <returns></returns>
-        static public PlaneTransformation Multiply(PlaneTransformation a, PlaneTransformation b) {
+        static public PlaneTransformation? Multiply(PlaneTransformation? a, PlaneTransformation? b) {
             if (a != null && b != null) {
                 return new PlaneTransformation(
                    a[0, 0] * b[0, 0] + a[0, 1] * b[1, 0], a[0, 0] * b[0, 1] + a[0, 1] * b[1, 1], a[0, 0] * b[0, 2] + a[0, 1] * b[1, 2] + a[0, 2],
@@ -111,7 +111,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="transform0"></param>
         /// <param name="transform1"></param>
         /// <returns></returns>
-        static public PlaneTransformation operator /(PlaneTransformation transform0, PlaneTransformation transform1) {
+        static public PlaneTransformation? operator /(PlaneTransformation? transform0, PlaneTransformation? transform1) {
             if (transform0 != null && transform1 != null) {
                 return transform0 * transform1.Inverse;
             }
@@ -126,7 +126,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="transformation0"></param>
         /// <param name="transformation1"></param>
         /// <returns></returns>
-        static public PlaneTransformation Divide(PlaneTransformation transformation0, PlaneTransformation transformation1) {
+        static public PlaneTransformation? Divide(PlaneTransformation? transformation0, PlaneTransformation? transformation1) {
             return transformation0 / transformation1;
         }
 

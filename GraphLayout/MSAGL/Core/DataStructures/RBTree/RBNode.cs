@@ -1,29 +1,53 @@
 using System;
 namespace Microsoft.Msagl.Core.DataStructures {
-    
+
+    //public class RBNodeBase<T>
+    //    where T : notnull {
+    //    //public RBColor color;
+    //    //public T Item;
+    //    //public RBNode<T> Parent, Left, Right;
+    //}
+    //public class RBNodeNil<T>
+    //    : RBNodeBase<T>
+    //    where T : notnull {
+    //    //public RBColor color;
+    //    //public T Item;
+    //    //public RBNode<T> Parent, Left, Right;
+    //}
+
+    //public class RBNodeRoot<T>
+    //    : RBNodeBase<T>
+    //    where T : notnull {
+    //    //public RBColor color;
+    //    //public T Item;
+    //    //public RBNode<T> Parent, Left, Right;
+    //}
 
 #if TEST_MSAGL
     [Serializable]
 #endif
-    internal class RBNode<T>
+    public class RBNode<T>
+        //: RBNodeRoot<T>
         where T : notnull {
 
-        internal RBColor color;
-        internal T Item;
-        internal RBNode<T> parent, left, right;
+        public RBColor color;
+        public T Item;
+        public RBNode<T> Parent;
+        public RBNode<T> Left;
+        public RBNode<T> Right;
 
-        internal RBNode(RBColor color) { 
+        public RBNode(RBColor color) {
             this.color = color;
             this.Item = default!;
-            this.parent = null!;
-            this.left = null!;
-            this.right= null!;
+            this.Parent = null!;
+            this.Left = null!;
+            this.Right = null!;
         }
-        internal RBNode(RBColor color, T item, RBNode<T> p, RBNode<T> left, RBNode<T> right) {
+        public RBNode(RBColor color, T item, RBNode<T> p, RBNode<T> left, RBNode<T> right) {
             this.color = color;
-            this.parent = p;
-            this.left = left;
-            this.right = right;
+            this.Parent = p;
+            this.Left = left;
+            this.Right = right;
             this.Item = item;
         }
 

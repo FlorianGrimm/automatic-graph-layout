@@ -80,7 +80,7 @@ namespace Microsoft.Msagl.Core.Geometry {
         /// <returns>The resulting product vector, or null if matrix and vector
         /// are incompatible.</returns>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "x"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "A"), System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "A")]
-        public static double[] Multiply(double[][] A, double[] x) {
+        public static double[]? Multiply(double[][] A, double[] x) {
             ValidateArg.IsNotNull(A, "A");
             ValidateArg.IsNotNull(x, "x");
             if(A[0].Length!=x.Length) {

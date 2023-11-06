@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+
 using Microsoft.Msagl.Core.DataStructures;
 using Microsoft.Msagl.Core.Layout;
 using Microsoft.Msagl.DebugHelpers;
@@ -65,7 +66,8 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             return String.Format(CultureInfo.InvariantCulture, "(Bezie{0},{1},{2},{3})", this.b[0], this.b[1], this.b[2], this.b[3]);
         }
 
-        private ParallelogramNodeOverICurve pBoxNode;
+        private ParallelogramNodeOverICurve? pBoxNode;
+
         /// <summary>
         /// A tree of ParallelogramNodes covering the curve. 
         /// This tree is used in curve intersections routines.
@@ -114,7 +116,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="u"></param>
         /// <param name="v"></param>
         /// <returns></returns>
-        public ICurve Trim(double u, double v) {
+        public ICurve? Trim(double u, double v) {
 
             AdjustParamTo01(ref u);
             AdjustParamTo01(ref v);
@@ -245,7 +247,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// this[Reverse[t]]=this[ParEnd+ParStart-t]
         /// </summary>
         /// <returns></returns>
-        public ICurve Reverse() {
+        public ICurve? Reverse() {
             return new CubicBezierSegment(this.b[3], this.b[2], this.b[1], this.b[0]);
         }
 
@@ -270,8 +272,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="xScale"></param>
         /// <param name="yScale"></param>
         /// <returns></returns>
-        public ICurve ScaleFromOrigin(double xScale, double yScale)
-        {
+        public ICurve ScaleFromOrigin(double xScale, double yScale) {
             return new CubicBezierSegment(Point.Scale(xScale, yScale, this.b[0]), Point.Scale(xScale, yScale, this.b[1]), Point.Scale(xScale, yScale, this.b[2]), Point.Scale(xScale, yScale, this.b[3]));
         }
 
@@ -281,7 +282,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="offset"></param>
         /// <param name="dir"></param>
         /// <returns></returns>
-        public ICurve OffsetCurve(double offset, Point dir) { return null; }
+        public ICurve? OffsetCurve(double offset, Point dir) { return null; }
 
         /// <summary>
         /// return length of the curve segment [start,end] 
@@ -308,16 +309,16 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="b3"></param>
         /// <returns></returns>
         private static double LengthOnControlPolygon(Point b0, Point b1, Point b2, Point b3) {
-            var innerCordLength = (b3- b0).Length;
+            var innerCordLength = (b3 - b0).Length;
             var controlPointPolygonLength = (b1 - b0).Length + (b2 - b1).Length + (b3 - b2).Length;
             if (controlPointPolygonLength - innerCordLength > Curve.LineSegmentThreshold) {
-                var mb0 = (b0 + b1)/2;
-                var mb1 = (b1 + b2)/2;
-                var mb2=(b2 + b3)/2;
-                var mmb0 = (mb0 + mb1)/2;
-                var mmb1 = (mb2 + mb1)/2;
-                var mmmb0 = (mmb0 + mmb1)/2;
-//                LayoutAlgorithmSettings.ShowDebugCurves(new DebugCurve(100, 2, "blue", new CubicBezierSegment(b0, b1, b2, b3)), new DebugCurve(100, 1, "red", new CubicBezierSegment(b0, mb0, mmb0, mmmb0)), new DebugCurve(100, 1, "green", new CubicBezierSegment(mmmb0, mmb1, mb2, b3)));
+                var mb0 = (b0 + b1) / 2;
+                var mb1 = (b1 + b2) / 2;
+                var mb2 = (b2 + b3) / 2;
+                var mmb0 = (mb0 + mb1) / 2;
+                var mmb1 = (mb2 + mb1) / 2;
+                var mmmb0 = (mmb0 + mmb1) / 2;
+                //                LayoutAlgorithmSettings.ShowDebugCurves(new DebugCurve(100, 2, "blue", new CubicBezierSegment(b0, b1, b2, b3)), new DebugCurve(100, 1, "red", new CubicBezierSegment(b0, mb0, mmb0, mmmb0)), new DebugCurve(100, 1, "green", new CubicBezierSegment(mmmb0, mmb1, mb2, b3)));
                 return LengthOnControlPolygon(b0, mb0, mmb0, mmmb0) + LengthOnControlPolygon(mmmb0, mmb1, mb2, b3);
             }
 
@@ -357,7 +358,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         public double ClosestParameterWithinBounds(Point targetPoint, double low, double high) {
             System.Diagnostics.Debug.Assert(high <= 1 && low >= 0);
             System.Diagnostics.Debug.Assert(low <= high);
-            double t = (high-low) / 8;
+            double t = (high - low) / 8;
             double closest = 0;
             double minDist = Double.MaxValue;
             for (int i = 0; i < 9; i++) {
@@ -487,7 +488,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                 - this.Ypp(t) * this.Xppp(t);//- Yp(t) * Xpppp(t)=0
         }
 
- 
+
         /// <summary>
         /// returns a parameter t such that the distance between curve[t] and a is minimal
         /// </summary>
@@ -517,7 +518,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
 
                 List<Tuple<double, double>> maxCurveCandidates = new List<Tuple<double, double>>();
 
-                
+
                 int n = 8;
                 double d = 1.0 / n;
                 double prev = -1;//out of the domain
@@ -596,7 +597,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             double low = 0;
             double upper = 1;
             while (upper - low > ApproximateComparer.Tolerance) {
-                var middle = (upper + low)/2;
+                var middle = (upper + low) / 2;
                 int err = this.EvaluateError(length, middle);
                 if (err > 0) {
                     upper = middle;
@@ -607,21 +608,21 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
                 }
             }
 
-            return (low + upper)/2;
+            return (low + upper) / 2;
         }
 
         private int EvaluateError(double length, double t) {
             //todo: this is a slow version!
             var f = 1 - t;
-            var mb0 = f* this.b[0] + t* this.b[1];
-            var mb1 = f* this.b[1] + t* this.b[2];
-            var mb2 = f* this.b[2] + t* this.b[3];
+            var mb0 = f * this.b[0] + t * this.b[1];
+            var mb1 = f * this.b[1] + t * this.b[2];
+            var mb2 = f * this.b[2] + t * this.b[3];
             var mmb0 = f * mb0 + t * mb1;
             var mmb1 = f * mb1 + t * mb2;
             var mmmb0 = f * mmb0 + t * mmb1;
-            
+
             var lengthAtT = LengthOnControlPolygon(this.b[0], mb0, mmb0, mmmb0);
-            
+
             if (lengthAtT > length + ApproximateComparer.DistanceEpsilon) {
                 return 1;
             }

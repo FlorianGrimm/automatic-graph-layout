@@ -25,7 +25,7 @@ namespace Microsoft.Msagl.Core
             this.progressRatio = 0;
             this.localStepCount = 0;
 
-            this.cancelToken = threadStaticCancelToken;
+            this._CancelToken = _ThreadStaticCancelToken;
             this.ThrowIfCanceled();
 
             this.ProgressSteps(0); // Initial progress
@@ -40,7 +40,7 @@ namespace Microsoft.Msagl.Core
             this.progressRatio = 0;
             this.localStepCount = 0;
 
-            CancelToken oldCancelToken = this.SetCancelToken(cancelToken);
+            CancelToken? oldCancelToken = this.SetCancelToken(cancelToken);
 
             try
             {
@@ -55,7 +55,7 @@ namespace Microsoft.Msagl.Core
             }
             finally
             {
-                threadStaticCancelToken = oldCancelToken;
+                _ThreadStaticCancelToken = oldCancelToken;
             }
         }
 
@@ -73,12 +73,12 @@ namespace Microsoft.Msagl.Core
         /// </summary>
         /// <param name="cancelToken">new cancel token</param>
         /// <returns>old cancel token</returns>
-        public CancelToken SetCancelToken(CancelToken cancelToken)
+        public CancelToken? SetCancelToken(CancelToken cancelToken)
         {
-            this.cancelToken = cancelToken;
+            this._CancelToken = cancelToken;
             this.ThrowIfCanceled();
-            CancelToken oldCancelToken = threadStaticCancelToken;
-            threadStaticCancelToken = cancelToken;
+            CancelToken? oldCancelToken = _ThreadStaticCancelToken;
+            _ThreadStaticCancelToken = cancelToken;
             return oldCancelToken;
         }
 
@@ -87,9 +87,9 @@ namespace Microsoft.Msagl.Core
         /// </summary>
         public void Cancel()
         {
-            if (this.cancelToken != null)
+            if (this._CancelToken != null)
             {
-                this.cancelToken.Canceled = true;
+                this._CancelToken.Canceled = true;
             }
         }
 
@@ -98,7 +98,7 @@ namespace Microsoft.Msagl.Core
         /// </summary>
         public bool IsCanceled
         {
-            get { return this.cancelToken != null && this.cancelToken.Canceled; }
+            get { return this._CancelToken != null && this._CancelToken.Canceled; }
         }
 
         /// <summary>
@@ -106,9 +106,9 @@ namespace Microsoft.Msagl.Core
         /// </summary>
         protected void ThrowIfCanceled()
         {
-            if (this.cancelToken != null)
+            if (this._CancelToken != null)
             {
-                this.cancelToken.ThrowIfCanceled();
+                this._CancelToken.ThrowIfCanceled();
             }
         }
 
@@ -116,18 +116,18 @@ namespace Microsoft.Msagl.Core
         /// The current cancel token - one per thread, cached by cancelToken, below.
         /// </summary>
         [ThreadStatic]
-        private static CancelToken threadStaticCancelToken;
+        private static CancelToken? _ThreadStaticCancelToken;
 
         /// <summary>
         /// ThreadStatic field above has about 10X the lookup cost of a local field, so we
         /// cache its value in cancelToken
         /// </summary>
-        private volatile CancelToken cancelToken;
-        
+        private volatile CancelToken? _CancelToken;
+
         /// <summary>
         /// the current cancel token
         /// </summary>
-        protected CancelToken CancelToken { get { return this.cancelToken; } }
+        protected CancelToken? CancelToken => this._CancelToken;
 
         #endregion Cancel
 
@@ -137,7 +137,7 @@ namespace Microsoft.Msagl.Core
         /// notifies whenever progress is made by the algorithm.  ProgressChangedEventArgs report
         /// 0 &lt; progressRatio &lt;= 1
         /// </summary>
-        public event EventHandler<ProgressChangedEventArgs> ProgressChanged;
+        public event EventHandler<ProgressChangedEventArgs>? ProgressChanged;
 
         /// <summary>
         /// Total progress to date
@@ -292,7 +292,7 @@ namespace Microsoft.Msagl.Core
         /// 0 &lt; progressRatio &lt;= 1.  Progress from sub-algorithms are converted to the correct ratio
         /// of the local progress
         /// </summary>
-        private void NotifyProgressChanged(object sender, ProgressChangedEventArgs args)
+        private void NotifyProgressChanged(object? sender, ProgressChangedEventArgs args)
         {
             if (ProgressChanged != null)
             {

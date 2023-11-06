@@ -70,7 +70,7 @@ namespace Microsoft.Msagl.Core.Layout.ProximityOverlapRemoval.StressEnergy {
         public List<Point> IterateAll() {
             this.initMaxIterationsSolver();
             int i = 0;
-            List<Point> res = null;
+            List<Point>? res = null;
             double stressOld = this.StressValue(this.Positions);
             while ( (!this.Settings.CancelOnStressMaxIteration || (i++)< this.Settings.MaxStressIterations)){
                 if (this.Settings.SolvingMethod == SolvingMethod.Localized) {

@@ -19,7 +19,15 @@ namespace Microsoft.Msagl.Routing.Rectilinear {
         /// The root of the hierarchy.
         /// </summary>
         internal RectangleNode<Obstacle, Point>? Root { get; private set; }
-        internal Rectangle? GraphBox { get { return this.Root?.Rectangle; /*(Rectangle)this.Root.Rectangle*/; } }
+        internal Rectangle GraphBox { get {
+                if (this.Root?.Rectangle is Rectangle rectangle) {
+                    return rectangle;
+                }
+                return new Rectangle();
+                //throw new Exception();
+                /*(Rectangle)this.Root.Rectangle*/; 
+            }
+        }
 
         /// <summary>
         /// Dictionary of sets of ancestors for each shape, for evaluating necessary group-boundary crossings.

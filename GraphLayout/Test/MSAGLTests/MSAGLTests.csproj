@@ -79,6 +79,7 @@
   <ItemGroup>
     <Compile Include="ConvexHullTest.cs" />
     <Compile Include="ClusterTests.cs" />
+    <Compile Include="Core\DataStructures\RbTreeTests.cs" />
     <Compile Include="CurveTest.cs" />
     <Compile Include="DelaunayTriangulation\CdtTests.cs" />
     <Compile Include="Infrastructure\BasicFileProcessor.cs" />

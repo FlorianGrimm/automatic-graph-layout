@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace Microsoft.Msagl.Core.DataStructures {
@@ -16,25 +17,24 @@ namespace Microsoft.Msagl.Core.DataStructures {
 
 
         // ReSharper disable InconsistentNaming
-        private GenericHeapElement<T>[] A;//array of heap elements
-                                         // ReSharper restore InconsistentNaming
-
+        private GenericHeapElement<T>[] A;
+        //array of heap elements
+        // ReSharper restore InconsistentNaming
 
         /// <summary>
         /// it is a mapping from queue elements and their correspondent HeapElements
         /// </summary>
-        private readonly Dictionary<T, GenericHeapElement<T>> cache;
+        private readonly Dictionary<T, GenericHeapElement<T>> _Cache;
         internal int Count { get { return this.heapSize; } }
 
         private int heapSize;
 
         internal bool ContainsElement(T key) {
-            return this.cache.ContainsKey(key);
+            return this._Cache.ContainsKey(key);
         }
 
-
         internal GenericBinaryHeapPriorityQueue() {
-            this.cache = new Dictionary<T, GenericHeapElement<T>>();
+            this._Cache = new Dictionary<T, GenericHeapElement<T>>();
             this.A = new GenericHeapElement<T>[InitialHeapCapacity + 1];
         }
 
@@ -56,11 +56,11 @@ namespace Microsoft.Msagl.Core.DataStructures {
 
             this.heapSize++;
             int i = this.heapSize;
-            this.A[i] = this.cache[element] = new GenericHeapElement<T>(i, priority, element);
+            this.A[i] = this._Cache[element] = new GenericHeapElement<T>(i, priority, element);
             while (i > 1 && this.A[i >> 1].priority.CompareTo(priority) > 0) {
                 this.SwapWithParent(i);
                 i >>= 1;
-            }          
+            }
         }
 
         internal bool IsEmpty() {
@@ -97,7 +97,7 @@ namespace Microsoft.Msagl.Core.DataStructures {
         }
 
         private void MoveQueueOneStepForward(T ret) {
-            this.cache.Remove(ret);
+            this._Cache.Remove(ret);
             this.PutAtI(1, this.A[this.heapSize]);
             int i = 1;
             while (true) {
@@ -131,11 +131,10 @@ namespace Microsoft.Msagl.Core.DataStructures {
         /// sets the object priority to c
         /// </summary>
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        internal void DecreasePriority(T element, double newPriority)
-        {
+        internal void DecreasePriority(T element, double newPriority) {
             GenericHeapElement<T> h;
             //ignore the element if it is not in the queue
-            if (!this.cache.TryGetValue(element, out h)) {
+            if (!this._Cache.TryGetValue(element, out h)) {
                 return;
             }
 
@@ -154,7 +153,7 @@ namespace Microsoft.Msagl.Core.DataStructures {
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode")]
-        
+
         /// <summary>
         /// enumerator
         /// </summary>
@@ -165,18 +164,16 @@ namespace Microsoft.Msagl.Core.DataStructures {
             }
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="priority"></param>
-        /// <returns></returns>
-        public T Peek(out double priority) {
+        public bool TryPeek(out double priority, [MaybeNullWhen(false)] out T value) {
             if (this.Count == 0) {
                 priority = 0.0;
-                return default(T);
+                value = default(T);
+                return false;
+            } else {
+                priority = this.A[1].priority;
+                value = this.A[1].v;
+                return true;
             }
-            priority = this.A[1].priority;
-            return this.A[1].v;         
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
@@ -184,20 +181,21 @@ namespace Microsoft.Msagl.Core.DataStructures {
                 yield return this.A[i].v;
             }
         }
+
 #if TEST_MSAGL
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            StringBuilder sb=new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             foreach (var i in this) {
                 sb.Append(i + ",");
             }
 
             return sb.ToString();
         }
-  
+
 #endif
     }
 }

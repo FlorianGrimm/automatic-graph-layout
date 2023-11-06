@@ -157,14 +157,11 @@ namespace Microsoft.Msagl.Core.Layout {
         /// </summary>
         public event EventHandler<LayoutChangeEventArgs> LayoutChangeEvent;
 
-        
+
         /// <summary>
         /// </summary>
         /// <param name="newValue"></param>
-        public void RaiseLayoutChangeEvent(object newValue) {
-            if (LayoutChangeEvent != null) {
-                LayoutChangeEvent(this, new LayoutChangeEventArgs{DataAfterChange = newValue});
-            }
-        }
+        public void RaiseLayoutChangeEvent(object? newValue) 
+            => this.LayoutChangeEvent?.Invoke(this, new LayoutChangeEventArgs { DataAfterChange = newValue });
     }
 }

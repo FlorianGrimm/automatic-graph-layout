@@ -233,7 +233,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             return pp.Point - pp.Prev.Point;
         }
 
-        private PolylinePoint TryToGetPolylinePointCorrespondingToT(double t) {
+        private PolylinePoint? TryToGetPolylinePointCorrespondingToT(double t) {
             for (PolylinePoint p = this.StartPoint; p != null; p = p.Next, t--) {
                 if (Math.Abs(t) < ApproximateComparer.Tolerance) {
                     return p;
@@ -243,7 +243,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             return null;
         }
 
-        private PolylinePoint TryToGetPrevPointToPolylinePoint(PolylinePoint p) {
+        private PolylinePoint? TryToGetPrevPointToPolylinePoint(PolylinePoint p) {
             if (p != this.StartPoint) {
                 return p.Prev;
             }
@@ -255,7 +255,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             return this.EndPoint;
         }
 
-        private PolylinePoint TryToGetNextPointToPolylinePoint(PolylinePoint p) {
+        private PolylinePoint? TryToGetNextPointToPolylinePoint(PolylinePoint p) {
             if (p != this.EndPoint) {
                 return p.Next;
             }
@@ -520,7 +520,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// this[Reverse[t]]=this[ParEnd+ParStart-t]
         /// </summary>
         /// <returns></returns>
-        public ICurve Reverse()
+        public ICurve? Reverse()
         {
             return this.ReversePolyline();
         }
@@ -531,10 +531,7 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
         /// <param name="offset"></param>
         /// <param name="dir"></param>
         /// <returns></returns>
-        public ICurve OffsetCurve(double offset, Point dir)
-        {
-            throw new NotImplementedException();
-        }
+        public ICurve? OffsetCurve(double offset, Point dir) => null;
 
         /// <summary>
         /// return length of the curve segment [start,end] 
@@ -725,11 +722,11 @@ namespace Microsoft.Msagl.Core.Geometry.Curves {
             return ret;
         }
 
-        internal PolylinePoint Next(PolylinePoint a) {
+        internal PolylinePoint? Next(PolylinePoint a) {
             return a.Next ?? (this.Closed ? this.StartPoint : null);
         }
 
-        internal PolylinePoint Prev(PolylinePoint a) {
+        internal PolylinePoint? Prev(PolylinePoint a) {
             return a.Prev ?? (this.Closed ? this.EndPoint : null);
         }
 

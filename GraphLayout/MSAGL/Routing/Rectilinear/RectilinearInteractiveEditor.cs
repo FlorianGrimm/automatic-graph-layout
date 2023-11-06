@@ -22,13 +22,18 @@ namespace Microsoft.Msagl.Routing.Rectilinear{
         /// <param name="geometryEdges">Edges defining the nodes to route between, and receiving the resultant paths</param>
         /// <param name="edgeRoutingMode">Mode of the edges (Rectilinear or RectilinearToCenter).</param>
         /// <param name="useSparseVisibilityGraph">Use a more memory-efficient but possibly path-suboptimal visibility graph</param>
-        /// <param name="useObstacleRectangles">Use obstacle bounding box rectangles in visibility graph</param>
         /// <param name="bendPenaltyAsAPercentageOfDistance">The cost penalty for a bend in the path, as a percentage of the Manhattan distance
         ///             between the source target ports.</param>
-        static public void CreatePortsAndRouteEdges(double cornerFitRadius, double padding
-                            , IEnumerable<Node> obstacleNodes, IEnumerable<Edge> geometryEdges
-                            , EdgeRoutingMode edgeRoutingMode, bool useSparseVisibilityGraph
-                            , double bendPenaltyAsAPercentageOfDistance, CancelToken ct = null) {
+        /// <param name="ct"></param>
+        static public void CreatePortsAndRouteEdges(
+            double cornerFitRadius,
+            double padding,
+            IEnumerable<Node> obstacleNodes,
+            IEnumerable<Edge> geometryEdges,
+            EdgeRoutingMode edgeRoutingMode,
+            bool useSparseVisibilityGraph,
+            double bendPenaltyAsAPercentageOfDistance,
+            CancelToken? ct = default) {
             var r = FillRouter(cornerFitRadius, padding, obstacleNodes, geometryEdges, edgeRoutingMode, useSparseVisibilityGraph
                             ,  bendPenaltyAsAPercentageOfDistance);
             r.Run(ct);

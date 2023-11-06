@@ -8,14 +8,12 @@
 // --------------------------------------------------------------------------------------------------------------------
 
 using System.Diagnostics;
+
 using Microsoft.Msagl.Core.DataStructures;
 
-namespace Microsoft.Msagl.Core.Geometry 
-{
-    public partial class OverlapRemovalCluster
-    {
-        private class ScanLine
-        {
+namespace Microsoft.Msagl.Core.Geometry {
+    public partial class OverlapRemovalCluster {
+        private class ScanLine {
 
             // This is the data structure that allows fast insert/remove of nodes as well as
             // scanning next/prev in the perpendicular direction to the scan line movement 
@@ -29,10 +27,9 @@ namespace Microsoft.Msagl.Core.Geometry
             // the nearer midpoint would have a constraint generated on the node with the
             // further midpoint (though in that case we probably generate a duplicative constraint
             // between the current node and the node with the further midpoint).
-            private readonly RbTree<OverlapRemovalNode> nodeTree = new RbTree<OverlapRemovalNode>((lhs, rhs)=> lhs.CompareTo(rhs));
+            private readonly RbTree<OverlapRemovalNode> nodeTree = new RbTree<OverlapRemovalNode>((lhs, rhs) => lhs.CompareTo(rhs));
 
-            internal void Insert(OverlapRemovalNode node)
-            {
+            internal void Insert(OverlapRemovalNode node) {
                 Debug.Assert(null == this.nodeTree.Find(node), "node already exists in the rbtree");
 
                 // RBTree's internal operations on insert/remove etc. mean the node can't cache the
@@ -40,22 +37,15 @@ namespace Microsoft.Msagl.Core.Geometry
                 this.nodeTree.Insert(node);
             }
 
-            internal void Remove(OverlapRemovalNode node)
-            {
+            internal void Remove(OverlapRemovalNode node) {
                 this.nodeTree.Remove(node);
             }
 
-            internal OverlapRemovalNode NextLeft(OverlapRemovalNode node)
-            {
-                var pred = this.nodeTree.Previous(this.nodeTree.Find(node));
-                return (pred != null) ? pred.Item : null;
-            }
+            internal OverlapRemovalNode? NextLeft(OverlapRemovalNode node)
+                => this.nodeTree.Previous(this.nodeTree.Find(node))?.Item;
 
-            internal OverlapRemovalNode NextRight(OverlapRemovalNode node)
-            {
-                var succ = this.nodeTree.Next(this.nodeTree.Find(node));
-                return (succ!= null) ? succ.Item : null;
-            }
+            internal OverlapRemovalNode? NextRight(OverlapRemovalNode node)
+                => this.nodeTree.Next(this.nodeTree.Find(node))?.Item;
         } // end class ScanLine
     }
-} 
+}
